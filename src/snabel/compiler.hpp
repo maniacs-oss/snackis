@@ -7,15 +7,7 @@
 namespace snabel {
   struct Exec;
   
-  void compile(Exec &exe,
-	       size_t lnr,
-	       const Tok &tok,
-	       OpSeq &out);
-
-  void compile(Exec &exe,
-	       size_t lnr,
-	       const TokSeq &exp,
-	       OpSeq &out);
+  void compile(Exec &exe, size_t lnr, TokSeq in, OpSeq &out);
 }
 
 #endif
