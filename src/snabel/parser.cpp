@@ -4,6 +4,10 @@
 #include "snabel/parser.hpp"
 
 namespace snabel {
+  Pos::Pos(size_t row, size_t col):
+    row(row), col(col)
+  { }
+
   Tok::Tok(const str &txt, size_t i):
     text(txt),
     i(i)

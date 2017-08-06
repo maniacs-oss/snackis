@@ -5,7 +5,7 @@ namespace snabel {
     name(n), imp(imp)
   { }
 
-  void Macro::operator ()(TokSeq &in, OpSeq &out) const {
-    imp(in, out);
+  void Macro::operator ()(Pos pos, TokSeq &in, OpSeq &out) const {
+    imp(pos, in, out);
   }
 }

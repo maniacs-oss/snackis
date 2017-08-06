@@ -7,6 +7,11 @@
 namespace snabel {
   using namespace snackis;
   
+  struct Pos {
+    size_t row, col;
+    Pos(size_t row, size_t col);
+  };
+
   struct Tok {
     str text;
     size_t i;

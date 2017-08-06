@@ -81,7 +81,44 @@ namespace snabel {
     add_func(*this, "*", {&i64_type, &i64_type}, i64_type, mul_i64);
     add_func(*this, "%", {&i64_type, &i64_type}, i64_type, mod_i64);
 
-    add_macro(*this, "reset", [](auto &in, auto &out) {
+    add_macro(*this, "begin", [](auto pos, auto &in, auto &out) {
+	out.push_back(Op::make_lambda());
+      });
+    
+    add_macro(*this, "drop", [](auto pos, auto &in, auto &out) {
+	out.push_back(Op::make_drop());
+      });
+    
+    add_macro(*this, "end", [](auto pos, auto &in, auto &out) {
+	out.push_back(Op::make_unlambda());
+      });
+    
+    add_macro(*this, "call", [](auto pos, auto &in, auto &out) {
+      out.push_back(Op::make_call());
+      });
+
+    add_macro(*this, "let", [this](auto pos, auto &in, auto &out) {
+	if (in.size() < 2) {
+	  ERROR(Snabel, fmt("Malformed binding on row %0, col %1",
+			    pos.row, pos.col));
+	} else {
+	  out.push_back(Op::make_backup(false));
+	  const str n(in.front().text);
+	  auto i(std::next(in.begin()));
+	  
+	  for (; i != in.end(); i++) {
+	    if (i->text == ";") { break; }
+	  }
+	  
+	  compile(*this, pos.row, TokSeq(std::next(in.begin()), i), out);
+	  if (i != in.end()) { i++; }
+	  in.erase(in.begin(), i);
+	  out.push_back(Op::make_restore());
+	  out.push_back(Op::make_let(fmt("$%0", n)));
+	}
+      });
+    
+    add_macro(*this, "reset", [](auto pos, auto &in, auto &out) {
 	out.push_back(Op::make_reset());
       });
   }
