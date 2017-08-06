@@ -66,7 +66,7 @@ namespace snabel {
 	}
 	
 	out.push_back(Op::make_restore());
-	out.push_back(Op::make_let(exp[1].text));
+	out.push_back(Op::make_let(fmt("$%0", exp[1].text)));
 
 	if (i != exp.end()) {
 	  compile(exe, lnr, TokSeq(i, exp.end()), out);
