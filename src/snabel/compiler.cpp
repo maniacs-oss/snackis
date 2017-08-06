@@ -28,7 +28,7 @@ namespace snabel {
     } else if (tok.text == "begin") {
       out.push_back(Op::make_lambda());
     } else if (tok.text == "call") {
-      out.push_back(Op::make_dyncall());
+      out.push_back(Op::make_call());
     } else if (tok.text == "drop") {
       out.push_back(Op::make_drop());
     } else if (tok.text == "end") {
@@ -39,7 +39,7 @@ namespace snabel {
 	(tok.text.size() > 1 && tok.text[0] == '-' && isdigit(tok.text[1]))) {
       out.push_back(Op::make_push(Box(exe.i64_type, to_int64(tok.text))));
     }  else {
-      out.push_back(Op::make_id(tok.text));
+      out.push_back(Op::make_get(tok.text));
     }
   }
 

@@ -18,12 +18,9 @@ namespace snabel {
     TRY(try_test);
     Exec exe;
     Coro &cor(exe.main);
-    
-    Func f("test-func");
-    add_imp(f, {&exe.i64_type}, exe.i64_type, test_func);
-
+    auto &f(add_func(cor, "test-func", {&exe.i64_type}, exe.i64_type, test_func));
     cor.ops.push_back(Op::make_push(Box(exe.i64_type, int64_t(7))));
-    cor.ops.push_back(Op::make_call(f));
+    cor.ops.push_back(Op::make_func(f.func));
     run(exe.main);
 
     CHECK(get<int64_t>(pop(cor)) == 35, _);

@@ -60,12 +60,13 @@ namespace gui {
 		      const snabel::ArgTypes &args,
 		      Reader::Cmd cmd) {
     CHECK(rdr.cmds.insert(id).second, _);
-    snabel::Func &f(add_func(rdr.exec.main, id));
-    add_imp(f, args, rdr.exec.void_type,
-	    [cmd](snabel::Scope &scp, snabel::FuncImp &fn, const snabel::Args &args) {
-	      cmd(args);
-	    });
-  };
+    snabel::add_func(rdr.exec.main, id, args, rdr.exec.void_type,
+		     [cmd](snabel::Scope &scp,
+			   snabel::FuncImp &fn,
+			   const snabel::Args &args) {
+		       cmd(args);
+		     });
+  }
   
   template <typename SearchT, typename ViewT, typename RecT>
   static void init_id_search(Reader &rdr, const str &id) {

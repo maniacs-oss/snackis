@@ -21,8 +21,101 @@ namespace snabel {
     return op;
   }
 
-  Op Op::make_call(Func &fn) {
+  Op Op::make_call(opt<Label> lbl) {
     Op op(OP_CALL);
+
+    op.info = [lbl](auto &op, auto &scp) {
+      return lbl ? lbl->tag : "";
+    };
+
+    op.compile = [lbl](auto &op, auto &scp, auto &out) mutable {
+      auto &cor(scp.coro);
+      auto &exe(cor.exec);      
+      DEFER({ curr_stack(cor).clear(); });
+      auto fn(peek(cor));
+      
+      if (fn && &fn->type == &exe.lambda_type) {
+	auto fnd(scp.labels.find(get<str>(*fn)));
+	
+	if (fnd != scp.labels.end()) {
+	  out.push_back(Op::make_drop(1));
+	  out.push_back(Op::make_call(fnd->second));
+	  return true;
+	}
+      }
+      
+      return false;
+    };
+
+    op.run = [lbl](auto &op, auto &scp) mutable {
+      auto &cor(scp.coro);
+      cor.returns.push_back(cor.pc);
+
+      if (!lbl) {
+	auto fn(pop(cor));
+	str n(get<str>(fn));
+	auto fnd(scp.labels.find(n));
+
+	if (fnd == scp.labels.end()) {
+	  ERROR(Snabel, fmt("Missing call target: %0", n));
+	} else {
+	  lbl.emplace(fnd->second);
+	}      
+      }
+
+      if (lbl) { jump(cor, *lbl); }
+    };
+    
+    return op;    
+  }
+  
+  Op Op::make_drop(size_t cnt) {
+    Op op(OP_DROP);
+    op.info = [cnt](auto &op, auto &scp) { return fmt_arg(cnt); };
+    
+    op.compile = [cnt](auto &op, auto &scp, auto &out) mutable {
+      Stack &s(curr_stack(scp.coro));
+      for (size_t i(0); i < cnt && !s.empty(); i++) {
+	s.pop_back();
+      }
+      
+      auto i(0);      
+      while (i < cnt && !out.empty() && out.back().code == OP_PUSH) {
+	out.pop_back();
+	i++;
+      }
+      
+      if (i == cnt) { return true; }
+      
+      if (i) {
+	out.push_back(Op::make_drop(cnt-i));
+	return true;
+      }
+
+      return false;
+    };
+
+    op.run = [cnt](auto &op, auto &scp) {
+      for (size_t i(0); i < cnt; i++) { pop(scp.coro); }
+    };
+    
+    return op;    
+  }
+
+  Op Op::make_fence() {
+    Op op(OP_FENCE);
+
+    op.compile = [](auto &op, auto &scp, auto &out) {
+      op.run(op, scp);
+      return false;
+    };
+    
+    op.run = [](auto &op, auto &scp) { scp.labels.clear(); };
+    return op;
+  }
+
+  Op Op::make_func(Func &fn) {
+    Op op(OP_FUNC);
     op.info = [&fn](auto &op, auto &scp) { return fn.name; };
 
     op.compile = [&fn](auto &op, auto &scp, auto &out) mutable {
@@ -72,117 +165,8 @@ namespace snabel {
     return op;
   }
 
-  Op Op::make_drop(size_t cnt) {
-    Op op(OP_DROP);
-    op.info = [cnt](auto &op, auto &scp) { return fmt_arg(cnt); };
-    
-    op.compile = [cnt](auto &op, auto &scp, auto &out) mutable {
-      Stack &s(curr_stack(scp.coro));
-      for (size_t i(0); i < cnt && !s.empty(); i++) {
-	s.pop_back();
-      }
-      
-      auto i(0);      
-      while (i < cnt && !out.empty() && out.back().code == OP_PUSH) {
-	out.pop_back();
-	i++;
-      }
-      
-      if (i == cnt) { return true; }
-      
-      if (i) {
-	out.push_back(Op::make_drop(cnt-i));
-	return true;
-      }
-
-      return false;
-    };
-
-    op.run = [cnt](auto &op, auto &scp) {
-      for (size_t i(0); i < cnt; i++) { pop(scp.coro); }
-    };
-    
-    return op;    
-  }
-
-  Op Op::make_dyncall(opt<Label> lbl) {
-    Op op(OP_DYNCALL);
-
-    op.info = [lbl](auto &op, auto &scp) {
-      return lbl ? lbl->tag : "";
-    };
-
-    op.compile = [lbl](auto &op, auto &scp, auto &out) mutable {
-      auto &cor(scp.coro);
-      auto &exe(cor.exec);      
-      DEFER({ curr_stack(cor).clear(); });
-      auto fn(peek(cor));
-      
-      if (fn && &fn->type == &exe.lambda_type) {
-	auto fnd(scp.labels.find(get<str>(*fn)));
-	
-	if (fnd != scp.labels.end()) {
-	  out.push_back(Op::make_drop(1));
-	  out.push_back(Op::make_dyncall(fnd->second));
-	  return true;
-	}
-      }
-      
-      return false;
-    };
-
-    op.run = [lbl](auto &op, auto &scp) mutable {
-      auto &cor(scp.coro);
-      cor.returns.push_back(cor.pc);
-
-      if (!lbl) {
-	auto fn(pop(cor));
-	str n(get<str>(fn));
-	auto fnd(scp.labels.find(n));
-
-	if (fnd == scp.labels.end()) {
-	  ERROR(Snabel, fmt("Missing dyncall target: %0", n));
-	} else {
-	  lbl.emplace(fnd->second);
-	}      
-      }
-
-      if (lbl) { jump(cor, *lbl); }
-    };
-    
-    return op;    
-  }
-
-  Op Op::make_fence() {
-    Op op(OP_FENCE);
-
-    op.compile = [](auto &op, auto &scp, auto &out) {
-      op.run(op, scp);
-      return false;
-    };
-    
-    op.run = [](auto &op, auto &scp) { scp.labels.clear(); };
-    return op;
-  }
-  
-  Op Op::make_group(bool copy_stack) {
-    Op op(OP_GROUP);
-
-    op.info = [copy_stack](auto &op, auto &scp) {
-      return copy_stack ? "copy" : "empty";
-    };
-
-    op.compile = [](auto &op, auto &scp, auto &out) mutable {
-      op.run(op, scp);
-      return false;
-    };
-    
-    op.run = [copy_stack](auto &op, auto &scp) { begin_scope(scp.coro, copy_stack); };
-    return op;
-  }
-
-  Op Op::make_id(const str &txt) {
-    Op op(OP_ID);
+  Op Op::make_get(const str &txt) {
+    Op op(OP_GET);
     op.info = [txt](auto &op, auto &scp) { return txt; };
 
     op.compile = [txt](auto &op, auto &scp, auto &out) {
@@ -195,7 +179,7 @@ namespace snabel {
 
 	if (&fnd->type == &scp.coro.exec.func_type) {
 	  Func &fn(*get<Func *>(*fnd));
-	  out.push_back(Op::make_call(fn));
+	  out.push_back(Op::make_func(fn));
 	  curr_stack(scp.coro).clear();
 	  return true;
 	}
@@ -222,6 +206,22 @@ namespace snabel {
       push(scp.coro, *fnd);
     };
 
+    return op;
+  }
+  
+  Op Op::make_group(bool copy_stack) {
+    Op op(OP_GROUP);
+
+    op.info = [copy_stack](auto &op, auto &scp) {
+      return copy_stack ? "copy" : "empty";
+    };
+
+    op.compile = [](auto &op, auto &scp, auto &out) mutable {
+      op.run(op, scp);
+      return false;
+    };
+    
+    op.run = [copy_stack](auto &op, auto &scp) { begin_scope(scp.coro, copy_stack); };
     return op;
   }
 
@@ -475,14 +475,14 @@ namespace snabel {
       return "Call";
     case OP_DROP:
       return "Drop";
-    case OP_DYNCALL:
-      return "Dyncall";
     case OP_FENCE:
       return "Fence";
+    case OP_FUNC:
+      return "Func";
+    case OP_GET:
+      return "Get";
     case OP_GROUP:
       return "Group";
-    case OP_ID:
-      return "Id";
     case OP_JUMP:
       return "Jump";
     case OP_LABEL:
