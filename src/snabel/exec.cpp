@@ -59,13 +59,13 @@ namespace snabel {
     main(fibers.emplace(std::piecewise_construct,
 			std::forward_as_tuple(null_uid),
 			std::forward_as_tuple(*this, null_uid)).first->second),
-    meta_type((add_type(main, "Type"))),
-    func_type((add_type(main, "Func"))),
-    i64_type((add_type(main, "I64"))),
-    lambda_type((add_type(main, "Lambda"))),
-    str_type((add_type(main, "Str"))),
-    undef_type((add_type(main, "Undef"))),
-    void_type((add_type(main, "Void"))),
+    meta_type((add_type(*this, "Type"))),
+    func_type((add_type(*this, "Func"))),
+    i64_type((add_type(*this, "I64"))),
+    lambda_type((add_type(*this, "Lambda"))),
+    str_type((add_type(*this, "Str"))),
+    undef_type((add_type(*this, "Undef"))),
+    void_type((add_type(*this, "Void"))),
     next_sym(1)
   {
     meta_type.fmt = [](auto &v) { return get<Type *>(v)->name; };
@@ -76,16 +76,46 @@ namespace snabel {
     undef_type.fmt = [](auto &v) { return "n/a"; };
     void_type.fmt = [](auto &v) { return "n/a"; };
 
-    add_func(main, "+", {&i64_type, &i64_type}, i64_type, add_i64);
-    add_func(main, "-", {&i64_type, &i64_type}, i64_type, sub_i64);
-    add_func(main, "*", {&i64_type, &i64_type}, i64_type, mul_i64);
-    add_func(main, "%", {&i64_type, &i64_type}, i64_type, mod_i64);
+    add_func(*this, "+", {&i64_type, &i64_type}, i64_type, add_i64);
+    add_func(*this, "-", {&i64_type, &i64_type}, i64_type, sub_i64);
+    add_func(*this, "*", {&i64_type, &i64_type}, i64_type, mul_i64);
+    add_func(*this, "%", {&i64_type, &i64_type}, i64_type, mod_i64);
 
-    /*add_macro(main, "reset", [](auto &in, auto &out) {
+    add_macro(*this, "reset", [](auto &in, auto &out) {
 	out.push_back(Op::make_reset());
-	});*/
+      });
   }
 
+  Macro &add_macro(Exec &exe, const str &n, Macro::Imp imp) {
+    return exe.macros.emplace(std::piecewise_construct,
+			      std::forward_as_tuple(n),
+			      std::forward_as_tuple(n, imp)).first->second; 
+  }
+
+  Type &add_type(Exec &exe, const str &n) {
+    auto &res(exe.types.emplace_front(n)); 
+    put_env(exe.main.scopes.front(), n, Box(exe.meta_type, &res));
+    return res;
+  }
+
+  FuncImp &add_func(Exec &exe,
+		    const str n,
+		    const ArgTypes &args,
+		    Type &rt,
+		    FuncImp::Imp imp) {
+    auto fnd(exe.funcs.find(n));
+
+    if (fnd == exe.funcs.end()) {
+      auto &fn(exe.funcs.emplace(std::piecewise_construct,
+				  std::forward_as_tuple(n),
+				  std::forward_as_tuple(n)).first->second);
+      put_env(exe.main.scopes.front(), n, Box(exe.func_type, &fn));
+      return add_imp(fn, args, rt, imp);
+    }
+    
+    return add_imp(fnd->second, args, rt, imp);
+  }
+  
   Sym gensym(Exec &exe) {
     return exe.next_sym.fetch_add(1);
   }

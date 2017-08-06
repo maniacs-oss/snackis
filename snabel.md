@@ -43,7 +43,7 @@ static void add_i64(Scope &scp, FuncImp &fn, const Args &args) {
 }
 
 Exec exe;
-add_func(exe.main, "+", {&i64_type, &i64_type}, i64_type, add_i64);
+add_func(exe, "+", {&i64_type, &i64_type}, i64_type, add_i64);
 ```
 
 ### Lambdas
@@ -86,8 +86,8 @@ Adding custom types from C++ is as easy as this:
 using namespace snabel;
 
 Exec exe;
-Type &str_type(add_type(exe.main, "Str"));
-str_type.fmt = [](auto &v) { return fmt("\"%0\"", get<std::string>(v)); };
+Type &str_type(add_type(exe, "Str"));
+str_type.fmt = [](auto &v) { return fmt("\"%0\"", get<str>(v)); };
 ```
 
 ### Jumps

@@ -17,13 +17,13 @@ namespace snabel {
   static void func_tests() {
     TRY(try_test);
     Exec exe;
+    auto &f(add_func(exe, "test-func", {&exe.i64_type}, exe.i64_type, test_func));
     Coro &cor(exe.main);
-    auto &f(add_func(cor, "test-func", {&exe.i64_type}, exe.i64_type, test_func));
     cor.ops.push_back(Op::make_push(Box(exe.i64_type, int64_t(7))));
     cor.ops.push_back(Op::make_func(f.func));
     run(exe.main);
 
-    CHECK(get<int64_t>(pop(cor)) == 35, _);
+    CHECK(get<int64_t>(pop(exe.main)) == 35, _);
   }
 
   static void parse_lines_tests() {

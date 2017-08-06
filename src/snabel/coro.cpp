@@ -28,30 +28,6 @@ namespace snabel {
     return cor.stacks.back();
   }
 
-  Type &add_type(Coro &cor, const str &n) {
-    Type &res(cor.types.emplace_front(n)); 
-    put_env(cor.scopes.front(), n, Box(cor.exec.meta_type, &res));
-    return res;
-  }
-
-  FuncImp &add_func(Coro &cor,
-		    const str n,
-		    const ArgTypes &args,
-		    Type &rt,
-		    FuncImp::Imp imp) {
-    auto fnd(cor.funcs.find(n));
-
-    if (fnd == cor.funcs.end()) {
-      auto &fn(cor.funcs.emplace(std::piecewise_construct,
-				  std::forward_as_tuple(n),
-				  std::forward_as_tuple(n)).first->second);
-      put_env(cor.scopes.front(), n, Box(cor.exec.func_type, &fn));
-      return add_imp(fn, args, rt, imp);
-    }
-    
-    return add_imp(fnd->second, args, rt, imp);
-  }
-
   void push(Coro &cor, const Box &val) {
     curr_stack(cor).push_back(val);
   }
