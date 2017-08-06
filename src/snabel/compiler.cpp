@@ -20,8 +20,8 @@ namespace snabel {
       out.push_back(Op::make_ungroup());
     } else if (tok.text[0] == '@') {
       out.push_back(Op::make_label(tok.text.substr(1)));
-    } else if (tok.text[0] == '!') {
-      out.push_back(Op::make_jump(tok.text.substr(1)));
+    } else if (tok.text.back() == '!') {
+      out.push_back(Op::make_jump(tok.text.substr(0, tok.text.size()-1)));
     } else if (tok.text[0] == '"') {
       out.push_back(Op::make_push(Box(exe.str_type,
 				      tok.text.substr(1, tok.text.size()-2))));

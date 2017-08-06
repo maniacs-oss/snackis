@@ -27,6 +27,25 @@ Snabel owes much of its semantics to the stack. Literals, identifiers and result
 42::I64
 ```
 
+### Functions
+Snabel derives much of its type-checking powers from functions. Each named function represents a set of implementations. Each implementation is required to declare its parameter- and result types. Implementations are matched in reverse declared order when resolving function calls, which allows overriding existing functionality at any point.
+
+Adding functions from C++ is as easy as this:
+
+```
+using namespace snabel;
+
+static void add_i64(Scope &scp, FuncImp &fn, const Args &args) {
+  Exec &exe(scp.coro.exec);
+  int64_t res(0);
+  for (auto &a: args) { res += get<int64_t>(a); }
+  push(scp.coro, exe.i64_type, res);
+}
+
+Exec exe;
+add_func(exe.main, "+", {&i64_type, &i64_type}, i64_type, add_i64);
+```
+
 ### Lambdas
 Using braces instead of parentheses pushes a pointer to the compiled expression on the stack, ```begin```/```end``` may be used to perform the same operation over multiple lines.
 
@@ -61,11 +80,24 @@ Snabel provides static types; and will check and optimize code based on types of
 I64::Type
 ```
 
+Adding custom types from C++ is as easy as this:
+
+```
+using namespace snabel;
+
+Exec exe;
+Type &str_type(add_type(exe.main, "Str"));
+str_type.fmt = [](auto &v) { return fmt("\"%0\"", get<str>(v)); };
+```
+
 ### Jumps
 Snabel's control structures are based on the idea of jumping to offsets within the instruction stream, direct support for declaring and jumping to labels is provided through reader macros '@' and '!'.
 
 ```
-> 1 2 !skip 3 @skip +
+> 1 2 3 +
+5::I64
+
+> 1 2 skip! 3 @skip +
 3::I64
 ```
 

@@ -125,7 +125,7 @@ namespace snabel {
   static void jump_tests() {
     TRY(try_test);    
     Exec exe;
-    compile(exe.main, "1 2 !exit 3 @exit +");
+    compile(exe.main, "1 2 exit! 3 @exit +");
     run(exe.main);
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
   }

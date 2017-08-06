@@ -76,17 +76,10 @@ namespace snabel {
     undef_type.fmt = [](auto &v) { return "n/a"; };
     void_type.fmt = [](auto &v) { return "n/a"; };
 
-    Func &add(add_func(main, "+"));
-    add_imp(add, {&i64_type, &i64_type}, i64_type, add_i64);
-
-    Func &sub(add_func(main, "-"));
-    add_imp(sub, {&i64_type, &i64_type}, i64_type, sub_i64);
-    
-    Func &mul(add_func(main, "*"));
-    add_imp(mul, {&i64_type, &i64_type}, i64_type, mul_i64);
-
-    Func &mod(add_func(main, "%"));
-    add_imp(mod, {&i64_type, &i64_type}, i64_type, mod_i64);
+    add_func(main, "+", {&i64_type, &i64_type}, i64_type, add_i64);
+    add_func(main, "-", {&i64_type, &i64_type}, i64_type, sub_i64);
+    add_func(main, "*", {&i64_type, &i64_type}, i64_type, mul_i64);
+    add_func(main, "%", {&i64_type, &i64_type}, i64_type, mod_i64);
 
     /*add_macro(main, "reset", [](auto &in, auto &out) {
 	out.push_back(Op::make_reset());

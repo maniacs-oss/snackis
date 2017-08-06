@@ -16,7 +16,7 @@ namespace snabel {
     OpSeq ops;
     int64_t pc;
     std::deque<Type> types;
-    std::deque<Func> funcs;
+    std::map<str, Func> funcs;
     std::deque<Scope> scopes;
     std::deque<Stack> stacks;
     std::deque<int64_t> returns;
@@ -31,7 +31,11 @@ namespace snabel {
   Stack &curr_stack(Coro &cor);
 
   Type &add_type(Coro &cor, const str &n);
-  Func &add_func(Coro &cor, const str &n);
+  FuncImp &add_func(Coro &cor,
+		    const str n,
+		    const ArgTypes &args,
+		    Type &rt,
+		    FuncImp::Imp imp);
   
   void push(Coro &cor, const Box &val);
   void push(Coro &cor, Type &typ, const Val &val);
