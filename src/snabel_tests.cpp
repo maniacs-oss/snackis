@@ -132,6 +132,9 @@ namespace snabel {
     compile(exe.main, "42 reset");
     run(exe.main);
     CHECK(!peek(exe.main), _);
+
+    compile(exe.main, "1 2 3 drop drop");
+    CHECK(exe.main.ops.size() == 1, _);
   }
 
   static void scope_tests() {
@@ -159,13 +162,6 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
   }
 
-  static void drop_tests() {
-    TRY(try_test);    
-    Exec exe;
-    compile(exe.main, "1 2 3 drop drop");
-    CHECK(exe.main.ops.size() == 1, _);
-  }
-
   static void lambda_tests() {
     TRY(try_test);    
     Exec exe;
@@ -182,6 +178,19 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
+  static void when_tests() {
+    TRY(try_test);    
+    Exec exe;
+    
+    compile(exe.main, "7 't {42} when");
+    run(exe.main);
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+
+    compile(exe.main, "7 'f {42} when");
+    run(exe.main);
+    CHECK(get<int64_t>(pop(exe.main)) == 7, _);
+  }
+
   void all_tests() {
     func_tests();
     parse_tests();
@@ -191,5 +200,6 @@ namespace snabel {
     scope_tests();
     jump_tests();
     lambda_tests();
+    when_tests();
   }
 }
