@@ -105,7 +105,7 @@ namespace snabel {
       out.push_back(Op::make_call());
       });
 
-    add_macro(*this, "let", [this](auto pos, auto &in, auto &out) {
+    add_macro(*this, "let:", [this](auto pos, auto &in, auto &out) {
 	if (in.size() < 2) {
 	  ERROR(Snabel, fmt("Malformed binding on row %0, col %1",
 			    pos.row, pos.col));

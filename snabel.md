@@ -65,10 +65,10 @@ n/a::Lambda
 ```
 
 ### Bindings
-Snabel supports named bindings using the ```let```-keyword. Bound names are prefixed with ```$```, lexically scoped and never change their value once bound in a specific scope. Semicolons may be used to separate bindings from surrounding code within a line.
+Snabel supports named bindings using the ```let:```-macro. Bound names are prefixed with ```$```, lexically scoped and never change their value once bound in a specific scope. Semicolons may be used to separate bindings from surrounding code within a line.
 
 ```
-> let fn {7 +}; 35 $fn call
+> let: fn {7 +}; 35 $fn call
 42::I64
 ```
 

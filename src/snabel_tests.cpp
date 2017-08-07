@@ -118,7 +118,7 @@ namespace snabel {
   static void compile_tests() {
     TRY(try_test);
     Exec exe;
-    compile(exe.main, "let foo 35\nlet bar $foo 7 +");
+    compile(exe.main, "let: foo 35\nlet: bar $foo 7 +");
     run(exe.main);
 
     Scope &scp(curr_scope(exe.main));
@@ -138,13 +138,13 @@ namespace snabel {
     TRY(try_test);    
     Exec exe;
     
-    compile(exe.main, "(let foo 21;$foo)");
+    compile(exe.main, "(let: foo 21;$foo)");
     run(exe.main);
     Scope &scp1(curr_scope(exe.main));
     CHECK(get<int64_t>(pop(scp1.coro)) == 21, _);
     CHECK(!find_env(scp1, "foo"), _);
 
-    compile(exe.main, "begin\nlet bar 42\n$bar\nend call");
+    compile(exe.main, "begin\nlet: bar 42\n$bar\nend call");
     run(exe.main);
     Scope &scp2(curr_scope(exe.main));
     CHECK(get<int64_t>(pop(scp2.coro)) == 42, _);
@@ -177,7 +177,7 @@ namespace snabel {
     run(exe.main);
     CHECK(get<int64_t>(pop(exe.main)) == 5, _);
 
-    compile(exe.main, "let fn {7 +}; 35 $fn call");
+    compile(exe.main, "let: fn {7 +}; 35 $fn call");
     run(exe.main);
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
