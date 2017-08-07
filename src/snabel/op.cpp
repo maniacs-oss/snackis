@@ -233,14 +233,15 @@ namespace snabel {
     };
 
     op.compile = [tag, lbl](auto &op, auto &scp, auto &out) {            
-      curr_stack(scp.coro).clear();
       auto fnd(scp.labels.find(tag));
 
       if (fnd == scp.labels.end() ||
 	  (lbl && fnd->second.pc == lbl->pc)) {
+	curr_stack(scp.coro).clear();
 	return false;
       }
 
+      jump(scp.coro, fnd->second);
       out.push_back(Op::make_jump(tag, fnd->second));
       return true;
     };

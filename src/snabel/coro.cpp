@@ -98,7 +98,7 @@ namespace snabel {
   
   void jump(Coro &cor, const Label &lbl) {
     reset_scope(cor, lbl.depth);
-    cor.pc = lbl.pc;    
+    cor.pc = lbl.pc;
   }
 
   void rewind(Coro &cor) {
@@ -132,12 +132,24 @@ namespace snabel {
       bool done(true);
       push_env(curr_scope(cor));
       cor.pc = 0;
-      
+      int64_t wait_pc(-1);
+	
       for (auto &op: cor.ops) {
-	if (compile(op, curr_scope(cor), out)) {
+	auto prev_pc(cor.pc);
+
+	if (wait_pc == -1 || cor.pc == wait_pc) {
+	  wait_pc = -1;
+	  if (compile(op, curr_scope(cor), out)) { done = false; }
+	} else {
+	  out.push_back(op);
 	  done = false;
 	}
-	
+
+	if (cor.pc != prev_pc) {
+	  wait_pc = cor.pc;
+	  cor.pc = prev_pc;
+	}
+	    
 	cor.pc++;
       }
 
