@@ -16,10 +16,9 @@ namespace snabel {
   struct Scope;
   struct Op;
 
-  enum OpCode { OP_BACKUP, OP_CALL, OP_DROP, OP_FENCE, OP_FUNC,
+  enum OpCode { OP_BACKUP, OP_BRANCH, OP_CALL, OP_DROP, OP_FENCE, OP_FUNC,
 	        OP_GET, OP_GROUP, OP_JUMP, OP_LABEL, OP_LAMBDA, OP_LET,
-		OP_PUSH, OP_RESET, OP_RESTORE, OP_RETURN, OP_UNGROUP, OP_UNLAMBDA,
-                OP_WHEN };
+		OP_PUSH, OP_RESET, OP_RESTORE, OP_RETURN, OP_UNGROUP, OP_UNLAMBDA };
 
   using OpSeq = std::deque<Op>;
 
@@ -31,6 +30,7 @@ namespace snabel {
     func<void (const Op &op, Scope &)> run;
     
     static Op make_backup(bool copy);
+    static Op make_branch(opt<Label> lbl=nullopt);
     static Op make_call(opt<Label> lbl=nullopt);
     static Op make_drop(size_t cnt=1);
     static Op make_fence();    
@@ -47,7 +47,6 @@ namespace snabel {
     static Op make_return();
     static Op make_ungroup();
     static Op make_unlambda();
-    static Op make_when(opt<Label> lbl=nullopt);
 
     Op(OpCode cod);
   };

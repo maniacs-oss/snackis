@@ -21,6 +21,43 @@ namespace snabel {
     return op;
   }
 
+  Op Op::make_branch(opt<Label> lbl) {
+    Op op(OP_BRANCH);
+    
+    op.compile = [lbl](auto &op, auto &scp, auto &out) mutable {
+      Coro &cor(scp.coro);
+      auto _lbl(peek(cor));
+      if (!_lbl) { return false; }
+      
+      pop(cor);			  
+      auto fnd(scp.labels.find(get<str>(*_lbl)));
+      CHECK(fnd != scp.labels.end(), _);
+      auto cnd(peek(cor));
+      if (cnd) { pop(cor); }
+
+      if (cnd && &cnd->type == &cor.exec.bool_type) {
+	if (get<bool>(*cnd)){
+	  out.push_back(Op::make_call(fnd->second));
+	  return true;
+	}
+      } else if (!lbl || lbl->pc != fnd->second.pc) {
+	out.push_back(Op::make_branch(fnd->second));
+	return true;	
+      }
+      
+      return false;
+    };
+
+    op.run = [lbl](auto &op, auto &scp) {
+      Coro &cor(scp.coro);
+      auto _lbl(pop(cor));
+      auto cnd(pop(cor));
+      if (get<bool>(cnd)) { call(cor, *lbl); }
+    };
+    
+    return op;
+  }
+  
   Op Op::make_call(opt<Label> lbl) {
     Op op(OP_CALL);
 
@@ -458,43 +495,6 @@ namespace snabel {
     return op;
   }
 
-  Op Op::make_when(opt<Label> lbl) {
-    Op op(OP_WHEN);
-    
-    op.compile = [lbl](auto &op, auto &scp, auto &out) mutable {
-      Coro &cor(scp.coro);
-      auto _lbl(peek(cor));
-      if (!_lbl) { return false; }
-      
-      pop(cor);			  
-      auto fnd(scp.labels.find(get<str>(*_lbl)));
-      CHECK(fnd != scp.labels.end(), _);
-      auto cnd(peek(cor));
-      if (cnd) { pop(cor); }
-
-      if (cnd && &cnd->type == &cor.exec.bool_type) {
-	if (get<bool>(*cnd)){
-	  out.push_back(Op::make_call(fnd->second));
-	  return true;
-	}
-      } else if (!lbl || lbl->pc != fnd->second.pc) {
-	out.push_back(Op::make_when(fnd->second));
-	return true;	
-      }
-      
-      return false;
-    };
-
-    op.run = [lbl](auto &op, auto &scp) {
-      Coro &cor(scp.coro);
-      auto _lbl(pop(cor));
-      auto cnd(pop(cor));
-      if (get<bool>(cnd)) { call(cor, *lbl); }
-    };
-    
-    return op;
-  }
-
   static str def_info(const Op &op, Scope &scp) { return ""; }
 
   static bool def_compile(const Op &op, Scope &scp, OpSeq &out) {
@@ -512,41 +512,41 @@ namespace snabel {
   str name(const Op &op) {
     switch (op.code){
     case OP_BACKUP:
-      return "Backup";
+      return "backup";
+    case OP_BRANCH:
+      return "branch";
     case OP_CALL:
-      return "Call";
+      return "call";
     case OP_DROP:
-      return "Drop";
+      return "drop";
     case OP_FENCE:
-      return "Fence";
+      return "fence";
     case OP_FUNC:
-      return "Func";
+      return "func";
     case OP_GET:
-      return "Get";
+      return "get";
     case OP_GROUP:
-      return "Group";
+      return "group";
     case OP_JUMP:
-      return "Jump";
+      return "jump";
     case OP_LABEL:
-      return "Label";
+      return "label";
     case OP_LAMBDA:
-      return "Lambda";
+      return "lambda";
     case OP_LET:
-      return "Let";
+      return "let";
     case OP_PUSH:
-      return "Push";
+      return "push";
     case OP_RESET:
-      return "Reset";
+      return "reset";
     case OP_RESTORE:
-      return "Restore";
+      return "restore";
     case OP_RETURN:
-      return "Return";
+      return "return";
     case OP_UNGROUP:
-      return "Ungroup";
+      return "ungroup";
     case OP_UNLAMBDA:
-      return "Unlambda";
-    case OP_WHEN:
-      return "When";
+      return "unlambda";
     };
 
     ERROR(Snabel, fmt("Invalid op code: %0", op.code));

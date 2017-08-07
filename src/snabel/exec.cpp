@@ -139,7 +139,7 @@ namespace snabel {
       });
 
     add_macro(*this, "when", [this](auto pos, auto &in, auto &out) {
-	out.push_back(Op::make_when());
+	out.push_back(Op::make_branch());
       });
   }
 
