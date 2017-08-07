@@ -57,8 +57,8 @@ namespace snabel {
 
   Exec::Exec():
     main(fibers.emplace(std::piecewise_construct,
-			std::forward_as_tuple(null_uid),
-			std::forward_as_tuple(*this, null_uid)).first->second),
+			std::forward_as_tuple(0),
+			std::forward_as_tuple(*this, 0)).first->second),
     meta_type((add_type(*this, "Type"))),
     func_type((add_type(*this, "Func"))),
     i64_type((add_type(*this, "I64"))),

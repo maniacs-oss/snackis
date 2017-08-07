@@ -2,7 +2,7 @@
 #define SNABEL_FIBER_HPP
 
 #include "snabel/coro.hpp"
-#include "snackis/core/uid.hpp"
+#include "snabel/sym.hpp"
 
 namespace snabel {
   using namespace snackis;
@@ -10,11 +10,9 @@ namespace snabel {
   struct Exec;
   
   struct Fiber: Coro {
-    UId id;
+    const Sym id;
     
-    Fiber(Exec &exe, UId id):
-      Coro(exe), id(id)
-    { }
+    Fiber(Exec &exe, Sym id);
   };
 }
 

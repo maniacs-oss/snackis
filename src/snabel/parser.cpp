@@ -72,7 +72,7 @@ namespace snabel {
 	j++;
       }
 
-      size_t cp(j);
+      const size_t cp(j);
 
       switch(c) {	
       case '(':
