@@ -16,11 +16,6 @@ namespace snabel {
       str e(tok.text.substr(1, tok.text.size()-2));
       compile(exe, lnr, parse_expr(e), out);
       out.push_back(Op::make_unlambda());
-    } else if (tok.text.front() == '(') {
-      out.push_back(Op::make_group(false));
-      str e(tok.text.substr(1, tok.text.size()-2));
-      compile(exe, lnr, parse_expr(e), out);
-      out.push_back(Op::make_ungroup());
     } else if (tok.text.front() == '@') {
       out.push_back(Op::make_label(tok.text.substr(1)));
     } else if (tok.text.back() == '!') {

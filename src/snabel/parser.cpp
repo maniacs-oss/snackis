@@ -40,7 +40,7 @@ namespace snabel {
     
     for (size_t i(1); i < in.size(); i++) {
       auto &c(in[i]);
-
+      
       if (c == '"') {
 	if (i == 0 || in[i-1] != '\\') { quoted = !quoted; }
       } else if (c == fst) {
@@ -60,53 +60,66 @@ namespace snabel {
     TokSeq out;
     
     for (size_t j(0); j < in.size(); j++) {
-      auto c(in[j]);
+      char c(in[j]);
+
+      while (quoted && c != '"') {
+	j++;
+	c = in[j];
+      }
+
+      if (c == '"') {
+	if (j == 0 || in[j-1] != '\\') { quoted = !quoted; }
+	j++;
+      }
+
+      size_t cp(j);
 
       switch(c) {	
-      case '"':
-	if (j == 0 || in[j-1] != '\\') { quoted = !quoted; }
-	if (quoted) { break; }
-	j++;
+      case '(':
+      case ')':
+      case ';':
       case '\\':
       case '{':
-      case '(':
+      case '}':
+      case '"':
       case '\n':
-      case ';':
       case ' ':
-	if (j > i) {
-	  str s(trim(in.substr(i, j-i)));
-	  if (!s.empty()) { out.emplace_back(s, i); }
+	if (!quoted && j > i) {
+	  if (in[i] == '(' || in[i] == ')' || in[i] == ';') { i++; }
 	  
-	  while (j < in.size()-2 && (c == '\\' || isspace(c))) {
+	  const str s(trim(in.substr(i, j-i)));
+	  if (!s.empty()) { out.emplace_back(s, i); }
+
+	  while (j < in.size()-1) {
+	    auto sc(in[j+1]);
+	    if (!isspace(sc) && sc != '\\') { break; }
 	    j++;
-	    c = in[j];
 	  }
 	  
 	  i = j;
 	}
-	
-	break;
       }
 
-      if (j == in.size()-1) {
+      if (c == '(' || c == ')' || c == ';') {
+	out.emplace_back(in.substr(cp, 1), cp);
+      }
+
+      if (i < j && j == in.size()-1) {
 	str s(trim(in.substr(i)));
 	if (!s.empty()) { out.emplace_back(s, i); }
-      } else if (c == '{' || c == '(') {
+      } else if (c == '{' && !quoted) {
 	size_t k(j);
 	str rest(in.substr(k));
-	k = parse_pair(rest, c, (c == '(') ? ')' : '}');
+	k = parse_pair(rest, c, '}');
 
 	if (k == str::npos) {
-	  ERROR(Snabel, fmt("Unbalanced %0", c));
+	  ERROR(Snabel, fmt("Unbalanced braces"));
 	  return out;
 	}
 
 	out.emplace_back(rest.substr(0, k+1), j);
-	j += k+1;
-	i = j;
-      } else if (c == ';') {
-	out.emplace_back(";", j);
-	i++;
+	j += k;
+	i = j+1;
       }
     }
 

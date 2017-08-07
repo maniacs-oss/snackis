@@ -48,10 +48,33 @@ namespace snabel {
     CHECK(ts[1].text == "bar", _);
   }
 
+  static void parse_semicolon_tests() {
+    TRY(try_test);    
+    auto ts(parse_expr(";foo; bar baz;"));
+    CHECK(ts.size() == 6, _);
+    CHECK(ts[0].text == ";", _);
+    CHECK(ts[1].text == "foo", _);
+    CHECK(ts[2].text == ";", _);
+    CHECK(ts[3].text == "bar", _);
+    CHECK(ts[4].text == "baz", _);
+    CHECK(ts[5].text == ";", _);
+  }
+
+  static void parse_braces_tests() {
+    TRY(try_test);    
+    auto ts(parse_expr("{ foo } {}; bar"));
+    CHECK(ts.size() == 4, _);
+    CHECK(ts[0].text == "{ foo }", _);
+    CHECK(ts[1].text == "{}", _);
+    CHECK(ts[2].text == ";", _);
+    CHECK(ts[3].text == "bar", _);
+  }
+
   static void parse_string_tests() {
-    auto ts(parse_expr("\"foo\" 1 +"));
+    auto ts(parse_expr("\"foo \" 1 +"));
+
     CHECK(ts.size() == 3, _);
-    CHECK(ts[0].text == "\"foo\"", _);
+    CHECK(ts[0].text == "\"foo \"", _);
     CHECK(ts[1].text == "1", _);
     CHECK(ts[2].text == "+", _);
 
@@ -65,21 +88,30 @@ namespace snabel {
   static void parse_tests() {
     parse_lines_tests();
     parse_backslash_tests();
+    parse_semicolon_tests();
+    parse_braces_tests();
     parse_string_tests();
   }
 
   static void parens_tests() {
-    TRY(try_test);
-    
+    TRY(try_test);    
     auto ts(parse_expr("foo (bar (35 7)) baz"));
-    CHECK(ts.size() == 3, _);
+    
+    CHECK(ts.size() == 9, _);
     CHECK(ts[0].text == "foo", _);
-    CHECK(ts[1].text == "(bar (35 7))", _);
-    CHECK(ts[2].text == "baz", _);
+    CHECK(ts[1].text == "(", _);
+    CHECK(ts[2].text == "bar", _);
+    CHECK(ts[3].text == "(", _);
+    CHECK(ts[4].text == "35", _);
+    CHECK(ts[5].text == "7", _);
+    CHECK(ts[6].text == ")", _);
+    CHECK(ts[7].text == ")", _);
+    CHECK(ts[8].text == "baz", _);
 
     Exec exe;
     compile(exe.main, "(1 1 +) (2 2 +) *");
     run(exe.main);
+    
     CHECK(get<int64_t>(pop(exe.main)) == 8, _);    
   }
 
