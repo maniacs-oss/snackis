@@ -3,7 +3,7 @@
 #include <cstdint>
 
 namespace snabel {
-    using Sym = uint64_t;
+  using Sym = uint64_t;
 }
 
 #endif

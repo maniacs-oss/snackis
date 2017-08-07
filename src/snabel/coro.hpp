@@ -39,9 +39,12 @@ namespace snabel {
   
   Scope &begin_scope(Coro &cor, bool copy_stack);
   void end_scope(Coro &cor);
+  void reset_scope(Coro &cor, size_t depth);
 
+  void call(Coro &cor, const Label &lbl);
   void jump(Coro &cor, const Label &lbl);
   void rewind(Coro &cor);  
+
   bool compile(Coro &cor, const str &in);
   void run(Coro &cor); 
 }

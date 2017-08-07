@@ -18,7 +18,7 @@ namespace snabel {
     bool operator ()(const Box &box) const;
   };
 
-  using Val = std::variant<const Undef, int64_t, str, Func *, Type *>;
+  using Val = std::variant<const Undef, bool, int64_t, str, Func *, Type *>;
   
   struct Box {
     Type &type;

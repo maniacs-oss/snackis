@@ -63,7 +63,7 @@ namespace snabel {
 	}      
       }
 
-      if (lbl) { jump(cor, *lbl); }
+      if (lbl) { call(cor, *lbl); }
     };
     
     return op;    
@@ -232,11 +232,15 @@ namespace snabel {
       return fmt("%0 (%1)", tag, lbl ? to_str(lbl->pc) : "?");
     };
 
-    op.compile = [tag, lbl](auto &op, auto &scp, auto &out) {      
+    op.compile = [tag, lbl](auto &op, auto &scp, auto &out) {            
       curr_stack(scp.coro).clear();
       auto fnd(scp.labels.find(tag));
-      if (fnd == scp.labels.end()) { return false; }
-      if (lbl && fnd->second.pc == lbl->pc) { return false; }
+
+      if (fnd == scp.labels.end() ||
+	  (lbl && fnd->second.pc == lbl->pc)) {
+	return false;
+      }
+
       out.push_back(Op::make_jump(tag, fnd->second));
       return true;
     };
@@ -452,7 +456,44 @@ namespace snabel {
     
     return op;
   }
-  
+
+  Op Op::make_when(opt<Label> lbl) {
+    Op op(OP_WHEN);
+    
+    op.compile = [lbl](auto &op, auto &scp, auto &out) mutable {
+      Coro &cor(scp.coro);
+      auto _lbl(peek(cor));
+      if (!_lbl) { return false; }
+      
+      pop(cor);			  
+      auto fnd(scp.labels.find(get<str>(*_lbl)));
+      CHECK(fnd != scp.labels.end(), _);
+      auto cnd(peek(cor));
+      if (cnd) { pop(cor); }
+
+      if (cnd && &cnd->type == &cor.exec.bool_type) {
+	if (get<bool>(*cnd)){
+	  out.push_back(Op::make_call(fnd->second));
+	  return true;
+	}
+      } else if (!lbl || lbl->pc != fnd->second.pc) {
+	out.push_back(Op::make_when(fnd->second));
+	return true;	
+      }
+      
+      return false;
+    };
+
+    op.run = [lbl](auto &op, auto &scp) {
+      Coro &cor(scp.coro);
+      auto _lbl(pop(cor));
+      auto cnd(pop(cor));
+      if (get<bool>(cnd)) { call(cor, *lbl); }
+    };
+    
+    return op;
+  }
+
   static str def_info(const Op &op, Scope &scp) { return ""; }
 
   static bool def_compile(const Op &op, Scope &scp, OpSeq &out) {
@@ -503,6 +544,8 @@ namespace snabel {
       return "Ungroup";
     case OP_UNLAMBDA:
       return "Unlambda";
+    case OP_WHEN:
+      return "When";
     };
 
     ERROR(Snabel, fmt("Invalid op code: %0", op.code));

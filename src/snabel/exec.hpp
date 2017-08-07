@@ -18,8 +18,8 @@ namespace snabel {
     std::map<str, Func> funcs;
 
     Fiber &main;
-    Type &meta_type,
-      &func_type, &i64_type, &lambda_type, &str_type,
+    Type &meta_type, &any_type,
+      &bool_type, &func_type, &i64_type, &lambda_type, &str_type,
       &undef_type, &void_type;
     std::atomic<Sym> next_sym;
     

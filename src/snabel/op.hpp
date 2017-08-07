@@ -18,7 +18,8 @@ namespace snabel {
 
   enum OpCode { OP_BACKUP, OP_CALL, OP_DROP, OP_FENCE, OP_FUNC,
 	        OP_GET, OP_GROUP, OP_JUMP, OP_LABEL, OP_LAMBDA, OP_LET,
-		OP_PUSH, OP_RESET, OP_RESTORE, OP_RETURN, OP_UNGROUP, OP_UNLAMBDA};
+		OP_PUSH, OP_RESET, OP_RESTORE, OP_RETURN, OP_UNGROUP, OP_UNLAMBDA,
+                OP_WHEN };
 
   using OpSeq = std::deque<Op>;
 
@@ -46,6 +47,7 @@ namespace snabel {
     static Op make_return();
     static Op make_ungroup();
     static Op make_unlambda();
+    static Op make_when(opt<Label> lbl=nullopt);
 
     Op(OpCode cod);
   };

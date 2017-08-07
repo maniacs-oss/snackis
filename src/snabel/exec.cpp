@@ -5,7 +5,7 @@
 #include "snabel/type.hpp"
 
 namespace snabel {
-  static void add_i64(Scope &scp, FuncImp &fn, const Args &args) {
+  static void add_i64_imp(Scope &scp, FuncImp &fn, const Args &args) {
     Exec &exe(scp.coro.exec);
     int64_t res(0);
 
@@ -17,7 +17,7 @@ namespace snabel {
     push(scp.coro, exe.i64_type, res);
   }
 
-  static void sub_i64(Scope &scp, FuncImp &fn, const Args &args) {
+  static void sub_i64_imp(Scope &scp, FuncImp &fn, const Args &args) {
     Exec &exe(scp.coro.exec);
     int64_t res(get<int64_t>(args[0]));
 
@@ -32,7 +32,7 @@ namespace snabel {
     push(scp.coro, exe.i64_type, res);
   }
 
-  static void mul_i64(Scope &scp, FuncImp &fn, const Args &args) {
+  static void mul_i64_imp(Scope &scp, FuncImp &fn, const Args &args) {
     Exec &exe(scp.coro.exec);
     int64_t res(1);
 
@@ -44,7 +44,7 @@ namespace snabel {
     push(scp.coro, exe.i64_type, res);
   }
 
-  static void mod_i64(Scope &scp, FuncImp &fn, const Args &args) {
+  static void mod_i64_imp(Scope &scp, FuncImp &fn, const Args &args) {
     Exec &exe(scp.coro.exec);
     int64_t res(get<int64_t>(args[0]));
     for (auto i=std::next(args.begin()); i != args.end(); i++) {
@@ -60,6 +60,8 @@ namespace snabel {
 			std::forward_as_tuple(0),
 			std::forward_as_tuple(*this, 0)).first->second),
     meta_type((add_type(*this, "Type"))),
+    any_type((add_type(*this, "Any"))),
+    bool_type((add_type(*this, "Bool"))),
     func_type((add_type(*this, "Func"))),
     i64_type((add_type(*this, "I64"))),
     lambda_type((add_type(*this, "Lambda"))),
@@ -69,17 +71,22 @@ namespace snabel {
     next_sym(1)
   {
     meta_type.fmt = [](auto &v) { return get<Type *>(v)->name; };
+    any_type.fmt = [](auto &v) { return "n/a"; };
+    bool_type.fmt = [](auto &v) { return get<bool>(v) ? "'t" : "'f"; };
+    put_env(main.scopes.front(), "'t", Box(bool_type, true));
+    put_env(main.scopes.front(), "'f", Box(bool_type, false));
+
     func_type.fmt = [](auto &v) { return fmt_arg(size_t(get<Func *>(v))); };
     i64_type.fmt = [](auto &v) { return fmt_arg(get<int64_t>(v)); };
-    lambda_type.fmt = [](auto &v) { return "n/a"; };
+    lambda_type.fmt = [](auto &v) { return get<str>(v); };
     str_type.fmt = [](auto &v) { return fmt("\"%0\"", get<str>(v)); };
     undef_type.fmt = [](auto &v) { return "n/a"; };
     void_type.fmt = [](auto &v) { return "n/a"; };
 
-    add_func(*this, "+", {&i64_type, &i64_type}, i64_type, add_i64);
-    add_func(*this, "-", {&i64_type, &i64_type}, i64_type, sub_i64);
-    add_func(*this, "*", {&i64_type, &i64_type}, i64_type, mul_i64);
-    add_func(*this, "%", {&i64_type, &i64_type}, i64_type, mod_i64);
+    add_func(*this, "+", {&i64_type, &i64_type}, i64_type, add_i64_imp);
+    add_func(*this, "-", {&i64_type, &i64_type}, i64_type, sub_i64_imp);
+    add_func(*this, "*", {&i64_type, &i64_type}, i64_type, mul_i64_imp);
+    add_func(*this, "%", {&i64_type, &i64_type}, i64_type, mod_i64_imp);
 
     add_macro(*this, "(", [](auto pos, auto &in, auto &out) {
 	out.push_back(Op::make_group(false));
@@ -92,7 +99,11 @@ namespace snabel {
     add_macro(*this, "begin", [](auto pos, auto &in, auto &out) {
 	out.push_back(Op::make_lambda());
       });
-    
+
+    add_macro(*this, "call", [](auto pos, auto &in, auto &out) {
+	out.push_back(Op::make_call());
+      });
+
     add_macro(*this, "drop", [](auto pos, auto &in, auto &out) {
 	out.push_back(Op::make_drop());
       });
@@ -100,10 +111,7 @@ namespace snabel {
     add_macro(*this, "end", [](auto pos, auto &in, auto &out) {
 	out.push_back(Op::make_unlambda());
       });
-    
-    add_macro(*this, "call", [](auto pos, auto &in, auto &out) {
-      out.push_back(Op::make_call());
-      });
+
 
     add_macro(*this, "let:", [this](auto pos, auto &in, auto &out) {
 	if (in.size() < 2) {
@@ -128,6 +136,10 @@ namespace snabel {
     
     add_macro(*this, "reset", [](auto pos, auto &in, auto &out) {
 	out.push_back(Op::make_reset());
+      });
+
+    add_macro(*this, "when", [this](auto pos, auto &in, auto &out) {
+	out.push_back(Op::make_when());
       });
   }
 
