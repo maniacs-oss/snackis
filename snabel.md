@@ -8,7 +8,7 @@ Just like Yoda of Star Wars-fame, and yesterdays scientific calculators; as well
 
 ```
 > 7 42 + 10 %
-9::I64
+9|I64
 ```
 
 ### Expressions
@@ -16,17 +16,17 @@ Snabel supports dividing expressions into parts using parentheses, each level st
 
 ```
 > (1 2 +) (2 2 *) +
-7::I64
+7|I64
 ```
 
 ### Conditions
 
 ```
 > 7 'f {35 +} when
-7::I64
+7|I64
 
 > 7 't {35 +} when
-42::I64
+42|I64
 ```
 
 ### Stacks
@@ -34,7 +34,7 @@ Literals, identifiers and results from function calls are pushed on the current 
 
 ```
 > 42 7 drop
-42::I64
+42|I64
 
 > 42 7 reset
 n/a
@@ -64,17 +64,17 @@ Using braces instead of parentheses pushes a pointer to the compiled expression 
 
 ```
 > {1 2 +}
-n/a::Lambda
+n/a|Lambda
 
 > {1 2 +} call
-3::I64
+3|I64
 
 > begin
     1
     2  +
     14 *
   end call
-42::I64
+42|I64
 ```
 
 ### Bindings
@@ -82,7 +82,7 @@ Snabel supports named bindings using the ```let:```-macro. Bound names are prefi
 
 ```
 > let: fn {7 +}; 35 $fn call
-42::I64
+42|I64
 ```
 
 ### Types
@@ -90,7 +90,7 @@ Snabel provides static types; and will check and optimize code based on types of
 
 ```
 > I64
-I64::Type
+I64|Type
 ```
 
 Adding custom types from C++ is as easy as this:
@@ -108,10 +108,10 @@ Snabel's control structures are based on the idea of jumping to offsets within t
 
 ```
 > 1 2 3 +
-5::I64
+5|I64
 
 > 1 2 skip! 3 @skip +
-3::I64
+3|I64
 ```
 
 ### Running the code
