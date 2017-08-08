@@ -182,11 +182,11 @@ namespace snabel {
     TRY(try_test);    
     Exec exe;
     
-    compile(exe.main, "7 't {42} when");
+    compile(exe.main, "7 't {35 +} when");
     run(exe.main);
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    compile(exe.main, "7 'f {42} when");
+    compile(exe.main, "7 'f {35 +} when");
     run(exe.main);
     CHECK(get<int64_t>(pop(exe.main)) == 7, _);
   }

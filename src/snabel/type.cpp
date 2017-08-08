@@ -14,6 +14,6 @@ namespace snabel {
   }
 
   bool isa(const Box &val, const Type &typ) {
-    return &val.type == &typ;
+    return val.type == &typ;
   }
 }

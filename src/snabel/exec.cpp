@@ -10,7 +10,7 @@ namespace snabel {
     int64_t res(0);
 
     for (auto &a: args) {
-      CHECK(&a.type == &exe.i64_type, _);
+      CHECK(a.type == &exe.i64_type, _);
       res += get<int64_t>(a);
     }
     
@@ -24,7 +24,7 @@ namespace snabel {
     if (args.size() == 1) { res = -res; }
     else {
       for (auto i=std::next(args.begin()); i != args.end(); i++) {
-	CHECK(&i->type == &exe.i64_type, _);
+	CHECK(i->type == &exe.i64_type, _);
 	res -= get<int64_t>(*i);
       }
     }
@@ -37,7 +37,7 @@ namespace snabel {
     int64_t res(1);
 
     for (auto &a: args) {
-      CHECK(&a.type == &exe.i64_type, _);
+      CHECK(a.type == &exe.i64_type, _);
       res *= get<int64_t>(a);
     }
     
@@ -48,7 +48,7 @@ namespace snabel {
     Exec &exe(scp.coro.exec);
     int64_t res(get<int64_t>(args[0]));
     for (auto i=std::next(args.begin()); i != args.end(); i++) {
-      CHECK(&i->type == &exe.i64_type, _);
+      CHECK(i->type == &exe.i64_type, _);
       res %= get<int64_t>(*i);
     }
     

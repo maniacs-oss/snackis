@@ -21,7 +21,7 @@ namespace snabel {
   using Val = std::variant<const Undef, bool, int64_t, str, Func *, Type *>;
   
   struct Box {
-    Type &type;
+    Type *type;
     Val val;
 
     Box(Type &t, const Val &v);

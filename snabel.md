@@ -19,12 +19,25 @@ Snabel supports dividing expressions into parts using parentheses, each level st
 7::I64
 ```
 
+### Conditions
+
+```
+> 7 'f {35 +} when
+7::I64
+
+> 7 't {35 +} when
+42::I64
+```
+
 ### Stacks
-Snabel owes much of its semantics to the stack. Literals, identifiers and results from function calls are pushed on the current fibers stack in order of appearance. Thanks to lexical scoping with automagic backups and restores and named bindings, keeping the stack squeaky clean is less critical in Snabel than most similar languages.
+Literals, identifiers and results from function calls are pushed on the current fibers stack in order of appearance. Thanks to lexical scoping and named bindings, keeping the stack squeaky clean is less critical in Snabel.
 
 ```
 > 42 7 drop
 42::I64
+
+> 42 7 reset
+n/a
 ```
 
 ### Functions

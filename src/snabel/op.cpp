@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 
 #include "snabel/box.hpp"
@@ -35,8 +36,10 @@ namespace snabel {
       auto cnd(peek(cor));
       if (cnd) { pop(cor); }
 
-      if (cnd && &cnd->type == &cor.exec.bool_type) {
+      if (cnd && cnd->type == &cor.exec.bool_type) {
 	if (get<bool>(*cnd)){
+	  out.push_back(Op::make_swap());
+	  out.push_back(Op::make_drop(1));
 	  out.push_back(Op::make_call(fnd->second));
 	  return true;
 	}
@@ -71,7 +74,7 @@ namespace snabel {
       DEFER({ curr_stack(cor).clear(); });
       auto fn(peek(cor));
       
-      if (fn && &fn->type == &exe.lambda_type) {
+      if (fn && fn->type == &exe.lambda_type) {
 	auto fnd(scp.labels.find(get<str>(*fn)));
 	
 	if (fnd != scp.labels.end()) {
@@ -214,15 +217,15 @@ namespace snabel {
 	  return false;
 	}
 
-	if (&fnd->type == &scp.coro.exec.func_type) {
+	if (fnd->type == &scp.coro.exec.func_type) {
 	  Func &fn(*get<Func *>(*fnd));
 	  out.push_back(Op::make_func(fn));
 	  curr_stack(scp.coro).clear();
 	  return true;
 	}
 
-	if (&fnd->type != &scp.coro.exec.undef_type &&
-	    &fnd->type != &scp.coro.exec.void_type) {
+	if (fnd->type != &scp.coro.exec.undef_type &&
+	    fnd->type != &scp.coro.exec.void_type) {
 	  push(scp.coro, *fnd);
 	  out.push_back(Op::make_push(*fnd));
 	  return true;
@@ -358,8 +361,8 @@ namespace snabel {
       auto fnd(find_env(scp, id));
       auto &exe(scp.coro.exec);
       
-      if (fnd && &fnd->type != &exe.undef_type) {
-	if (&fnd->type == &exe.void_type) {
+      if (fnd && fnd->type != &exe.undef_type) {
+	if (fnd->type == &exe.void_type) {
 	  if (get<int64_t>(*fnd) != prev_pc) {
 	    ERROR(Snabel, fmt("Duplicate binding: %0", id));
 	  }
@@ -456,6 +459,33 @@ namespace snabel {
     return op;
   }
 
+  Op Op::make_swap() {
+    Op op(OP_SWAP);
+
+    op.compile = [](auto &op, auto &scp, auto &out) {
+      auto &s(curr_stack(scp.coro));
+      if (s.size() > 1) { op.run(op, scp); }
+      return false;
+    };
+    
+    op.run = [](auto &op, auto &scp) {
+      auto &s(curr_stack(scp.coro));
+
+      if (s.size() > 1) {
+	auto x(s.back());
+	s.pop_back();
+	auto y(s.back());
+	s.pop_back();
+	s.push_back(x);
+	s.push_back(y);
+      } else {
+	ERROR(Snabel, fmt("Invalid swap:\n%0", s));
+      }
+    };
+    
+    return op;
+  }
+
   Op Op::make_ungroup() {
     Op op(OP_UNGROUP);
 
@@ -543,6 +573,8 @@ namespace snabel {
       return "restore";
     case OP_RETURN:
       return "return";
+    case OP_SWAP:
+      return "swap";
     case OP_UNGROUP:
       return "ungroup";
     case OP_UNLAMBDA:
