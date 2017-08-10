@@ -262,7 +262,7 @@ namespace snabel {
 	std::find_if(args.begin(), args.end(),
 		     [](auto &a){ return undef(a); }) == args.end()) {
       (*imp)(cor, args);
-      result.emplace(pop(cor));
+      result.emplace(*peek(cor));
     } else if (&imp->res_type != &cor.exec.void_type) {
       push(cor, Box(imp->res_type, undef));
     }

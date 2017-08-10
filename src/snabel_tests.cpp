@@ -154,6 +154,14 @@ namespace snabel {
     CHECK(!find_env(scp2, "bar"), _);
   }
 
+  static void let_tests() {
+    TRY(try_test);    
+    Exec exe;
+    compile(exe.main, "let: foo 35 7 +; $foo");
+    run(exe.main);
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+  }
+
   static void jump_tests() {
     TRY(try_test);    
     Exec exe;
@@ -198,6 +206,7 @@ namespace snabel {
     compile_tests();
     stack_tests();
     scope_tests();
+    let_tests();
     jump_tests();
     lambda_tests();
     when_tests();
