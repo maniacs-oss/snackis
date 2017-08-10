@@ -43,6 +43,7 @@ namespace snabel {
 		    FuncImp::Imp imp);
 
   Sym gensym(Exec &exe);
+  bool run(Exec &exe, const str &in); 
 }
 
 #endif

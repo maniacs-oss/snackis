@@ -62,6 +62,14 @@ namespace snabel {
     push(scp.coro, lst);    
   }
 
+  static void list_reverse_imp(Scope &scp, FuncImp &fn, const Args &args) {
+    auto &in_arg(args[0]);
+    auto &in(get<ListRef>(in_arg)->elems);
+    ListRef out(new List());
+    std::copy(in.rbegin(), in.rend(), std::back_inserter(out->elems));
+    push(scp.coro, *in_arg.type, out); 
+  }
+
   Exec::Exec():
     main(fibers.emplace(std::piecewise_construct,
 			std::forward_as_tuple(0),
@@ -116,6 +124,9 @@ namespace snabel {
     add_func(*this, "push",
 	     {ArgType(list_type), ArgType(0, 0)}, ArgType(0),
 	     list_push_imp);
+    add_func(*this, "reverse",
+	     {ArgType(list_type)}, ArgType(0),
+	     list_reverse_imp);
 
     add_macro(*this, "{", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Lambda());
@@ -279,5 +290,10 @@ namespace snabel {
     Sym s(exe.next_sym);
     exe.next_sym++;
     return s;
+  }
+
+  bool run(Exec &exe, const str &in) {
+    if (!compile(exe.main, in)) { return false; }
+    return run(exe.main);
   }
 }

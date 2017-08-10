@@ -113,17 +113,14 @@ namespace snabel {
     CHECK(ts[8].text == "baz", _);
 
     Exec exe;
-    compile(exe.main, "(1 1 +) (2 2 +) *");
-    run(exe.main);
-    
+    run(exe, "(1 1 +) (2 2 +) *");
     CHECK(get<int64_t>(pop(exe.main)) == 8, _);    
   }
 
   static void compile_tests() {
     TRY(try_test);
     Exec exe;
-    compile(exe.main, "let: foo 35\nlet: bar $foo 7 +");
-    run(exe.main);
+    run(exe, "let: foo 35\nlet: bar $foo 7 +");
 
     Scope &scp(curr_scope(exe.main));
     CHECK(get<int64_t>(get_env(scp, "$foo")) == 35, _);
@@ -133,8 +130,7 @@ namespace snabel {
   static void stack_tests() {
     TRY(try_test);    
     Exec exe;
-    compile(exe.main, "42 reset");
-    run(exe.main);
+    run(exe, "42 reset");
     CHECK(!peek(exe.main), _);
 
     compile(exe.main, "1 2 3 drop drop");
@@ -145,14 +141,12 @@ namespace snabel {
     TRY(try_test);    
     Exec exe;
     
-    compile(exe.main, "(let: foo 21;$foo)");
-    run(exe.main);
+    run(exe, "(let: foo 21;$foo)");
     Scope &scp1(curr_scope(exe.main));
     CHECK(get<int64_t>(pop(scp1.coro)) == 21, _);
     CHECK(!find_env(scp1, "foo"), _);
 
-    compile(exe.main, "begin\nlet: bar 42\n$bar\nend call");
-    run(exe.main);
+    run(exe, "begin\nlet: bar 42\n$bar\nend call");
     Scope &scp2(curr_scope(exe.main));
     CHECK(get<int64_t>(pop(scp2.coro)) == 42, _);
     CHECK(!find_env(scp2, "bar"), _);
@@ -161,32 +155,27 @@ namespace snabel {
   static void let_tests() {
     TRY(try_test);    
     Exec exe;
-    compile(exe.main, "let: foo 35 7 +; $foo");
-    run(exe.main);
+    run(exe, "let: foo 35 7 +; $foo");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
   static void jump_tests() {
     TRY(try_test);    
     Exec exe;
-    compile(exe.main, "1 2 exit! 3 @exit +");
-    run(exe.main);
+    run(exe, "1 2 exit! 3 @exit +");
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
   }
 
   static void lambda_tests() {
     TRY(try_test);    
     Exec exe;
-    compile(exe.main, "{1 2 +} call");
-    run(exe.main);
+    run(exe, "{1 2 +} call");
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
 
-    compile(exe.main, "2 {3 +} call");
-    run(exe.main);
+    run(exe, "2 {3 +} call");
     CHECK(get<int64_t>(pop(exe.main)) == 5, _);
 
-    compile(exe.main, "let: fn {7 +}; 35 $fn call");
-    run(exe.main);
+    run(exe, "let: fn {7 +}; 35 $fn call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
@@ -194,30 +183,39 @@ namespace snabel {
     TRY(try_test);    
     Exec exe;
     
-    compile(exe.main, "7 't {35 +} when");
-    run(exe.main);
+    run(exe, "7 't {35 +} when");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    compile(exe.main, "7 'f {35 +} when");
-    run(exe.main);
+    run(exe, "7 'f {35 +} when");
     CHECK(get<int64_t>(pop(exe.main)) == 7, _);
   }
 
   static void list_push_tests() {
     TRY(try_test);    
     Exec exe;
-    compile(exe.main, "[0] 1 push");
-    run(exe.main);
+    run(exe, "[0] 1 push");
     auto lsb(pop(exe.main));
     auto ls(get<ListRef>(lsb));
     CHECK(ls->elems.size() == 2, _);
   }
 
+  static void list_reverse_tests() {
+    TRY(try_test);    
+    Exec exe;
+    run(exe, "[0 1 2] reverse");
+    auto lsb(pop(exe.main));
+    auto ls(get<ListRef>(lsb));
+    CHECK(ls->elems.size() == 3, _);
+    
+    for (int64_t i(0); i < 3; i++) {
+      CHECK(get<int64_t>(ls->elems[i]) == 2-i, _);
+    }
+  }
+
   static void list_tests() {
     TRY(try_test);    
     Exec exe;
-    compile(exe.main, "[0 1 2]");
-    run(exe.main);
+    run(exe, "[0 1 2]");
     auto lsb(pop(exe.main));
     CHECK(lsb.type == &get_list_type(exe, exe.i64_type), _);
     auto ls(get<ListRef>(lsb));
@@ -228,6 +226,7 @@ namespace snabel {
     }
 
     list_push_tests();
+    list_reverse_tests();
   }
 
   void all_tests() {

@@ -85,15 +85,15 @@ namespace gui {
     TRY(try_run);
     auto &cor(v->exec.main);
     snabel::rewind(cor);
-    snabel::begin_scope(cor, false);
-    snabel::run(cor);
-    snabel::end_scope(cor);
-    auto res(peek(v->exec.main));
-    if (res) {
-      log(v->ctx, "Script result:\n%0\n%1",
-	  res->type->fmt(*res), res->type->name);
-    } else {
-      log(v->ctx, "Script result: n/a");
+
+    if (snabel::run(cor)) {
+      auto res(peek(v->exec.main));
+      if (res) {
+	log(v->ctx, "Script result:\n%0\n%1",
+	    res->type->fmt(*res), res->type->name);
+      } else {
+	log(v->ctx, "Script result: n/a");
+      }
     }
   }
   

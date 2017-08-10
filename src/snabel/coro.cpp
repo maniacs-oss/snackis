@@ -127,9 +127,9 @@ namespace snabel {
     }
 
     begin_scope(cor, false);
+    TRY(try_compile);
     
     while (true) {
-      TRY(try_compile);
       OpSeq out;
       
       cor.pc = 0;
@@ -149,8 +149,6 @@ namespace snabel {
 
       cor.pc = 0;
       while (cor.pc < cor.ops.size()) {
-	TRY(try_trace);
-	DEFER({ try_trace.errors.clear(); });
 	Op &op(cor.ops[cor.pc]);
 	if (!trace(op, curr_scope(cor))) { break; }
 	cor.pc++;
@@ -165,16 +163,21 @@ namespace snabel {
 
       cor.ops.clear();
       cor.ops.swap(out);
+      try_compile.errors.clear();
     }
 
     rewind(cor);
-    return true;
+    return try_compile.errors.empty();
   }
 
-  void run(Coro &cor) {
+  bool run(Coro &cor) {
+    begin_scope(cor);
+    
     while (cor.pc < cor.ops.size()) {
-      if (!run(cor.ops[cor.pc], curr_scope(cor))) { break; }
+      if (!run(cor.ops[cor.pc], curr_scope(cor))) { return false; }
       cor.pc++;
     }
+
+    return true;
   }
 }

@@ -34,10 +34,10 @@ namespace snabel {
   opt<Box> peek(Coro &cor);
   Box pop(Coro &cor);
 
-  Stack &backup_stack(Coro &cor, bool copy);
+  Stack &backup_stack(Coro &cor, bool copy=false);
   void restore_stack(Coro &cor);
   
-  Scope &begin_scope(Coro &cor, bool copy_stack);
+  Scope &begin_scope(Coro &cor, bool copy_stack=false);
   void end_scope(Coro &cor);
   void reset_scope(Coro &cor, size_t depth);
 
@@ -46,7 +46,7 @@ namespace snabel {
   void rewind(Coro &cor);  
 
   bool compile(Coro &cor, const str &in);
-  void run(Coro &cor); 
+  bool run(Coro &cor); 
 }
 
 #endif
