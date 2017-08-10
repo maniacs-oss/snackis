@@ -33,7 +33,7 @@ namespace snabel {
   Macro &add_macro(Exec &exe, const str &n, Macro::Imp imp);
 
   Type &add_type(Exec &exe, const str &n);
-  Type &add_list_type(Exec &exe, Type &elt);
+  Type &get_list_type(Exec &exe, Type &elt);
 
   FuncImp &add_func(Exec &exe,
 		    const str n,

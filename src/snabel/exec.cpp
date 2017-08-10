@@ -180,7 +180,7 @@ namespace snabel {
     return res;
   }
 
-  Type &add_list_type(Exec &exe, Type &elt) {
+  Type &get_list_type(Exec &exe, Type &elt) {
     str n(fmt("List<%0>", elt.name));
     auto fnd(find_env(exe.main.scopes.front(), n));
     if (fnd) { return *get<Type *>(*fnd); }

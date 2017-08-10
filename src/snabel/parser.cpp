@@ -69,28 +69,16 @@ namespace snabel {
 	c = in[j];
       }
 
-      if (c == '"' && (j == 0 || in[j-1] != '\\')) {
-	quoted = !quoted;
-	j++;
-      }
-      
+      if (c == '"' && (j == 0 || in[j-1] != '\\')) { quoted = !quoted; }
       const size_t cp(j);
 
-      if (split.find(c) != split.end() ||
-	  c == '\\' || c == '"' || c == '\n' || c == ' ') {
-	if (!quoted && j > i) {
-	  if (split.find(in[i]) != split.end()) { i++; }
-	  const str s(trim(in.substr(i, j-i)));
-	  if (!s.empty()) { out.emplace_back(s, i); }
-
-	  while (j < in.size()-1) {
-	    auto sc(in[j+1]);
-	    if (!isspace(sc) && sc != '\\') { break; }
-	    j++;
-	  }
-	  
-	  i = j;
-	}
+      if ((split.find(c) != split.end() ||
+	   c == '"' || c == '\n' || c == ' ') &&
+	  !quoted && j > i) {
+	if (split.find(in[i]) != split.end()) { i++; }
+	const str s(trim(in.substr(i, (c == '"') ? j-i+1 : j-i)));
+	if (!s.empty()) { out.emplace_back(s, i); }
+	i = (c == '"') ? j+1 : j;
       }
 
       if (split.find(c) != split.end()) {

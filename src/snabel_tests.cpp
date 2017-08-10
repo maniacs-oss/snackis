@@ -35,19 +35,6 @@ namespace snabel {
     CHECK(ls[2] == "baz", _);
   }
 
-  static void parse_backslash_tests() {
-    TRY(try_test);    
-    auto ls(parse_lines("foo\\\nbar\nbaz"));
-    CHECK(ls.size() == 2, _);
-    CHECK(ls[0] == "foo\\\nbar", _);
-    CHECK(ls[1] == "baz", _);
-    
-    auto ts(parse_expr(ls[0]));
-    CHECK(ts.size() == 2, _);
-    CHECK(ts[0].text == "foo", _);
-    CHECK(ts[1].text == "bar", _);
-  }
-
   static void parse_semicolon_tests() {
     TRY(try_test);    
     auto ts(parse_expr(";foo; bar baz;"));
@@ -89,13 +76,23 @@ namespace snabel {
     CHECK(ts[1].text == "\"foo\"", _);
     CHECK(ts[2].text == "+", _);
   }
-  
+
+  static void parse_list_tests() {
+    auto ts(parse_expr("[42 \"bar\"]"));
+
+    CHECK(ts.size() == 4, _);
+    CHECK(ts[0].text == "[", _);
+    CHECK(ts[1].text == "42", _);
+    CHECK(ts[2].text == "\"bar\"", _);
+    CHECK(ts[3].text == "]", _);
+  }
+
   static void parse_tests() {
     parse_lines_tests();
-    parse_backslash_tests();
     parse_semicolon_tests();
     parse_braces_tests();
     parse_string_tests();
+    parse_list_tests();
   }
 
   static void parens_tests() {
@@ -204,6 +201,21 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 7, _);
   }
 
+  static void list_tests() {
+    TRY(try_test);    
+    Exec exe;
+    compile(exe.main, "[0 1 2]");
+    run(exe.main);
+    auto lsb(pop(exe.main));
+    CHECK(lsb.type == &get_list_type(exe, exe.i64_type), _);
+    auto ls(get<ListRef>(lsb));
+    CHECK(ls->elems.size() == 3, _);
+    
+    for (int64_t i(0); i < 3; i++) {
+      CHECK(get<int64_t>(ls->elems[i]) == i, _);
+    }
+  }
+
   void all_tests() {
     func_tests();
     parse_tests();
@@ -215,5 +227,6 @@ namespace snabel {
     jump_tests();
     lambda_tests();
     when_tests();
+    list_tests();
   }
 }

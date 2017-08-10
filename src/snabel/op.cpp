@@ -567,7 +567,7 @@ namespace snabel {
     std::shared_ptr<List> lst(new List());
     lst->elems.swap(curr_stack(cor));
     Type *elt(lst->elems.empty() ? &exe.any_type : lst->elems[0].type);  
-    push(cor, Box(add_list_type(exe, *elt), lst));
+    push(cor, Box(get_list_type(exe, *elt), lst));
     return true;
   }
 
