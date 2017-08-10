@@ -97,6 +97,14 @@ namespace snabel {
     add_func(*this, "*", {&i64_type, &i64_type}, i64_type, mul_i64_imp);
     add_func(*this, "%", {&i64_type, &i64_type}, i64_type, mod_i64_imp);
 
+    add_macro(*this, "{", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(Lambda());
+      });
+
+    add_macro(*this, "}", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(Unlambda());
+      });
+
     add_macro(*this, "(", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Group(false));
       });

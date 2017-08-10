@@ -11,12 +11,7 @@ namespace snabel {
     Tok tok(in.front());
     in.pop_front();
     
-    if (tok.text[0] == '{') {
-      out.emplace_back(Lambda());
-      str e(tok.text.substr(1, tok.text.size()-2));
-      compile(exe, lnr, parse_expr(e), out);
-      out.emplace_back(Unlambda());
-    } else if (tok.text.front() == '@') {
+    if (tok.text.front() == '@') {
       out.emplace_back(Target(tok.text.substr(1)));
     } else if (tok.text.back() == '!') {
       out.emplace_back(Jump(tok.text.substr(0, tok.text.size()-1)));

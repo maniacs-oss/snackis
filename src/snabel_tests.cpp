@@ -63,11 +63,16 @@ namespace snabel {
   static void parse_braces_tests() {
     TRY(try_test);    
     auto ts(parse_expr("{ foo } {}; bar"));
-    CHECK(ts.size() == 4, _);
-    CHECK(ts[0].text == "{ foo }", _);
-    CHECK(ts[1].text == "{}", _);
-    CHECK(ts[2].text == ";", _);
-    CHECK(ts[3].text == "bar", _);
+    CHECK(ts.size() == 7, _);
+    CHECK(ts[0].text == "{", _);
+    CHECK(ts[1].text == "foo", _);
+    CHECK(ts[2].text == "}", _);
+
+    CHECK(ts[3].text == "{", _);
+    CHECK(ts[4].text == "}", _);
+    
+    CHECK(ts[5].text == ";", _);
+    CHECK(ts[6].text == "bar", _);
   }
 
   static void parse_string_tests() {

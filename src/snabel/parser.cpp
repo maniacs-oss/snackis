@@ -55,7 +55,7 @@ namespace snabel {
   }
   
   TokSeq parse_expr(const str &in) {
-    static std::set<char> split {'(', ')', ';'};
+    static const std::set<char> split({'{', '}', '(', ')', ';'});
     
     size_t i(0);
     bool quoted(false);
@@ -76,16 +76,8 @@ namespace snabel {
 
       const size_t cp(j);
 
-      switch(c) {	
-      case '(':
-      case ')':
-      case ';':
-      case '\\':
-      case '{':
-      case '}':
-      case '"':
-      case '\n':
-      case ' ':
+      if (split.find(c) != split.end() ||
+	  c == '\\' || c == '"' || c == '\n' || c == ' ') {
 	if (!quoted && j > i) {
 	  if (split.find(in[i]) != split.end()) { i++; }
 	  
@@ -109,19 +101,6 @@ namespace snabel {
       if (i < j && j == in.size()-1) {
 	str s(trim(in.substr(i)));
 	if (!s.empty()) { out.emplace_back(s, i); }
-      } else if (c == '{' && !quoted) {
-	size_t k(j);
-	str rest(in.substr(k));
-	k = parse_pair(rest, c, '}');
-
-	if (k == str::npos) {
-	  ERROR(Snabel, fmt("Unbalanced braces"));
-	  return out;
-	}
-
-	out.emplace_back(rest.substr(0, k+1), j);
-	j += k;
-	i = j+1;
       }
     }
 
