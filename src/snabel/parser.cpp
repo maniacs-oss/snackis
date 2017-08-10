@@ -55,6 +55,8 @@ namespace snabel {
   }
   
   TokSeq parse_expr(const str &in) {
+    static std::set<char> split {'(', ')', ';'};
+    
     size_t i(0);
     bool quoted(false);
     TokSeq out;
@@ -85,7 +87,7 @@ namespace snabel {
       case '\n':
       case ' ':
 	if (!quoted && j > i) {
-	  if (in[i] == '(' || in[i] == ')' || in[i] == ';') { i++; }
+	  if (split.find(in[i]) != split.end()) { i++; }
 	  
 	  const str s(trim(in.substr(i, j-i)));
 	  if (!s.empty()) { out.emplace_back(s, i); }
@@ -100,7 +102,7 @@ namespace snabel {
 	}
       }
 
-      if (c == '(' || c == ')' || c == ';') {
+      if (split.find(c) != split.end()) {
 	out.emplace_back(in.substr(cp, 1), cp);
       }
 
