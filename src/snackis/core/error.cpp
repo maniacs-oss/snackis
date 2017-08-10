@@ -3,14 +3,13 @@
 #include "snackis/core/error.hpp"
 
 namespace snackis {
-  static void default_handler(const std::vector<Error *> &errors) {
+  static void default_handler(const std::deque<Error *> &errors) {
     for (auto e: errors) { std::cerr << e->what << std::endl; }
     abort();
   }
   
   thread_local ErrorHandler error_handler(default_handler);
-
-  static thread_local std::vector<Try *> try_stack;
+  thread_local std::deque<Try *> try_stack;
 
   Error::Error(const str &what):
     what(stack_trace() + what)

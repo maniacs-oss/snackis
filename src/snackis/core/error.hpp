@@ -16,6 +16,7 @@
 
 #define CHECK(expr, cond) {			\
     auto _(expr);				\
+    if (!(cond)) { try_stack.clear(); }		\
     assert(cond);				\
   }						\
 
@@ -38,14 +39,15 @@ namespace snackis {
   };
 
   struct Try: Trace {
-    std::vector<Error *> errors;
+    std::deque<Error *> errors;
 
     Try(const str &id, const str &file, int line);
     ~Try();
   };
 
-  using ErrorHandler = func<void (const std::vector<Error *> &)>;
+  using ErrorHandler = func<void (const std::deque<Error *> &)>;
   extern thread_local ErrorHandler error_handler;
+  extern thread_local std::deque<Try *> try_stack;
   
   void throw_error(Error *e);
 

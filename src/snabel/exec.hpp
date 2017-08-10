@@ -16,12 +16,12 @@ namespace snabel {
     std::map<UId, Fiber> fibers;
     std::deque<Type> types;
     std::map<str, Func> funcs;
-    std::map<str, Label> labels;    
+    std::map<str, Label> labels;
     std::deque<str> lambdas;
 
     Fiber &main;
-    Type &meta_type, &any_type,
-      &bool_type, &func_type, &i64_type, &lambda_type, &str_type,
+    Type &any_type, &meta_type,
+      &bool_type, &func_type, &i64_type, &lambda_type, &list_type, &str_type,
       &undef_type, &void_type;
     Sym next_sym;
     
@@ -33,12 +33,13 @@ namespace snabel {
   Macro &add_macro(Exec &exe, const str &n, Macro::Imp imp);
 
   Type &add_type(Exec &exe, const str &n);
+  Type &add_type(Exec &exe, const str &n, Type &super);
   Type &get_list_type(Exec &exe, Type &elt);
 
   FuncImp &add_func(Exec &exe,
 		    const str n,
 		    const ArgTypes &args,
-		    Type &rt,
+		    const ArgType &rt,
 		    FuncImp::Imp imp);
 
   Sym gensym(Exec &exe);

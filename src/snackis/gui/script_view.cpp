@@ -89,7 +89,12 @@ namespace gui {
     snabel::run(cor);
     snabel::end_scope(cor);
     auto res(peek(v->exec.main));
-    log(v->ctx, "Script result:\n%0", res ? fmt_arg(*res) : "n/a");
+    if (res) {
+      log(v->ctx, "Script result:\n%0\n%1",
+	  res->type->fmt(*res), res->type->name);
+    } else {
+      log(v->ctx, "Script result: n/a");
+    }
   }
   
   static GtkWidget *init_code(ScriptView &v) {

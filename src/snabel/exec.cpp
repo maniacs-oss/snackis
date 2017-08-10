@@ -55,19 +55,27 @@ namespace snabel {
     push(scp.coro, exe.i64_type, res);
   }
 
+  static void list_push_imp(Scope &scp, FuncImp &fn, const Args &args) {
+    auto &lst(args[0]);
+    auto &el(args[1]);
+    get<ListRef>(lst)->elems.push_back(el);
+    push(scp.coro, lst);    
+  }
+
   Exec::Exec():
     main(fibers.emplace(std::piecewise_construct,
 			std::forward_as_tuple(0),
 			std::forward_as_tuple(*this, 0)).first->second),
-    meta_type((add_type(*this, "Type"))),
-    any_type((add_type(*this, "Any"))),
-    bool_type((add_type(*this, "Bool"))),
-    func_type((add_type(*this, "Func"))),
-    i64_type((add_type(*this, "I64"))),
-    lambda_type((add_type(*this, "Lambda"))),
-    str_type((add_type(*this, "Str"))),
-    undef_type((add_type(*this, "Undef"))),
-    void_type((add_type(*this, "Void"))),
+    any_type(add_type(*this, "Any")),
+    meta_type(add_type(*this, "Type", any_type)),
+    bool_type(add_type(*this, "Bool", any_type)),
+    func_type(add_type(*this, "Func", any_type)),
+    i64_type(add_type(*this, "I64", any_type)),
+    lambda_type(add_type(*this, "Lambda", any_type)),
+    list_type(get_list_type(*this, any_type)),
+    str_type(add_type(*this, "Str", any_type)),
+    undef_type(add_type(*this, "Undef")),
+    void_type(add_type(*this, "Void")),
     next_sym(1)
   {
     meta_type.fmt = [](auto &v) { return get<Type *>(v)->name; };
@@ -92,10 +100,22 @@ namespace snabel {
     void_type.fmt = [](auto &v) { return "n/a"; };
     void_type.eq = [](auto &x, auto &y) { return true; };  
  
-    add_func(*this, "+", {&i64_type, &i64_type}, i64_type, add_i64_imp);
-    add_func(*this, "-", {&i64_type, &i64_type}, i64_type, sub_i64_imp);
-    add_func(*this, "*", {&i64_type, &i64_type}, i64_type, mul_i64_imp);
-    add_func(*this, "%", {&i64_type, &i64_type}, i64_type, mod_i64_imp);
+    add_func(*this, "+",
+	     {ArgType(i64_type), ArgType(i64_type)}, ArgType(i64_type),
+	     add_i64_imp);
+    add_func(*this, "-",
+	     {ArgType(i64_type), ArgType(i64_type)}, ArgType(i64_type),
+	     sub_i64_imp);
+    add_func(*this, "*",
+	     {ArgType(i64_type), ArgType(i64_type)}, ArgType(i64_type),
+	     mul_i64_imp);
+    add_func(*this, "%",
+	     {ArgType(i64_type), ArgType(i64_type)}, ArgType(i64_type),
+	     mod_i64_imp);
+
+    add_func(*this, "push",
+	     {ArgType(list_type), ArgType(0, 0)}, ArgType(0),
+	     list_push_imp);
 
     add_macro(*this, "{", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Lambda());
@@ -163,6 +183,10 @@ namespace snabel {
 	out.emplace_back(Reset());
       });
 
+    add_macro(*this, "stash", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(Stash());
+      });
+
     add_macro(*this, "when", [this](auto pos, auto &in, auto &out) {
 	out.emplace_back(Branch());
       });
@@ -173,20 +197,48 @@ namespace snabel {
 			      std::forward_as_tuple(n),
 			      std::forward_as_tuple(n, imp)).first->second; 
   }
-
+  
   Type &add_type(Exec &exe, const str &n) {
     auto &res(exe.types.emplace_front(n)); 
     put_env(exe.main.scopes.front(), n, Box(exe.meta_type, &res));
     return res;
   }
 
-  Type &get_list_type(Exec &exe, Type &elt) {
+  Type &add_type(Exec &exe, const str &n, Type &super) {
+    auto &res(exe.types.emplace_front(n, super)); 
+    put_env(exe.main.scopes.front(), n, Box(exe.meta_type, &res));
+    return res;
+  }
+
+  Type &get_list_type(Exec &exe, Type &elt) {    
     str n(fmt("List<%0>", elt.name));
     auto fnd(find_env(exe.main.scopes.front(), n));
     if (fnd) { return *get<Type *>(*fnd); }
-    auto &t(add_type(exe, n));
+    auto &t(add_type(exe, n, exe.list_type));
+    t.args.push_back(&elt);
+    
+    t.fmt = [&elt](auto &v) {
+      auto &ls(get<ListRef>(v)->elems);
+
+      OutStream buf;
+      buf << '[';
+
+      if (ls.size() < 4) {
+	for (size_t i(0); i < ls.size(); i++) {
+	  if (i > 0) { buf << ' '; }
+	  auto &v(ls[i]);
+	  buf << v.type->fmt(v);
+	};
+      } else {
+	buf <<
+	ls.front().type->fmt(ls.front()) <<
+	" : " <<
+	ls.back().type->fmt(ls.back());
+      }
       
-    t.fmt = [&elt](auto &v) { return fmt_arg(get<ListRef>(v)->elems); };
+      buf << ']';
+      return buf.str();
+    };
     
     t.eq = [&elt](auto &_x, auto &_y) {
       auto &x(get<ListRef>(_x)), &y(get<ListRef>(_y));
@@ -208,7 +260,7 @@ namespace snabel {
   FuncImp &add_func(Exec &exe,
 		    const str n,
 		    const ArgTypes &args,
-		    Type &rt,
+		    const ArgType &rt,
 		    FuncImp::Imp imp) {
     auto fnd(exe.funcs.find(n));
 

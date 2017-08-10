@@ -72,7 +72,7 @@ namespace gui {
   static void init_id_search(Reader &rdr, const str &id) {
     Ctx &ctx(rdr.ctx);
 
-    add_cmd(rdr, id, {&rdr.exec.str_type}, [&ctx, id](auto args) {
+    add_cmd(rdr, id, {snabel::ArgType(rdr.exec.str_type)}, [&ctx, id](auto args) {
 	auto *v(new SearchT(ctx));
 	auto id(snabel::get<str>(args[0]));
 	gui::set_str(GTK_ENTRY(v->id_fld), id);
@@ -150,7 +150,7 @@ namespace gui {
 	}
       });
 
-    add_cmd(rdr, "invite", {&rdr.exec.str_type}, [&ctx](auto args) {
+    add_cmd(rdr, "invite", {snabel::ArgType(rdr.exec.str_type)}, [&ctx](auto args) {
 	db::Trans trans(ctx);
 	TRY(try_invite);
 	Invite inv(ctx, snabel::get<str>(args[0]));

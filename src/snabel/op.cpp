@@ -256,19 +256,29 @@ namespace snabel {
     if (!imp) { imp = match(fn, cor); }
     if (!imp) { return false; }
     auto args(pop_args(*imp, cor));
-
+    	
     if (result) {
       push(cor, *result);
     } else {
       if (args.size() < imp->args.size()) { return false; }
+
       if (imp->pure &&
 	  !imp->args.empty() &&
 	  std::find_if(args.begin(), args.end(),
 		       [](auto &a){ return undef(a); }) == args.end()) {
 	(*imp)(cor, args);
 	result.emplace(*peek(cor));
-      } else if (&imp->res_type != &cor.exec.void_type) {
-	push(cor, Box(imp->res_type, undef));
+      } else {
+	auto res_type(get_type(*imp, imp->res_type, args));
+
+	if (!res_type) {
+	  ERROR(Snabel, "Missing function result type");
+	  return false;
+	}
+
+	if (res_type != &cor.exec.void_type) {
+	  push(cor, Box(*res_type, undef));
+	}
       }
     }
     
@@ -566,8 +576,13 @@ namespace snabel {
     Exec &exe(cor.exec);
     std::shared_ptr<List> lst(new List());
     lst->elems.swap(curr_stack(cor));
+
     Type *elt(lst->elems.empty() ? &exe.any_type : lst->elems[0].type);  
-    push(cor, Box(get_list_type(exe, *elt), lst));
+    for (auto i(std::next(lst->elems.begin())); i != lst->elems.end() && elt; i++) {
+      elt = get_super(*elt, *i->type);
+    }
+
+    push(cor, Box(get_list_type(exe, elt ? *elt : exe.undef_type), lst));
     return true;
   }
 

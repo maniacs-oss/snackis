@@ -17,7 +17,9 @@ namespace snabel {
   static void func_tests() {
     TRY(try_test);
     Exec exe;
-    auto &f(add_func(exe, "test-func", {&exe.i64_type}, exe.i64_type, test_func));
+    auto &f(add_func(exe, "test-func",
+		     {ArgType(exe.i64_type)}, ArgType(exe.i64_type),
+		     test_func));
     Coro &cor(exe.main);
     cor.ops.emplace_back(Push(Box(exe.i64_type, int64_t(7))));
     cor.ops.emplace_back(Funcall(f.func));
@@ -201,6 +203,16 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 7, _);
   }
 
+  static void list_push_tests() {
+    TRY(try_test);    
+    Exec exe;
+    compile(exe.main, "[0] 1 push");
+    run(exe.main);
+    auto lsb(pop(exe.main));
+    auto ls(get<ListRef>(lsb));
+    CHECK(ls->elems.size() == 2, _);
+  }
+
   static void list_tests() {
     TRY(try_test);    
     Exec exe;
@@ -214,6 +226,8 @@ namespace snabel {
     for (int64_t i(0); i < 3; i++) {
       CHECK(get<int64_t>(ls->elems[i]) == i, _);
     }
+
+    list_push_tests();
   }
 
   void all_tests() {

@@ -13,22 +13,35 @@ namespace snabel {
   struct Box;
   struct Coro;
   struct Scope;
-  struct Func;
   struct Type;
+  struct Func;
   
-  using ArgTypes = std::deque<Type *>;
   using Args = std::deque<Box>;
+
+  struct ArgType {
+    Type *type;
+    opt<size_t> arg_idx, type_arg_idx;
+
+    ArgType(Type &type);
+    ArgType(size_t arg_idx, opt<size_t> type_arg_idx=nullopt);
+  };
+  
+  using ArgTypes = std::deque<ArgType>;
 
   struct FuncImp {
     using Imp = func<void (Scope &, FuncImp &, const Args &)>;
 
     Func &func;
     ArgTypes args;
-    Type &res_type;
+    ArgType res_type;
     Imp imp;
     bool pure;
     
-    FuncImp(Func &fn, const ArgTypes &args, Type &rt, Imp imp, bool pur=true);
+    FuncImp(Func &fn,
+	    const ArgTypes &args,
+	    const ArgType &rt,
+	    Imp imp,
+	    bool pure=true);
     void operator ()(Coro &cor, const Args &args);
     void operator ()(Coro &cor);
   };
@@ -38,11 +51,12 @@ namespace snabel {
     std::deque<FuncImp> imps;
     Func(const str &nam);
   };
-  
+
+  Type *get_type(const FuncImp &imp, const ArgType &arg_type, const Args &args);
   Args pop_args(const FuncImp &imp, Coro &cor);
   FuncImp &add_imp(Func &fn,
 		   const ArgTypes &args,
-		   Type &rt,
+		   const ArgType &rt,
 		   FuncImp::Imp imp);
   bool match(const FuncImp &imp, const Coro &cor);
   FuncImp *match(Func &fn, const Coro &cor);
