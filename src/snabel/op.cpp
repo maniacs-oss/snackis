@@ -252,19 +252,24 @@ namespace snabel {
   }
 
   bool Funcall::trace(Scope &scp) {
-    Coro &cor(scp.coro);
+    Coro &cor(scp.coro);      
     if (!imp) { imp = match(fn, cor); }
     if (!imp) { return false; }
     auto args(pop_args(*imp, cor));
-    if (args.size() < imp->args.size()) { return false; }
-    if (imp->pure &&
-	!imp->args.empty() &&
-	std::find_if(args.begin(), args.end(),
-		     [](auto &a){ return undef(a); }) == args.end()) {
-      (*imp)(cor, args);
-      result.emplace(*peek(cor));
-    } else if (&imp->res_type != &cor.exec.void_type) {
-      push(cor, Box(imp->res_type, undef));
+
+    if (result) {
+      push(cor, *result);
+    } else {
+      if (args.size() < imp->args.size()) { return false; }
+      if (imp->pure &&
+	  !imp->args.empty() &&
+	  std::find_if(args.begin(), args.end(),
+		       [](auto &a){ return undef(a); }) == args.end()) {
+	(*imp)(cor, args);
+	result.emplace(*peek(cor));
+      } else if (&imp->res_type != &cor.exec.void_type) {
+	push(cor, Box(imp->res_type, undef));
+      }
     }
     
     return true;
