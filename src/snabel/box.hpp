@@ -1,6 +1,7 @@
 #ifndef SNABEL_BOX_HPP
 #define SNABEL_BOX_HPP
 
+#include <deque>
 #include <variant>
 
 #include "snackis/core/error.hpp"
@@ -12,13 +13,19 @@ namespace snabel {
   struct Box;
   struct Func;
   struct Exec;
+  struct List;
   struct Type;
 
   struct Undef {
     bool operator ()(const Box &box) const;
   };
-
-  using Val = std::variant<const Undef, bool, int64_t, str, Func *, Type *>;
+  
+  using ListRef = std::shared_ptr<List>;
+    
+  using Val = std::variant<const Undef,
+			   bool, int64_t, str,
+			   ListRef,
+			   Func *, Type *>;
   
   struct Box {
     Type *type;
@@ -27,13 +34,23 @@ namespace snabel {
     Box(Type &t, const Val &v);
   };
 
+  struct List {
+    std::deque<Box> elems;
+  };
+
   extern const Undef undef;
 
   bool operator ==(const Box &x, const Box &y);
   bool operator !=(const Box &x, const Box &y);
   
   template <typename T>
-  T get(const Box &b) {
+  const T &get(const Box &b) {
+    CHECK(!undef(b), _);
+    return std::get<T>(b.val);
+  }
+
+  template <typename T>
+  T &get(Box &b) {
     CHECK(!undef(b), _);
     return std::get<T>(b.val);
   }

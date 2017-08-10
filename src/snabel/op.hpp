@@ -20,8 +20,8 @@ namespace snabel {
 
   enum OpCode { OP_BACKUP, OP_BRANCH, OP_CALL, OP_DROP, OP_FUNCALL,
 	        OP_GET, OP_GROUP, OP_JUMP,  OP_LAMBDA, OP_LET,
-		OP_PUSH, OP_RESET, OP_RESTORE, OP_RETURN, OP_SWAP, OP_TARGET,
-		OP_UNGROUP, OP_UNLAMBDA };
+		OP_PUSH, OP_RESET, OP_RESTORE, OP_RETURN, OP_STASH, OP_SWAP, 
+		OP_TARGET, OP_UNGROUP, OP_UNLAMBDA };
 
   using OpSeq = std::deque<Op>;
 
@@ -179,6 +179,13 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
 
+  struct Stash: OpImp {
+    Stash();
+    OpImp &get_imp(Op &op) const override;
+    bool trace(Scope &scp) override;
+    bool run(Scope &scp) override;
+  };
+
   struct Swap: OpImp {
     Swap();
     OpImp &get_imp(Op &op) const override;
@@ -213,7 +220,7 @@ namespace snabel {
 
   using OpData = std::variant<Backup, Branch, Call, Drop, Funcall, Get, Group,
 			      Jump, Lambda, Let, Push, Reset, Restore, Return,
-			      Swap, Target, Ungroup, Unlambda>;
+			      Stash, Swap, Target, Ungroup, Unlambda>;
 
   struct Op {
     OpData data;

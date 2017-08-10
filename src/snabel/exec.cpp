@@ -112,7 +112,16 @@ namespace snabel {
     add_macro(*this, ")", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Ungroup());
       });
-    
+
+    add_macro(*this, "[", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(Backup(false));
+      });
+
+    add_macro(*this, "]", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(Stash());	
+	out.emplace_back(Restore());
+      });
+
     add_macro(*this, "begin", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Lambda());
       });
@@ -171,6 +180,31 @@ namespace snabel {
     return res;
   }
 
+  Type &add_list_type(Exec &exe, Type &elt) {
+    str n(fmt("List<%0>", elt.name));
+    auto fnd(find_env(exe.main.scopes.front(), n));
+    if (fnd) { return *get<Type *>(*fnd); }
+    auto &t(add_type(exe, n));
+      
+    t.fmt = [&elt](auto &v) { return fmt_arg(get<ListRef>(v)->elems); };
+    
+    t.eq = [&elt](auto &_x, auto &_y) {
+      auto &x(get<ListRef>(_x)), &y(get<ListRef>(_y));
+      
+      if (x->elems.size() != y->elems.size()) { return false; }
+      
+      for (auto i = x->elems.begin(), j = y->elems.begin();
+	   i != x->elems.end();
+	   i++, j++) {
+	if (!elt.eq(*i, *j)) { return false; }
+      }
+      
+      return true;
+    };
+    
+    return t;
+  }
+
   FuncImp &add_func(Exec &exe,
 		    const str n,
 		    const ArgTypes &args,
@@ -190,6 +224,8 @@ namespace snabel {
   }
   
   Sym gensym(Exec &exe) {
-    return exe.next_sym.fetch_add(1);
+    Sym s(exe.next_sym);
+    exe.next_sym++;
+    return s;
   }
 }

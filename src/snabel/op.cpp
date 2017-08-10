@@ -549,6 +549,28 @@ namespace snabel {
     return true;
   }
 
+  Stash::Stash():
+    OpImp(OP_STASH, "stash")
+  { }
+
+  OpImp &Stash::get_imp(Op &op) const {
+    return std::get<Stash>(op.data);
+  }
+
+  bool Stash::trace(Scope &scp) {
+    return run(scp);
+  }
+
+  bool Stash::run(Scope &scp) {
+    Coro &cor(scp.coro);
+    Exec &exe(cor.exec);
+    std::shared_ptr<List> lst(new List());
+    lst->elems.swap(curr_stack(cor));
+    Type *elt(lst->elems.empty() ? &exe.any_type : lst->elems[0].type);  
+    push(cor, Box(add_list_type(exe, *elt), lst));
+    return true;
+  }
+
   Swap::Swap():
     OpImp(OP_SWAP, "swap")
   { }

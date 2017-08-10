@@ -55,7 +55,7 @@ namespace snabel {
   }
   
   TokSeq parse_expr(const str &in) {
-    static const std::set<char> split({'{', '}', '(', ')', ';'});
+    static const std::set<char> split({'{', '}', '(', ')', '[', ']', ';'});
     
     size_t i(0);
     bool quoted(false);
@@ -69,18 +69,17 @@ namespace snabel {
 	c = in[j];
       }
 
-      if (c == '"') {
-	if (j == 0 || in[j-1] != '\\') { quoted = !quoted; }
+      if (c == '"' && (j == 0 || in[j-1] != '\\')) {
+	quoted = !quoted;
 	j++;
       }
-
+      
       const size_t cp(j);
 
       if (split.find(c) != split.end() ||
 	  c == '\\' || c == '"' || c == '\n' || c == ' ') {
 	if (!quoted && j > i) {
 	  if (split.find(in[i]) != split.end()) { i++; }
-	  
 	  const str s(trim(in.substr(i, j-i)));
 	  if (!s.empty()) { out.emplace_back(s, i); }
 
