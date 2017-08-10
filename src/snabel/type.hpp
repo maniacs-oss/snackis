@@ -12,6 +12,7 @@ namespace snabel {
   struct Type {
     const str name;
     
+    func<bool (const Box &, const Box &)> eq;
     func<str (const Box &)> fmt;
     
     Type(const str &n);

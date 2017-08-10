@@ -10,7 +10,7 @@ namespace snabel {
   static void test_func(Scope &scp, FuncImp &fn, const Args &args) {
     Exec &exe(scp.coro.exec);
     CHECK(args.size() == 1, _);
-    CHECK(&args[0].type == &exe.i64_type, _);
+    CHECK(args[0].type == &exe.i64_type, _);
     push(scp.coro, exe.i64_type, 42-get<int64_t>(args[0]));
   }
   
@@ -19,8 +19,8 @@ namespace snabel {
     Exec exe;
     auto &f(add_func(exe, "test-func", {&exe.i64_type}, exe.i64_type, test_func));
     Coro &cor(exe.main);
-    cor.ops.push_back(Op::make_push(Box(exe.i64_type, int64_t(7))));
-    cor.ops.push_back(Op::make_func(f.func));
+    cor.ops.emplace_back(Push(Box(exe.i64_type, int64_t(7))));
+    cor.ops.emplace_back(Funcall(f.func));
     run(exe.main);
 
     CHECK(get<int64_t>(pop(exe.main)) == 35, _);

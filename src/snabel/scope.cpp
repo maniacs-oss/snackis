@@ -6,7 +6,7 @@
 
 namespace snabel {  
   Scope::Scope(const Scope &src):
-    coro(src.coro), labels(src.labels), envs(src.envs)
+    coro(src.coro), envs(src.envs)
   { }
 
   Scope::Scope(Coro &cor):

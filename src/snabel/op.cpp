@@ -10,593 +10,669 @@
 #include "snackis/core/defer.hpp"
 
 namespace snabel {
-  Op Op::make_backup(bool copy) {
-    Op op(OP_BACKUP);
-
-    op.compile = [](auto &op, auto &scp, auto &out) {
-      op.run(op, scp);
-      return false;
-    };
-    
-    op.run = [copy](auto &op, auto &scp) { backup_stack(scp.coro, copy); };
-    return op;
+  OpImp::OpImp(OpCode code, const str &name):
+    code(code), name(name)
+  { }
+  
+  str OpImp::info() const {
+    return "";
   }
 
-  Op Op::make_branch(opt<Label> lbl) {
-    Op op(OP_BRANCH);
-    
-    op.compile = [lbl](auto &op, auto &scp, auto &out) mutable {
-      Coro &cor(scp.coro);
-      auto _lbl(peek(cor));
-      if (!_lbl) { return false; }
-      
-      pop(cor);			  
-      auto fnd(scp.labels.find(get<str>(*_lbl)));
-      CHECK(fnd != scp.labels.end(), _);
-      auto cnd(peek(cor));
-      if (cnd) { pop(cor); }
+  void OpImp::prepare(Scope &scp)
+  { }
 
-      if (cnd && cnd->type == &cor.exec.bool_type) {
-	if (get<bool>(*cnd)){
-	  out.push_back(Op::make_swap());
-	  out.push_back(Op::make_drop(1));
-	  out.push_back(Op::make_call(fnd->second));
-	  return true;
-	}
-      } else if (!lbl || lbl->pc != fnd->second.pc) {
-	out.push_back(Op::make_branch(fnd->second));
-	return true;	
-      }
-      
-      return false;
-    };
+  void OpImp::refresh(Scope &scp)
+  { }
 
-    op.run = [lbl](auto &op, auto &scp) {
-      Coro &cor(scp.coro);
-      auto _lbl(pop(cor));
-      auto cnd(pop(cor));
-      if (get<bool>(cnd)) { call(cor, *lbl); }
-    };
-    
-    return op;
+  bool OpImp::trace(Scope &scp) {
+    return true;
+  }
+
+  bool OpImp::compile(const Op &op, Scope &scp, OpSeq &out) {
+    return false;
   }
   
-  Op Op::make_call(opt<Label> lbl) {
-    Op op(OP_CALL);
+  bool OpImp::run(Scope &) {
+    return true;
+  }
 
-    op.info = [lbl](auto &op, auto &scp) {
-      return lbl ? lbl->tag : "";
-    };
+  Backup::Backup(bool copy):
+    OpImp(OP_BACKUP, "backup"), copy(copy)
+  { }
 
-    op.compile = [lbl](auto &op, auto &scp, auto &out) mutable {
-      auto &cor(scp.coro);
-      auto &exe(cor.exec);      
-      DEFER({ curr_stack(cor).clear(); });
+  OpImp &Backup::get_imp(Op &op) const {
+    return std::get<Backup>(op.data);
+  }
+
+  bool Backup::trace(Scope &scp) {
+    return run(scp);
+  }
+  
+  bool Backup::run(Scope &scp) {
+    backup_stack(scp.coro, copy);
+    return true;
+  }
+  
+  Branch::Branch():
+    OpImp(OP_BRANCH, "branch"), label(nullptr)
+  { }
+
+  OpImp &Branch::get_imp(Op &op) const {
+    return std::get<Branch>(op.data);
+  }
+
+  str Branch::info() const {
+      return label ? label->tag : "";    
+  }
+
+  bool Branch::trace(Scope &scp) {
+    return run(scp);
+  }
+
+  /*
+  out.emplace_back(Trunc(curr_stack(cor).size()));
+  */
+
+  bool Branch::compile(const Op &op, Scope &scp, OpSeq &out) {
+    if (!cond) { return false; }
+    
+    if (*cond) {
+      out.emplace_back(Swap());
+      out.emplace_back(Drop(1));
+      out.emplace_back(Call());
+    } else {
+      out.emplace_back(Drop(2));	
+    }
+      
+    return true;
+  }
+  
+  bool Branch::run(Scope &scp) {
+    auto &cor(scp.coro);
+    auto &exe(cor.exec);
+    
+    auto lbl(peek(cor));
+    if (!lbl) { return false; }      
+    pop(cor);
+
+    if (!label) {
+      const str l(get<str>(*lbl));
+      auto fnd(exe.labels.find(l));
+      if (fnd == exe.labels.end()) {
+	ERROR(Snabel, fmt("Missing branch label: %0", l));
+	return false;
+      }
+      
+      label = &fnd->second;
+    }
+
+    auto cnd(peek(cor));
+    
+    if (cnd) {
+      pop(cor);
+      if (cnd->type != &cor.exec.bool_type) {
+	ERROR(Snabel, fmt("Invalid branch condition: %0", *cnd));
+	return false;
+      }
+      
+      cond.emplace(get<bool>(*cnd));
+    } else {
+      ERROR(Snabel, fmt("Missing branch condition: %0", curr_stack(cor)));
+      return false;
+    }
+    
+    if (!cond) { return false; }    
+    if (*cond) { call(cor, *label); }
+    return true;    
+  }
+  
+  Call::Call():
+    OpImp(OP_CALL, "call"), label(nullptr)
+  { }
+
+  Call::Call(Label &label):
+    OpImp(OP_CALL, "call"), label(&label)
+  { }
+
+  OpImp &Call::get_imp(Op &op) const {
+    return std::get<Call>(op.data);
+  }
+
+  str Call::info() const {
+      return label ? label->tag : "";    
+  }
+
+  bool Call::trace(Scope &scp) {
+    auto &cor(scp.coro);
+    auto &exe(cor.exec);      
+      
+    if (!label) {
       auto fn(peek(cor));
-      
+
       if (fn && fn->type == &exe.lambda_type) {
-	auto fnd(scp.labels.find(get<str>(*fn)));
-	
-	if (fnd != scp.labels.end()) {
-	  out.push_back(Op::make_drop(1));
-	  out.push_back(Op::make_call(fnd->second));
-	  return true;
-	}
+	auto fnd(exe.labels.find(get<str>(*fn)));
+	if (fnd != exe.labels.end()) { label = &fnd->second; }
       }
-      
-      return false;
-    };
+    }
 
-    op.run = [lbl](auto &op, auto &scp) mutable {
-      auto &cor(scp.coro);
-      cor.returns.push_back(cor.pc);
-
-      if (!lbl) {
-	auto fn(pop(cor));
-	str n(get<str>(fn));
-	auto fnd(scp.labels.find(n));
-
-	if (fnd == scp.labels.end()) {
-	  ERROR(Snabel, fmt("Missing call target: %0", n));
-	} else {
-	  lbl.emplace(fnd->second);
-	}      
-      }
-
-      if (lbl) { call(cor, *lbl); }
-    };
+    if (!label) { return false; }
     
-    return op;    
+    return run(scp);
   }
   
-  Op Op::make_drop(size_t cnt) {
-    Op op(OP_DROP);
-    op.info = [cnt](auto &op, auto &scp) { return fmt_arg(cnt); };
-    
-    op.compile = [cnt](auto &op, auto &scp, auto &out) mutable {
-      Stack &s(curr_stack(scp.coro));
-      for (size_t i(0); i < cnt && !s.empty(); i++) {
-	s.pop_back();
-      }
+  bool Call::run(Scope &scp) {
+    auto &cor(scp.coro);
+    auto &exe(cor.exec);
+    auto fn(pop(cor));
       
-      auto i(0);      
-      while (i < cnt && !out.empty() && out.back().code == OP_PUSH) {
-	out.pop_back();
-	i++;
-      }
-      
-      if (i == cnt) { return true; }
-      
-      if (i) {
-	out.push_back(Op::make_drop(cnt-i));
-	return true;
-      }
+    if (!label) {
+      str n(get<str>(fn));
+      auto fnd(exe.labels.find(n));
 
-      return false;
-    };
-
-    op.run = [cnt](auto &op, auto &scp) {
-      for (size_t i(0); i < cnt; i++) { pop(scp.coro); }
-    };
-    
-    return op;    
-  }
-
-  Op Op::make_fence() {
-    Op op(OP_FENCE);
-
-    op.compile = [](auto &op, auto &scp, auto &out) {
-      op.run(op, scp);
-      return false;
-    };
-    
-    op.run = [](auto &op, auto &scp) { scp.labels.clear(); };
-    return op;
-  }
-
-  Op Op::make_func(Func &fn) {
-    Op op(OP_FUNC);
-    op.info = [&fn](auto &op, auto &scp) { return fn.name; };
-
-    op.compile = [&fn](auto &op, auto &scp, auto &out) mutable {
-      auto &s(curr_stack(scp.coro));
-      if (s.empty()) { return false; }
-      auto imp(match(fn, scp.coro));
-
-      if (imp && imp->pure && !imp->args.empty()) {
-	auto args(pop_args(*imp, scp.coro));
-
-	if (std::find_if(args.begin(), args.end(),
-			 [](auto &a){ return undef(a); }) == args.end()) {
-	  (*imp)(scp.coro, args);
-	  out.push_back(Op::make_drop(args.size()));	
-	  out.push_back(Op::make_push(pop(scp.coro)));
-	  return true;
-	}
-      }
-
-      if (!imp && fn.imps.size() == 1) { imp = &fn.imps.front(); }
-
-      if (imp) {
-	auto args(pop_args(*imp, scp.coro));
-
-	if (&imp->res_type != &scp.coro.exec.void_type) {
-	  push(scp.coro, Box(imp->res_type, undef));
-	}
-	
+      if (fnd == exe.labels.end()) {
+	ERROR(Snabel, fmt("Missing call target: %0", n));
 	return false;
-      }
-
-      s.clear();
-      return false;
-    };
-    
-    op.run = [&fn](auto &op, auto &scp) {
-      auto imp(match(fn, scp.coro));
-      
-      if (imp) {
-	(*imp)(scp.coro);
       } else {
-	ERROR(Snabel, fmt("Function not applicable: %0\n%1", 
-			  fn.name, curr_stack(scp.coro)));
-      }
-    };
+	label = &fnd->second;
+      }      
+    }
 
-    return op;
+    call(cor, *label);
+    return true;
   }
 
-  Op Op::make_get(const str &txt) {
-    Op op(OP_GET);
-    op.info = [txt](auto &op, auto &scp) { return txt; };
+  Drop::Drop(size_t count):
+    OpImp(OP_DROP, "drop"), count(count)
+  { }
 
-    op.compile = [txt](auto &op, auto &scp, auto &out) {
-	auto fnd(find_env(scp, txt));
+  OpImp &Drop::get_imp(Op &op) const {
+    return std::get<Drop>(op.data);
+  }
 
-	if (!fnd) {
-	  ERROR(Snabel, fmt("Unknown identifier: %0", txt));
-	  return false;
-	}
+  str Drop::info() const {
+    return fmt_arg(count);
+  }
+  
+  bool Drop::trace(Scope &scp) {
+    return run(scp);
+  }
+  
+  bool Drop::compile(const Op &op, Scope &scp, OpSeq &out) {
+    bool done(false);
+    size_t rem(0);
 
-	if (fnd->type == &scp.coro.exec.func_type) {
-	  Func &fn(*get<Func *>(*fnd));
-	  out.push_back(Op::make_func(fn));
-	  curr_stack(scp.coro).clear();
-	  return true;
-	}
+    while (!done && count > 0 && !out.empty()) {
+      auto &o(out.back());
+      
+      switch(o.imp.code) {
+      case OP_PUSH:
+	count--;
+	rem++;
+	out.pop_back();
+	break;
+      case OP_DROP:
+	count += get<Drop>(o.data).count;
+	rem++;
+	out.pop_back();
+	break;
+      default:
+	done = true;
+      }
+    }
+      
+    if (rem) {
+      if (count) { out.push_back(op); }
+      return true;
+    }
+    
+    return false;
+  }
+  
+  bool Drop::run(Scope &scp) {
+    auto &s(curr_stack(scp.coro));
+    if (s.size() < count) {
+      ERROR(Snabel, fmt("Not enough values on stack (%0):\n%1", count, s));
+      return false;
+    }
+    
+    for (size_t i(0); i < count; i++) { pop(scp.coro); }
+    return true;
+  }
 
-	if (fnd->type != &scp.coro.exec.undef_type &&
-	    fnd->type != &scp.coro.exec.void_type) {
-	  push(scp.coro, *fnd);
-	  out.push_back(Op::make_push(*fnd));
-	  return true;
-	}
+  Funcall::Funcall(Func &fn):
+    OpImp(OP_FUNCALL, "funcall"), fn(fn), imp(nullptr)
+  { }
 
-	curr_stack(scp.coro).clear();
-	return false;
-    };
+  OpImp &Funcall::get_imp(Op &op) const {
+    return std::get<Funcall>(op.data);
+  }
 
-    op.run = [txt](auto &op, auto &scp) {
-      auto fnd(find_env(scp, txt));
+  str Funcall::info() const {
+    return fn.name;
+  }
+
+  bool Funcall::trace(Scope &scp) {
+    Coro &cor(scp.coro);
+    if (!imp) { imp = match(fn, cor); }
+    if (!imp) { return false; }
+    auto args(pop_args(*imp, cor));
+    if (args.size() < imp->args.size()) { return false; }
+    if (imp->pure &&
+	!imp->args.empty() &&
+	std::find_if(args.begin(), args.end(),
+		     [](auto &a){ return undef(a); }) == args.end()) {
+      (*imp)(cor, args);
+      result.emplace(pop(cor));
+    } else if (&imp->res_type != &cor.exec.void_type) {
+      push(cor, Box(imp->res_type, undef));
+    }
+    
+    return true;
+  }
+  
+  bool Funcall::compile(const Op &op, Scope &scp, OpSeq &out) {
+    if (result) {
+      out.emplace_back(Drop(imp->args.size()));	
+      out.emplace_back(Push(*result));
+      return true;
+    }
+
+    return false;
+  }
+  
+  bool Funcall::run(Scope &scp) {
+    Coro &cor(scp.coro);
+    if (!imp) { imp = match(fn, cor); }
+    
+    if (!imp) {
+      ERROR(Snabel, fmt("Function not applicable: %0\n%1", 
+			fn.name, curr_stack(scp.coro)));
+      return false;
+    }
+
+    (*imp)(cor);
+    return true;
+  }
+
+  Get::Get(const str &name):
+    OpImp(OP_GET, "get"), name(name)
+  { }
+
+  OpImp &Get::get_imp(Op &op) const {
+    return std::get<Get>(op.data);
+  }
+
+  str Get::info() const { return name; }
+
+  bool Get::trace(Scope &scp) {
+    return run(scp);
+  }
+  
+  bool Get::compile(const Op &op, Scope &scp, OpSeq &out) {
+    if (!value) { return false; }
+    
+    if (value->type == &scp.coro.exec.func_type &&
+	name.front() != '$') {
+      out.emplace_back(Funcall(*get<Func *>(*value)));
+    } else {
+      out.emplace_back(Push(*value));
+    }
+      
+    return true;
+  }
+  
+  bool Get::run(Scope &scp) {
+    if (!value) {
+      auto fnd(find_env(scp, name));
 
       if (!fnd) {
-	ERROR(Snabel, fmt("Unknown identifier: %0", txt));
-	return;
-      }
-
-      push(scp.coro, *fnd);
-    };
-
-    return op;
-  }
-  
-  Op Op::make_group(bool copy_stack) {
-    Op op(OP_GROUP);
-
-    op.info = [copy_stack](auto &op, auto &scp) {
-      return copy_stack ? "copy" : "empty";
-    };
-
-    op.compile = [](auto &op, auto &scp, auto &out) mutable {
-      op.run(op, scp);
-      return false;
-    };
-    
-    op.run = [copy_stack](auto &op, auto &scp) { begin_scope(scp.coro, copy_stack); };
-    return op;
-  }
-
-  Op Op::make_jump(const str &tag, opt<Label> lbl) {
-    Op op(OP_JUMP);
-
-    op.info = [tag, lbl](auto &op, auto &scp) {
-      return fmt("%0 (%1)", tag, lbl ? to_str(lbl->pc) : "?");
-    };
-
-    op.compile = [tag, lbl](auto &op, auto &scp, auto &out) {            
-      auto fnd(scp.labels.find(tag));
-
-      if (fnd == scp.labels.end() ||
-	  (lbl && fnd->second.pc == lbl->pc)) {
-	curr_stack(scp.coro).clear();
+	ERROR(Snabel, fmt("Unknown identifier: %0", name));
 	return false;
       }
 
-      jump(scp.coro, fnd->second);
-      out.push_back(Op::make_jump(tag, fnd->second));
-      return true;
-    };
+      value.emplace(*fnd);
+    }
 
-    op.run = [tag, lbl](auto &op, auto &scp) {
-      if (lbl) {
-	jump(scp.coro, *lbl);
-      } else {
-	ERROR(Snabel, fmt("Missing label: %0", tag));
-      }
-    };
+    if (value->type == &scp.coro.exec.func_type &&
+	name.front() != '$') {
+      ERROR(Snabel, fmt("Function not found: %0", name));
+      return false;
+    }
     
-    return op;
+    push(scp.coro, *value);
+    return true;
   }
   
-  Op Op::make_label(const str &tag) {
-    Op op(OP_LABEL);
-    op.info = [tag](auto &op, auto &scp) { return tag; };
+  Group::Group(bool copy):
+    OpImp(OP_GROUP, "group"), copy(copy)
+  { }
 
-    int64_t prev_pc(-1);
-    op.compile = [tag, prev_pc](auto &op, auto &scp, auto &out)
-      mutable {
-      Coro &cor(scp.coro);
-      auto fnd(scp.labels.find(tag));
-
-      if (fnd == scp.labels.end()) {
-	scp.labels.emplace(std::piecewise_construct,
-			   std::forward_as_tuple(tag),
-			   std::forward_as_tuple(tag, cor.scopes.size(), cor.pc));
-	prev_pc = cor.pc;
-	out.push_back(op);
-	return true;
-      }
-
-      if (prev_pc == cor.pc) { return false; }
-      
-      if (prev_pc == -1 || fnd->second.pc == prev_pc) {
-	fnd->second.depth = cor.scopes.size();
-	prev_pc = fnd->second.pc = cor.pc;
-      } else {
-	ERROR(Snabel, fmt("Duplicate label: %0", tag));
-      }
-      
-      out.push_back(op);
-      return true;
-    };
-
-    return op;
+  OpImp &Group::get_imp(Op &op) const {
+    return std::get<Group>(op.data);
   }
 
-  Op Op::make_lambda() {
-    Op op(OP_LAMBDA);
+  str Group::info() const { return copy ? "copy" : ""; }
 
-    op.compile = [](auto &op, auto &scp, auto &out) mutable {
-      Coro &cor(scp.coro);
-      curr_stack(cor).clear();
-      
-      const Sym tag(gensym(cor.exec));
-      scp.lambdas.push_back(tag);
-      out.push_back(Op::make_jump(fmt("_exit%0", tag)));
-      out.push_back(Op::make_label(fmt("_enter%0", tag)));
-      out.push_back(Op::make_group(true));
-      out.push_back(Op::make_fence());
-      return true;
-    };
-    
-    return op;
+  bool Group::trace(Scope &scp) {
+    return run(scp);
   }
   
-  Op Op::make_let(const str &id) {
-    Op op(OP_LET);
-    op.info = [id](auto &op, auto &scp) { return id; };
+  bool Group::run(Scope &scp) {
+    begin_scope(scp.coro, copy);
+    return true;
+  }
 
-    int64_t prev_pc(-1);
-    op.compile = [id, prev_pc](auto &op, auto &scp, auto &out)
-      mutable {
-      auto fnd(find_env(scp, id));
-      auto &exe(scp.coro.exec);
+  Jump::Jump(const str &tag):
+    OpImp(OP_JUMP, "jump"), tag(tag), label(nullptr)
+  { }
+
+  Jump::Jump(Label &label):
+    OpImp(OP_JUMP, "jump"), tag(label.tag), label(&label)
+  { }
+
+  OpImp &Jump::get_imp(Op &op) const {
+    return std::get<Jump>(op.data);
+  }
+
+  str Jump::info() const {
+    return fmt("%0 (%1)", tag, label ? to_str(label->pc) : "?");
+  }
+
+  bool Jump::trace(Scope &scp) {
+    auto &cor(scp.coro);
+    auto &exe(cor.exec);
+    
+    auto fnd(exe.labels.find(tag));
+    if (fnd == exe.labels.end()) { return false; }
+    
+    label = &fnd->second;
+    return run(scp);
+  }
+
+  bool Jump::run(Scope &scp) {
+    if (!label) {
+      ERROR(Snabel, fmt("Missing label: %0", tag));
+      return false;
+    }
       
-      if (fnd && fnd->type != &exe.undef_type) {
-	if (fnd->type == &exe.void_type) {
-	  if (get<int64_t>(*fnd) != prev_pc) {
-	    ERROR(Snabel, fmt("Duplicate binding: %0", id));
-	  }
-	} else {
-	  ERROR(Snabel, fmt("Duplicate binding: %0\n%1", id, *fnd));
-	}
+    jump(scp.coro, *label);
+    return true;
+  }
+  
+  Lambda::Lambda():
+    OpImp(OP_LAMBDA, "lambda")
+  { }
 
-	auto &s(curr_stack(scp.coro));
-
-	if (s.size() == 1) {
-	  s.pop_back();
-	} else {
-	  s.clear();
-	}
-      } else {
-	opt<Box> val;	
-	  auto &s(curr_stack(scp.coro));
-
-	if (s.size() == 1) {
-	  val.emplace(s.back());
-	  s.pop_back();
-	} else {
-	  s.clear();
-	}
-	
-	put_env(scp, id, val ? *val : Box(exe.void_type, scp.coro.pc));
-	prev_pc = scp.coro.pc;
-      }
-
-      return false;
-    };
-
-    op.run = [id](auto &op, auto &scp) {
-      auto &s(curr_stack(scp.coro));
-      
-      if (s.size() == 1) {
-	auto v(s.back());
-	s.pop_back();
-	put_env(scp, id, v);
-      } else {
-	ERROR(Snabel, fmt("Malformed run binding: %0\n%1", id, s));
-      }
-    };
-    
-    return op;
+  OpImp &Lambda::get_imp(Op &op) const {
+    return std::get<Lambda>(op.data);
   }
 
-  Op Op::make_push(const Box &it) {
-    Op op(OP_PUSH);
-    op.info = [it](auto &op, auto &scp) { return fmt_arg(it); };
-    
-    op.compile = [it](auto &op, auto &scp, auto &out) {
-      op.run(op, scp);
-      return false;
-    };
-    
-    op.run = [it](auto &op, auto &scp) { push(scp.coro, it); };
-    return op;
-  }
-
-  Op Op::make_reset() {
-    Op op(OP_RESET);
-
-    op.compile = [](auto &op, auto &scp, auto &out) {
-      op.run(op, scp);
-      return false;
-    };
-    
-    op.run = [](auto &op, auto &scp) { curr_stack(scp.coro).clear(); };
-    return op;
-  }
-
-  Op Op::make_restore() {
-    Op op(OP_RESTORE);
-
-    op.compile = [](auto &op, auto &scp, auto &out) {
-      op.run(op, scp);
-      return false;
-    };
-    
-    op.run = [](auto &op, auto &scp) { restore_stack(scp.coro); };
-    return op;
-  }
-
-  Op Op::make_return() {
-    Op op(OP_RETURN);
-
-    op.run = [](auto &op, auto &scp) {
+  bool Lambda::compile(const Op &op, Scope &scp, OpSeq &out) {
       Coro &cor(scp.coro);
-      cor.pc = cor.returns.back();
-      cor.returns.pop_back();
-    };
-    
-    return op;
+
+      str tag(fmt_arg(gensym(cor.exec)));
+      cor.exec.lambdas.push_back(tag);
+      curr_stack(cor).clear();
+
+      out.emplace_back(Jump(fmt("_exit%0", tag)));
+      out.emplace_back(Target(fmt("_enter%0", tag)));
+      out.emplace_back(Group(true));
+      return true;
   }
 
-  Op Op::make_swap() {
-    Op op(OP_SWAP);
+  Let::Let(const str &name):
+    OpImp(OP_LET, "let"), name(name)
+  { }
 
-    op.compile = [](auto &op, auto &scp, auto &out) {
-      auto &s(curr_stack(scp.coro));
-      if (s.size() > 1) { op.run(op, scp); }
+  OpImp &Let::get_imp(Op &op) const {
+    return std::get<Let>(op.data);
+  }
+
+  str Let::info() const { return name; }
+
+  void Let::prepare(Scope &scp) {
+    auto fnd(find_env(scp, name));
+      
+    if (fnd) {
+      ERROR(Snabel, fmt("Duplicate binding: %0", name));
+    }
+  }
+  
+  bool Let::trace(Scope &scp) {
+    auto &s(curr_stack(scp.coro));
+    if (s.empty()) { return false; }
+    
+    if (!value) {
+      value.emplace(s.back());
+      put_env(scp, name, *value);
+    }
+    
+    s.pop_back();
+    return true;
+  }
+  
+  bool Let::run(Scope &scp) {
+    auto &s(curr_stack(scp.coro));
+
+    if (s.empty()) {
+      ERROR(Snabel, fmt("Missing bound value: %0", name));
       return false;
-    };
-    
-    op.run = [](auto &op, auto &scp) {
-      auto &s(curr_stack(scp.coro));
+    }
 
-      if (s.size() > 1) {
-	auto x(s.back());
-	s.pop_back();
-	auto y(s.back());
-	s.pop_back();
-	s.push_back(x);
-	s.push_back(y);
-      } else {
-	ERROR(Snabel, fmt("Invalid swap:\n%0", s));
-      }
-    };
-    
-    return op;
+    value.emplace(s.back());
+    s.pop_back();
+    put_env(scp, name, *value);
+    return true;
   }
 
-  Op Op::make_ungroup() {
-    Op op(OP_UNGROUP);
+  Push::Push(const Box &value):
+    OpImp(OP_PUSH, "push"), value(value)
+  { }
 
-    op.compile = [](auto &op, auto &scp, auto &out) mutable {
-      auto &cor(scp.coro);
-      bool clear(curr_stack(cor).empty());
-      op.run(op, scp);
-      if (clear) { curr_stack(cor).clear(); }
+  OpImp &Push::get_imp(Op &op) const {
+    return std::get<Push>(op.data);
+  }
+
+  str Push::info() const { return fmt_arg(value); }
+
+  bool Push::trace(Scope &scp) {
+    return run(scp);
+  }
+  
+  bool Push::run(Scope &scp) {
+    push(scp.coro, value);
+    return true;
+  }
+
+  Reset::Reset():
+    OpImp(OP_RESET, "reset")
+  { }
+
+  OpImp &Reset::get_imp(Op &op) const {
+    return std::get<Reset>(op.data);
+  }
+
+  bool Reset::trace(Scope &scp) {
+    return run(scp);
+  }
+
+  bool Reset::run(Scope &scp) {
+    curr_stack(scp.coro).clear();
+    return true;
+  }
+
+  Restore::Restore():
+    OpImp(OP_RESTORE, "restore")
+  { }
+
+  OpImp &Restore::get_imp(Op &op) const {
+    return std::get<Restore>(op.data);
+  }
+
+  bool Restore::trace(Scope &scp) {
+    return run(scp);
+  }
+
+  bool Restore::run(Scope &scp) {
+    restore_stack(scp.coro);
+    return true;
+  }
+
+  Return::Return():
+    OpImp(OP_RETURN, "return")
+  { }
+
+  OpImp &Return::get_imp(Op &op) const {
+    return std::get<Return>(op.data);
+  }
+
+  bool Return::trace(Scope &scp) {
+    if (scp.coro.returns.empty()) { return false; }
+    return run(scp);
+  }
+
+  bool Return::run(Scope &scp) {
+    Coro &cor(scp.coro);
+
+    if (cor.returns.empty()) {
+      ERROR(Snabel, "Missing return pc");
       return false;
-    };
+    }
 
-    op.run = [](auto &op, auto &scp) { end_scope(scp.coro); };
-    return op;
+    cor.pc = cor.returns.back();
+    cor.returns.pop_back();
+    return true;
   }
 
-  Op Op::make_unlambda() {
-    Op op(OP_UNLAMBDA);
+  Swap::Swap():
+    OpImp(OP_SWAP, "swap")
+  { }
 
-    op.compile = [](auto &op, auto &scp, auto &out) mutable {
+  OpImp &Swap::get_imp(Op &op) const {
+    return std::get<Swap>(op.data);
+  }
+
+  bool Swap::trace(Scope &scp) {
+    return run(scp);
+  }
+    
+  bool Swap::run(Scope &scp) {
+    auto &s(curr_stack(scp.coro));
+    if (s.size() < 2) {
+      ERROR(Snabel, fmt("Invalid swap:\n%0", s));
+      return false;
+    }
+    
+    auto x(s.back());
+    s.pop_back();
+    auto y(s.back());
+    s.pop_back();
+    s.push_back(x);
+    s.push_back(y);
+    return true;
+  }
+
+  Target::Target(const str &tag):
+    OpImp(OP_TARGET, "target"), tag(tag), label(nullptr)
+  { }
+
+  OpImp &Target::get_imp(Op &op) const {
+    return std::get<Target>(op.data);
+  }
+
+  str Target::info() const { return tag; }
+
+  void Target::prepare(Scope &scp) {
+    auto &cor(scp.coro);
+    auto &exe(cor.exec);
+    auto fnd(exe.labels.find(tag));
+    pc = cor.pc;
+    depth = cor.scopes.size();
+
+    if (fnd == exe.labels.end()) {
+      label = &exe.labels
+	.emplace(std::piecewise_construct,
+		 std::forward_as_tuple(tag),
+		 std::forward_as_tuple(tag, cor.pc, depth))
+	.first->second;
+    } else {
+      ERROR(Snabel, fmt("Duplicate label: %0", tag));
+    }
+  }
+
+  void Target::refresh(Scope &scp) {
+    label->pc = scp.coro.pc;
+  }
+  
+  Ungroup::Ungroup():
+    OpImp(OP_UNGROUP, "ungroup")
+  { }
+
+  OpImp &Ungroup::get_imp(Op &op) const {
+    return std::get<Ungroup>(op.data);
+  }
+
+  bool Ungroup::trace(Scope &scp) {
+    return run(scp);
+  }
+  
+  bool Ungroup::run(Scope &scp) {
+    if (scp.coro.scopes.size() < 2) { return false; }
+    end_scope(scp.coro);
+    return true;
+  }
+
+  Unlambda::Unlambda():
+    OpImp(OP_UNLAMBDA, "unlambda")
+  { }
+
+  OpImp &Unlambda::get_imp(Op &op) const {
+    return std::get<Unlambda>(op.data);
+  }
+
+  bool Unlambda::compile(const Op &op, Scope &scp, OpSeq &out) {
       Coro &cor(scp.coro);
       curr_stack(cor).clear();
-      
-      if (scp.lambdas.empty()) {
+
+      if (cor.exec.lambdas.empty()) {
 	ERROR(Snabel, "Missing lambda start");
 	return false;
       }
 
-      const Sym tag(scp.lambdas.back());
-      scp.lambdas.pop_back();
-      out.push_back(Op::make_ungroup());
-      out.push_back(Op::make_return());
-      out.push_back(Op::make_label(fmt("_exit%0", tag)));
-      out.push_back(Op::make_push(Box(cor.exec.lambda_type, fmt("_enter%0", tag))));
+      str tag(cor.exec.lambdas.back());
+      cor.exec.lambdas.pop_back();
+      
+      out.emplace_back(Ungroup());
+      out.emplace_back(Return());
+      out.emplace_back(Target(fmt("_exit%0", tag)));
+      out.emplace_back(Push(Box(cor.exec.lambda_type, fmt("_enter%0", tag))));
       return true;
-    };
-    
-    return op;
   }
-
-  static str def_info(const Op &op, Scope &scp) { return ""; }
-
-  static bool def_compile(const Op &op, Scope &scp, OpSeq &out) {
-    return false;
-  }
-
-  static void def_run(const Op &op, Scope &scp)
-  { }
-
-  Op::Op(OpCode cod):
-    code(cod),
-    info(def_info), compile(def_compile), run(def_run)
-  { }
-
-  str name(const Op &op) {
-    switch (op.code){
-    case OP_BACKUP:
-      return "backup";
-    case OP_BRANCH:
-      return "branch";
-    case OP_CALL:
-      return "call";
-    case OP_DROP:
-      return "drop";
-    case OP_FENCE:
-      return "fence";
-    case OP_FUNC:
-      return "func";
-    case OP_GET:
-      return "get";
-    case OP_GROUP:
-      return "group";
-    case OP_JUMP:
-      return "jump";
-    case OP_LABEL:
-      return "label";
-    case OP_LAMBDA:
-      return "lambda";
-    case OP_LET:
-      return "let";
-    case OP_PUSH:
-      return "push";
-    case OP_RESET:
-      return "reset";
-    case OP_RESTORE:
-      return "restore";
-    case OP_RETURN:
-      return "return";
-    case OP_SWAP:
-      return "swap";
-    case OP_UNGROUP:
-      return "ungroup";
-    case OP_UNLAMBDA:
-      return "unlambda";
-    };
-
-    ERROR(Snabel, fmt("Invalid op code: %0", op.code));
-    return "n/a";
-  }
-
   
-  str info(const Op &op, Scope &scp) {
-    return op.info(op, scp);
+  Op::Op(const Op &src):
+    data(src.data), imp(src.imp.get_imp(*this)), prepared(src.prepared)
+  { }
+
+  void prepare(Op &op, Scope &scp) {
+    op.imp.prepare(scp);
+    op.prepared = true;
   }
 
-  bool compile(const Op &op, Scope &scp, OpSeq &out) {
-    if (op.compile(op, scp, out)) { return true; }
+  void refresh(Op &op, Scope &scp) {
+    op.imp.refresh(scp);
+  }
+
+  bool trace(Op &op, Scope &scp) {
+    return op.imp.trace(scp);
+  }
+
+  bool compile(Op &op, Scope &scp, OpSeq &out) {
+    if (op.imp.compile(op, scp, out)) { return true; }
     out.push_back(op);
     return false;
   }
 
-  void run(const Op &op, Scope &scp) {
-    op.run(op, scp);
+  bool run(Op &op, Scope &scp) {
+    return op.imp.run(scp);
   }
 }

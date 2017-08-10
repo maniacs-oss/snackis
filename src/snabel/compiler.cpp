@@ -11,26 +11,26 @@ namespace snabel {
     Tok tok(in.front());
     in.pop_front();
     
-    if (tok.text[0] == '{') {      
-      out.push_back(Op::make_lambda());
+    if (tok.text[0] == '{') {
+      out.emplace_back(Lambda());
       str e(tok.text.substr(1, tok.text.size()-2));
       compile(exe, lnr, parse_expr(e), out);
-      out.push_back(Op::make_unlambda());
+      out.emplace_back(Unlambda());
     } else if (tok.text.front() == '@') {
-      out.push_back(Op::make_label(tok.text.substr(1)));
+      out.emplace_back(Target(tok.text.substr(1)));
     } else if (tok.text.back() == '!') {
-      out.push_back(Op::make_jump(tok.text.substr(0, tok.text.size()-1)));
+      out.emplace_back(Jump(tok.text.substr(0, tok.text.size()-1)));
     } else if (tok.text.front() == '"') {
-      out.push_back(Op::make_push(Box(exe.str_type,
-				      tok.text.substr(1, tok.text.size()-2))));
+      out.emplace_back(Push(Box(exe.str_type,
+				tok.text.substr(1, tok.text.size()-2))));
     } else if (isdigit(tok.text[0]) || 
 	(tok.text.size() > 1 && tok.text[0] == '-' && isdigit(tok.text[1]))) {
-      out.push_back(Op::make_push(Box(exe.i64_type, to_int64(tok.text))));
+      out.emplace_back(Push(Box(exe.i64_type, to_int64(tok.text))));
     } else {
       auto fnd(exe.macros.find(tok.text));
       
       if (fnd == exe.macros.end()) {
-	out.push_back(Op::make_get(tok.text));
+	out.emplace_back(Get(tok.text));
       } else {
 	fnd->second(Pos(lnr, tok.i), in, out);
       }

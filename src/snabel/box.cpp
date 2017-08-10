@@ -11,6 +11,14 @@ namespace snabel {
   Box::Box(Type &t, const Val &v):
     type(&t), val(v)
   { }
+
+  bool operator ==(const Box &x, const Box &y) {
+    return x.type == y.type && x.type->eq(x, y);
+  }
+  
+  bool operator !=(const Box &x, const Box &y) {
+    return x.type != y.type || !x.type->eq(x, y);
+  }
 }
 
 namespace snackis {

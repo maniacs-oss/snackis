@@ -114,6 +114,8 @@ namespace snabel {
 
   bool compile(Coro &cor, const str &in) {
     cor.ops.clear();
+    cor.exec.labels.clear();
+    cor.exec.lambdas.clear();
     size_t lnr(0);
     
     for (auto &ln: parse_lines(in)) {
@@ -125,39 +127,44 @@ namespace snabel {
     }
 
     begin_scope(cor, false);
-
+    
     while (true) {
       TRY(try_compile);
       OpSeq out;
-      bool done(true);
-      push_env(curr_scope(cor));
+      
       cor.pc = 0;
-      int64_t wait_pc(-1);
-	
       for (auto &op: cor.ops) {
-	auto prev_pc(cor.pc);
-
-	if (wait_pc == -1 || cor.pc == wait_pc) {
-	  wait_pc = -1;
-	  if (compile(op, curr_scope(cor), out)) { done = false; }
-	} else {
-	  out.push_back(op);
-	  done = false;
+	if (!op.prepared) {
+	  prepare(op, curr_scope(cor));
 	}
-
-	if (cor.pc != prev_pc) {
-	  wait_pc = cor.pc;
-	  cor.pc = prev_pc;
-	}
-	    
+	
 	cor.pc++;
       }
 
+      cor.pc = 0;
+      for (auto &op: cor.ops) {
+	refresh(op, curr_scope(cor));
+	cor.pc++;
+      }
+
+      cor.pc = 0;
+      while (cor.pc < cor.ops.size()) {
+	TRY(try_trace);
+	DEFER({ try_trace.errors.clear(); });
+	Op &op(cor.ops[cor.pc]);
+	if (!trace(op, curr_scope(cor))) { break; }
+	cor.pc++;
+      }
+
+      bool done(true);
+      for (auto &op: cor.ops) {
+	if (compile(op, curr_scope(cor), out)) { done = false; }
+      }
+
+      if (done) { break; }
+
       cor.ops.clear();
       cor.ops.swap(out);
-      pop_env(curr_scope(cor));
-      if (done) { break; }
-      try_compile.errors.clear();
     }
 
     rewind(cor);
@@ -166,8 +173,8 @@ namespace snabel {
 
   void run(Coro &cor) {
     while (cor.pc < cor.ops.size()) {
-      run(cor.ops[cor.pc], curr_scope(cor));
+      if (!run(cor.ops[cor.pc], curr_scope(cor))) { break; }
       cor.pc++;
     }
-  }  
+  }
 }

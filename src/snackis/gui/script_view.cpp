@@ -65,8 +65,8 @@ namespace gui {
       
       gtk_list_store_set(v->bcode_store, &iter,
 			 BCODE_PTR, &op,
-			 BCODE_NAME, name(op).c_str(),
-			 BCODE_INFO, info(op, curr_scope(v->exec.main)).c_str(),
+			 BCODE_NAME, op.imp.name.c_str(),
+			 BCODE_INFO, op.imp.info().c_str(),
 			 -1);
     }
 

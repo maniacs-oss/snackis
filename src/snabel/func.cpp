@@ -49,7 +49,7 @@ namespace snabel {
     return fn.imps.emplace_front(fn, args, rt, imp);
   }
 
-  static bool match(const FuncImp &imp, const Coro &cor) {
+  bool match(const FuncImp &imp, const Coro &cor) {
     if (imp.args.empty()) { return true; }
     auto &s(curr_stack(cor));
     if (s.size() < imp.args.size()) { return false; }

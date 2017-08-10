@@ -71,54 +71,62 @@ namespace snabel {
     next_sym(1)
   {
     meta_type.fmt = [](auto &v) { return get<Type *>(v)->name; };
+    meta_type.eq = [](auto &x, auto &y) { return get<Type *>(x) == get<Type *>(y); };
     any_type.fmt = [](auto &v) { return "n/a"; };
+    any_type.eq = [](auto &x, auto &y) { return false; };
     bool_type.fmt = [](auto &v) { return get<bool>(v) ? "'t" : "'f"; };
+    bool_type.eq = [](auto &x, auto &y) { return get<bool>(x) == get<bool>(y); };
     put_env(main.scopes.front(), "'t", Box(bool_type, true));
     put_env(main.scopes.front(), "'f", Box(bool_type, false));
 
     func_type.fmt = [](auto &v) { return fmt_arg(size_t(get<Func *>(v))); };
+    func_type.eq = [](auto &x, auto &y) { return get<Func *>(x) == get<Func *>(y); };
     i64_type.fmt = [](auto &v) { return fmt_arg(get<int64_t>(v)); };
+    i64_type.eq = [](auto &x, auto &y) { return get<int64_t>(x) == get<int64_t>(y); };
     lambda_type.fmt = [](auto &v) { return get<str>(v); };
+    lambda_type.eq = [](auto &x, auto &y) { return get<str>(x) == get<str>(y); };
     str_type.fmt = [](auto &v) { return fmt("\"%0\"", get<str>(v)); };
+    str_type.eq = [](auto &x, auto &y) { return get<str>(x) == get<str>(y); };
     undef_type.fmt = [](auto &v) { return "n/a"; };
+    undef_type.eq = [](auto &x, auto &y) { return true; };
     void_type.fmt = [](auto &v) { return "n/a"; };
-
+    void_type.eq = [](auto &x, auto &y) { return true; };  
+ 
     add_func(*this, "+", {&i64_type, &i64_type}, i64_type, add_i64_imp);
     add_func(*this, "-", {&i64_type, &i64_type}, i64_type, sub_i64_imp);
     add_func(*this, "*", {&i64_type, &i64_type}, i64_type, mul_i64_imp);
     add_func(*this, "%", {&i64_type, &i64_type}, i64_type, mod_i64_imp);
 
     add_macro(*this, "(", [](auto pos, auto &in, auto &out) {
-	out.push_back(Op::make_group(false));
+	out.emplace_back(Group(false));
       });
 
     add_macro(*this, ")", [](auto pos, auto &in, auto &out) {
-	out.push_back(Op::make_ungroup());
+	out.emplace_back(Ungroup());
       });
     
     add_macro(*this, "begin", [](auto pos, auto &in, auto &out) {
-	out.push_back(Op::make_lambda());
+	out.emplace_back(Lambda());
       });
 
     add_macro(*this, "call", [](auto pos, auto &in, auto &out) {
-	out.push_back(Op::make_call());
+	out.emplace_back(Call());
       });
 
     add_macro(*this, "drop", [](auto pos, auto &in, auto &out) {
-	out.push_back(Op::make_drop());
+	out.emplace_back(Drop(1));
       });
     
     add_macro(*this, "end", [](auto pos, auto &in, auto &out) {
-	out.push_back(Op::make_unlambda());
+	out.emplace_back(Unlambda());
       });
-
 
     add_macro(*this, "let:", [this](auto pos, auto &in, auto &out) {
 	if (in.size() < 2) {
 	  ERROR(Snabel, fmt("Malformed binding on row %0, col %1",
 			    pos.row, pos.col));
 	} else {
-	  out.push_back(Op::make_backup(false));
+	  out.emplace_back(Backup(false));
 	  const str n(in.front().text);
 	  auto i(std::next(in.begin()));
 	  
@@ -129,17 +137,17 @@ namespace snabel {
 	  compile(*this, pos.row, TokSeq(std::next(in.begin()), i), out);
 	  if (i != in.end()) { i++; }
 	  in.erase(in.begin(), i);
-	  out.push_back(Op::make_restore());
-	  out.push_back(Op::make_let(fmt("$%0", n)));
+	  out.emplace_back(Restore());
+	  out.emplace_back(Let(fmt("$%0", n)));
 	}
       });
     
     add_macro(*this, "reset", [](auto pos, auto &in, auto &out) {
-	out.push_back(Op::make_reset());
+	out.emplace_back(Reset());
       });
 
     add_macro(*this, "when", [this](auto pos, auto &in, auto &out) {
-	out.push_back(Op::make_branch());
+	out.emplace_back(Branch());
       });
   }
 

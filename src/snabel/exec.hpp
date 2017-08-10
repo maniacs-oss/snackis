@@ -5,6 +5,7 @@
 #include <map>
 
 #include "snabel/fiber.hpp"
+#include "snabel/label.hpp"
 #include "snabel/macro.hpp"
 #include "snabel/sym.hpp"
 #include "snabel/type.hpp"
@@ -16,6 +17,8 @@ namespace snabel {
     std::map<UId, Fiber> fibers;
     std::deque<Type> types;
     std::map<str, Func> funcs;
+    std::map<str, Label> labels;    
+    std::deque<str> lambdas;
 
     Fiber &main;
     Type &meta_type, &any_type,

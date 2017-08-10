@@ -4,6 +4,7 @@
 #include <deque>
 #include <utility>
 
+#include "snabel/box.hpp"
 #include "snabel/label.hpp"
 #include "snackis/core/func.hpp"
 #include "snackis/core/str.hpp"
@@ -13,50 +14,226 @@ namespace snabel {
 
   struct Box;
   struct Func;
+  struct FuncImp;
   struct Scope;
   struct Op;
 
-  enum OpCode { OP_BACKUP, OP_BRANCH, OP_CALL, OP_DROP, OP_FENCE, OP_FUNC,
-	        OP_GET, OP_GROUP, OP_JUMP, OP_LABEL, OP_LAMBDA, OP_LET,
-		OP_PUSH, OP_RESET, OP_RESTORE, OP_RETURN, OP_SWAP, OP_UNGROUP,
-		OP_UNLAMBDA };
+  enum OpCode { OP_BACKUP, OP_BRANCH, OP_CALL, OP_DROP, OP_FUNCALL,
+	        OP_GET, OP_GROUP, OP_JUMP,  OP_LAMBDA, OP_LET,
+		OP_PUSH, OP_RESET, OP_RESTORE, OP_RETURN, OP_SWAP, OP_TARGET,
+		OP_UNGROUP, OP_UNLAMBDA };
 
   using OpSeq = std::deque<Op>;
 
-  struct Op {
-    OpCode code;
+  struct OpImp {
+    const OpCode code;
+    const str name;
     
-    func<str (const Op &op, Scope &)> info;
-    func<bool (const Op &op, Scope &, OpSeq &)> compile;
-    func<void (const Op &op, Scope &)> run;
-    
-    static Op make_backup(bool copy);
-    static Op make_branch(opt<Label> lbl=nullopt);
-    static Op make_call(opt<Label> lbl=nullopt);
-    static Op make_drop(size_t cnt=1);
-    static Op make_fence();    
-    static Op make_func(Func &fn);
-    static Op make_get(const str &txt);
-    static Op make_group(bool copy_stack);
-    static Op make_jump(const str &tag, opt<Label> lbl=nullopt);
-    static Op make_label(const str &tag);
-    static Op make_lambda();
-    static Op make_let(const str &id);
-    static Op make_push(const Box &it);
-    static Op make_reset();
-    static Op make_restore();
-    static Op make_return();
-    static Op make_swap();
-    static Op make_ungroup();
-    static Op make_unlambda();
-
-    Op(OpCode cod);
+    OpImp(OpCode code, const str &name);
+    virtual OpImp &get_imp(Op &op) const = 0;
+    virtual str info() const;
+    virtual void prepare(Scope &scp);
+    virtual void refresh(Scope &scp);
+    virtual bool trace(Scope &scp);
+    virtual bool compile(const Op &op, Scope &scp, OpSeq &out);
+    virtual bool run(Scope &scp);
   };
 
-  str name(const Op &op);
-  str info(const Op &op, Scope &scp);
-  bool compile(const Op &op, Scope &scp, OpSeq &out);
-  void run(const Op &op, Scope &scp);
+  struct Backup: OpImp {
+    bool copy;
+    
+    Backup(bool copy);
+    OpImp &get_imp(Op &op) const override;
+    bool trace(Scope &scp) override;
+    bool run(Scope &scp) override;
+  };
+
+  struct Branch: OpImp {
+    Label *label;
+    opt<bool> cond;
+
+    Branch();
+    OpImp &get_imp(Op &op) const override;
+    str info() const override;
+    bool trace(Scope &scp) override;
+    bool compile(const Op &op, Scope &scp, OpSeq & out) override;
+    bool run(Scope &scp) override;
+  };
+
+  struct Call: OpImp {
+    Label *label;
+
+    Call();
+    Call(Label &label);
+    OpImp &get_imp(Op &op) const override;
+    str info() const override;
+
+    bool trace(Scope &scp) override;
+    bool run(Scope &scp) override;
+  };
+
+  struct Drop: OpImp {
+    size_t count;
+
+    Drop(size_t count);
+    OpImp &get_imp(Op &op) const override;
+    str info() const override;
+    bool trace(Scope &scp) override;
+    bool compile(const Op &op, Scope &scp, OpSeq & out) override;
+    bool run(Scope &scp) override;
+  };
+
+  struct Funcall: OpImp {
+    Func &fn;
+    FuncImp *imp;
+    opt<Box> result;
+
+    Funcall(Func &fn);
+    OpImp &get_imp(Op &op) const override;
+    str info() const override;
+    bool trace(Scope &scp) override;
+    bool compile(const Op &op, Scope &scp, OpSeq & out) override;
+    bool run(Scope &scp) override;
+  };
+
+  struct Get: OpImp {
+    str name;
+    opt<Box> value;
+
+    Get(const str &name);
+    OpImp &get_imp(Op &op) const override;
+    str info() const override;
+    bool trace(Scope &scp) override;
+    bool compile(const Op &op, Scope &scp, OpSeq & out) override;
+    bool run(Scope &scp) override;
+  };
+
+  struct Group: OpImp {
+    bool copy;
+    
+    Group(bool copy);
+    OpImp &get_imp(Op &op) const override;
+    str info() const override;
+    bool trace(Scope &scp) override;
+    bool run(Scope &scp) override;
+  };
+
+  struct Jump: OpImp {
+    str tag;
+    Label *label;
+    
+    Jump(const str &tag);
+    Jump(Label &label);
+    OpImp &get_imp(Op &op) const override;
+    str info() const override;
+    bool trace(Scope &scp) override;
+    bool run(Scope &scp) override;
+  };
+
+  struct Lambda: OpImp {
+    Lambda();
+    OpImp &get_imp(Op &op) const override;
+    bool compile(const Op &op, Scope &scp, OpSeq & out) override;
+  };
+
+  struct Let: OpImp {
+    str name;
+    opt<Box> value;
+    
+    Let(const str &name);
+    OpImp &get_imp(Op &op) const override;
+    str info() const override;
+    void prepare(Scope &scp) override;
+    bool trace(Scope &scp) override;
+    bool run(Scope &scp) override;
+  };
+
+  struct Push: OpImp {
+    Box value;
+    
+    Push(const Box &value);
+    OpImp &get_imp(Op &op) const override;
+    str info() const override;
+    bool trace(Scope &scp) override;
+    bool run(Scope &scp) override;
+  };
+
+  struct Reset: OpImp {
+    Reset();
+    OpImp &get_imp(Op &op) const override;
+    bool trace(Scope &scp) override;
+    bool run(Scope &scp) override;
+  };
+
+  struct Restore: OpImp {
+    Restore();
+    OpImp &get_imp(Op &op) const override;
+    bool trace(Scope &scp) override;
+    bool run(Scope &scp) override;
+  };
+
+  struct Return: OpImp {
+    Return();
+    OpImp &get_imp(Op &op) const override;
+    bool trace(Scope &scp) override;
+    bool run(Scope &scp) override;
+  };
+
+  struct Swap: OpImp {
+    Swap();
+    OpImp &get_imp(Op &op) const override;
+    bool trace(Scope &scp) override;
+    bool run(Scope &scp) override;
+  };
+
+  struct Target: OpImp {
+    str tag;
+    Label *label;
+    int64_t depth, pc;
+    
+    Target(const str &tag);
+    OpImp &get_imp(Op &op) const override;
+    str info() const override;
+    void prepare(Scope &scp) override;
+    void refresh(Scope &scp) override;
+  };
+
+  struct Ungroup: OpImp {
+    Ungroup();
+    OpImp &get_imp(Op &op) const override;
+    bool trace(Scope &scp) override;
+    bool run(Scope &scp) override;
+  };
+
+  struct Unlambda: OpImp {
+    Unlambda();
+    OpImp &get_imp(Op &op) const override;
+    bool compile(const Op &op, Scope &scp, OpSeq & out) override;
+  };
+
+  using OpData = std::variant<Backup, Branch, Call, Drop, Funcall, Get, Group,
+			      Jump, Lambda, Let, Push, Reset, Restore, Return,
+			      Swap, Target, Ungroup, Unlambda>;
+
+  struct Op {
+    OpData data;
+    OpImp &imp;
+    bool prepared;
+    
+    template <typename ImpT>
+    Op(const ImpT &imp);
+    Op(const Op &src);
+  };
+
+  template <typename ImpT>
+  Op::Op(const ImpT &imp): data(imp), imp(get<ImpT>(data)), prepared(false)
+  { }
+
+  void prepare(Op &op, Scope &scp);
+  void refresh(Op &op, Scope &scp);
+  bool trace(Op &op, Scope &scp);
+  bool compile(Op &op, Scope &scp, OpSeq &out);
+  bool run(Op &op, Scope &scp);
 }
 
 #endif

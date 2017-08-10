@@ -44,6 +44,7 @@ namespace snabel {
 		   const ArgTypes &args,
 		   Type &rt,
 		   FuncImp::Imp imp);
+  bool match(const FuncImp &imp, const Coro &cor);
   FuncImp *match(Func &fn, const Coro &cor);
 }
 

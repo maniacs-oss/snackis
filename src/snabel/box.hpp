@@ -28,6 +28,9 @@ namespace snabel {
   };
 
   extern const Undef undef;
+
+  bool operator ==(const Box &x, const Box &y);
+  bool operator !=(const Box &x, const Box &y);
   
   template <typename T>
   T get(const Box &b) {
