@@ -98,7 +98,7 @@ I64
 ```
 
 ### Types
-Snabel provides static types; and will check and optimize code based on types of variables and functions during compilation. First class types and type-inference are provided to help reduce cognitive load and keyboard wear.
+Snabel provides static, optionally parameterized types; and will check and optimize code based on types of variables and functions during compilation. First class types and type-inference are provided to help reduce cognitive load and keyboard wear.
 
 ```
 > I64
