@@ -205,6 +205,10 @@ namespace snabel {
 	out.emplace_back(Reset());
       });
 
+    add_macro(*this, "return", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(Exit());
+      });
+
     add_macro(*this, "stash", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Stash());
       });
@@ -303,6 +307,12 @@ namespace snabel {
     return s;
   }
 
+  Label *find_label(Exec &exe, const str &tag) {
+    auto fnd(exe.labels.find(tag));
+    if (fnd == exe.labels.end()) { return nullptr; }
+    return &fnd->second;
+  }
+  
   bool run(Exec &exe, const str &in) {
     if (!compile(exe.main, in)) { return false; }
     return run(exe.main);

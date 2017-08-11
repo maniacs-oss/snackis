@@ -68,7 +68,7 @@ add_func(exe, "+",
 ```
 
 ### Lambdas
-Using braces instead of parentheses pushes a pointer to the compiled expression on the stack, ```begin```/```end``` may be used to perform the same operation over multiple lines.
+Using braces instead of parentheses pushes a pointer to the compiled expression on the stack, ```begin```/```end``` may be used to perform the same operation over multiple lines. The lambda scope may be exited early by calling ```return```.
 
 ```
 > {1 2 +}
@@ -82,9 +82,10 @@ I64
 > begin
     1
     2  +
+    return
     14 *
   end call
-42
+3
 I64
 ```
 

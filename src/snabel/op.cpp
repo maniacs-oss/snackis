@@ -250,6 +250,48 @@ namespace snabel {
     return true;
   }
 
+  Exit::Exit():
+    OpImp(OP_EXIT, "exit"), label(nullptr)
+  { }
+
+  OpImp &Exit::get_imp(Op &op) const {
+    return std::get<Exit>(op.data);
+  }
+
+  bool Exit::trace(Scope &scp) {
+    Coro &cor(scp.coro);
+    Exec &exe(cor.exec);
+
+    if (!label) {
+      if (exe.lambdas.empty()) {
+	ERROR(Snabel, "Missing lambda");
+	return false;
+      }
+
+      str tag(exe.lambdas.back());
+      auto lbl(find_label(exe, fmt("_exit%0", tag)));
+
+      if (!lbl) {
+	ERROR(Snabel, "Missing exit label");
+	return false;
+      }
+
+      label = lbl;
+    }
+
+    return true;
+  }
+  
+  bool Exit::compile(const Op &op, Scope &scp, OpSeq &out) {
+    if (!label) { return false; }
+    out.emplace_back(Jump(*label));
+    return true;
+  }
+
+  bool Exit::run(Scope &scp) {
+    return false;
+  }
+
   Funcall::Funcall(Func &fn):
     OpImp(OP_FUNCALL, "funcall"), fn(fn), imp(nullptr)
   { }
@@ -428,26 +470,43 @@ namespace snabel {
   }
   
   Lambda::Lambda():
-    OpImp(OP_LAMBDA, "lambda")
+    OpImp(OP_LAMBDA, "lambda"), compiled(false)
   { }
 
   OpImp &Lambda::get_imp(Op &op) const {
     return std::get<Lambda>(op.data);
   }
 
+  void Lambda::prepare(Scope &scp) {
+    tag = fmt_arg(gensym(scp.coro.exec));
+  }
+  
+  bool Lambda::trace(Scope &scp) {
+    return run(scp);
+  }
+  
   bool Lambda::compile(const Op &op, Scope &scp, OpSeq &out) {
-      Coro &cor(scp.coro);
+      if (compiled) { return false; }
+      if (!run(scp)) { return false; }
 
-      str tag(fmt_arg(gensym(cor.exec)));
-      cor.exec.lambdas.push_back(tag);
-      curr_stack(cor).clear();
+      if (tag.empty()) {
+	ERROR(Snabel, "Empty lambda tag");
+	return false;
+      }
 
-      out.emplace_back(Jump(fmt("_exit%0", tag)));
+      compiled = true;
+      out.emplace_back(Jump(fmt("_skip%0", tag)));
       out.emplace_back(Target(fmt("_enter%0", tag)));
       out.emplace_back(Group(true));
+      out.push_back(op);
       return true;
   }
 
+  bool Lambda::run(Scope &scp) {
+    scp.coro.exec.lambdas.push_back(tag);
+    return true;
+  }
+  
   Let::Let(const str &name):
     OpImp(OP_LET, "let"), name(name)
   { }
@@ -575,7 +634,7 @@ namespace snabel {
     cor.returns.pop_back();
     return true;
   }
-
+  
   Stash::Stash():
     OpImp(OP_STASH, "stash")
   { }
@@ -660,7 +719,11 @@ namespace snabel {
   }
 
   void Target::refresh(Scope &scp) {
-    label->pc = scp.coro.pc;
+    if (label) {
+      label->pc = scp.coro.pc;
+    } else {
+      ERROR(Snabel, "Missing target label");
+    }
   }
   
   Ungroup::Ungroup():
@@ -682,32 +745,51 @@ namespace snabel {
   }
 
   Unlambda::Unlambda():
-    OpImp(OP_UNLAMBDA, "unlambda")
+    OpImp(OP_UNLAMBDA, "unlambda"), compiled(false)
   { }
 
   OpImp &Unlambda::get_imp(Op &op) const {
     return std::get<Unlambda>(op.data);
   }
 
+  bool Unlambda::trace(Scope &scp) {
+      return run(scp);
+  }
+
   bool Unlambda::compile(const Op &op, Scope &scp, OpSeq &out) {
       Coro &cor(scp.coro);
-      curr_stack(cor).clear();
+      if (compiled) { return false; }  
+      if (!run(scp)) { return false; }
 
-      if (cor.exec.lambdas.empty()) {
-	ERROR(Snabel, "Missing lambda start");
-	return false;
-      }
-
-      str tag(cor.exec.lambdas.back());
-      cor.exec.lambdas.pop_back();
-      
+      compiled = true;
+      out.emplace_back(Target(fmt("_exit%0", tag)));
+      out.push_back(op);
       out.emplace_back(Ungroup());
       out.emplace_back(Return());
-      out.emplace_back(Target(fmt("_exit%0", tag)));
+      out.emplace_back(Target(fmt("_skip%0", tag)));
       out.emplace_back(Push(Box(cor.exec.lambda_type, fmt("_enter%0", tag))));
       return true;
   }
-  
+
+  bool Unlambda::run(Scope &scp) {
+    Exec &exe(scp.coro.exec);
+    
+    if (exe.lambdas.empty()) {
+      ERROR(Snabel, "Missing lambda");
+      return false;
+    }
+
+    if (tag.empty()) {
+      tag = exe.lambdas.back();
+    } else if (exe.lambdas.back() != tag) {
+      ERROR(Snabel, "Lambda tag changed");
+      return false;
+    }
+    
+    exe.lambdas.pop_back();
+    return true;
+  }
+
   Op::Op(const Op &src):
     data(src.data), imp(src.imp.get_imp(*this)), prepared(src.prepared)
   { }

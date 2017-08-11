@@ -43,7 +43,8 @@ namespace snabel {
 		    FuncImp::Imp imp);
 
   Sym gensym(Exec &exe);
-  bool run(Exec &exe, const str &in); 
+  Label *find_label(Exec &exe, const str &tag);
+  bool run(Exec &exe, const str &in);
 }
 
 #endif

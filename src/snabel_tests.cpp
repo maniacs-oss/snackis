@@ -177,6 +177,9 @@ namespace snabel {
 
     run(exe, "let: fn {7 +}; 35 $fn call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+
+    run(exe, "{7 35 + return 99} call");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
   static void when_tests() {
