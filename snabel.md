@@ -46,7 +46,7 @@ n/a
 ```
 
 ### Functions
-Snabel derives much of its type-checking powers from functions. Each named function represents a set of implementations. Each implementation is required to declare its parameter- and result types. Implementations are matched in reverse declared order when resolving function calls, which allows overriding existing functionality at any point.
+Snabel derives much of its type-checking powers from functions. Each named function represents a set of implementations. Each implementation is required to declare its parameter- and result types. Functions are pure by default, which means that Snabel will run them at will during compilation; set ```imp.pure = false;``` to prevent this from happening. Implementations are matched in reverse declared order when resolving function calls, which allows overriding existing functionality at any point.
 
 Adding functions from C++ is as easy as this:
 
@@ -61,7 +61,10 @@ static void add_i64(Scope &scp, FuncImp &fn, const Args &args) {
 }
 
 Exec exe;
-add_func(exe, "+", {&i64_type, &i64_type}, i64_type, add_i64);
+add_func(exe, "+",
+         {ArgType(exe.i64_type), ArgType(exe.i64_type)},
+	 {ArgType(exe.i64_type)},
+	 add_i64);
 ```
 
 ### Lambdas
@@ -119,8 +122,8 @@ List<I64>
 [42 "foo"]
 List<Any>
 
-> [1 2] 3 push reverse
-[3 2 1]
+> [1 2] 3 push reverse pop drop
+[3 2]
 List<I64>
 ```
 
