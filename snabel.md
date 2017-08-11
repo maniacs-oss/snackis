@@ -54,10 +54,10 @@ Adding functions from C++ is as easy as this:
 using namespace snabel;
 
 static void add_i64(Scope &scp, FuncImp &fn, const Args &args) {
-  Exec &exe(scp.coro.exec);
+  Coro &cor(scp.coro);
   int64_t res(0);
   for (auto &a: args) { res += get<int64_t>(a); }
-  push(scp.coro, exe.i64_type, res);
+  push(cor, cor.exec.i64_type, res);
 }
 
 Exec exe;
@@ -138,6 +138,32 @@ I64
 > 1 2 skip! 3 @skip +
 3
 I64
+```
+
+### Macros
+Besides a tiny core of fundamental functionality, the rest of Snabel is implemented as macros. A macro takes an incoming sequence of tokens and an outgoing sequence of VM-operations as parameters, both lists may be modified from within the macro.
+
+```
+add_macro(*this, "let:", [this](auto pos, auto &in, auto &out) {
+  if (in.size() < 2) {
+    ERROR(Snabel, fmt("Malformed binding on row %0, col %1",
+	              pos.row, pos.col));
+  } else {
+    out.emplace_back(Backup(false));
+    const str n(in.front().text);
+    auto i(std::next(in.begin()));
+	  
+    for (; i != in.end(); i++) {
+      if (i->text == ";") { break; }
+    }
+
+    compile(*this, pos.row, TokSeq(std::next(in.begin()), i), out);
+    if (i != in.end()) { i++; }
+    in.erase(in.begin(), i);
+    out.emplace_back(Restore());
+    out.emplace_back(Let(fmt("$%0", n)));
+  }
+});
 ```
 
 ### Running the code
