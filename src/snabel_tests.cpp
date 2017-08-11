@@ -120,7 +120,7 @@ namespace snabel {
   static void compile_tests() {
     TRY(try_test);
     Exec exe;
-    run(exe, "let: foo 35\nlet: bar $foo 7 +");
+    run(exe, "let: foo 35; let: bar $foo 7 +");
 
     Scope &scp(curr_scope(exe.main));
     CHECK(get<int64_t>(get_env(scp, "$foo")) == 35, _);
@@ -145,11 +145,6 @@ namespace snabel {
     Scope &scp1(curr_scope(exe.main));
     CHECK(get<int64_t>(pop(scp1.coro)) == 21, _);
     CHECK(!find_env(scp1, "foo"), _);
-
-    run(exe, "begin\nlet: bar 42\n$bar\nend call");
-    Scope &scp2(curr_scope(exe.main));
-    CHECK(get<int64_t>(pop(scp2.coro)) == 42, _);
-    CHECK(!find_env(scp2, "bar"), _);
   }
 
   static void let_tests() {
@@ -169,27 +164,37 @@ namespace snabel {
   static void lambda_tests() {
     TRY(try_test);    
     Exec exe;
-    run(exe, "{1 2 +} call");
+    run(exe, "{1 2 + return} call");
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
 
-    run(exe, "2 {3 +} call");
+    run(exe, "2 {3 + return} call");
     CHECK(get<int64_t>(pop(exe.main)) == 5, _);
 
-    run(exe, "let: fn {7 +}; 35 $fn call");
+    run(exe, "{let: bar 42; $bar return} call");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+    CHECK(!find_env(curr_scope(exe.main), "bar"), _);
+
+    run(exe, "let: fn {7 + return}; 35 $fn call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
     run(exe, "{7 35 + return 99} call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+
+    run(exe, "-1 {1 + zero? {'t return} when return} call");
+    CHECK(get<bool>(pop(exe.main)), _);
+
+    run(exe, "-42 {1 + dup zero? {exit!} when recall @exit return} call");
+    CHECK(get<int64_t>(pop(exe.main)) == 0, _);
   }
 
   static void when_tests() {
     TRY(try_test);    
     Exec exe;
     
-    run(exe, "7 't {35 +} when");
+    run(exe, "7 't {35 + return} when");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run(exe, "7 'f {35 +} when");
+    run(exe, "7 'f {35 + return} when");
     CHECK(get<int64_t>(pop(exe.main)) == 7, _);
   }
 

@@ -38,7 +38,7 @@ namespace snabel {
   void restore_stack(Coro &cor, size_t len=1);
   
   Scope &begin_scope(Coro &cor, bool copy_stack=false);
-  void end_scope(Coro &cor, size_t stack_len=1);
+  bool end_scope(Coro &cor, size_t stack_len=1);
   void reset_scope(Coro &cor, size_t depth);
 
   void call(Coro &cor, const Label &lbl);

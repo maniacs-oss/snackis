@@ -5,6 +5,12 @@
 #include "snabel/type.hpp"
 
 namespace snabel {
+  static void zero_i64_imp(Scope &scp, FuncImp &fn, const Args &args) {
+    Exec &exe(scp.coro.exec);
+    bool res(get<int64_t>(args[0]) == 0);
+    push(scp.coro, exe.bool_type, res);
+  }
+
   static void add_i64_imp(Scope &scp, FuncImp &fn, const Args &args) {
     Exec &exe(scp.coro.exec);
     int64_t res(0);
@@ -111,11 +117,17 @@ namespace snabel {
     lambda_type.eq = [](auto &x, auto &y) { return get<str>(x) == get<str>(y); };
     str_type.fmt = [](auto &v) { return fmt("\"%0\"", get<str>(v)); };
     str_type.eq = [](auto &x, auto &y) { return get<str>(x) == get<str>(y); };
+
     undef_type.fmt = [](auto &v) { return "n/a"; };
     undef_type.eq = [](auto &x, auto &y) { return true; };
+    put_env(main.scopes.front(), "'undef", Box(undef_type, undef));
+    
     void_type.fmt = [](auto &v) { return "n/a"; };
     void_type.eq = [](auto &x, auto &y) { return true; };  
  
+    add_func(*this, "zero?",
+	     {ArgType(i64_type)}, {ArgType(bool_type)},
+	     zero_i64_imp);
     add_func(*this, "+",
 	     {ArgType(i64_type), ArgType(i64_type)}, {ArgType(i64_type)},
 	     add_i64_imp);
@@ -175,7 +187,11 @@ namespace snabel {
     add_macro(*this, "drop", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Drop(1));
       });
-    
+
+    add_macro(*this, "dup", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(Dup());
+      });
+
     add_macro(*this, "end", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Unlambda());
       });
@@ -201,6 +217,10 @@ namespace snabel {
 	}
       });
     
+    add_macro(*this, "recall", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(Recall());
+      });
+
     add_macro(*this, "reset", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Reset());
       });
@@ -211,6 +231,10 @@ namespace snabel {
 
     add_macro(*this, "stash", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Stash());
+      });
+
+    add_macro(*this, "swap", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(Swap());
       });
 
     add_macro(*this, "when", [this](auto pos, auto &in, auto &out) {

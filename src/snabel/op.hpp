@@ -18,10 +18,10 @@ namespace snabel {
   struct Scope;
   struct Op;
 
-  enum OpCode { OP_BACKUP, OP_BRANCH, OP_CALL, OP_DROP, OP_EXIT, OP_FUNCALL,
+  enum OpCode { OP_BACKUP, OP_BRANCH, OP_CALL, OP_DROP, OP_DUP, OP_EXIT, OP_FUNCALL,
 	        OP_GET, OP_GROUP, OP_JUMP,  OP_LAMBDA, OP_LET,
-		OP_PUSH, OP_RESET, OP_RESTORE, OP_RETURN, OP_STASH, OP_SWAP, 
-		OP_TARGET, OP_UNGROUP, OP_UNLAMBDA };
+		OP_PUSH, OP_RECALL, OP_RESET, OP_RESTORE, OP_RETURN, OP_STASH,
+		OP_SWAP, OP_TARGET, OP_UNGROUP, OP_UNLAMBDA };
 
   using OpSeq = std::deque<Op>;
 
@@ -32,8 +32,8 @@ namespace snabel {
     OpImp(OpCode code, const str &name);
     virtual OpImp &get_imp(Op &op) const = 0;
     virtual str info() const;
-    virtual void prepare(Scope &scp);
-    virtual void refresh(Scope &scp);
+    virtual bool prepare(Scope &scp);
+    virtual bool refresh(Scope &scp);
     virtual bool trace(Scope &scp);
     virtual bool compile(const Op &op, Scope &scp, OpSeq &out);
     virtual bool run(Scope &scp);
@@ -50,13 +50,11 @@ namespace snabel {
 
   struct Branch: OpImp {
     Label *label;
-    opt<bool> cond;
 
     Branch();
     OpImp &get_imp(Op &op) const override;
     str info() const override;
     bool trace(Scope &scp) override;
-    bool compile(const Op &op, Scope &scp, OpSeq & out) override;
     bool run(Scope &scp) override;
   };
 
@@ -83,12 +81,19 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
 
+  struct Dup: OpImp {
+    Dup();
+    OpImp &get_imp(Op &op) const override;
+    bool trace(Scope &scp) override;
+    bool run(Scope &scp) override;
+  };
+
   struct Exit: OpImp {
     Label *label;
     
     Exit();
     OpImp &get_imp(Op &op) const override;
-    bool trace(Scope &scp) override;
+    bool refresh(Scope &scp) override;
     bool compile(const Op &op, Scope &scp, OpSeq & out) override;
     bool run(Scope &scp) override;
   };
@@ -96,13 +101,11 @@ namespace snabel {
   struct Funcall: OpImp {
     Func &fn;
     FuncImp *imp;
-    opt<Stack> result;
 
     Funcall(Func &fn);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
     bool trace(Scope &scp) override;
-    bool compile(const Op &op, Scope &scp, OpSeq & out) override;
     bool run(Scope &scp) override;
   };
 
@@ -136,6 +139,7 @@ namespace snabel {
     Jump(Label &label);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
+    bool refresh(Scope &scp) override;
     bool trace(Scope &scp) override;
     bool run(Scope &scp) override;
   };
@@ -146,10 +150,9 @@ namespace snabel {
     
     Lambda();
     OpImp &get_imp(Op &op) const override;
-    void prepare(Scope &scp) override;
-    bool trace(Scope &scp) override;
+    bool prepare(Scope &scp) override;
+    bool refresh(Scope &scp) override;
     bool compile(const Op &op, Scope &scp, OpSeq & out) override;
-    bool run(Scope &scp) override;
   };
 
   struct Let: OpImp {
@@ -159,7 +162,7 @@ namespace snabel {
     Let(const str &name);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
-    void prepare(Scope &scp) override;
+    bool prepare(Scope &scp) override;
     bool trace(Scope &scp) override;
     bool run(Scope &scp) override;
   };
@@ -171,6 +174,16 @@ namespace snabel {
     Push(const Stack &vals);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
+    bool trace(Scope &scp) override;
+    bool run(Scope &scp) override;
+  };
+
+  struct Recall: OpImp {
+    Label *label;
+    
+    Recall();
+    OpImp &get_imp(Op &op) const override;
+    bool refresh(Scope &scp) override;
     bool trace(Scope &scp) override;
     bool run(Scope &scp) override;
   };
@@ -218,8 +231,8 @@ namespace snabel {
     Target(const str &tag);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
-    void prepare(Scope &scp) override;
-    void refresh(Scope &scp) override;
+    bool prepare(Scope &scp) override;
+    bool refresh(Scope &scp) override;
   };
 
   struct Ungroup: OpImp {
@@ -235,14 +248,13 @@ namespace snabel {
 
     Unlambda();
     OpImp &get_imp(Op &op) const override;
-    bool trace(Scope &scp) override;
+    bool refresh(Scope &scp) override;
     bool compile(const Op &op, Scope &scp, OpSeq & out) override;
-    bool run(Scope &scp) override;
   };
 
-  using OpData = std::variant<Backup, Branch, Call, Drop, Exit, Funcall, Get, Group,
-			      Jump, Lambda, Let, Push, Reset, Restore, Return,
-			      Stash, Swap, Target, Ungroup, Unlambda>;
+  using OpData = std::variant<Backup, Branch, Call, Drop, Dup, Exit, Funcall, Get,
+			      Group, Jump, Lambda, Let, Push, Recall, Reset, Restore,
+			      Return, Stash, Swap, Target, Ungroup, Unlambda>;
 
   struct Op {
     OpData data;
@@ -258,8 +270,8 @@ namespace snabel {
   Op::Op(const ImpT &imp): data(imp), imp(get<ImpT>(data)), prepared(false)
   { }
 
-  void prepare(Op &op, Scope &scp);
-  void refresh(Op &op, Scope &scp);
+  bool prepare(Op &op, Scope &scp);
+  bool refresh(Op &op, Scope &scp);
   bool trace(Op &op, Scope &scp);
   bool compile(Op &op, Scope &scp, OpSeq &out);
   bool run(Op &op, Scope &scp);

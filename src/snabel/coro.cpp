@@ -1,6 +1,7 @@
 #include <iostream>
 #include "snabel/compiler.hpp"
 #include "snabel/coro.hpp"
+#include "snabel/error.hpp"
 #include "snabel/exec.hpp"
 #include "snabel/parser.hpp"
 #include "snackis/core/defer.hpp"
@@ -87,10 +88,15 @@ namespace snabel {
     return cor.scopes.emplace_back(cor.scopes.back());
   }
   
-  void end_scope(Coro &cor, size_t stack_len) {
-    CHECK(!cor.scopes.empty(), _);
+  bool end_scope(Coro &cor, size_t stack_len) {
+    if (cor.scopes.size() < 2) {
+      ERROR(Snabel, "Open scope");
+      return false;
+    }
+    
     restore_stack(cor, stack_len);
     cor.scopes.pop_back();
+    return true;
   }
 
   void reset_scope(Coro &cor, size_t depth) {
@@ -123,58 +129,60 @@ namespace snabel {
   bool compile(Coro &cor, const str &in) {
     cor.ops.clear();
     cor.exec.labels.clear();
-    cor.exec.lambdas.clear();
     size_t lnr(0);
     
     for (auto &ln: parse_lines(in)) {
       if (!ln.empty()) {
 	compile(cor.exec, lnr, parse_expr(ln), cor.ops);
       }
-      
+       
       lnr++;
     }
 
-    begin_scope(cor, false);
     TRY(try_compile);
-    
+
     while (true) {
       OpSeq out;
+      begin_scope(cor, false);
       
       cor.pc = 0;
       for (auto &op: cor.ops) {
-	if (!op.prepared) {
-	  prepare(op, curr_scope(cor));
+	if (!op.prepared && !prepare(op, curr_scope(cor))) {
+	  goto exit;
 	}
 	
 	cor.pc++;
       }
 
+
       cor.pc = 0;
+      cor.exec.lambdas.clear();
       for (auto &op: cor.ops) {
-	refresh(op, curr_scope(cor));
+	if (!refresh(op, curr_scope(cor))) { goto exit; }
 	cor.pc++;
       }
 
       cor.pc = 0;
+      cor.exec.lambdas.clear();
       while (cor.pc < cor.ops.size()) {
 	Op &op(cor.ops[cor.pc]);
 	if (!trace(op, curr_scope(cor))) { break; }
 	cor.pc++;
       }
 
+      rewind(cor);
       bool done(true);
+      cor.exec.lambdas.clear();
       for (auto &op: cor.ops) {
 	if (compile(op, curr_scope(cor), out)) { done = false; }
       }
 
-      if (done) { break; }
-
+      if (done) { goto exit; }
       cor.ops.clear();
       cor.ops.swap(out);
       try_compile.errors.clear();
     }
-
-    rewind(cor);
+  exit:
     return try_compile.errors.empty();
   }
 
@@ -182,7 +190,8 @@ namespace snabel {
     begin_scope(cor);
     
     while (cor.pc < cor.ops.size()) {
-      if (!run(cor.ops[cor.pc], curr_scope(cor))) { return false; }
+      auto &op(cor.ops[cor.pc]);
+      if (!run(op, curr_scope(cor))) { return false; }
       cor.pc++;
     }
 
