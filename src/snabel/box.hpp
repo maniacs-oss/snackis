@@ -38,6 +38,8 @@ namespace snabel {
     std::deque<Box> elems;
   };
 
+  using Stack = std::deque<Box>;
+
   extern const Undef undef;
 
   bool operator ==(const Box &x, const Box &y);
@@ -46,12 +48,14 @@ namespace snabel {
   template <typename T>
   const T &get(const Box &b) {
     CHECK(!undef(b), _);
+    CHECK(std::holds_alternative<T>(b.val), _);
     return std::get<T>(b.val);
   }
 
   template <typename T>
   T &get(Box &b) {
     CHECK(!undef(b), _);
+    CHECK(std::holds_alternative<T>(b.val), _);
     return std::get<T>(b.val);
   }
 }

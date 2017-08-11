@@ -60,7 +60,7 @@ namespace gui {
 		      const snabel::ArgTypes &args,
 		      Reader::Cmd cmd) {
     CHECK(rdr.cmds.insert(id).second, _);
-    snabel::add_func(rdr.exec, id, args, rdr.exec.void_type,
+    snabel::add_func(rdr.exec, id, args, {},
 		     [cmd](snabel::Scope &scp,
 			   snabel::FuncImp &fn,
 			   const snabel::Args &args) {

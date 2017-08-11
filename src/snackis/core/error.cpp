@@ -5,7 +5,6 @@
 namespace snackis {
   static void default_handler(const std::deque<Error *> &errors) {
     for (auto e: errors) { std::cerr << e->what << std::endl; }
-    abort();
   }
   
   thread_local ErrorHandler error_handler(default_handler);

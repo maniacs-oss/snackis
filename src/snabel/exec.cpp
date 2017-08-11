@@ -62,6 +62,14 @@ namespace snabel {
     push(scp.coro, lst);    
   }
 
+  static void list_pop_imp(Scope &scp, FuncImp &fn, const Args &args) {
+    auto &lst_arg(args[0]);
+    auto &lst(get<ListRef>(lst_arg)->elems);
+    push(scp.coro, lst_arg);
+    push(scp.coro, lst.back());
+    lst.pop_back();
+  }
+
   static void list_reverse_imp(Scope &scp, FuncImp &fn, const Args &args) {
     auto &in_arg(args[0]);
     auto &in(get<ListRef>(in_arg)->elems);
@@ -109,23 +117,26 @@ namespace snabel {
     void_type.eq = [](auto &x, auto &y) { return true; };  
  
     add_func(*this, "+",
-	     {ArgType(i64_type), ArgType(i64_type)}, ArgType(i64_type),
+	     {ArgType(i64_type), ArgType(i64_type)}, {ArgType(i64_type)},
 	     add_i64_imp);
     add_func(*this, "-",
-	     {ArgType(i64_type), ArgType(i64_type)}, ArgType(i64_type),
+	     {ArgType(i64_type), ArgType(i64_type)}, {ArgType(i64_type)},
 	     sub_i64_imp);
     add_func(*this, "*",
-	     {ArgType(i64_type), ArgType(i64_type)}, ArgType(i64_type),
+	     {ArgType(i64_type), ArgType(i64_type)}, {ArgType(i64_type)},
 	     mul_i64_imp);
     add_func(*this, "%",
-	     {ArgType(i64_type), ArgType(i64_type)}, ArgType(i64_type),
+	     {ArgType(i64_type), ArgType(i64_type)}, {ArgType(i64_type)},
 	     mod_i64_imp);
 
     add_func(*this, "push",
-	     {ArgType(list_type), ArgType(0, 0)}, ArgType(0),
+	     {ArgType(list_type), ArgType(0, 0)}, {ArgType(0)},
 	     list_push_imp);
+    add_func(*this, "pop",
+	     {ArgType(list_type)}, {ArgType(0), ArgType(0, 0)},
+	     list_pop_imp);
     add_func(*this, "reverse",
-	     {ArgType(list_type)}, ArgType(0),
+	     {ArgType(list_type)}, {ArgType(0)},
 	     list_reverse_imp);
 
     add_macro(*this, "{", [](auto pos, auto &in, auto &out) {
@@ -271,7 +282,7 @@ namespace snabel {
   FuncImp &add_func(Exec &exe,
 		    const str n,
 		    const ArgTypes &args,
-		    const ArgType &rt,
+		    const ArgTypes &results,
 		    FuncImp::Imp imp) {
     auto fnd(exe.funcs.find(n));
 
@@ -280,10 +291,10 @@ namespace snabel {
 				  std::forward_as_tuple(n),
 				  std::forward_as_tuple(n)).first->second);
       put_env(exe.main.scopes.front(), n, Box(exe.func_type, &fn));
-      return add_imp(fn, args, rt, imp);
+      return add_imp(fn, args, results, imp);
     }
     
-    return add_imp(fnd->second, args, rt, imp);
+    return add_imp(fnd->second, args, results, imp);
   }
   
   Sym gensym(Exec &exe) {

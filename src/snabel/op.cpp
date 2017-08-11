@@ -205,16 +205,27 @@ namespace snabel {
       auto &o(out.back());
       
       switch(o.imp.code) {
-      case OP_PUSH:
-	count--;
-	rem++;
-	out.pop_back();
+      case OP_PUSH: {
+	auto &p(get<Push>(o.data));
+	while (count > 0 && !p.vals.empty()) {
+	  count--;
+	  rem++;
+	  p.vals.pop_back();
+	}
+
+	if (p.vals.empty()) {
+	  out.pop_back();
+	} else {
+	  done = true;
+	}
 	break;
-      case OP_DROP:
+      }
+      case OP_DROP: {
 	count += get<Drop>(o.data).count;
 	rem++;
 	out.pop_back();
 	break;
+      }
       default:
 	done = true;
       }
@@ -267,17 +278,19 @@ namespace snabel {
 	  std::find_if(args.begin(), args.end(),
 		       [](auto &a){ return undef(a); }) == args.end()) {
 	(*imp)(cor, args);
-	result.emplace(*peek(cor));
+	auto &s(curr_stack(cor));
+	result.emplace(Stack(std::next(s.begin(), s.size()-imp->results.size()),
+			     s.end()));
       } else {
-	auto res_type(get_type(*imp, imp->res_type, args));
+	for (auto &res: imp->results) {
+	  auto rt(get_type(*imp, res, args));
 
-	if (!res_type) {
-	  ERROR(Snabel, "Missing function result type");
-	  return false;
-	}
+	  if (!rt) {
+	    ERROR(Snabel, "Missing function result type");
+	    return false;
+	  }
 
-	if (res_type != &cor.exec.void_type) {
-	  push(cor, Box(*res_type, undef));
+	  push(cor, Box(*rt, undef));
 	}
       }
     }
@@ -324,20 +337,20 @@ namespace snabel {
   }
   
   bool Get::compile(const Op &op, Scope &scp, OpSeq &out) {
-    if (!value) { return false; }
+    if (!val) { return false; }
     
-    if (value->type == &scp.coro.exec.func_type &&
+    if (val->type == &scp.coro.exec.func_type &&
 	name.front() != '$') {
-      out.emplace_back(Funcall(*get<Func *>(*value)));
+      out.emplace_back(Funcall(*get<Func *>(*val)));
     } else {
-      out.emplace_back(Push(*value));
+      out.emplace_back(Push(*val));
     }
       
     return true;
   }
   
   bool Get::run(Scope &scp) {
-    if (!value) {
+    if (!val) {
       auto fnd(find_env(scp, name));
 
       if (!fnd) {
@@ -345,16 +358,16 @@ namespace snabel {
 	return false;
       }
 
-      value.emplace(*fnd);
+      val.emplace(*fnd);
     }
 
-    if (value->type == &scp.coro.exec.func_type &&
+    if (val->type == &scp.coro.exec.func_type &&
 	name.front() != '$') {
       ERROR(Snabel, fmt("Function not found: %0", name));
       return false;
     }
     
-    push(scp.coro, *value);
+    push(scp.coro, *val);
     return true;
   }
   
@@ -457,9 +470,9 @@ namespace snabel {
     auto &s(curr_stack(scp.coro));
     if (s.empty()) { return false; }
     
-    if (!value) {
-      value.emplace(s.back());
-      put_env(scp, name, *value);
+    if (!val) {
+      val.emplace(s.back());
+      put_env(scp, name, *val);
     }
     
     s.pop_back();
@@ -470,32 +483,36 @@ namespace snabel {
     auto &s(curr_stack(scp.coro));
 
     if (s.empty()) {
-      ERROR(Snabel, fmt("Missing bound value: %0", name));
+      ERROR(Snabel, fmt("Missing bound val: %0", name));
       return false;
     }
 
-    value.emplace(s.back());
+    val.emplace(s.back());
     s.pop_back();
-    put_env(scp, name, *value);
+    put_env(scp, name, *val);
     return true;
   }
 
-  Push::Push(const Box &value):
-    OpImp(OP_PUSH, "push"), value(value)
+  Push::Push(const Box &val):
+    OpImp(OP_PUSH, "push"), vals({val})
   { }
 
+  Push::Push(const Stack &vals):
+    OpImp(OP_PUSH, "push"), vals(vals)
+  { }
+  
   OpImp &Push::get_imp(Op &op) const {
     return std::get<Push>(op.data);
   }
 
-  str Push::info() const { return fmt_arg(value); }
+  str Push::info() const { return fmt_arg(vals); }
 
   bool Push::trace(Scope &scp) {
     return run(scp);
   }
   
   bool Push::run(Scope &scp) {
-    push(scp.coro, value);
+    push(scp.coro, vals);
     return true;
   }
 

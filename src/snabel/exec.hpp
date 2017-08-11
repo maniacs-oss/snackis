@@ -39,7 +39,7 @@ namespace snabel {
   FuncImp &add_func(Exec &exe,
 		    const str n,
 		    const ArgTypes &args,
-		    const ArgType &rt,
+		    const ArgTypes &results,
 		    FuncImp::Imp imp);
 
   Sym gensym(Exec &exe);

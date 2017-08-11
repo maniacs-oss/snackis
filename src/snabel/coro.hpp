@@ -9,8 +9,6 @@
 namespace snabel {
   struct Exec;
   
-  using Stack = std::deque<Box>;
-
   struct Coro {
     Exec &exec;
     OpSeq ops;
@@ -31,14 +29,16 @@ namespace snabel {
 
   void push(Coro &cor, const Box &val);
   void push(Coro &cor, Type &typ, const Val &val);
+  void push(Coro &cor, const Stack &vals);
+  
   opt<Box> peek(Coro &cor);
   Box pop(Coro &cor);
 
   Stack &backup_stack(Coro &cor, bool copy=false);
-  void restore_stack(Coro &cor);
+  void restore_stack(Coro &cor, size_t len=1);
   
   Scope &begin_scope(Coro &cor, bool copy_stack=false);
-  void end_scope(Coro &cor);
+  void end_scope(Coro &cor, size_t stack_len=1);
   void reset_scope(Coro &cor, size_t depth);
 
   void call(Coro &cor, const Label &lbl);

@@ -18,7 +18,7 @@ namespace snabel {
     TRY(try_test);
     Exec exe;
     auto &f(add_func(exe, "test-func",
-		     {ArgType(exe.i64_type)}, ArgType(exe.i64_type),
+		     {ArgType(exe.i64_type)}, {ArgType(exe.i64_type)},
 		     test_func));
     Coro &cor(exe.main);
     cor.ops.emplace_back(Push(Box(exe.i64_type, int64_t(7))));
@@ -199,6 +199,18 @@ namespace snabel {
     CHECK(ls->elems.size() == 2, _);
   }
 
+  static void list_pop_tests() {
+    TRY(try_test);    
+    Exec exe;
+    run(exe, "[7 35] pop");
+    
+    CHECK(get<int64_t>(pop(exe.main)) == 35, _);
+    auto lsb(pop(exe.main));
+    auto ls(get<ListRef>(lsb));
+    CHECK(ls->elems.size() == 1, _);
+    CHECK(get<int64_t>(ls->elems.front()) == 7, _);
+  }
+
   static void list_reverse_tests() {
     TRY(try_test);    
     Exec exe;
@@ -226,6 +238,7 @@ namespace snabel {
     }
 
     list_push_tests();
+    list_pop_tests();
     list_reverse_tests();
   }
 

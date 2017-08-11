@@ -13,16 +13,16 @@ namespace snabel {
 
   FuncImp::FuncImp(Func &fn,
 		   const ArgTypes &args,
-		   const ArgType &rt,
+		   const ArgTypes &results,
 		   Imp imp,
 		   bool pure):
-    func(fn), args(args), res_type(rt), imp(imp), pure(pure)
+    func(fn), args(args), results(results), imp(imp), pure(pure)
   { }
   
   void FuncImp::operator ()(Coro &cor, const Args &args) {
     Scope &tmp(begin_scope(cor, false));
     imp(tmp, *this, args);
-    end_scope(cor);
+    end_scope(cor, results.size());
   }
 
   void FuncImp::operator ()(Coro &cor) {
@@ -64,9 +64,9 @@ namespace snabel {
 
   FuncImp &add_imp(Func &fn,
 		   const ArgTypes &args,
-		   const ArgType &rt,
+		   const ArgTypes &results,
 		   FuncImp::Imp imp) {
-    return fn.imps.emplace_front(fn, args, rt, imp);
+    return fn.imps.emplace_front(fn, args, results, imp);
   }
 
   bool match(const FuncImp &imp, const Coro &cor) {

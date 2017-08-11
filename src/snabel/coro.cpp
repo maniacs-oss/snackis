@@ -36,6 +36,10 @@ namespace snabel {
     curr_stack(cor).emplace_back(typ, val);
   }
 
+  void push(Coro &cor, const Stack &vals) {
+    std::copy(vals.begin(), vals.end(), std::back_inserter(curr_stack(cor)));
+  }
+
   opt<Box> peek(Coro &cor) {
     auto &s(curr_stack(cor));
     if (s.empty()) { return nullopt; }
@@ -58,14 +62,18 @@ namespace snabel {
     return cor.stacks.emplace_back(cor.stacks.back());
   }
   
-  void restore_stack(Coro &cor) {
+  void restore_stack(Coro &cor, size_t len) {
     CHECK(!cor.stacks.empty(), _);
     auto prev(cor.stacks.back());
     cor.stacks.pop_back();
     CHECK(!cor.stacks.empty(), _);
 
-    if (!prev.empty()) {
-      curr_stack(cor).emplace_back(prev.back());
+    if (len) {
+      std::copy((prev.size() <= len)
+		? prev.begin()
+		: std::next(prev.begin(), prev.size()-len),
+		prev.end(),
+		std::back_inserter(curr_stack(cor)));
     }
   }
 
@@ -79,9 +87,9 @@ namespace snabel {
     return cor.scopes.emplace_back(cor.scopes.back());
   }
   
-  void end_scope(Coro &cor) {
+  void end_scope(Coro &cor, size_t stack_len) {
     CHECK(!cor.scopes.empty(), _);
-    restore_stack(cor);
+    restore_stack(cor, stack_len);
     cor.scopes.pop_back();
   }
 

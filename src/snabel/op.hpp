@@ -86,7 +86,7 @@ namespace snabel {
   struct Funcall: OpImp {
     Func &fn;
     FuncImp *imp;
-    opt<Box> result;
+    opt<Stack> result;
 
     Funcall(Func &fn);
     OpImp &get_imp(Op &op) const override;
@@ -98,7 +98,7 @@ namespace snabel {
 
   struct Get: OpImp {
     str name;
-    opt<Box> value;
+    opt<Box> val;
 
     Get(const str &name);
     OpImp &get_imp(Op &op) const override;
@@ -138,7 +138,7 @@ namespace snabel {
 
   struct Let: OpImp {
     str name;
-    opt<Box> value;
+    opt<Box> val;
     
     Let(const str &name);
     OpImp &get_imp(Op &op) const override;
@@ -149,9 +149,10 @@ namespace snabel {
   };
 
   struct Push: OpImp {
-    Box value;
+    Stack vals;
     
-    Push(const Box &value);
+    Push(const Box &val);
+    Push(const Stack &vals);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
     bool trace(Scope &scp) override;

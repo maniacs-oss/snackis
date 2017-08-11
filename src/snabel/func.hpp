@@ -33,13 +33,13 @@ namespace snabel {
 
     Func &func;
     ArgTypes args;
-    ArgType res_type;
+    ArgTypes results;
     Imp imp;
     bool pure;
     
     FuncImp(Func &fn,
 	    const ArgTypes &args,
-	    const ArgType &rt,
+	    const ArgTypes &results,
 	    Imp imp,
 	    bool pure=true);
     void operator ()(Coro &cor, const Args &args);
@@ -56,7 +56,7 @@ namespace snabel {
   Args pop_args(const FuncImp &imp, Coro &cor);
   FuncImp &add_imp(Func &fn,
 		   const ArgTypes &args,
-		   const ArgType &rt,
+		   const ArgTypes &results,
 		   FuncImp::Imp imp);
   bool match(const FuncImp &imp, const Coro &cor);
   FuncImp *match(Func &fn, const Coro &cor);
