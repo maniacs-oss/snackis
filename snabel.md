@@ -68,7 +68,7 @@ add_func(exe, "+",
 ```
 
 ### Lambdas
-Using braces instead of parentheses pushes a pointer to the compiled expression on the stack, ```begin```/```end``` may be used to perform the same operation over multiple lines. Lambdas may be exited early by calling ```return``` and called recursively using ```recall```.
+Using braces instead of parentheses pushes a pointer to the compiled expression on the stack. Lambdas may be exited early by calling ```return``` and called recursively using ```recall```.
 
 ```
 > {1 2 +}
@@ -79,12 +79,10 @@ Lambda
 3
 I64
 
-> begin
-    1
-    2  +
-    return
+> {
+    1 2 + return
     14 *
-  end call
+  } call
 3
 I64
 
@@ -134,14 +132,14 @@ List<I64>
 ```
 
 ### Jumps
-Snabel's control structures are based on the idea of jumping to offsets within the instruction stream, direct support for declaring and jumping to labels is provided through reader macros '@' and '!'.
+Snabel's control structures are based on the idea of jumping to offsets within the instruction stream. Beginning any name with ```@``` will create a label with the specified name at that point, while ending any name with ```!``` will jump to the specified label from that point.
 
 ```
 > 1 2 3 +
 5
 I64
 
-> 1 2 skip! 3 @skip +
+> 1 2 skip! 42 @skip +
 3
 I64
 ```

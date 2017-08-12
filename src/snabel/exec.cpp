@@ -195,10 +195,6 @@ namespace snabel {
 	out.emplace_back(Restore());
       });
 
-    add_macro(*this, "begin", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(Lambda());
-      });
-
     add_macro(*this, "call", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Call());
       });
@@ -209,10 +205,6 @@ namespace snabel {
 
     add_macro(*this, "dup", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Dup());
-      });
-
-    add_macro(*this, "end", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(Unlambda());
       });
 
     add_macro(*this, "let:", [this](auto pos, auto &in, auto &out) {
