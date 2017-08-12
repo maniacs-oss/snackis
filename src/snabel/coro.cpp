@@ -99,12 +99,19 @@ namespace snabel {
     return true;
   }
 
+  void reset_scope(Coro &cor, size_t depth) {
+    while (cor.scopes.size() > depth) {
+      cor.scopes.pop_back();
+    }
+  }
+
   void call(Coro &cor, const Label &lbl){
     cor.returns.push_back(cor.pc);
     jump(cor, lbl);
   }
   
   void jump(Coro &cor, const Label &lbl) {
+    reset_scope(cor, lbl.depth);
     cor.pc = lbl.pc;
   }
 
@@ -136,8 +143,8 @@ namespace snabel {
 
     while (true) {
       OpSeq out;
+      rewind(cor);
       
-      cor.pc = 0;
       for (auto &op: cor.ops) {
 	if (!op.prepared && !prepare(op, cor.exec.main.scopes.front())) {
 	  goto exit;
@@ -164,7 +171,7 @@ namespace snabel {
       try_compile.errors.clear();
     }
   exit:
-    cor.pc = 0;
+    rewind(cor);
     return try_compile.errors.empty();
   }
 

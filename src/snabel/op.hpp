@@ -118,6 +118,7 @@ namespace snabel {
     Group(bool copy);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
+    bool refresh(Scope &scp) override;
     bool run(Scope &scp) override;
   };
 
@@ -189,6 +190,7 @@ namespace snabel {
   struct Return: OpImp {
     Return();
     OpImp &get_imp(Op &op) const override;
+    bool refresh(Scope &scp) override;
     bool run(Scope &scp) override;
   };
   
@@ -207,7 +209,6 @@ namespace snabel {
   struct Target: OpImp {
     str tag;
     Label *label;
-    int64_t depth, pc;
     
     Target(const str &tag);
     OpImp &get_imp(Op &op) const override;
@@ -219,6 +220,7 @@ namespace snabel {
   struct Ungroup: OpImp {
     Ungroup();
     OpImp &get_imp(Op &op) const override;
+    bool refresh(Scope &scp) override;
     bool run(Scope &scp) override;
   };
 

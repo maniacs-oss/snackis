@@ -119,9 +119,9 @@ namespace snabel {
   bool Call::run(Scope &scp) {
     auto &cor(scp.coro);
     auto &exe(cor.exec);
-    auto fn(pop(cor));
       
     if (!label) {
+      auto fn(pop(cor));
       str n(get<str>(fn));
       auto fnd(exe.labels.find(n));
 
@@ -336,6 +336,10 @@ namespace snabel {
 
   str Group::info() const { return copy ? "copy" : ""; }
 
+  bool Group::refresh(Scope &scp) {
+    return run(scp);
+  }
+  
   bool Group::run(Scope &scp) {
     begin_scope(scp.coro, copy);
     return true;
@@ -486,8 +490,7 @@ namespace snabel {
     }
     
     auto tag = exe.lambdas.back();
-    auto lbl(find_label(exe, fmt("_recall%0", tag)));
-    if (lbl) { label = lbl; }
+    label = find_label(exe, fmt("_recall%0", tag));
     return true;
   }
 
@@ -533,6 +536,11 @@ namespace snabel {
 
   OpImp &Return::get_imp(Op &op) const {
     return std::get<Return>(op.data);
+  }
+
+  bool Return::refresh(Scope &scp) {
+    end_scope(scp.coro);
+    return true;
   }
 
   bool Return::run(Scope &scp) {
@@ -609,20 +617,21 @@ namespace snabel {
     return std::get<Target>(op.data);
   }
 
-  str Target::info() const { return tag; }
+  str Target::info() const {
+    if (!label) { return tag; }
+    return fmt("%0 (%1:%2)", label->tag, label->depth, label->pc);
+  }
 
   bool Target::prepare(Scope &scp) {
     auto &cor(scp.coro);
     auto &exe(cor.exec);
     auto fnd(exe.labels.find(tag));
-    pc = cor.pc;
-    depth = cor.scopes.size();
 
     if (fnd == exe.labels.end()) {
       label = &exe.labels
 	.emplace(std::piecewise_construct,
 		 std::forward_as_tuple(tag),
-		 std::forward_as_tuple(tag, cor.pc, depth))
+		 std::forward_as_tuple(tag, cor.scopes.size(), cor.pc))
 	.first->second;
     } else {
       ERROR(Snabel, fmt("Duplicate label: %0", tag));
@@ -634,11 +643,13 @@ namespace snabel {
 
   bool Target::refresh(Scope &scp) {
     if (!label) {
-      ERROR(Snabel, "Missing label");
+      ERROR(Snabel, fmt("Missing target label: %0", tag));
       return false;  
     }
 
-    label->pc = scp.coro.pc;
+    auto &cor(scp.coro);
+    label->pc = cor.pc;
+    label->depth = cor.scopes.size();
     return true;
   }
   
@@ -648,6 +659,10 @@ namespace snabel {
 
   OpImp &Ungroup::get_imp(Op &op) const {
     return std::get<Ungroup>(op.data);
+  }
+
+  bool Ungroup::refresh(Scope &scp) {
+    return run(scp);
   }
 
   bool Ungroup::run(Scope &scp) {
