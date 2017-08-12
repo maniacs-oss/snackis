@@ -164,26 +164,26 @@ namespace snabel {
   static void lambda_tests() {
     TRY(try_test);    
     Exec exe;
-    run(exe, "{1 2 + return} call");
+    run(exe, "{1 2 +} call");
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
 
-    run(exe, "2 {3 + return} call");
+    run(exe, "2 {3 +} call");
     CHECK(get<int64_t>(pop(exe.main)) == 5, _);
 
-    run(exe, "{let: bar 42; $bar return} call");
+    run(exe, "{let: bar 42; $bar} call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
     CHECK(!find_env(curr_scope(exe.main), "bar"), _);
 
-    run(exe, "let: fn {7 + return}; 35 $fn call");
+    run(exe, "let: fn {7 +}; 35 $fn call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
     run(exe, "{7 35 + return 99} call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run(exe, "-1 {1 + zero? {'t return} when return} call");
+    run(exe, "-1 {1 + zero? {'t} when} call");
     CHECK(get<bool>(pop(exe.main)), _);
 
-    run(exe, "-42 {1 + dup zero? {exit!} when recall @exit return} call");
+    run(exe, "42 {dec dup zero? {exit!} when recall @exit} call");
     CHECK(get<int64_t>(pop(exe.main)) == 0, _);
   }
 
@@ -191,10 +191,10 @@ namespace snabel {
     TRY(try_test);    
     Exec exe;
     
-    run(exe, "7 't {35 + return} when");
+    run(exe, "7 't {35 +} when");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run(exe, "7 'f {35 + return} when");
+    run(exe, "7 'f {35 +} when");
     CHECK(get<int64_t>(pop(exe.main)) == 7, _);
   }
 

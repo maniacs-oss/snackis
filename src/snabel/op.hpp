@@ -34,7 +34,6 @@ namespace snabel {
     virtual str info() const;
     virtual bool prepare(Scope &scp);
     virtual bool refresh(Scope &scp);
-    virtual bool trace(Scope &scp);
     virtual bool compile(const Op &op, Scope &scp, OpSeq &out);
     virtual bool run(Scope &scp);
   };
@@ -44,7 +43,6 @@ namespace snabel {
     
     Backup(bool copy);
     OpImp &get_imp(Op &op) const override;
-    bool trace(Scope &scp) override;
     bool run(Scope &scp) override;
   };
 
@@ -54,7 +52,6 @@ namespace snabel {
     Branch();
     OpImp &get_imp(Op &op) const override;
     str info() const override;
-    bool trace(Scope &scp) override;
     bool run(Scope &scp) override;
   };
 
@@ -65,8 +62,6 @@ namespace snabel {
     Call(Label &label);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
-
-    bool trace(Scope &scp) override;
     bool run(Scope &scp) override;
   };
 
@@ -76,7 +71,6 @@ namespace snabel {
     Drop(size_t count);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
-    bool trace(Scope &scp) override;
     bool compile(const Op &op, Scope &scp, OpSeq & out) override;
     bool run(Scope &scp) override;
   };
@@ -84,7 +78,6 @@ namespace snabel {
   struct Dup: OpImp {
     Dup();
     OpImp &get_imp(Op &op) const override;
-    bool trace(Scope &scp) override;
     bool run(Scope &scp) override;
   };
 
@@ -105,7 +98,6 @@ namespace snabel {
     Funcall(Func &fn);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
-    bool trace(Scope &scp) override;
     bool run(Scope &scp) override;
   };
 
@@ -116,7 +108,6 @@ namespace snabel {
     Get(const str &name);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
-    bool trace(Scope &scp) override;
     bool compile(const Op &op, Scope &scp, OpSeq & out) override;
     bool run(Scope &scp) override;
   };
@@ -127,7 +118,6 @@ namespace snabel {
     Group(bool copy);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
-    bool trace(Scope &scp) override;
     bool run(Scope &scp) override;
   };
 
@@ -140,7 +130,6 @@ namespace snabel {
     OpImp &get_imp(Op &op) const override;
     str info() const override;
     bool refresh(Scope &scp) override;
-    bool trace(Scope &scp) override;
     bool run(Scope &scp) override;
   };
 
@@ -163,7 +152,6 @@ namespace snabel {
     OpImp &get_imp(Op &op) const override;
     str info() const override;
     bool prepare(Scope &scp) override;
-    bool trace(Scope &scp) override;
     bool run(Scope &scp) override;
   };
 
@@ -174,7 +162,6 @@ namespace snabel {
     Push(const Stack &vals);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
-    bool trace(Scope &scp) override;
     bool run(Scope &scp) override;
   };
 
@@ -184,42 +171,36 @@ namespace snabel {
     Recall();
     OpImp &get_imp(Op &op) const override;
     bool refresh(Scope &scp) override;
-    bool trace(Scope &scp) override;
     bool run(Scope &scp) override;
   };
 
   struct Reset: OpImp {
     Reset();
     OpImp &get_imp(Op &op) const override;
-    bool trace(Scope &scp) override;
     bool run(Scope &scp) override;
   };
 
   struct Restore: OpImp {
     Restore();
     OpImp &get_imp(Op &op) const override;
-    bool trace(Scope &scp) override;
     bool run(Scope &scp) override;
   };
 
   struct Return: OpImp {
     Return();
     OpImp &get_imp(Op &op) const override;
-    bool trace(Scope &scp) override;
     bool run(Scope &scp) override;
   };
   
   struct Stash: OpImp {
     Stash();
     OpImp &get_imp(Op &op) const override;
-    bool trace(Scope &scp) override;
     bool run(Scope &scp) override;
   };
 
   struct Swap: OpImp {
     Swap();
     OpImp &get_imp(Op &op) const override;
-    bool trace(Scope &scp) override;
     bool run(Scope &scp) override;
   };
 
@@ -238,7 +219,6 @@ namespace snabel {
   struct Ungroup: OpImp {
     Ungroup();
     OpImp &get_imp(Op &op) const override;
-    bool trace(Scope &scp) override;
     bool run(Scope &scp) override;
   };
 
@@ -272,7 +252,6 @@ namespace snabel {
 
   bool prepare(Op &op, Scope &scp);
   bool refresh(Op &op, Scope &scp);
-  bool trace(Op &op, Scope &scp);
   bool compile(Op &op, Scope &scp, OpSeq &out);
   bool run(Op &op, Scope &scp);
 }

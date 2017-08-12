@@ -26,10 +26,6 @@ namespace snabel {
     return true;
   }
 
-  bool OpImp::trace(Scope &scp) {
-    return true;
-  }
-
   bool OpImp::compile(const Op &op, Scope &scp, OpSeq &out) {
     return false;
   }
@@ -46,10 +42,6 @@ namespace snabel {
     return std::get<Backup>(op.data);
   }
 
-  bool Backup::trace(Scope &scp) {
-    return run(scp);
-  }
-  
   bool Backup::run(Scope &scp) {
     backup_stack(scp.coro, copy);
     return true;
@@ -64,28 +56,9 @@ namespace snabel {
   }
 
   str Branch::info() const {
-      return label ? label->tag : "";    
+    return label ? label->tag : "";    
   }
 
-  bool Branch::trace(Scope &scp) {
-    auto &cor(scp.coro);
-    auto &exe(cor.exec);
-    
-    auto lbl(peek(cor));
-    if (!lbl || lbl->type != &exe.lambda_type || undef(*lbl)) {
-      return true;
-    }
-      
-    pop(cor);
-    auto cnd(peek(cor));
-    if (cnd && !undef(*cnd) && cnd->type == &exe.bool_type) { pop(cor); }
-
-    const str l(get<str>(*lbl));
-    auto fnd(exe.labels.find(l));
-    if (fnd != exe.labels.end()) { call(cor, fnd->second); }
-    return true;
-  }
-  
   bool Branch::run(Scope &scp) {
     auto &cor(scp.coro);
     auto &exe(cor.exec);
@@ -143,24 +116,6 @@ namespace snabel {
       return label ? label->tag : "";    
   }
 
-  bool Call::trace(Scope &scp) {
-    auto &cor(scp.coro);
-    auto &exe(cor.exec);      
-      
-    if (!label) {
-      auto fn(peek(cor));
-
-      if (fn && fn->type == &exe.lambda_type) {
-	auto fnd(exe.labels.find(get<str>(*fn)));
-	if (fnd != exe.labels.end()) { label = &fnd->second; }
-      }
-    }
-
-    if (!label) { return false; }
-    
-    return run(scp);
-  }
-  
   bool Call::run(Scope &scp) {
     auto &cor(scp.coro);
     auto &exe(cor.exec);
@@ -192,10 +147,6 @@ namespace snabel {
 
   str Drop::info() const {
     return fmt_arg(count);
-  }
-  
-  bool Drop::trace(Scope &scp) {
-    return run(scp);
   }
   
   bool Drop::compile(const Op &op, Scope &scp, OpSeq &out) {
@@ -259,10 +210,6 @@ namespace snabel {
     return std::get<Dup>(op.data);
   }
 
-  bool Dup::trace(Scope &scp) {
-    return run(scp);
-  }
-    
   bool Dup::run(Scope &scp) {
     auto &s(curr_stack(scp.coro));
     if (s.empty()) {
@@ -327,28 +274,6 @@ namespace snabel {
     return fn.name;
   }
 
-  bool Funcall::trace(Scope &scp) {
-    Coro &cor(scp.coro);      
-    if (!imp) { imp = match(fn, cor); }
-    if (!imp) { return false; }
-    
-    auto args(pop_args(*imp, cor));
-    if (args.size() < imp->args.size()) { return false; }
-    
-    for (auto &res: imp->results) {
-      auto rt(get_type(*imp, res, args));
-      
-      if (!rt) {
-	ERROR(Snabel, "Missing function result type");
-	return false;
-      }
-      
-      push(cor, Box(*rt, undef));
-    }
-    
-    return true;
-  }
-  
   bool Funcall::run(Scope &scp) {
     Coro &cor(scp.coro);
     if (imp && !match(*imp, cor)) { imp = nullptr; }
@@ -374,18 +299,15 @@ namespace snabel {
 
   str Get::info() const { return name; }
 
-  bool Get::trace(Scope &scp) {
-    return run(scp);
-  }
-  
   bool Get::compile(const Op &op, Scope &scp, OpSeq &out) {
     Exec &exe(scp.coro.exec);
-    if (!val) { return false; }
-    
-    if (val->type == &exe.func_type && name.front() != '$') {
-      out.emplace_back(Funcall(*get<Func *>(*val)));
+    auto fnd(find_env(scp, name));
+    if (!fnd) { return false; }
+
+    if (fnd->type == &exe.func_type && name.front() != '$') {
+      out.emplace_back(Funcall(*get<Func *>(*fnd)));
       return true;
-    } 
+    }
 
     return false;
   }
@@ -414,10 +336,6 @@ namespace snabel {
 
   str Group::info() const { return copy ? "copy" : ""; }
 
-  bool Group::trace(Scope &scp) {
-    return run(scp);
-  }
-  
   bool Group::run(Scope &scp) {
     begin_scope(scp.coro, copy);
     return true;
@@ -449,10 +367,6 @@ namespace snabel {
     }
     
     return true;
-  }
-
-  bool Jump::trace(Scope &scp) {
-    return run(scp);
   }
 
   bool Jump::run(Scope &scp) {
@@ -521,10 +435,6 @@ namespace snabel {
     return true;
   }
   
-  bool Let::trace(Scope &scp) {
-    return run(scp);
-  }
-  
   bool Let::run(Scope &scp) {
     auto &s(curr_stack(scp.coro));
 
@@ -553,10 +463,6 @@ namespace snabel {
 
   str Push::info() const { return fmt_arg(vals); }
 
-  bool Push::trace(Scope &scp) {
-    return run(scp);
-  }
-  
   bool Push::run(Scope &scp) {
     push(scp.coro, vals);
     return true;
@@ -585,10 +491,6 @@ namespace snabel {
     return true;
   }
 
-  bool Recall::trace(Scope &scp) {
-    return run(scp);
-  }
-
   bool Recall::run(Scope &scp) {
     if (!label) {
       ERROR(Snabel, "Missing recall label");
@@ -607,10 +509,6 @@ namespace snabel {
     return std::get<Reset>(op.data);
   }
 
-  bool Reset::trace(Scope &scp) {
-    return run(scp);
-  }
-
   bool Reset::run(Scope &scp) {
     curr_stack(scp.coro).clear();
     return true;
@@ -624,10 +522,6 @@ namespace snabel {
     return std::get<Restore>(op.data);
   }
 
-  bool Restore::trace(Scope &scp) {
-    return run(scp);
-  }
-
   bool Restore::run(Scope &scp) {
     restore_stack(scp.coro);
     return true;
@@ -639,10 +533,6 @@ namespace snabel {
 
   OpImp &Return::get_imp(Op &op) const {
     return std::get<Return>(op.data);
-  }
-
-  bool Return::trace(Scope &scp) {
-    return run(scp);
   }
 
   bool Return::run(Scope &scp) {
@@ -672,10 +562,6 @@ namespace snabel {
     return std::get<Stash>(op.data);
   }
 
-  bool Stash::trace(Scope &scp) {
-    return run(scp);
-  }
-
   bool Stash::run(Scope &scp) {
     Coro &cor(scp.coro);
     Exec &exe(cor.exec);
@@ -699,10 +585,6 @@ namespace snabel {
     return std::get<Swap>(op.data);
   }
 
-  bool Swap::trace(Scope &scp) {
-    return run(scp);
-  }
-    
   bool Swap::run(Scope &scp) {
     auto &s(curr_stack(scp.coro));
     if (s.size() < 2) {
@@ -768,10 +650,6 @@ namespace snabel {
     return std::get<Ungroup>(op.data);
   }
 
-  bool Ungroup::trace(Scope &scp) {
-    return run(scp);
-  }
-  
   bool Ungroup::run(Scope &scp) {
     return end_scope(scp.coro);
   }
@@ -808,10 +686,8 @@ namespace snabel {
     if (compiled || tag.empty()) { return false; }  
     
     compiled = true;
-    out.emplace_back(Reset());
     out.emplace_back(Target(fmt("_exit%0", tag)));
     out.push_back(op);
-    //out.emplace_back(Ungroup());
     out.emplace_back(Return());
     out.emplace_back(Target(fmt("_skip%0", tag)));
     out.emplace_back(Push(Box(cor.exec.lambda_type, fmt("_enter%0", tag))));
@@ -829,10 +705,6 @@ namespace snabel {
 
   bool refresh(Op &op, Scope &scp) {
     return op.imp.refresh(scp);
-  }
-
-  bool trace(Op &op, Scope &scp) {
-    return op.imp.trace(scp);
   }
 
   bool compile(Op &op, Scope &scp, OpSeq &out) {

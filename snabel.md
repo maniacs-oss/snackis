@@ -46,7 +46,7 @@ n/a
 ```
 
 ### Functions
-Snabel derives much of its type-checking powers from functions. Each named function represents a set of implementations. Each implementation is required to declare its parameter- and result types. Functions are pure by default, which means that Snabel will run them at will during compilation; set ```imp.pure = false;``` to prevent this from happening. Implementations are matched in reverse declared order when resolving function calls, which allows overriding existing functionality at any point.
+Snabel derives most of its type-checking powers from functions. Each named function represents a set of implementations, and each implementation is required to declare its parameter- and result types. Implementations are matched in reverse declared order when resolving function calls, to allow overriding existing functionality at any point.
 
 Adding functions from C++ is as easy as this:
 
@@ -68,7 +68,7 @@ add_func(exe, "+",
 ```
 
 ### Lambdas
-Using braces instead of parentheses pushes a pointer to the compiled expression on the stack, ```begin```/```end``` may be used to perform the same operation over multiple lines. The lambda scope may be exited early by calling ```return```.
+Using braces instead of parentheses pushes a pointer to the compiled expression on the stack, ```begin```/```end``` may be used to perform the same operation over multiple lines. Lambdas may be exited early by calling ```return``` and called recursively using ```recall```.
 
 ```
 > {1 2 +}
@@ -87,6 +87,11 @@ I64
   end call
 3
 I64
+
+> 42
+  {dec dup zero? {exit!} when recall @exit}
+  call
+0
 ```
 
 ### Bindings
@@ -99,7 +104,7 @@ I64
 ```
 
 ### Types
-Snabel provides static, optionally parameterized types; and will check and optimize code based on types of variables and functions during compilation. First class types and type-inference are provided to help reduce cognitive load and keyboard wear.
+Snabel provides first class static, optionally parameterized types with inference.
 
 ```
 > I64

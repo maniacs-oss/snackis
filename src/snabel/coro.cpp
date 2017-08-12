@@ -143,38 +143,26 @@ namespace snabel {
 
     while (true) {
       OpSeq out;
-      begin_scope(cor, false);
       
       cor.pc = 0;
       for (auto &op: cor.ops) {
-	if (!op.prepared && !prepare(op, curr_scope(cor))) {
+	if (!op.prepared && !prepare(op, cor.exec.main.scopes.front())) {
 	  goto exit;
 	}
 	
 	cor.pc++;
       }
 
-
       cor.pc = 0;
       cor.exec.lambdas.clear();
       for (auto &op: cor.ops) {
-	if (!refresh(op, curr_scope(cor))) { goto exit; }
+	if (!refresh(op, cor.exec.main.scopes.front())) { goto exit; }
 	cor.pc++;
       }
 
-      cor.pc = 0;
-      cor.exec.lambdas.clear();
-      while (cor.pc < cor.ops.size()) {
-	Op &op(cor.ops[cor.pc]);
-	if (!trace(op, curr_scope(cor))) { break; }
-	cor.pc++;
-      }
-
-      rewind(cor);
       bool done(true);
-      cor.exec.lambdas.clear();
       for (auto &op: cor.ops) {
-	if (compile(op, curr_scope(cor), out)) { done = false; }
+	if (compile(op, cor.exec.main.scopes.front(), out)) { done = false; }
       }
 
       if (done) { goto exit; }
@@ -183,6 +171,7 @@ namespace snabel {
       try_compile.errors.clear();
     }
   exit:
+    cor.pc = 0;
     return try_compile.errors.empty();
   }
 

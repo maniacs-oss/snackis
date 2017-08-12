@@ -11,6 +11,16 @@ namespace snabel {
     push(scp.coro, exe.bool_type, res);
   }
 
+  static void inc_i64_imp(Scope &scp, FuncImp &fn, const Args &args) {
+    auto &a(args[0]);
+    push(scp.coro, *a.type, get<int64_t>(a)+1);
+  }
+
+  static void dec_i64_imp(Scope &scp, FuncImp &fn, const Args &args) {
+    auto &a(args[0]);
+    push(scp.coro, *a.type, get<int64_t>(a)-1);
+  }
+
   static void add_i64_imp(Scope &scp, FuncImp &fn, const Args &args) {
     Exec &exe(scp.coro.exec);
     int64_t res(0);
@@ -128,6 +138,15 @@ namespace snabel {
     add_func(*this, "zero?",
 	     {ArgType(i64_type)}, {ArgType(bool_type)},
 	     zero_i64_imp);
+
+    add_func(*this, "inc",
+	     {ArgType(i64_type)}, {ArgType(i64_type)},
+	     inc_i64_imp);
+
+    add_func(*this, "dec",
+	     {ArgType(i64_type)}, {ArgType(i64_type)},
+	     dec_i64_imp);
+
     add_func(*this, "+",
 	     {ArgType(i64_type), ArgType(i64_type)}, {ArgType(i64_type)},
 	     add_i64_imp);
