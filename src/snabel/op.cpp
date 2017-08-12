@@ -68,19 +68,31 @@ namespace snabel {
   }
 
   bool Branch::trace(Scope &scp) {
-    return run(scp);
+    auto &cor(scp.coro);
+    auto &exe(cor.exec);
+    
+    auto lbl(peek(cor));
+    if (!lbl || lbl->type != &exe.lambda_type || undef(*lbl)) {
+      return true;
+    }
+      
+    pop(cor);
+    auto cnd(peek(cor));
+    if (cnd && !undef(*cnd) && cnd->type == &exe.bool_type) { pop(cor); }
+
+    const str l(get<str>(*lbl));
+    auto fnd(exe.labels.find(l));
+    if (fnd != exe.labels.end()) { call(cor, fnd->second); }
+    return true;
   }
-
-  /*
-  out.emplace_back(Trunc(curr_stack(cor).size()));
-  */
-
+  
   bool Branch::run(Scope &scp) {
     auto &cor(scp.coro);
     auto &exe(cor.exec);
     auto lbl(peek(cor));
     
     if (!lbl || lbl->type != &exe.lambda_type) {
+      ERROR(Snabel, fmt("Invalid branch argument: %0", *lbl));
       return false;
     }
     
@@ -112,7 +124,7 @@ namespace snabel {
     }
 
     if(get<bool>(*cnd)) { call(cor, *label); }
-    return true;    
+    return true;
   }
   
   Call::Call():
@@ -319,25 +331,19 @@ namespace snabel {
     Coro &cor(scp.coro);      
     if (!imp) { imp = match(fn, cor); }
     if (!imp) { return false; }
+    
     auto args(pop_args(*imp, cor));
     if (args.size() < imp->args.size()) { return false; }
     
-    if (imp->pure &&
-	!imp->args.empty() &&
-	std::find_if(args.begin(), args.end(),
-		     [](auto &a){ return undef(a); }) == args.end()) {
-      (*imp)(cor, args);
-    } else {
-      for (auto &res: imp->results) {
-	auto rt(get_type(*imp, res, args));
-	
-	if (!rt) {
-	  ERROR(Snabel, "Missing function result type");
-	  return false;
-	}
-	
-	push(cor, Box(*rt, undef));
+    for (auto &res: imp->results) {
+      auto rt(get_type(*imp, res, args));
+      
+      if (!rt) {
+	ERROR(Snabel, "Missing function result type");
+	return false;
       }
+      
+      push(cor, Box(*rt, undef));
     }
     
     return true;
