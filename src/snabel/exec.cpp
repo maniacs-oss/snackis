@@ -103,7 +103,7 @@ namespace snabel {
     bool_type(add_type(*this, "Bool", any_type)),
     func_type(add_type(*this, "Func", any_type)),
     i64_type(add_type(*this, "I64", any_type)),
-    lambda_type(add_type(*this, "Lambda", any_type)),
+    label_type(add_type(*this, "Label", any_type)),
     list_type(get_list_type(*this, any_type)),
     str_type(add_type(*this, "Str", any_type)),
     undef_type(add_type(*this, "Undef")),
@@ -114,6 +114,7 @@ namespace snabel {
     meta_type.eq = [](auto &x, auto &y) { return get<Type *>(x) == get<Type *>(y); };
     any_type.fmt = [](auto &v) { return "n/a"; };
     any_type.eq = [](auto &x, auto &y) { return false; };
+
     bool_type.fmt = [](auto &v) { return get<bool>(v) ? "'t" : "'f"; };
     bool_type.eq = [](auto &x, auto &y) { return get<bool>(x) == get<bool>(y); };
     put_env(main.scopes.front(), "'t", Box(bool_type, true));
@@ -123,8 +124,10 @@ namespace snabel {
     func_type.eq = [](auto &x, auto &y) { return get<Func *>(x) == get<Func *>(y); };
     i64_type.fmt = [](auto &v) { return fmt_arg(get<int64_t>(v)); };
     i64_type.eq = [](auto &x, auto &y) { return get<int64_t>(x) == get<int64_t>(y); };
-    lambda_type.fmt = [](auto &v) { return get<str>(v); };
-    lambda_type.eq = [](auto &x, auto &y) { return get<str>(x) == get<str>(y); };
+
+    label_type.fmt = [](auto &v) { return get<str>(v); };
+    label_type.eq = [](auto &x, auto &y) { return get<str>(x) == get<str>(y); };
+
     str_type.fmt = [](auto &v) { return fmt("\"%0\"", get<str>(v)); };
     str_type.eq = [](auto &x, auto &y) { return get<str>(x) == get<str>(y); };
 

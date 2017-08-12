@@ -64,7 +64,7 @@ namespace snabel {
     auto &exe(cor.exec);
     auto lbl(peek(cor));
     
-    if (!lbl || lbl->type != &exe.lambda_type) {
+    if (!lbl || lbl->type != &exe.label_type) {
       ERROR(Snabel, fmt("Invalid branch argument: %0", *lbl));
       return false;
     }
@@ -120,7 +120,9 @@ namespace snabel {
     auto &cor(scp.coro);
     auto &exe(cor.exec);
       
-    if (!label) {
+    if (label) {
+      call(cor, *label);
+    } else {
       auto fn(pop(cor));
       str n(get<str>(fn));
       auto fnd(exe.labels.find(n));
@@ -128,12 +130,11 @@ namespace snabel {
       if (fnd == exe.labels.end()) {
 	ERROR(Snabel, fmt("Missing call target: %0", n));
 	return false;
-      } else {
-	label = &fnd->second;
-      }      
+      }
+
+      call(cor, fnd->second);
     }
 
-    call(cor, *label);
     return true;
   }
 
@@ -494,14 +495,19 @@ namespace snabel {
     return true;
   }
 
-  bool Recall::run(Scope &scp) {
+  bool Recall::compile(const Op &op, Scope &scp, OpSeq &out) {
     if (!label) {
       ERROR(Snabel, "Missing recall label");
       return false;
     }
-
-    call(scp.coro, *label);
+    
+    out.emplace_back(Jump(*label));
     return true;
+  }
+
+  bool Recall::run(Scope &scp) {
+    ERROR(Snabel, "Missing recall label");
+    return false;
   }
   
   Reset::Reset():
@@ -705,7 +711,7 @@ namespace snabel {
     out.push_back(op);
     out.emplace_back(Return());
     out.emplace_back(Target(fmt("_skip%0", tag)));
-    out.emplace_back(Push(Box(cor.exec.lambda_type, fmt("_enter%0", tag))));
+    out.emplace_back(Push(Box(cor.exec.label_type, fmt("_enter%0", tag))));
     return true;
   }
 

@@ -21,7 +21,7 @@ namespace snabel {
 
     Fiber &main;
     Type &any_type, &meta_type,
-      &bool_type, &func_type, &i64_type, &lambda_type, &list_type, &str_type,
+      &bool_type, &func_type, &i64_type, &label_type, &list_type, &str_type,
       &undef_type, &void_type;
     Sym next_sym;
     
