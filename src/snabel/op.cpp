@@ -217,47 +217,6 @@ namespace snabel {
     return true;
   }
 
-  Exit::Exit():
-    OpImp(OP_EXIT, "exit"), label(nullptr)
-  { }
-
-  OpImp &Exit::get_imp(Op &op) const {
-    return std::get<Exit>(op.data);
-  }
-
-  bool Exit::refresh(Scope &scp) {
-    Coro &cor(scp.coro);
-    Exec &exe(cor.exec);
-
-    if (!label) {
-      if (exe.lambdas.empty()) {
-	ERROR(Snabel, "Missing lambda");
-	return false;
-      }
-
-      str tag(exe.lambdas.back());
-      auto lbl(find_label(exe, fmt("_exit%0", tag)));
-      if (lbl) { label = lbl; }
-    }
-
-    return true;
-  }
-  
-  bool Exit::compile(const Op &op, Scope &scp, OpSeq &out) {
-    if (!label) {
-      ERROR(Snabel, "Missing exit label");
-      return false;
-    }
-    
-    out.emplace_back(Jump(*label));
-    return true;
-  }
-
-  bool Exit::run(Scope &scp) {
-    ERROR(Snabel, "Missing exit label");
-    return false;
-  }
-
   Funcall::Funcall(Func &fn):
     OpImp(OP_FUNCALL, "funcall"), fn(fn), imp(nullptr)
   { }
@@ -377,7 +336,7 @@ namespace snabel {
   }
   
   Lambda::Lambda():
-    OpImp(OP_LAMBDA, "lambda"), compiled(false)
+    OpImp(OP_LAMBDA, "lambda"), exit_label(nullptr), compiled(false)
   { }
 
   OpImp &Lambda::get_imp(Op &op) const {
@@ -390,8 +349,9 @@ namespace snabel {
   }
 
   bool Lambda::refresh(Scope &scp) {
+    exit_label = find_label(scp.coro.exec, fmt("_exit%0", tag));
     scp.coro.exec.lambdas.push_back(tag);
-    return run(scp);
+    return true;
   }
 
   bool Lambda::compile(const Op &op, Scope &scp, OpSeq &out) {
@@ -411,6 +371,16 @@ namespace snabel {
       return true;
   }
 
+  bool Lambda::run(Scope &scp) {
+    if (!exit_label) {
+      ERROR(Snabel, fmt("Missing lambda exit label: %0", tag));
+      return false;
+    }
+    
+    scp.recall_pcs.push_back(exit_label->pc);
+    return true;
+  }
+  
   Let::Let(const str &name):
     OpImp(OP_LET, "let"), name(name)
   { }
@@ -737,6 +707,11 @@ namespace snabel {
     return true;
   }
 
+  bool Unlambda::run(Scope &scp) {
+    if (!scp.recall_pcs.empty()) { scp.recall_pcs.pop_back(); }
+    return true;
+  }
+  
   Op::Op(const Op &src):
     data(src.data), imp(src.imp.get_imp(*this)), prepared(src.prepared)
   { }

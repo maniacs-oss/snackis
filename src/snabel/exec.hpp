@@ -36,6 +36,7 @@ namespace snabel {
   Type &add_type(Exec &exe, const str &n, Type &super);
   Type &get_list_type(Exec &exe, Type &elt);
   Label &add_label(Exec &exe, const str &tag);
+  Label *find_label(Exec &exe, const str &tag);
   void clear_labels(Exec &exe);
   
   FuncImp &add_func(Exec &exe,
@@ -45,7 +46,6 @@ namespace snabel {
 		    FuncImp::Imp imp);
 
   Sym gensym(Exec &exe);
-  Label *find_label(Exec &exe, const str &tag);
   bool run(Exec &exe, const str &in);
 }
 

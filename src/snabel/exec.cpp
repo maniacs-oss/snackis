@@ -243,7 +243,7 @@ namespace snabel {
       });
 
     add_macro(*this, "return", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(Exit());
+	out.emplace_back(Return(true));
       });
 
     add_macro(*this, "stash", [](auto pos, auto &in, auto &out) {
@@ -359,17 +359,17 @@ namespace snabel {
     
     exe.labels.clear();
   }
-  
+
+  Label *find_label(Exec &exe, const str &tag) {
+    auto fnd(exe.labels.find(tag));
+    if (fnd == exe.labels.end()) { return nullptr; }
+    return &fnd->second;
+  }
+
   Sym gensym(Exec &exe) {
     Sym s(exe.next_sym);
     exe.next_sym++;
     return s;
-  }
-
-  Label *find_label(Exec &exe, const str &tag) {
-    auto fnd(find_env(exe.main_scope, tag));
-    if (!fnd) { return nullptr; }
-    return get<Label *>(*fnd);
   }
   
   bool run(Exec &exe, const str &in) {
