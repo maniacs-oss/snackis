@@ -100,7 +100,6 @@ namespace snabel {
 
   struct Get: OpImp {
     str name;
-    opt<Box> val;
 
     Get(const str &name);
     OpImp &get_imp(Op &op) const override;
@@ -178,7 +177,6 @@ namespace snabel {
     Recall();
     OpImp &get_imp(Op &op) const override;
     bool refresh(Scope &scp) override;
-    bool compile(const Op &op, Scope &scp, OpSeq & out) override;
     bool run(Scope &scp) override;
   };
 

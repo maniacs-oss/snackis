@@ -157,15 +157,16 @@ namespace snabel {
   static void jump_tests() {
     TRY(try_test);    
     Exec exe;
-    run(exe, "1 2 exit! 3 @exit +");
-    CHECK(get<int64_t>(pop(exe.main)) == 3, _);
+
+    run(exe, "3 4 exit 35 @exit +");
+    CHECK(get<int64_t>(pop(exe.main)) == 7, _);
   }
 
   static void lambda_tests() {
     TRY(try_test);    
     Exec exe;
-    run(exe, "{1 2 +} call");
-    CHECK(get<int64_t>(pop(exe.main)) == 3, _);
+    run(exe, "{3 4 +} call 35 +");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
     run(exe, "2 {3 +} call");
     CHECK(get<int64_t>(pop(exe.main)) == 5, _);
@@ -183,10 +184,10 @@ namespace snabel {
     run(exe, "{'t {42} when} call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run(exe, "0 {zero? {exit!} when 'f @exit 't} call");
+    run(exe, "0 {zero? {exit} when 'f @exit 't} call");
     CHECK(get<bool>(pop(exe.main)), _);
 
-    run(exe, "42 {dec dup zero? {exit!} when recall @exit} call");
+    run(exe, "42 {dec dup zero? {exit} when recall @exit} call");
     CHECK(get<int64_t>(pop(exe.main)) == 0, _);
   }
 

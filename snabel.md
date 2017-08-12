@@ -132,14 +132,14 @@ List<I64>
 ```
 
 ### Jumps
-Snabel's control structures are based on the idea of jumping to offsets within the instruction stream. Beginning any name with ```@``` will create a label with the specified name at that point, while ending any name with ```!``` will jump to the specified label from that point.
+Snabel's control structures are based on the idea of jumping to offsets within the instruction stream. Beginning any name with ```@``` will create a label with the specified name at that point, while simply naming a label will result in jumping there.
 
 ```
 > 1 2 3 +
 5
 I64
 
-> 1 2 skip! 42 @skip +
+> 1 2 skip 42 @skip +
 3
 I64
 ```

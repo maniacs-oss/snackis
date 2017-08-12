@@ -20,7 +20,9 @@ namespace snabel {
   struct Scope {
     Coro &coro;
     std::deque<Env> envs;
+
     int64_t return_pc;
+    std::deque<int64_t> recall_pcs;
     
     Scope(const Scope &src);
     Scope(Coro &cor);

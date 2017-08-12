@@ -302,6 +302,8 @@ namespace snabel {
 
     if (fnd->type == &exe.func_type && name.front() != '$') {
       out.emplace_back(Funcall(*get<Func *>(*fnd)));
+    } else if (fnd->type == &exe.label_type && name.front() != '$') {
+      out.emplace_back(Jump(*get<Label *>(*fnd)));
     } else {
       out.emplace_back(Push(*fnd));
     }
@@ -319,7 +321,6 @@ namespace snabel {
     }
     
     push(cor, *fnd);
-    val.emplace(*fnd);
     return true;
   }
   
@@ -468,7 +469,7 @@ namespace snabel {
       out.emplace_back(Funcall(*get<Func *>(*fnd)));
       out.emplace_back(Return(false));
       out.emplace_back(Target(fmt("_skip%0", tag)));
-      out.emplace_back(Get(call_lbl));
+      out.emplace_back(Pointer(call_lbl));
     } else {
       return false;
     }
@@ -522,19 +523,16 @@ namespace snabel {
     return true;
   }
 
-  bool Recall::compile(const Op &op, Scope &scp, OpSeq &out) {
+  bool Recall::run(Scope &scp) {
     if (!label) {
       ERROR(Snabel, "Missing recall label");
       return false;
     }
-    
-    out.emplace_back(Jump(*label));
-    return true;
-  }
 
-  bool Recall::run(Scope &scp) {
-    ERROR(Snabel, "Missing recall label");
-    return false;
+    Coro &cor(scp.coro);
+    scp.recall_pcs.push_back(cor.pc);
+    jump(cor, *label);
+    return true;
   }
   
   Reset::Reset():
@@ -578,16 +576,23 @@ namespace snabel {
 
   bool Return::run(Scope &scp) {
     Coro &cor(scp.coro);
-    if (scoped && !end_scope(scp.coro)) { return false; }
-    auto &prev_scp(curr_scope(cor));
 
-    if (prev_scp.return_pc == -1) {
-      ERROR(Snabel, "Missing return pc");
-      return false;
+    if (scp.recall_pcs.empty()) {
+      if (scoped && !end_scope(scp.coro)) { return false; }
+      auto &ret_scp(curr_scope(cor));
+      
+      if (ret_scp.return_pc == -1) {
+	ERROR(Snabel, "Missing return pc");
+	return false;
+      }
+
+      cor.pc = ret_scp.return_pc;
+      ret_scp.return_pc = -1;
+    } else {
+      cor.pc = scp.recall_pcs.back();
+      scp.recall_pcs.pop_back();
     }
-
-    cor.pc = prev_scp.return_pc;
-    prev_scp.return_pc = -1;
+    
     return true;
   }
   
@@ -728,7 +733,7 @@ namespace snabel {
     out.push_back(op);
     out.emplace_back(Return(true));
     out.emplace_back(Target(fmt("_skip%0", tag)));
-    out.emplace_back(Get(fmt("_enter%0", tag)));
+    out.emplace_back(Pointer(fmt("_enter%0", tag)));
     return true;
   }
 

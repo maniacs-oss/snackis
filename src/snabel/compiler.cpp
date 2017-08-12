@@ -13,8 +13,6 @@ namespace snabel {
     
     if (tok.text.front() == '@') {
       out.emplace_back(Target(tok.text.substr(1)));
-    } else if (tok.text.back() == '!') {
-      out.emplace_back(Jump(tok.text.substr(0, tok.text.size()-1)));
     } else if (tok.text.front() == '&') {
       out.emplace_back(Pointer(tok.text.substr(1)));
     } else if (tok.text.front() == '"') {

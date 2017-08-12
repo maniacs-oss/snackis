@@ -10,7 +10,7 @@ namespace snabel {
   { }
 
   Scope::Scope(Coro &cor):
-    coro(cor)
+    coro(cor), return_pc(-1)
   {
     push_env(*this);
   }
@@ -66,6 +66,7 @@ namespace snabel {
 
   void call(Scope &scp, const Label &lbl) {
     Coro &cor(scp.coro);
+    CHECK(scp.return_pc == -1, _);
     scp.return_pc = cor.pc;
     jump(cor, lbl);
   }
