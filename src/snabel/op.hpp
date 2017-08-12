@@ -19,7 +19,7 @@ namespace snabel {
   struct Op;
 
   enum OpCode { OP_BACKUP, OP_BRANCH, OP_CALL, OP_DROP, OP_DUP, OP_EXIT, OP_FUNCALL,
-	        OP_GET, OP_GROUP, OP_JUMP,  OP_LAMBDA, OP_LET,
+	        OP_GET, OP_GROUP, OP_JUMP,  OP_LAMBDA, OP_LET, OP_POINTER,
 		OP_PUSH, OP_RECALL, OP_RESET, OP_RESTORE, OP_RETURN, OP_STASH,
 		OP_SWAP, OP_TARGET, OP_UNGROUP, OP_UNLAMBDA };
 
@@ -47,11 +47,8 @@ namespace snabel {
   };
 
   struct Branch: OpImp {
-    Label *label;
-
     Branch();
     OpImp &get_imp(Op &op) const override;
-    str info() const override;
     bool run(Scope &scp) override;
   };
 
@@ -156,6 +153,15 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
 
+  struct Pointer: OpImp {
+    str id;
+    
+    Pointer(const str &id);
+    OpImp &get_imp(Op &op) const override;
+    bool compile(const Op &op, Scope &scp, OpSeq & out) override;
+    bool run(Scope &scp) override;
+  };
+  
   struct Push: OpImp {
     Stack vals;
     
@@ -189,7 +195,9 @@ namespace snabel {
   };
 
   struct Return: OpImp {
-    Return();
+    bool scoped;
+    
+    Return(bool scoped);
     OpImp &get_imp(Op &op) const override;
     bool refresh(Scope &scp) override;
     bool run(Scope &scp) override;
@@ -236,8 +244,9 @@ namespace snabel {
   };
 
   using OpData = std::variant<Backup, Branch, Call, Drop, Dup, Exit, Funcall, Get,
-			      Group, Jump, Lambda, Let, Push, Recall, Reset, Restore,
-			      Return, Stash, Swap, Target, Ungroup, Unlambda>;
+			      Group, Jump, Lambda, Let, Pointer, Push, Recall, Reset,
+			      Restore, Return, Stash, Swap, Target, Ungroup,
+			      Unlambda>;
 
   struct Op {
     OpData data;

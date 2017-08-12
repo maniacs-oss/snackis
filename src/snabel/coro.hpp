@@ -16,7 +16,6 @@ namespace snabel {
     
     std::deque<Scope> scopes;
     std::deque<Stack> stacks;
-    std::deque<int64_t> returns;
     
     Coro(Exec &exe);
     Coro(const Coro &) = delete;
@@ -41,7 +40,6 @@ namespace snabel {
   bool end_scope(Coro &cor, size_t stack_len=1);
   void reset_scope(Coro &cor, size_t depth);
 
-  void call(Coro &cor, const Label &lbl);
   void jump(Coro &cor, const Label &lbl);
   void rewind(Coro &cor);  
 

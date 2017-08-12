@@ -20,6 +20,7 @@ namespace snabel {
   struct Scope {
     Coro &coro;
     std::deque<Env> envs;
+    int64_t return_pc;
     
     Scope(const Scope &src);
     Scope(Coro &cor);
@@ -34,6 +35,7 @@ namespace snabel {
   Box get_env(Scope &scp, const str &n);
   void put_env(Scope &scp, const str &n, const Box &val);
   bool rem_env(Scope &scp, const str &n);
+  void call(Scope &scp, const Label &lbl);
 }
 
 #endif

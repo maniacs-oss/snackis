@@ -13,6 +13,7 @@ namespace snabel {
   struct Box;
   struct Func;
   struct Exec;
+  struct Label;
   struct List;
   struct Type;
 
@@ -25,7 +26,7 @@ namespace snabel {
   using Val = std::variant<const Undef,
 			   bool, int64_t, str,
 			   ListRef,
-			   Func *, Type *>;
+			   Label *, Func *, Type *>;
   
   struct Box {
     Type *type;

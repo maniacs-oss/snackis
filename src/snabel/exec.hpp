@@ -20,6 +20,7 @@ namespace snabel {
     std::deque<str> lambdas;
 
     Fiber &main;
+    Scope &main_scope;
     Type &any_type, &meta_type,
       &bool_type, &func_type, &i64_type, &label_type, &list_type, &str_type,
       &undef_type, &void_type;
@@ -31,11 +32,12 @@ namespace snabel {
   };
 
   Macro &add_macro(Exec &exe, const str &n, Macro::Imp imp);
-
   Type &add_type(Exec &exe, const str &n);
   Type &add_type(Exec &exe, const str &n, Type &super);
   Type &get_list_type(Exec &exe, Type &elt);
-
+  Label &add_label(Exec &exe, const str &tag);
+  void clear_labels(Exec &exe);
+  
   FuncImp &add_func(Exec &exe,
 		    const str n,
 		    const ArgTypes &args,

@@ -93,7 +93,7 @@ namespace snabel {
       ERROR(Snabel, "Open scope");
       return false;
     }
-    
+
     restore_stack(cor, stack_len);
     cor.scopes.pop_back();
     return true;
@@ -103,11 +103,6 @@ namespace snabel {
     while (cor.scopes.size() > depth) {
       cor.scopes.pop_back();
     }
-  }
-
-  void call(Coro &cor, const Label &lbl){
-    cor.returns.push_back(cor.pc);
-    jump(cor, lbl);
   }
   
   void jump(Coro &cor, const Label &lbl) {
@@ -127,13 +122,16 @@ namespace snabel {
   }
 
   bool compile(Coro &cor, const str &in) {
+    Exec &exe(cor.exec);
+    
     cor.ops.clear();
-    cor.exec.labels.clear();
+    clear_labels(exe);
+    rewind(cor);
     size_t lnr(0);
     
     for (auto &ln: parse_lines(in)) {
       if (!ln.empty()) {
-	compile(cor.exec, lnr, parse_expr(ln), cor.ops);
+	compile(exe, lnr, parse_expr(ln), cor.ops);
       }
        
       lnr++;
@@ -146,7 +144,7 @@ namespace snabel {
       rewind(cor);
       
       for (auto &op: cor.ops) {
-	if (!op.prepared && !prepare(op, cor.exec.main.scopes.front())) {
+	if (!op.prepared && !prepare(op, exe.main_scope)) {
 	  goto exit;
 	}
 	
@@ -154,15 +152,15 @@ namespace snabel {
       }
 
       cor.pc = 0;
-      cor.exec.lambdas.clear();
+      exe.lambdas.clear();
       for (auto &op: cor.ops) {
-	if (!refresh(op, cor.exec.main.scopes.front())) { goto exit; }
+	if (!refresh(op, exe.main_scope)) { goto exit; }
 	cor.pc++;
       }
 
       bool done(true);
       for (auto &op: cor.ops) {
-	if (compile(op, cor.exec.main.scopes.front(), out)) { done = false; }
+	if (compile(op, exe.main_scope, out)) { done = false; }
       }
 
       if (done) { goto exit; }
@@ -180,7 +178,13 @@ namespace snabel {
     
     while (cor.pc < cor.ops.size()) {
       auto &op(cor.ops[cor.pc]);
-      if (!run(op, curr_scope(cor))) { return false; }
+
+      if (!run(op, curr_scope(cor))) {
+	ERROR(Snabel, fmt("Error on line %0: %1 %2",
+			  cor.pc, op.imp.name, op.imp.info()));
+	return false;
+      }
+      
       cor.pc++;
     }
 

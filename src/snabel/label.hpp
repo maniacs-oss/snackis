@@ -11,7 +11,7 @@ namespace snabel {
     const str tag;
     int64_t depth, pc;
     
-    Label(const str &tag, int64_t depth, int64_t pc);
+    Label(const str &tag);
   };
 }
 

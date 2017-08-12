@@ -98,6 +98,7 @@ namespace snabel {
     main(fibers.emplace(std::piecewise_construct,
 			std::forward_as_tuple(0),
 			std::forward_as_tuple(*this, 0)).first->second),
+    main_scope(main.scopes.front()),
     any_type(add_type(*this, "Any")),
     meta_type(add_type(*this, "Type", any_type)),
     bool_type(add_type(*this, "Bool", any_type)),
@@ -117,23 +118,25 @@ namespace snabel {
 
     bool_type.fmt = [](auto &v) { return get<bool>(v) ? "'t" : "'f"; };
     bool_type.eq = [](auto &x, auto &y) { return get<bool>(x) == get<bool>(y); };
-    put_env(main.scopes.front(), "'t", Box(bool_type, true));
-    put_env(main.scopes.front(), "'f", Box(bool_type, false));
+    put_env(main_scope, "'t", Box(bool_type, true));
+    put_env(main_scope, "'f", Box(bool_type, false));
 
     func_type.fmt = [](auto &v) { return fmt_arg(size_t(get<Func *>(v))); };
     func_type.eq = [](auto &x, auto &y) { return get<Func *>(x) == get<Func *>(y); };
     i64_type.fmt = [](auto &v) { return fmt_arg(get<int64_t>(v)); };
     i64_type.eq = [](auto &x, auto &y) { return get<int64_t>(x) == get<int64_t>(y); };
 
-    label_type.fmt = [](auto &v) { return get<str>(v); };
-    label_type.eq = [](auto &x, auto &y) { return get<str>(x) == get<str>(y); };
+    label_type.fmt = [](auto &v) { return get<Label *>(v)->tag; };
+    label_type.eq = [](auto &x, auto &y) {
+      return get<Label *>(x) == get<Label *>(y);
+    };
 
     str_type.fmt = [](auto &v) { return fmt("\"%0\"", get<str>(v)); };
     str_type.eq = [](auto &x, auto &y) { return get<str>(x) == get<str>(y); };
 
     undef_type.fmt = [](auto &v) { return "n/a"; };
     undef_type.eq = [](auto &x, auto &y) { return true; };
-    put_env(main.scopes.front(), "'undef", Box(undef_type, undef));
+    put_env(main_scope, "'undef", Box(undef_type, undef));
     
     void_type.fmt = [](auto &v) { return "n/a"; };
     void_type.eq = [](auto &x, auto &y) { return true; };  
@@ -264,19 +267,19 @@ namespace snabel {
   
   Type &add_type(Exec &exe, const str &n) {
     auto &res(exe.types.emplace_front(n)); 
-    put_env(exe.main.scopes.front(), n, Box(exe.meta_type, &res));
+    put_env(exe.main_scope, n, Box(exe.meta_type, &res));
     return res;
   }
 
   Type &add_type(Exec &exe, const str &n, Type &super) {
     auto &res(exe.types.emplace_front(n, super)); 
-    put_env(exe.main.scopes.front(), n, Box(exe.meta_type, &res));
+    put_env(exe.main_scope, n, Box(exe.meta_type, &res));
     return res;
   }
 
   Type &get_list_type(Exec &exe, Type &elt) {    
     str n(fmt("List<%0>", elt.name));
-    auto fnd(find_env(exe.main.scopes.front(), n));
+    auto fnd(find_env(exe.main_scope, n));
     if (fnd) { return *get<Type *>(*fnd); }
     auto &t(add_type(exe, n, exe.list_type));
     t.args.push_back(&elt);
@@ -332,11 +335,29 @@ namespace snabel {
       auto &fn(exe.funcs.emplace(std::piecewise_construct,
 				  std::forward_as_tuple(n),
 				  std::forward_as_tuple(n)).first->second);
-      put_env(exe.main.scopes.front(), n, Box(exe.func_type, &fn));
+      put_env(exe.main_scope, n, Box(exe.func_type, &fn));
       return add_imp(fn, args, results, imp);
     }
     
     return add_imp(fnd->second, args, results, imp);
+  }
+
+  Label &add_label(Exec &exe, const str &tag) {
+    auto &l(exe.labels
+      .emplace(std::piecewise_construct,
+	       std::forward_as_tuple(tag),
+	       std::forward_as_tuple(tag))
+	    .first->second);
+    put_env(exe.main_scope, tag, Box(exe.label_type, &l));
+    return l;
+  }
+
+  void clear_labels(Exec &exe) {
+    for (auto &l: exe.labels) {
+      rem_env(exe.main_scope, l.first);
+    }
+    
+    exe.labels.clear();
   }
   
   Sym gensym(Exec &exe) {
@@ -346,9 +367,9 @@ namespace snabel {
   }
 
   Label *find_label(Exec &exe, const str &tag) {
-    auto fnd(exe.labels.find(tag));
-    if (fnd == exe.labels.end()) { return nullptr; }
-    return &fnd->second;
+    auto fnd(find_env(exe.main_scope, tag));
+    if (!fnd) { return nullptr; }
+    return get<Label *>(*fnd);
   }
   
   bool run(Exec &exe, const str &in) {
