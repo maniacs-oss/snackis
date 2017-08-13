@@ -29,7 +29,7 @@ GtkCheckButton {
 
 GtkCheckButton GtkLabel {
     border-radius: 0.3em;
-    color: #991f00;    
+    color: #cccccc;    
 }
 
 GtkComboBox {
@@ -68,7 +68,7 @@ GtkEntry:selected:focused {
 }
 
 GtkLabel {
-    color: #991f00;
+    color: #cccccc;
     font-size: 105%;
 }
 
@@ -127,7 +127,7 @@ GtkTreeView column-header .button {
 
 GtkTreeView column-header .label {
     font-weight: normal;
-    color: #991f00;
+    color: #cccccc;
 }
 
 .window {
