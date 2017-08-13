@@ -105,6 +105,7 @@ namespace snabel {
     func_type(add_type(*this, "Func", any_type)),
     i64_type(add_type(*this, "I64", any_type)),
     label_type(add_type(*this, "Label", any_type)),
+    lambda_type(add_type(*this, "Lambda", any_type)),
     list_type(get_list_type(*this, any_type)),
     str_type(add_type(*this, "Str", any_type)),
     undef_type(add_type(*this, "Undef")),
@@ -123,6 +124,21 @@ namespace snabel {
 
     func_type.fmt = [](auto &v) { return fmt_arg(size_t(get<Func *>(v))); };
     func_type.eq = [](auto &x, auto &y) { return get<Func *>(x) == get<Func *>(y); };
+    func_type.call.emplace([](auto &scp, auto &v) {
+	auto &cor(scp.coro);
+	auto &fn(*get<Func *>(v));
+	auto imp(match(fn, cor));
+
+	if (!imp) {
+	  ERROR(Snabel, fmt("Function not applicable: %0\n%1", 
+			    fn.name, curr_stack(cor)));
+	  return false;
+	}
+
+	(*imp)(cor);
+	return true;
+      });
+
     i64_type.fmt = [](auto &v) { return fmt_arg(get<int64_t>(v)); };
     i64_type.eq = [](auto &x, auto &y) { return get<int64_t>(x) == get<int64_t>(y); };
 
@@ -130,6 +146,24 @@ namespace snabel {
     label_type.eq = [](auto &x, auto &y) {
       return get<Label *>(x) == get<Label *>(y);
     };
+    label_type.call.emplace([](auto &scp, auto &v) {
+	jump(scp.coro, *get<Label *>(v));
+	return true;
+      });
+
+    lambda_type.fmt = [](auto &v) { return get<str>(v); };
+    lambda_type.eq = [](auto &x, auto &y) { return get<str>(x) == get<str>(y); };
+    lambda_type.call.emplace([](auto &scp, auto &v) {
+	auto lbl(find_label(scp.coro.exec, get<str>(v)));
+
+	if (!lbl) {
+	  ERROR(Snabel, "Missing lambda label");
+	  return false;
+	}
+
+	call(scp, *lbl);
+	return true;
+      });
 
     str_type.fmt = [](auto &v) { return fmt("\"%0\"", get<str>(v)); };
     str_type.eq = [](auto &x, auto &y) { return get<str>(x) == get<str>(y); };
@@ -243,7 +277,7 @@ namespace snabel {
       });
 
     add_macro(*this, "return", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(Return(true));
+	out.emplace_back(Return(false));
       });
 
     add_macro(*this, "stash", [](auto pos, auto &in, auto &out) {

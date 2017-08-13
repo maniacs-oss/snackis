@@ -9,6 +9,7 @@ namespace snabel {
   using namespace snackis;
 
   struct Box;
+  struct Scope;
   
   struct Type {    
     const str name;
@@ -17,6 +18,7 @@ namespace snabel {
     
     func<bool (const Box &, const Box &)> eq;
     func<str (const Box &)> fmt;
+    opt<func<bool (Scope &, Box &)>> call;
     
     Type(const str &n);
     Type(const str &n, Type &super);

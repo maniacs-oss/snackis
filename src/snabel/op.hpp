@@ -53,12 +53,8 @@ namespace snabel {
   };
 
   struct Call: OpImp {
-    Label *label;
-
     Call();
-    Call(Label &label);
     OpImp &get_imp(Op &op) const override;
-    str info() const override;
     bool run(Scope &scp) override;
   };
 

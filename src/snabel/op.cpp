@@ -57,18 +57,17 @@ namespace snabel {
 
   bool Branch::run(Scope &scp) {
     auto &cor(scp.coro);
-    auto &exe(cor.exec);    
-    auto lbl(peek(cor));
+    auto tgt(peek(cor));
     
-    if (!lbl) {
+    if (!tgt) {
       ERROR(Snabel, "Missing branch target");
       return false;
     }
 
     pop(cor);
     
-    if (lbl->type != &exe.label_type) {
-      ERROR(Snabel, fmt("Invalid branch target: %0", *lbl));
+    if (!tgt->type->call) {
+      ERROR(Snabel, fmt("Invalid branch target: %0", *tgt));
       return false;
     }
 
@@ -86,51 +85,35 @@ namespace snabel {
       return false;
     }
 
-    if(get<bool>(*cnd)) { call(scp, *get<Label *>(*lbl)); }
+    if(get<bool>(*cnd)) { return (*tgt->type->call)(scp, *tgt); }
     return true;
   }
   
   Call::Call():
-    OpImp(OP_CALL, "call"), label(nullptr)
-  { }
-
-  Call::Call(Label &label):
-    OpImp(OP_CALL, "call"), label(&label)
+    OpImp(OP_CALL, "call")
   { }
 
   OpImp &Call::get_imp(Op &op) const {
     return std::get<Call>(op.data);
   }
 
-  str Call::info() const {
-      return label ? label->tag : "";    
-  }
-
   bool Call::run(Scope &scp) {
     auto &cor(scp.coro);
-    auto &exe(cor.exec);
-      
-    if (label) {
-      call(scp, *label);
-    } else {
-      auto lbl(peek(cor));
-
-      if (!lbl) {
-	ERROR(Snabel, "Missing call target");
-	return false;
-      }
-      
-      pop(cor);
-
-      if (lbl->type != &exe.label_type) {
-	ERROR(Snabel, fmt("Invalid call target: %0", *lbl));
-	return false;
-      }
-      
-      call(scp, *get<Label *>(*lbl));
+    auto tgt(peek(cor));
+    
+    if (!tgt) {
+      ERROR(Snabel, "Missing call target");
+      return false;
     }
-
-    return true;
+    
+    pop(cor);
+    
+    if (!tgt->type->call) {
+      ERROR(Snabel, fmt("Invalid call target: %0", *tgt));
+      return false;
+    }
+    
+    return (*tgt->type->call)(scp, *tgt);
   }
 
   Drop::Drop(size_t count):
@@ -429,18 +412,10 @@ namespace snabel {
     auto fnd(find_env(scp, id));
     if (!fnd) { return false; }
 
-    if (fnd->type == &exe.label_type) {
+    if (fnd->type == &exe.label_type || fnd->type == &exe.func_type) {
       out.emplace_back(Push(*fnd));
-    } else if (fnd->type == &exe.func_type) {
-      const Sym tag(gensym(exe));
-      out.emplace_back(Jump(fmt("_skip%0", tag)));
-      str call_lbl(fmt("_call%0", tag));
-      out.emplace_back(Target(call_lbl));
-      out.emplace_back(Funcall(*get<Func *>(*fnd)));
-      out.emplace_back(Return(false));
-      out.emplace_back(Target(fmt("_skip%0", tag)));
-      out.emplace_back(Pointer(call_lbl));
     } else {
+      ERROR(Snabel, fmt("Invalid pointer: %0", *fnd));
       return false;
     }
 
@@ -703,7 +678,7 @@ namespace snabel {
     out.push_back(op);
     out.emplace_back(Return(true));
     out.emplace_back(Target(fmt("_skip%0", tag)));
-    out.emplace_back(Pointer(fmt("_enter%0", tag)));
+    out.emplace_back(Push(Box(scp.coro.exec.lambda_type, fmt("_enter%0", tag))));
     return true;
   }
 
