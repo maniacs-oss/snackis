@@ -18,10 +18,10 @@ namespace snabel {
   struct Scope;
   struct Op;
 
-  enum OpCode { OP_BACKUP, OP_BIND, OP_BRANCH, OP_CALL, OP_DROP, OP_DUP, OP_FUNCALL,
-	        OP_GETENV, OP_GROUP, OP_JUMP, OP_LAMBDA, OP_LOOKUP,
-		OP_PUSH, OP_RECALL, OP_RESET, OP_RESTORE, OP_RETURN, OP_STASH,
-		OP_SWAP, OP_TARGET, OP_UNGROUP, OP_UNLAMBDA };
+  enum OpCode { OP_BACKUP, OP_BRANCH, OP_CALL, OP_DEREF, OP_DROP, OP_DUP,
+		OP_FUNCALL, OP_GETENV, OP_GROUP, OP_JUMP, OP_LAMBDA,
+		OP_PUSH, OP_PUTENV, OP_RECALL, OP_RESET, OP_RESTORE, OP_RETURN,
+		OP_STASH, OP_SWAP, OP_TARGET, OP_UNGROUP, OP_UNLAMBDA };
 
   using OpSeq = std::deque<Op>;
 
@@ -46,17 +46,6 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
 
-  struct Bind: OpImp {
-    str name;
-    opt<Box> val;
-    
-    Bind(const str &name);
-    OpImp &get_imp(Op &op) const override;
-    str info() const override;
-    bool prepare(Scope &scp) override;
-    bool run(Scope &scp) override;
-  };
-
   struct Branch: OpImp {
     Branch();
     OpImp &get_imp(Op &op) const override;
@@ -75,6 +64,16 @@ namespace snabel {
     size_t count;
 
     Drop(size_t count);
+    OpImp &get_imp(Op &op) const override;
+    str info() const override;
+    bool compile(const Op &op, Scope &scp, OpSeq & out) override;
+    bool run(Scope &scp) override;
+  };
+
+  struct Deref: OpImp {
+    str name;
+
+    Deref(const str &name);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
     bool compile(const Op &op, Scope &scp, OpSeq & out) override;
@@ -139,16 +138,6 @@ namespace snabel {
     bool compile(const Op &op, Scope &scp, OpSeq & out) override;
     bool run(Scope &scp) override;
   };
-
-  struct Lookup: OpImp {
-    str name;
-
-    Lookup(const str &name);
-    OpImp &get_imp(Op &op) const override;
-    str info() const override;
-    bool compile(const Op &op, Scope &scp, OpSeq & out) override;
-    bool run(Scope &scp) override;
-  };
   
   struct Push: OpImp {
     Stack vals;
@@ -157,6 +146,17 @@ namespace snabel {
     Push(const Stack &vals);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
+    bool run(Scope &scp) override;
+  };
+
+  struct Putenv: OpImp {
+    str name;
+    opt<Box> val;
+    
+    Putenv(const str &name);
+    OpImp &get_imp(Op &op) const override;
+    str info() const override;
+    bool prepare(Scope &scp) override;
     bool run(Scope &scp) override;
   };
 
@@ -231,8 +231,8 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
 
-  using OpData = std::variant<Backup, Bind, Branch, Call, Drop, Dup, Funcall,
-			      Getenv, Group, Jump, Lambda, Lookup, Push,
+  using OpData = std::variant<Backup, Branch, Call, Deref, Drop, Dup, Funcall,
+			      Getenv, Group, Jump, Lambda, Push, Putenv, 
 			      Recall, Reset, Restore, Return, Stash, Swap, Target,
 			      Ungroup, Unlambda>;
 

@@ -47,41 +47,6 @@ namespace snabel {
     return true;
   }
   
-  Bind::Bind(const str &name):
-    OpImp(OP_BIND, "bind"), name(name)
-  { }
-
-  OpImp &Bind::get_imp(Op &op) const {
-    return std::get<Bind>(op.data);
-  }
-
-  str Bind::info() const { return name; }
-
-  bool Bind::prepare(Scope &scp) {
-    auto fnd(find_env(scp, name));
-      
-    if (fnd) {
-      ERROR(Snabel, fmt("Duplicate binding: %0", name));
-      return false;
-    }
-
-    return true;
-  }
-  
-  bool Bind::run(Scope &scp) {
-    auto &s(curr_stack(scp.coro));
-
-    if (s.empty()) {
-      ERROR(Snabel, fmt("Missing bound val: %0", name));
-      return false;
-    }
-
-    val.emplace(s.back());
-    s.pop_back();
-    put_env(scp, name, *val);
-    return true;
-  }
-
   Branch::Branch():
     OpImp(OP_BRANCH, "branch")
   { }
@@ -151,6 +116,52 @@ namespace snabel {
     }
     
     return (*tgt->type->call)(scp, *tgt);
+  }
+
+  Deref::Deref(const str &name):
+    OpImp(OP_DEREF, "deref"), name(name)
+  { }
+
+  OpImp &Deref::get_imp(Op &op) const {
+    return std::get<Deref>(op.data);
+  }
+
+  str Deref::info() const { return name; }
+
+  bool Deref::compile(const Op &op, Scope &scp, OpSeq &out) {
+    auto &exe(scp.exec);
+    auto fnd(find_env(scp, name));
+    if (!fnd) { return false; }
+
+    if (fnd->type == &exe.func_type && name.front() != '$') {
+      out.emplace_back(Funcall(*get<Func *>(*fnd)));
+    } else if (fnd->type == &exe.lambda_type && name.front() != '$') {
+      out.emplace_back(Call(*fnd));
+    } else if (fnd->type == &exe.label_type && name.front() != '$') {
+      out.emplace_back(Jump(*get<Label *>(*fnd)));
+    } else {
+      out.emplace_back(Push(*fnd));
+    }
+
+    return true;
+  }
+
+  bool Deref::run(Scope &scp) {
+    auto &cor(scp.coro);
+    auto &exe(scp.exec);
+    auto fnd(find_env(scp, name));
+    
+    if (!fnd) {
+      ERROR(Snabel, fmt("Unknown identifier: %0", name));
+      return false;
+    }
+
+    if (isa(*fnd, exe.callable_type) && name.front() != '$') {
+      return (*fnd->type->call)(scp, *fnd);
+    }
+    
+    push(cor, *fnd);
+    return true;
   }
 
   Drop::Drop(size_t count):
@@ -263,6 +274,56 @@ namespace snabel {
     return true;
   }
   
+  Getenv::Getenv(const str &id):
+    OpImp(OP_GETENV, "getenv"), id(id)
+  { }
+
+  OpImp &Getenv::get_imp(Op &op) const {
+    return std::get<Getenv>(op.data);
+  }
+
+  bool Getenv::compile(const Op &op, Scope &scp, OpSeq &out) {
+    if (id.empty()) { return false; }
+    auto fnd(find_env(scp, id));
+    if (!fnd) { return false; }
+    out.emplace_back(Push(*fnd));
+    return true;
+  }
+
+  bool Getenv::run(Scope &scp) {
+    if (!id.empty()) {
+      ERROR(Snabel, fmt("Unknown identifier: %0", id));
+      return false;
+    }
+
+    auto &cor(scp.coro);
+    auto &exe(scp.exec);
+    auto id_arg(peek(cor));
+
+    if (!id_arg) {
+      ERROR(Snabel, "Missing identifier");
+      return false;
+    }
+
+    pop(cor);
+
+    if (id_arg->type != &exe.str_type) {
+      ERROR(Snabel, fmt("Invalid identifier: %0", *id_arg));
+      return false;
+    }
+
+    auto id_str(get<str>(*id_arg));
+    auto fnd(find_env(scp, id_str));
+
+    if (!fnd) {
+      ERROR(Snabel, fmt("Unknown identifier: %0", id_str));
+      return false;
+    }
+    
+    push(cor, *fnd);
+    return true;
+  }
+
   Group::Group(bool copy):
     OpImp(OP_GROUP, "group"), copy(copy)
   { }
@@ -359,104 +420,43 @@ namespace snabel {
     
     scp.recall_pcs.push_back(exit_label->pc);
     return true;
-  }
+  }  
   
-  Lookup::Lookup(const str &name):
-    OpImp(OP_LOOKUP, "lookup"), name(name)
+  Putenv::Putenv(const str &name):
+    OpImp(OP_PUTENV, "putenv"), name(name)
   { }
 
-  OpImp &Lookup::get_imp(Op &op) const {
-    return std::get<Lookup>(op.data);
+  OpImp &Putenv::get_imp(Op &op) const {
+    return std::get<Putenv>(op.data);
   }
 
-  str Lookup::info() const { return name; }
+  str Putenv::info() const { return name; }
 
-  bool Lookup::compile(const Op &op, Scope &scp, OpSeq &out) {
-    auto &exe(scp.exec);
+  bool Putenv::prepare(Scope &scp) {
     auto fnd(find_env(scp, name));
-    if (!fnd) { return false; }
-
-    if (fnd->type == &exe.func_type && name.front() != '$') {
-      out.emplace_back(Funcall(*get<Func *>(*fnd)));
-    } else if (fnd->type == &exe.lambda_type && name.front() != '$') {
-      out.emplace_back(Call(*fnd));
-    } else if (fnd->type == &exe.label_type && name.front() != '$') {
-      out.emplace_back(Jump(*get<Label *>(*fnd)));
-    } else {
-      out.emplace_back(Push(*fnd));
-    }
-
-    return true;
-  }
-
-  bool Lookup::run(Scope &scp) {
-    auto &cor(scp.coro);
-    auto &exe(scp.exec);
-    auto fnd(find_env(scp, name));
-    
-    if (!fnd) {
-      ERROR(Snabel, fmt("Unknown identifier: %0", name));
+      
+    if (fnd) {
+      ERROR(Snabel, fmt("Duplicate env: %0", name));
       return false;
     }
 
-    if (isa(*fnd, exe.callable_type) && name.front() != '$') {
-      return (*fnd->type->call)(scp, *fnd);
-    }
-    
-    push(cor, *fnd);
-    return true;
-  }
-
-  Getenv::Getenv(const str &id):
-    OpImp(OP_GETENV, "getenv"), id(id)
-  { }
-
-  OpImp &Getenv::get_imp(Op &op) const {
-    return std::get<Getenv>(op.data);
-  }
-
-  bool Getenv::compile(const Op &op, Scope &scp, OpSeq &out) {
-    if (id.empty()) { return false; }
-    auto fnd(find_env(scp, id));
-    if (!fnd) { return false; }
-    out.emplace_back(Push(*fnd));
-    return true;
-  }
-
-  bool Getenv::run(Scope &scp) {
-    if (!id.empty()) {
-      ERROR(Snabel, fmt("Unknown identifier: %0", id));
-      return false;
-    }
-
-    auto &cor(scp.coro);
-    auto &exe(scp.exec);
-    auto id_arg(peek(cor));
-
-    if (!id_arg) {
-      ERROR(Snabel, "Missing identifier");
-      return false;
-    }
-
-    pop(cor);
-
-    if (id_arg->type != &exe.str_type) {
-      ERROR(Snabel, fmt("Invalid identifier: %0", *id_arg));
-      return false;
-    }
-
-    auto id_str(get<str>(*id_arg));
-    auto fnd(find_env(scp, id_str));
-
-    if (!fnd) {
-      ERROR(Snabel, fmt("Unknown identifier: %0", id_str));
-      return false;
-    }
-    
-    push(cor, *fnd);
     return true;
   }
   
+  bool Putenv::run(Scope &scp) {
+    auto &s(curr_stack(scp.coro));
+
+    if (s.empty()) {
+      ERROR(Snabel, fmt("Missing env: %0", name));
+      return false;
+    }
+
+    val.emplace(s.back());
+    s.pop_back();
+    put_env(scp, name, *val);
+    return true;
+  }
+
   Push::Push(const Box &val):
     OpImp(OP_PUSH, "push"), vals({val})
   { }

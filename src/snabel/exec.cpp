@@ -280,13 +280,13 @@ namespace snabel {
 	  if (i != in.end()) { i++; }
 	  in.erase(in.begin(), i);
 	  out.emplace_back(Restore());
-	  out.emplace_back(Bind(n));
+	  out.emplace_back(Putenv(n));
 	}
       });
 
     add_macro(*this, "let:", [this](auto pos, auto &in, auto &out) {
 	if (in.size() < 2) {
-	  ERROR(Snabel, fmt("Malformed binding on row %0, col %1",
+	  ERROR(Snabel, fmt("Malformed let on row %0, col %1",
 			    pos.row, pos.col));
 	} else {
 	  out.emplace_back(Backup(false));
@@ -301,7 +301,7 @@ namespace snabel {
 	  if (i != in.end()) { i++; }
 	  in.erase(in.begin(), i);
 	  out.emplace_back(Restore());
-	  out.emplace_back(Bind(fmt("$%0", n)));
+	  out.emplace_back(Putenv(fmt("$%0", n)));
 	}
       });
 
