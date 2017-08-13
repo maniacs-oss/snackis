@@ -7,12 +7,11 @@
 namespace snabel {
   using namespace snackis;
 
-  struct Exec;
-  
   struct Fiber: Coro {
-    const Sym id;
+    using Id = Sym;
+    const Id id;
     
-    Fiber(Exec &exe, Sym id);
+    Fiber(Thread &thd, Id id);
   };
 }
 

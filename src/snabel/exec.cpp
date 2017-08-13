@@ -6,7 +6,7 @@
 
 namespace snabel {
   static void zero_i64_imp(Scope &scp, FuncImp &fn, const Args &args) {
-    Exec &exe(scp.coro.exec);
+    Exec &exe(scp.exec);
     bool res(get<int64_t>(args[0]) == 0);
     push(scp.coro, exe.bool_type, res);
   }
@@ -22,7 +22,7 @@ namespace snabel {
   }
 
   static void add_i64_imp(Scope &scp, FuncImp &fn, const Args &args) {
-    Exec &exe(scp.coro.exec);
+    Exec &exe(scp.exec);
     int64_t res(0);
 
     for (auto &a: args) {
@@ -34,7 +34,7 @@ namespace snabel {
   }
 
   static void sub_i64_imp(Scope &scp, FuncImp &fn, const Args &args) {
-    Exec &exe(scp.coro.exec);
+    Exec &exe(scp.exec);
     int64_t res(get<int64_t>(args[0]));
 
     if (args.size() == 1) { res = -res; }
@@ -49,7 +49,7 @@ namespace snabel {
   }
 
   static void mul_i64_imp(Scope &scp, FuncImp &fn, const Args &args) {
-    Exec &exe(scp.coro.exec);
+    Exec &exe(scp.exec);
     int64_t res(1);
 
     for (auto &a: args) {
@@ -61,7 +61,7 @@ namespace snabel {
   }
 
   static void mod_i64_imp(Scope &scp, FuncImp &fn, const Args &args) {
-    Exec &exe(scp.coro.exec);
+    Exec &exe(scp.exec);
     int64_t res(get<int64_t>(args[0]));
     for (auto i=std::next(args.begin()); i != args.end(); i++) {
       CHECK(i->type == &exe.i64_type, _);
@@ -94,23 +94,35 @@ namespace snabel {
     push(scp.coro, *in_arg.type, out); 
   }
 
+  static void thread_imp(Scope &scp, FuncImp &fn, const Args &args) {
+    auto &t(start_thread(scp, args[0]));
+    push(scp.coro, scp.exec.thread_type, &t);
+  }
+
+  static void join_imp(Scope &scp, FuncImp &fn, const Args &args) {
+    join(*get<Thread *>(args[0]), scp);
+  }
+
   Exec::Exec():
-    main(fibers.emplace(std::piecewise_construct,
-			std::forward_as_tuple(0),
-			std::forward_as_tuple(*this, 0)).first->second),
+    main_thread(threads.emplace(std::piecewise_construct,
+				std::forward_as_tuple(0),
+				std::forward_as_tuple(*this, 0)).first->second),
+    main(main_thread.main),
     main_scope(main.scopes.front()),
     any_type(add_type(*this, "Any")),
     meta_type(add_type(*this, "Type", any_type)),
     bool_type(add_type(*this, "Bool", any_type)),
-    func_type(add_type(*this, "Func", any_type)),
+    callable_type(add_type(*this, "Callable", any_type)),
+    func_type(add_type(*this, "Func", callable_type)),
     i64_type(add_type(*this, "I64", any_type)),
-    label_type(add_type(*this, "Label", any_type)),
-    lambda_type(add_type(*this, "Lambda", any_type)),
+    label_type(add_type(*this, "Label", callable_type)),
+    lambda_type(add_type(*this, "Lambda", callable_type)),
     list_type(get_list_type(*this, any_type)),
     str_type(add_type(*this, "Str", any_type)),
+    thread_type(add_type(*this, "Thread", any_type)),
     undef_type(add_type(*this, "Undef")),
     void_type(add_type(*this, "Void")),
-    next_sym(1)
+    next_gensym(1)
   {
     meta_type.fmt = [](auto &v) { return get<Type *>(v)->name; };
     meta_type.eq = [](auto &x, auto &y) { return get<Type *>(x) == get<Type *>(y); };
@@ -121,6 +133,9 @@ namespace snabel {
     bool_type.eq = [](auto &x, auto &y) { return get<bool>(x) == get<bool>(y); };
     put_env(main_scope, "'t", Box(bool_type, true));
     put_env(main_scope, "'f", Box(bool_type, false));
+
+    callable_type.fmt = [](auto &v) { return "n/a"; };
+    callable_type.eq = [](auto &x, auto &y) { return false; };
 
     func_type.fmt = [](auto &v) { return fmt_arg(size_t(get<Func *>(v))); };
     func_type.eq = [](auto &x, auto &y) { return get<Func *>(x) == get<Func *>(y); };
@@ -154,7 +169,7 @@ namespace snabel {
     lambda_type.fmt = [](auto &v) { return get<str>(v); };
     lambda_type.eq = [](auto &x, auto &y) { return get<str>(x) == get<str>(y); };
     lambda_type.call.emplace([](auto &scp, auto &v) {
-	auto lbl(find_label(scp.coro.exec, get<str>(v)));
+	auto lbl(find_label(scp.exec, get<str>(v)));
 
 	if (!lbl) {
 	  ERROR(Snabel, "Missing lambda label");
@@ -167,6 +182,11 @@ namespace snabel {
 
     str_type.fmt = [](auto &v) { return fmt("\"%0\"", get<str>(v)); };
     str_type.eq = [](auto &x, auto &y) { return get<str>(x) == get<str>(y); };
+
+    thread_type.fmt = [](auto &v) { return fmt_arg(get<Thread *>(v)->id); };
+    thread_type.eq = [](auto &x, auto &y) {
+      return get<Thread *>(x) == get<Thread *>(y);
+    };
 
     undef_type.fmt = [](auto &v) { return "n/a"; };
     undef_type.eq = [](auto &x, auto &y) { return true; };
@@ -210,6 +230,14 @@ namespace snabel {
 	     {ArgType(list_type)}, {ArgType(0)},
 	     list_reverse_imp);
 
+    add_func(*this, "thread",
+	     {ArgType(callable_type)}, {ArgType(bool_type)},
+	     thread_imp);
+
+    add_func(*this, "join",
+	     {ArgType(thread_type)}, {ArgType(any_type)},
+	     join_imp);
+
     add_macro(*this, "{", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Lambda());
       });
@@ -235,16 +263,25 @@ namespace snabel {
 	out.emplace_back(Restore());
       });
 
-    add_macro(*this, "call", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(Call());
-      });
-
-    add_macro(*this, "drop", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(Drop(1));
-      });
-
-    add_macro(*this, "dup", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(Dup());
+    add_macro(*this, "func:", [this](auto pos, auto &in, auto &out) {
+	if (in.size() < 2) {
+	  ERROR(Snabel, fmt("Malformed func on row %0, col %1",
+			    pos.row, pos.col));
+	} else {
+	  out.emplace_back(Backup(false));
+	  const str n(in.front().text);
+	  auto i(std::next(in.begin()));
+	  
+	  for (; i != in.end(); i++) {
+	    if (i->text == ";") { break; }
+	  }
+	  
+	  compile(*this, pos.row, TokSeq(std::next(in.begin()), i), out);
+	  if (i != in.end()) { i++; }
+	  in.erase(in.begin(), i);
+	  out.emplace_back(Restore());
+	  out.emplace_back(Bind(n));
+	}
       });
 
     add_macro(*this, "let:", [this](auto pos, auto &in, auto &out) {
@@ -266,6 +303,22 @@ namespace snabel {
 	  out.emplace_back(Restore());
 	  out.emplace_back(Bind(fmt("$%0", n)));
 	}
+      });
+
+    add_macro(*this, "call", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(Call());
+      });
+
+    add_macro(*this, "drop", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(Drop(1));
+      });
+
+    add_macro(*this, "dup", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(Dup());
+      });
+
+    add_macro(*this, "getenv", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(Getenv());
       });
     
     add_macro(*this, "recall", [](auto pos, auto &in, auto &out) {
@@ -399,11 +452,9 @@ namespace snabel {
     if (fnd == exe.labels.end()) { return nullptr; }
     return &fnd->second;
   }
-
+  
   Sym gensym(Exec &exe) {
-    Sym s(exe.next_sym);
-    exe.next_sym++;
-    return s;
+    return exe.next_gensym.fetch_add(1);
   }
   
   bool run(Exec &exe, const str &in) {

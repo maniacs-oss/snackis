@@ -124,8 +124,8 @@ namespace snabel {
     return true;
   }
   
-  Call::Call():
-    OpImp(OP_CALL, "call")
+  Call::Call(opt<Box> target):
+    OpImp(OP_CALL, "call"), target(target)
   { }
 
   OpImp &Call::get_imp(Op &op) const {
@@ -133,6 +133,8 @@ namespace snabel {
   }
 
   bool Call::run(Scope &scp) {
+    if (target) { return (*target->type->call)(scp, *target); }
+
     auto &cor(scp.coro);
     auto tgt(peek(cor));
     
@@ -322,13 +324,13 @@ namespace snabel {
   }
 
   bool Lambda::prepare(Scope &scp) {
-    tag = fmt_arg(gensym(scp.coro.exec));
+    tag = fmt_arg(gensym(scp.exec));
     return true;
   }
 
   bool Lambda::refresh(Scope &scp) {
-    exit_label = find_label(scp.coro.exec, fmt("_exit%0", tag));
-    scp.coro.exec.lambdas.push_back(tag);
+    exit_label = find_label(scp.exec, fmt("_exit%0", tag));
+    scp.exec.lambdas.push_back(tag);
     return true;
   }
 
@@ -370,12 +372,14 @@ namespace snabel {
   str Lookup::info() const { return name; }
 
   bool Lookup::compile(const Op &op, Scope &scp, OpSeq &out) {
-    Exec &exe(scp.coro.exec);
+    auto &exe(scp.exec);
     auto fnd(find_env(scp, name));
     if (!fnd) { return false; }
 
     if (fnd->type == &exe.func_type && name.front() != '$') {
       out.emplace_back(Funcall(*get<Func *>(*fnd)));
+    } else if (fnd->type == &exe.lambda_type && name.front() != '$') {
+      out.emplace_back(Call(*fnd));
     } else if (fnd->type == &exe.label_type && name.front() != '$') {
       out.emplace_back(Jump(*get<Label *>(*fnd)));
     } else {
@@ -384,46 +388,73 @@ namespace snabel {
 
     return true;
   }
-  
+
   bool Lookup::run(Scope &scp) {
-    Coro &cor(scp.coro);     
+    auto &cor(scp.coro);
+    auto &exe(scp.exec);
     auto fnd(find_env(scp, name));
     
     if (!fnd) {
       ERROR(Snabel, fmt("Unknown identifier: %0", name));
       return false;
     }
+
+    if (isa(*fnd, exe.callable_type) && name.front() != '$') {
+      return (*fnd->type->call)(scp, *fnd);
+    }
     
     push(cor, *fnd);
     return true;
   }
 
-  Pointer::Pointer(const str &id):
-    OpImp(OP_POINTER, "pointer"), id(id)
+  Getenv::Getenv(const str &id):
+    OpImp(OP_GETENV, "getenv"), id(id)
   { }
 
-  OpImp &Pointer::get_imp(Op &op) const {
-    return std::get<Pointer>(op.data);
+  OpImp &Getenv::get_imp(Op &op) const {
+    return std::get<Getenv>(op.data);
   }
 
-  bool Pointer::compile(const Op &op, Scope &scp, OpSeq &out) {
-    Exec &exe(scp.coro.exec);
+  bool Getenv::compile(const Op &op, Scope &scp, OpSeq &out) {
+    if (id.empty()) { return false; }
     auto fnd(find_env(scp, id));
     if (!fnd) { return false; }
-
-    if (fnd->type == &exe.label_type || fnd->type == &exe.func_type) {
-      out.emplace_back(Push(*fnd));
-    } else {
-      ERROR(Snabel, fmt("Invalid pointer: %0", *fnd));
-      return false;
-    }
-
+    out.emplace_back(Push(*fnd));
     return true;
   }
 
-  bool Pointer::run(Scope &scp) {
-    ERROR(Snabel, fmt("Missing pointer: %0", id));
-    return false;
+  bool Getenv::run(Scope &scp) {
+    if (!id.empty()) {
+      ERROR(Snabel, fmt("Unknown identifier: %0", id));
+      return false;
+    }
+
+    auto &cor(scp.coro);
+    auto &exe(scp.exec);
+    auto id_arg(peek(cor));
+
+    if (!id_arg) {
+      ERROR(Snabel, "Missing identifier");
+      return false;
+    }
+
+    pop(cor);
+
+    if (id_arg->type != &exe.str_type) {
+      ERROR(Snabel, fmt("Invalid identifier: %0", *id_arg));
+      return false;
+    }
+
+    auto id_str(get<str>(*id_arg));
+    auto fnd(find_env(scp, id_str));
+
+    if (!fnd) {
+      ERROR(Snabel, fmt("Unknown identifier: %0", id_str));
+      return false;
+    }
+    
+    push(cor, *fnd);
+    return true;
   }
   
   Push::Push(const Box &val):
@@ -651,7 +682,7 @@ namespace snabel {
   }
 
   bool Unlambda::refresh(Scope &scp) {
-    Exec &exe(scp.coro.exec);
+    Exec &exe(scp.exec);
     
     if (exe.lambdas.empty()) {
       ERROR(Snabel, "Missing lambda");
@@ -677,7 +708,7 @@ namespace snabel {
     out.push_back(op);
     out.emplace_back(Return(true));
     out.emplace_back(Target(fmt("_skip%0", tag)));
-    out.emplace_back(Push(Box(scp.coro.exec.lambda_type, fmt("_enter%0", tag))));
+    out.emplace_back(Push(Box(scp.exec.lambda_type, fmt("_enter%0", tag))));
     return true;
   }
 

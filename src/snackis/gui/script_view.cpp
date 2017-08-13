@@ -59,7 +59,7 @@ namespace gui {
     snabel::compile(v->exec.main, code);    
     gtk_list_store_clear(v->bcode_store);
 
-    for (auto &op: v->exec.main.ops) {
+    for (auto &op: v->exec.main_thread.ops) {
       GtkTreeIter iter;
       gtk_list_store_append(v->bcode_store, &iter);
       

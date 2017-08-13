@@ -18,7 +18,7 @@ namespace snabel {
     
     func<bool (const Box &, const Box &)> eq;
     func<str (const Box &)> fmt;
-    opt<func<bool (Scope &, Box &)>> call;
+    opt<func<bool (Scope &, const Box &)>> call;
     
     Type(const str &n);
     Type(const str &n, Type &super);

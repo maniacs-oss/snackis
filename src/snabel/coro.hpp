@@ -7,17 +7,17 @@
 #include "snabel/scope.hpp"
 
 namespace snabel {
-  struct Exec;
+  struct Thread;
   
   struct Coro {
+    Thread &thread;
     Exec &exec;
-    OpSeq ops;
     int64_t pc;
     
     std::deque<Scope> scopes;
     std::deque<Stack> stacks;
     
-    Coro(Exec &exe);
+    Coro(Thread &thread);
     Coro(const Coro &) = delete;
     const Coro &operator =(const Coro &) = delete;
   };
@@ -44,7 +44,7 @@ namespace snabel {
   void rewind(Coro &cor);  
 
   bool compile(Coro &cor, const str &in);
-  bool run(Coro &cor); 
+  bool run(Coro &cor, bool scope=true); 
 }
 
 #endif

@@ -11,21 +11,15 @@ namespace snabel {
     Exec &exe(scp.coro.exec);
     CHECK(args.size() == 1, _);
     CHECK(args[0].type == &exe.i64_type, _);
-    push(scp.coro, exe.i64_type, 42-get<int64_t>(args[0]));
+    push(scp.coro, exe.i64_type, 35+get<int64_t>(args[0]));
   }
   
   static void func_tests() {
     TRY(try_test);
     Exec exe;
-    auto &f(add_func(exe, "test-func",
-		     {ArgType(exe.i64_type)}, {ArgType(exe.i64_type)},
-		     test_func));
-    Coro &cor(exe.main);
-    cor.ops.emplace_back(Push(Box(exe.i64_type, int64_t(7))));
-    cor.ops.emplace_back(Funcall(f.func));
-    run(exe.main);
-
-    CHECK(get<int64_t>(pop(exe.main)) == 35, _);
+    
+    run(exe, "func: test-func {35 +}; 7 test-func");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
   static void parse_lines_tests() {
@@ -65,18 +59,28 @@ namespace snabel {
   }
 
   static void parse_string_tests() {
-    auto ts(parse_expr("\"foo \" 1 +"));
+    auto ts(parse_expr("\"foo \" 1 2"));
 
     CHECK(ts.size() == 3, _);
     CHECK(ts[0].text == "\"foo \"", _);
     CHECK(ts[1].text == "1", _);
-    CHECK(ts[2].text == "+", _);
+    CHECK(ts[2].text == "2", _);
 
-    ts = parse_expr("1 \"foo\" +");
+    ts = parse_expr("1 \"foo\" 2");
     CHECK(ts.size() == 3, _);
     CHECK(ts[0].text == "1", _);
     CHECK(ts[1].text == "\"foo\"", _);
-    CHECK(ts[2].text == "+", _);
+    CHECK(ts[2].text == "2", _);
+
+    ts = parse_expr("let: foo {42}; \"$foo\"");
+    CHECK(ts.size() == 7, _);
+    CHECK(ts[0].text == "let:", _);
+    CHECK(ts[1].text == "foo", _);
+    CHECK(ts[2].text == "{", _);
+    CHECK(ts[3].text == "42", _);
+    CHECK(ts[4].text == "}", _);
+    CHECK(ts[5].text == ";", _);
+    CHECK(ts[6].text == "\"$foo\"", _);
   }
 
   static void parse_list_tests() {
@@ -134,7 +138,7 @@ namespace snabel {
     CHECK(!peek(exe.main), _);
 
     compile(exe.main, "1 2 3 drop drop");
-    CHECK(exe.main.ops.size() == 1, _);
+    CHECK(exe.main_thread.ops.size() == 1, _);
   }
 
   static void scope_tests() {
@@ -254,6 +258,20 @@ namespace snabel {
     list_reverse_tests();
   }
 
+  static void env_tests() {
+    TRY(try_test);    
+    Exec exe;
+    run(exe, "let: foo {42}; \"$foo\" getenv call");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+  }
+  
+  static void thread_tests() {
+    TRY(try_test);    
+    Exec exe;
+    run(exe, "7 {35 +} thread join");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+  }
+  
   void all_tests() {
     func_tests();
     parse_tests();
@@ -266,5 +284,7 @@ namespace snabel {
     lambda_tests();
     when_tests();
     list_tests();
+    env_tests();
+    thread_tests();
   }
 }

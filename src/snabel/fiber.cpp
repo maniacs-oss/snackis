@@ -1,7 +1,7 @@
 #include "snabel/fiber.hpp"
 
 namespace snabel {
-  Fiber::Fiber(Exec &exe, Sym id):
-    Coro(exe), id(id)
+  Fiber::Fiber(Thread &thd, Id id):
+    Coro(thd), id(id)
   { }
 }

@@ -14,13 +14,17 @@ namespace snabel {
   using namespace snackis;
   
   struct Coro;
-
+  struct Thread;
+  
   using Env = std::map<str, Box>;
   
   struct Scope {
     Coro &coro;
+    Thread &thread;
+    Exec &exec;
     std::deque<Env> envs;
-
+    Env &root_env;
+    
     int64_t return_pc;
     std::deque<int64_t> recall_pcs;
     
@@ -38,6 +42,8 @@ namespace snabel {
   void put_env(Scope &scp, const str &n, const Box &val);
   bool rem_env(Scope &scp, const str &n);
   void call(Scope &scp, const Label &lbl);
+
+  Thread &start_thread(Scope &scp, const Box &init);
 }
 
 #endif

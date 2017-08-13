@@ -20,9 +20,7 @@ namespace snabel {
   { }
   
   void FuncImp::operator ()(Coro &cor, const Args &args) {
-    Scope &tmp(begin_scope(cor, false));
-    imp(tmp, *this, args);
-    end_scope(cor, results.size());
+    imp(curr_scope(cor), *this, args);
   }
 
   void FuncImp::operator ()(Coro &cor) {

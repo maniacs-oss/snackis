@@ -15,6 +15,7 @@ namespace snabel {
   struct Exec;
   struct Label;
   struct List;
+  struct Thread;
   struct Type;
 
   struct Undef {
@@ -26,7 +27,7 @@ namespace snabel {
   using Val = std::variant<const Undef,
 			   bool, int64_t, str,
 			   ListRef,
-			   Label *, Func *, Type *>;
+			   Func *, Label *, Thread *, Type *>;
   
   struct Box {
     Type *type;

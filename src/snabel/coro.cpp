@@ -8,8 +8,8 @@
 #include "snackis/core/error.hpp"
 
 namespace snabel {
-  Coro::Coro(Exec &exe):
-    exec(exe), pc(0)
+  Coro::Coro(Thread &thd):
+    thread(thd), exec(thd.exec), pc(0)
   {
     begin_scope(*this, false);
   }
@@ -78,7 +78,7 @@ namespace snabel {
     }
   }
 
-  Scope &begin_scope(Coro &cor, bool copy_stack) {    
+  Scope &begin_scope(Coro &cor, bool copy_stack) {
     backup_stack(cor, copy_stack);
 
     if (cor.scopes.empty()) {
@@ -123,15 +123,16 @@ namespace snabel {
 
   bool compile(Coro &cor, const str &in) {
     Exec &exe(cor.exec);
+    Thread &thd(cor.thread);
     
-    cor.ops.clear();
+    thd.ops.clear();
     clear_labels(exe);
     rewind(cor);
     size_t lnr(0);
     
     for (auto &ln: parse_lines(in)) {
       if (!ln.empty()) {
-	compile(exe, lnr, parse_expr(ln), cor.ops);
+	compile(exe, lnr, parse_expr(ln), thd.ops);
       }
        
       lnr++;
@@ -143,7 +144,7 @@ namespace snabel {
       OpSeq out;
       rewind(cor);
       
-      for (auto &op: cor.ops) {
+      for (auto &op: thd.ops) {
 	if (!op.prepared && !prepare(op, exe.main_scope)) {
 	  goto exit;
 	}
@@ -153,19 +154,19 @@ namespace snabel {
 
       cor.pc = 0;
       exe.lambdas.clear();
-      for (auto &op: cor.ops) {
+      for (auto &op: thd.ops) {
 	if (!refresh(op, exe.main_scope)) { goto exit; }
 	cor.pc++;
       }
 
       bool done(true);
-      for (auto &op: cor.ops) {
+      for (auto &op: thd.ops) {
 	if (compile(op, exe.main_scope, out)) { done = false; }
       }
 
       if (done) { goto exit; }
-      cor.ops.clear();
-      cor.ops.swap(out);
+      thd.ops.clear();
+      thd.ops.swap(out);
       try_compile.errors.clear();
     }
   exit:
@@ -173,11 +174,12 @@ namespace snabel {
     return try_compile.errors.empty();
   }
 
-  bool run(Coro &cor) {
-    begin_scope(cor);
+  bool run(Coro &cor, bool scope) {
+    Thread &thd(cor.thread);
+    if (scope) { begin_scope(cor, true); }
     
-    while (cor.pc < cor.ops.size()) {
-      auto &op(cor.ops[cor.pc]);
+    while (cor.pc < thd.ops.size()) {
+      auto &op(thd.ops[cor.pc]);
 
       if (!run(op, curr_scope(cor))) {
 	ERROR(Snabel, fmt("Error on line %0: %1 %2",

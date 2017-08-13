@@ -19,7 +19,7 @@ namespace snabel {
   struct Op;
 
   enum OpCode { OP_BACKUP, OP_BIND, OP_BRANCH, OP_CALL, OP_DROP, OP_DUP, OP_FUNCALL,
-	        OP_GROUP, OP_JUMP, OP_LAMBDA, OP_LOOKUP, OP_POINTER,
+	        OP_GETENV, OP_GROUP, OP_JUMP, OP_LAMBDA, OP_LOOKUP,
 		OP_PUSH, OP_RECALL, OP_RESET, OP_RESTORE, OP_RETURN, OP_STASH,
 		OP_SWAP, OP_TARGET, OP_UNGROUP, OP_UNLAMBDA };
 
@@ -64,7 +64,9 @@ namespace snabel {
   };
 
   struct Call: OpImp {
-    Call();
+    opt<Box> target;
+    
+    Call(opt<Box> target=nullopt);
     OpImp &get_imp(Op &op) const override;
     bool run(Scope &scp) override;
   };
@@ -91,6 +93,15 @@ namespace snabel {
     Funcall(Func &fn);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
+    bool run(Scope &scp) override;
+  };
+
+  struct Getenv: OpImp {
+    const str id;
+    
+    Getenv(const str &id="");
+    OpImp &get_imp(Op &op) const override;
+    bool compile(const Op &op, Scope &scp, OpSeq & out) override;
     bool run(Scope &scp) override;
   };
 
@@ -135,15 +146,6 @@ namespace snabel {
     Lookup(const str &name);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
-    bool compile(const Op &op, Scope &scp, OpSeq & out) override;
-    bool run(Scope &scp) override;
-  };
-
-  struct Pointer: OpImp {
-    str id;
-    
-    Pointer(const str &id);
-    OpImp &get_imp(Op &op) const override;
     bool compile(const Op &op, Scope &scp, OpSeq & out) override;
     bool run(Scope &scp) override;
   };
@@ -230,7 +232,7 @@ namespace snabel {
   };
 
   using OpData = std::variant<Backup, Bind, Branch, Call, Drop, Dup, Funcall,
-			      Group, Jump, Lambda, Lookup, Pointer, Push,
+			      Getenv, Group, Jump, Lambda, Lookup, Push,
 			      Recall, Reset, Restore, Return, Stash, Swap, Target,
 			      Ungroup, Unlambda>;
 
