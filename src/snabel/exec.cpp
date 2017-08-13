@@ -264,7 +264,7 @@ namespace snabel {
 	  if (i != in.end()) { i++; }
 	  in.erase(in.begin(), i);
 	  out.emplace_back(Restore());
-	  out.emplace_back(Let(fmt("$%0", n)));
+	  out.emplace_back(Bind(fmt("$%0", n)));
 	}
       });
     

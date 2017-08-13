@@ -18,8 +18,8 @@ namespace snabel {
   struct Scope;
   struct Op;
 
-  enum OpCode { OP_BACKUP, OP_BRANCH, OP_CALL, OP_DROP, OP_DUP, OP_FUNCALL,
-	        OP_GET, OP_GROUP, OP_JUMP,  OP_LAMBDA, OP_LET, OP_POINTER,
+  enum OpCode { OP_BACKUP, OP_BIND, OP_BRANCH, OP_CALL, OP_DROP, OP_DUP, OP_FUNCALL,
+	        OP_GROUP, OP_JUMP, OP_LAMBDA, OP_LOOKUP, OP_POINTER,
 		OP_PUSH, OP_RECALL, OP_RESET, OP_RESTORE, OP_RETURN, OP_STASH,
 		OP_SWAP, OP_TARGET, OP_UNGROUP, OP_UNLAMBDA };
 
@@ -43,6 +43,17 @@ namespace snabel {
     
     Backup(bool copy);
     OpImp &get_imp(Op &op) const override;
+    bool run(Scope &scp) override;
+  };
+
+  struct Bind: OpImp {
+    str name;
+    opt<Box> val;
+    
+    Bind(const str &name);
+    OpImp &get_imp(Op &op) const override;
+    str info() const override;
+    bool prepare(Scope &scp) override;
     bool run(Scope &scp) override;
   };
 
@@ -76,21 +87,10 @@ namespace snabel {
 
   struct Funcall: OpImp {
     Func &fn;
-    FuncImp *imp;
 
     Funcall(Func &fn);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
-    bool run(Scope &scp) override;
-  };
-
-  struct Get: OpImp {
-    str name;
-
-    Get(const str &name);
-    OpImp &get_imp(Op &op) const override;
-    str info() const override;
-    bool compile(const Op &op, Scope &scp, OpSeq & out) override;
     bool run(Scope &scp) override;
   };
 
@@ -129,14 +129,13 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
 
-  struct Let: OpImp {
+  struct Lookup: OpImp {
     str name;
-    opt<Box> val;
-    
-    Let(const str &name);
+
+    Lookup(const str &name);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
-    bool prepare(Scope &scp) override;
+    bool compile(const Op &op, Scope &scp, OpSeq & out) override;
     bool run(Scope &scp) override;
   };
 
@@ -230,10 +229,10 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
 
-  using OpData = std::variant<Backup, Branch, Call, Drop, Dup, Funcall, Get,
-			      Group, Jump, Lambda, Let, Pointer, Push, Recall, Reset,
-			      Restore, Return, Stash, Swap, Target, Ungroup,
-			      Unlambda>;
+  using OpData = std::variant<Backup, Bind, Branch, Call, Drop, Dup, Funcall,
+			      Group, Jump, Lambda, Lookup, Pointer, Push,
+			      Recall, Reset, Restore, Return, Stash, Swap, Target,
+			      Ungroup, Unlambda>;
 
   struct Op {
     OpData data;

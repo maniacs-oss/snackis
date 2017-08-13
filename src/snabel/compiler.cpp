@@ -25,7 +25,7 @@ namespace snabel {
       auto fnd(exe.macros.find(tok.text));
       
       if (fnd == exe.macros.end()) {
-	out.emplace_back(Get(tok.text));
+	out.emplace_back(Lookup(tok.text));
       } else {
 	fnd->second(Pos(lnr, tok.i), in, out);
       }

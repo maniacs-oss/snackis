@@ -47,6 +47,41 @@ namespace snabel {
     return true;
   }
   
+  Bind::Bind(const str &name):
+    OpImp(OP_BIND, "bind"), name(name)
+  { }
+
+  OpImp &Bind::get_imp(Op &op) const {
+    return std::get<Bind>(op.data);
+  }
+
+  str Bind::info() const { return name; }
+
+  bool Bind::prepare(Scope &scp) {
+    auto fnd(find_env(scp, name));
+      
+    if (fnd) {
+      ERROR(Snabel, fmt("Duplicate binding: %0", name));
+      return false;
+    }
+
+    return true;
+  }
+  
+  bool Bind::run(Scope &scp) {
+    auto &s(curr_stack(scp.coro));
+
+    if (s.empty()) {
+      ERROR(Snabel, fmt("Missing bound val: %0", name));
+      return false;
+    }
+
+    val.emplace(s.back());
+    s.pop_back();
+    put_env(scp, name, *val);
+    return true;
+  }
+
   Branch::Branch():
     OpImp(OP_BRANCH, "branch")
   { }
@@ -201,7 +236,7 @@ namespace snabel {
   }
 
   Funcall::Funcall(Func &fn):
-    OpImp(OP_FUNCALL, "funcall"), fn(fn), imp(nullptr)
+    OpImp(OP_FUNCALL, "funcall"), fn(fn)
   { }
 
   OpImp &Funcall::get_imp(Op &op) const {
@@ -214,8 +249,7 @@ namespace snabel {
 
   bool Funcall::run(Scope &scp) {
     Coro &cor(scp.coro);
-    if (imp && !match(*imp, cor)) { imp = nullptr; }
-    if (!imp) { imp = match(fn, cor); }
+    auto imp = match(fn, cor);
     
     if (!imp) {
       ERROR(Snabel, fmt("Function not applicable: %0\n%1", 
@@ -224,45 +258,6 @@ namespace snabel {
     }
 
     (*imp)(cor);
-    return true;
-  }
-
-  Get::Get(const str &name):
-    OpImp(OP_GET, "get"), name(name)
-  { }
-
-  OpImp &Get::get_imp(Op &op) const {
-    return std::get<Get>(op.data);
-  }
-
-  str Get::info() const { return name; }
-
-  bool Get::compile(const Op &op, Scope &scp, OpSeq &out) {
-    Exec &exe(scp.coro.exec);
-    auto fnd(find_env(scp, name));
-    if (!fnd) { return false; }
-
-    if (fnd->type == &exe.func_type && name.front() != '$') {
-      out.emplace_back(Funcall(*get<Func *>(*fnd)));
-    } else if (fnd->type == &exe.label_type && name.front() != '$') {
-      out.emplace_back(Jump(*get<Label *>(*fnd)));
-    } else {
-      out.emplace_back(Push(*fnd));
-    }
-
-    return true;
-  }
-  
-  bool Get::run(Scope &scp) {
-    Coro &cor(scp.coro);     
-    auto fnd(find_env(scp, name));
-    
-    if (!fnd) {
-      ERROR(Snabel, fmt("Unknown identifier: %0", name));
-      return false;
-    }
-    
-    push(cor, *fnd);
     return true;
   }
   
@@ -364,38 +359,42 @@ namespace snabel {
     return true;
   }
   
-  Let::Let(const str &name):
-    OpImp(OP_LET, "let"), name(name)
+  Lookup::Lookup(const str &name):
+    OpImp(OP_LOOKUP, "lookup"), name(name)
   { }
 
-  OpImp &Let::get_imp(Op &op) const {
-    return std::get<Let>(op.data);
+  OpImp &Lookup::get_imp(Op &op) const {
+    return std::get<Lookup>(op.data);
   }
 
-  str Let::info() const { return name; }
+  str Lookup::info() const { return name; }
 
-  bool Let::prepare(Scope &scp) {
+  bool Lookup::compile(const Op &op, Scope &scp, OpSeq &out) {
+    Exec &exe(scp.coro.exec);
     auto fnd(find_env(scp, name));
-      
-    if (fnd) {
-      ERROR(Snabel, fmt("Duplicate binding: %0", name));
-      return false;
+    if (!fnd) { return false; }
+
+    if (fnd->type == &exe.func_type && name.front() != '$') {
+      out.emplace_back(Funcall(*get<Func *>(*fnd)));
+    } else if (fnd->type == &exe.label_type && name.front() != '$') {
+      out.emplace_back(Jump(*get<Label *>(*fnd)));
+    } else {
+      out.emplace_back(Push(*fnd));
     }
 
     return true;
   }
   
-  bool Let::run(Scope &scp) {
-    auto &s(curr_stack(scp.coro));
-
-    if (s.empty()) {
-      ERROR(Snabel, fmt("Missing bound val: %0", name));
+  bool Lookup::run(Scope &scp) {
+    Coro &cor(scp.coro);     
+    auto fnd(find_env(scp, name));
+    
+    if (!fnd) {
+      ERROR(Snabel, fmt("Unknown identifier: %0", name));
       return false;
     }
-
-    val.emplace(s.back());
-    s.pop_back();
-    put_env(scp, name, *val);
+    
+    push(cor, *fnd);
     return true;
   }
 
