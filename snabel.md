@@ -29,8 +29,11 @@ Literals, identifiers and results from function calls are pushed on the current 
 42
 I64
 
-> 42 7 reset
-n/a
+> 42 7 reset stash
+[]
+
+> 42 35 swap -
+-7
 ```
 
 ### Functions
