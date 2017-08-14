@@ -156,6 +156,15 @@ I64
 I64
 ```
 
+### Threads
+Snabel was designed from the ground up to support multi-threading. Starting a new thread copies the entire program, stack and environment to a separate structure to minimize locking; sets the program counter after the last instruction, and calls the specified target. The target is only a starting point, threads are free to go wherever they want; a thread is finished once the program counter passes the last instruction. The last value on the thread stack is pushed on the calling stack when returning from ```join```.
+
+```
+> 7 {35 +} thread join
+42
+I64
+```
+
 ### Macros
 Besides a tiny core of fundamental functionality, the rest of Snabel is implemented as macros. A macro takes an incoming sequence of tokens and an outgoing sequence of VM-operations as parameters, both lists may be modified from within the macro.
 
