@@ -3,11 +3,7 @@
 
 namespace snabel {
   Type::Type(const str &n):
-    name(n), super(nullptr)
-  { }
-
-  Type::Type(const str &n, Type &super):
-    name(n), super(&super)
+    name(n)
   { }
 
   Type::~Type()
@@ -17,18 +13,27 @@ namespace snabel {
     return x.name < y.name;
   }
 
-  bool isa(const Box &val, const Type &typ) {
-    for (Type *i = val.type; i; i = i->super) {
-      if (i == &typ) { return true; }
+  bool isa(const Type &x, const Type &y) {
+    if (&x == &y) { return true; }
+    
+    for (Type *xs: x.supers) {
+      if (isa(*xs, y)) { return true; }
     }
 
     return false;
   }
 
+  bool isa(const Box &val, const Type &typ) {
+    return isa(*val.type, typ);
+  }
+
   Type *get_super(Type &x, Type &y) {
-    for (Type *i = &x; i; i = i->super) {
-      for (Type *j = &y; j; j = j->super) {
-	if (i == j) { return i; }
+    if (&x == &y) { return &x; }
+    
+    for (Type *i: x.supers) {
+      for (Type *j: y.supers) {
+	auto res(get_super(*i, *j));
+	if (res) { return res; }
       }
     }
 

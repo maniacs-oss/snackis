@@ -3,12 +3,12 @@
 #include "snabel/coro.hpp"
 
 namespace snabel {
-  Iter::Iter(const Cond &cond, const Box &target):
-    cond(cond), target(target)
+  Iter::Iter(const Box &target):
+    target(target)
   { }
 
   bool next(Iter &iter, Scope &scp) {
-    auto nxt(iter.next(iter.cond, scp));
+    auto nxt(iter.next(scp));
     if (!nxt) { return false; }
     push(scp.coro, *nxt);
     (*iter.target.type->call)(scp, iter.target);

@@ -9,14 +9,9 @@ namespace snabel {
   struct Scope;
 
   struct Iter {
-    using Cond = std::variant<Range>;
-    
-    Cond cond;
     Box target;    
-
-    func<opt<Box> (Cond &, Scope &)> next;
-
-    Iter(const Cond &cond, const Box &target);
+    func<opt<Box> (Scope &)> next;
+    Iter(const Box &target);
   };
 
   bool next(Iter &iter, Scope &scp);

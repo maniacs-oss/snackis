@@ -28,10 +28,8 @@ namespace snabel {
     std::mutex mutex;
     Fiber &main;
     Scope &main_scope;
-    Type &any_type, &meta_type,
-      &bool_type, &callable_type, &func_type, &i64_type, &label_type, &lambda_type,
-      &list_type, &str_type, &thread_type, 
-      &undef_type, &void_type;
+    Type &any_type, &bool_type, &callable_type, &func_type, &i64_type, &label_type,
+      &lambda_type, &meta_type, &str_type, &thread_type, &undef_type, &void_type;
     std::atomic<Sym> next_gensym;
     
     Exec();
@@ -42,7 +40,7 @@ namespace snabel {
   Macro &add_macro(Exec &exe, const str &n, Macro::Imp imp);
 
   Type &add_type(Exec &exe, const str &n);
-  Type &add_type(Exec &exe, const str &n, Type &super);
+  Type &get_iterable_type(Exec &exe, Type &elt);
   Type &get_list_type(Exec &exe, Type &elt);
 
   FuncImp &add_func(Exec &exe,
