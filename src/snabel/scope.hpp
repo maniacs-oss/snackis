@@ -39,7 +39,7 @@ namespace snabel {
 
   Box *find_env(Scope &scp, const str &n);
   Box get_env(Scope &scp, const str &n);
-  void put_env(Scope &scp, const str &n, const Box &val);
+  void put_env(Scope &scp, const str &n, const Box &val, bool force=false);
   bool rem_env(Scope &scp, const str &n);
   void call(Scope &scp, const Label &lbl);
 

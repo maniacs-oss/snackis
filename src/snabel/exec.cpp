@@ -126,16 +126,24 @@ namespace snabel {
   {
     meta_type.fmt = [](auto &v) { return get<Type *>(v)->name; };
     meta_type.eq = [](auto &x, auto &y) { return get<Type *>(x) == get<Type *>(y); };
+    
     any_type.fmt = [](auto &v) { return "n/a"; };
     any_type.eq = [](auto &x, auto &y) { return false; };
+
+    callable_type.fmt = [](auto &v) { return "n/a"; };
+    callable_type.eq = [](auto &x, auto &y) { return false; };
+
+    undef_type.fmt = [](auto &v) { return "n/a"; };
+    undef_type.eq = [](auto &x, auto &y) { return true; };
+    put_env(main_scope, "'undef", Box(undef_type, undef));
+    
+    void_type.fmt = [](auto &v) { return "n/a"; };
+    void_type.eq = [](auto &x, auto &y) { return true; };  
 
     bool_type.fmt = [](auto &v) { return get<bool>(v) ? "'t" : "'f"; };
     bool_type.eq = [](auto &x, auto &y) { return get<bool>(x) == get<bool>(y); };
     put_env(main_scope, "'t", Box(bool_type, true));
     put_env(main_scope, "'f", Box(bool_type, false));
-
-    callable_type.fmt = [](auto &v) { return "n/a"; };
-    callable_type.eq = [](auto &x, auto &y) { return false; };
 
     func_type.fmt = [](auto &v) { return fmt_arg(size_t(get<Func *>(v))); };
     func_type.eq = [](auto &x, auto &y) { return get<Func *>(x) == get<Func *>(y); };
@@ -187,13 +195,6 @@ namespace snabel {
     thread_type.eq = [](auto &x, auto &y) {
       return get<Thread *>(x) == get<Thread *>(y);
     };
-
-    undef_type.fmt = [](auto &v) { return "n/a"; };
-    undef_type.eq = [](auto &x, auto &y) { return true; };
-    put_env(main_scope, "'undef", Box(undef_type, undef));
-    
-    void_type.fmt = [](auto &v) { return "n/a"; };
-    void_type.eq = [](auto &x, auto &y) { return true; };  
  
     add_func(*this, "zero?",
 	     {ArgType(i64_type)}, {ArgType(bool_type)},

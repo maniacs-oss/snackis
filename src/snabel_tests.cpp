@@ -187,10 +187,10 @@ namespace snabel {
     run(exe, "{'t {42} when} call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run(exe, "0 {zero? {exit} when 'f @exit 't} call");
+    run(exe, "'t {dup &return when 'f} call");
     CHECK(get<bool>(pop(exe.main)), _);
 
-    run(exe, "42 {dec dup zero? &exit when recall @exit} call");
+    run(exe, "42 {dec dup zero? &return when recall} call");
     CHECK(get<int64_t>(pop(exe.main)) == 0, _);
   }
 

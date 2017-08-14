@@ -51,17 +51,21 @@ namespace snabel {
     return *fnd;
   }
 
-  void put_env(Scope &scp, const str &n, const Box &val) {
+  void put_env(Scope &scp, const str &n, const Box &val, bool force) {
     auto &env(curr_env(scp));
     auto fnd(env.find(n));
 
-    if (fnd != env.end()) {
-      ERROR(Snabel, fmt("Name '%0' is already bound to: %1", n, fnd->second));
+    if (fnd != env.end() && !force) {
+      ERROR(Snabel, fmt("'%0' is already bound to: %1", n, fnd->second));
     }
 
-    env.emplace(std::piecewise_construct,
-		std::forward_as_tuple(n),
-		std::forward_as_tuple(val));
+    if (fnd == env.end()) {
+      env.emplace(std::piecewise_construct,
+		  std::forward_as_tuple(n),
+		  std::forward_as_tuple(val));
+    } else {
+      fnd->second = val;
+    }
   }
 
   bool rem_env(Scope &scp, const str &n) {

@@ -160,6 +160,7 @@ namespace snabel {
       }
 
       bool done(true);
+      exe.lambdas.clear();
       for (auto &op: thd.ops) {
 	if (compile(op, exe.main_scope, out)) { done = false; }
       }

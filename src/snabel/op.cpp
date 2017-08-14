@@ -284,10 +284,26 @@ namespace snabel {
 
   bool Getenv::compile(const Op &op, Scope &scp, OpSeq &out) {
     if (id.empty()) { return false; }
-    auto fnd(find_env(scp, id));
-    if (!fnd) { return false; }
-    out.emplace_back(Push(*fnd));
-    return true;
+
+    if (id == "return") {
+      if (scp.exec.lambdas.empty()) {
+	ERROR(Snabel, "Missing lambda for return");
+	return false;
+      }
+
+      auto fnd(find_env(scp, fmt("_exit%0", scp.exec.lambdas.back())));
+      if (fnd) {
+	out.emplace_back(Push(*fnd));
+	return true;
+      }
+    } else {
+      auto fnd(find_env(scp, id));
+      if (!fnd) { return false; }
+      out.emplace_back(Push(*fnd));
+      return true;
+    }
+
+    return false;
   }
 
   bool Getenv::run(Scope &scp) {
@@ -396,7 +412,8 @@ namespace snabel {
   }
 
   bool Lambda::compile(const Op &op, Scope &scp, OpSeq &out) {
-      if (compiled) { return false; }
+    scp.exec.lambdas.push_back(tag);
+    if (compiled) { return false; }
 
       if (tag.empty()) {
 	ERROR(Snabel, "Empty lambda tag");
@@ -417,7 +434,7 @@ namespace snabel {
       ERROR(Snabel, fmt("Missing lambda exit label: %0", tag));
       return false;
     }
-    
+
     scp.recall_pcs.push_back(exit_label->pc);
     return true;
   }  
@@ -701,6 +718,7 @@ namespace snabel {
   }
   
   bool Unlambda::compile(const Op &op, Scope &scp, OpSeq &out) {
+    scp.exec.lambdas.pop_back();
     if (compiled || tag.empty()) { return false; }  
     
     compiled = true;

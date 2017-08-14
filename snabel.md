@@ -78,7 +78,7 @@ I64
 I64
 
 > 42
-  {dec dup zero? &exit when recall @exit}
+  {dec dup zero? &return when recall}
   call
 0
 ```
