@@ -31,6 +31,7 @@ namespace snabel {
   void push(Coro &cor, const Stack &vals);
   
   opt<Box> peek(Coro &cor);
+  opt<Box> try_pop(Coro &cor);
   Box pop(Coro &cor);
 
   Stack &backup_stack(Coro &cor, bool copy=false);

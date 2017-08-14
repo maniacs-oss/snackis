@@ -37,7 +37,7 @@ I64
 ```
 
 ### Functions
-Snabel derives most of its type-checking powers from functions. Each named function represents a set of implementations, and each implementation is required to declare its parameter- and result types. Implementations are matched in reverse declared order when resolving function calls, to allow overriding existing functionality at any point. Prefixing the name of a function with ```&``` pushes it on the stack for later use.
+Snabel derives most of its type-checking powers from functions. Each named function represents a set of implementations, and each implementation may declare its parameter- and result types. Implementations are matched in reverse declared order when resolving function calls, to allow overriding existing functionality at any point. Prefixing the name of a function with ```&``` pushes it on the stack for later use.
 
 Adding functions from C++ is as easy as this:
 
@@ -122,6 +122,19 @@ List<Any>
 List<I64>
 ```
 
+### Labels
+Snabel's control structures are based on the idea of jumping to offsets within the instruction stream. Beginning any name with ```@``` will create a label with the specified name at that point, while simply naming a label in scope will result in jumping there. Prefixing the name of a label in scope with ```&``` pushes it on the stack for later use.
+
+```
+> 1 2 3 +
+5
+I64
+
+> 1 2 skip 42 @skip +
+3
+I64
+```
+
 ### Conditions
 ```when``` accepts a condition and a callable target, the target is called if the condition is true. Possible targets are functions, lambdas and labels.
 
@@ -139,20 +152,12 @@ I64
 I64
 ```
 
-### Labels
-Snabel's control structures are based on the idea of jumping to offsets within the instruction stream. Beginning any name with ```@``` will create a label with the specified name at that point, while simply naming a label in scope will result in jumping there. Prefixing the name of a label in scope with ```&``` pushes it on the stack for later use.
+### Loops
+```for``` accepts an iterable and a call target, and will call the target as long as the iterator returns more values. Possible conditions are numbers, which will call the target N times with N pushed on the stack; and lists, which will call the target with successive items pushed on the stack.
 
 ```
-> 1 2 3 +
-5
-I64
-
-> 1 2 skip 42 @skip +
-3
-I64
-
-> let: foo &bar; 0 't $foo when 7 @bar 42 -
-42
+> 0 7 &+ for
+21
 I64
 ```
 

@@ -164,7 +164,20 @@ namespace snabel {
 
     i64_type.fmt = [](auto &v) { return fmt_arg(get<int64_t>(v)); };
     i64_type.eq = [](auto &x, auto &y) { return get<int64_t>(x) == get<int64_t>(y); };
+    i64_type.iter = [](auto &cnd, auto &tgt) {
+      Iter it(Range(0, get<int64_t>(cnd)), tgt);
+      
+      it.next = [](auto &_cnd, auto &scp) -> opt<Box> {
+	auto &cnd(get<Range>(_cnd));
+	if (cnd.beg == cnd.end) { return nullopt; }
+	auto res(cnd.beg);
+	cnd.beg++;
+	return Box(scp.exec.i64_type, res);
+      };
 
+      return it;
+    };
+    
     label_type.fmt = [](auto &v) { return get<Label *>(v)->tag; };
     label_type.eq = [](auto &x, auto &y) {
       return get<Label *>(x) == get<Label *>(y);
@@ -318,10 +331,14 @@ namespace snabel {
 	out.emplace_back(Dup());
       });
 
+    add_macro(*this, "for", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(For());
+      });
+
     add_macro(*this, "getenv", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Getenv());
       });
-    
+
     add_macro(*this, "recall", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Recall());
       });

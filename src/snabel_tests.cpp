@@ -264,6 +264,13 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
   
+  static void loop_tests() {
+    TRY(try_test);    
+    Exec exe;
+    run(exe, "0 7 &+ for");
+    CHECK(get<int64_t>(pop(exe.main)) == 21, _);
+  }
+  
   static void thread_tests() {
     TRY(try_test);    
     Exec exe;
@@ -284,6 +291,7 @@ namespace snabel {
     when_tests();
     list_tests();
     env_tests();
+    loop_tests();
     thread_tests();
   }
 }

@@ -47,6 +47,14 @@ namespace snabel {
     return s.back();
   }
 
+  opt<Box> try_pop(Coro &cor) {
+    auto &s(curr_stack(cor));
+    if (s.empty()) { return nullopt; }
+    auto res(s.back());
+    s.pop_back();
+    return res;
+  }
+
   Box pop(Coro &cor) {
     auto &s(curr_stack(cor));
     CHECK(!s.empty(), _);

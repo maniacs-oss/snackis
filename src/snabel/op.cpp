@@ -47,38 +47,47 @@ namespace snabel {
     return true;
   }
   
-  Branch::Branch():
-    OpImp(OP_BRANCH, "branch")
+  Branch::Branch(opt<Box> target):
+    OpImp(OP_BRANCH, "branch"), target(target)
   { }
 
   OpImp &Branch::get_imp(Op &op) const {
     return std::get<Branch>(op.data);
   }
 
+  bool Branch::prepare(Scope &scp) {
+    if (target && !target->type->call) {
+      ERROR(Snabel, fmt("Invalid branch target: %0", *target));
+      return false;
+    }
+
+    return true;
+  }
+  
   bool Branch::run(Scope &scp) {
     auto &cor(scp.coro);
-    auto tgt(peek(cor));
-    
+    auto tgt(target);
+
     if (!tgt) {
-      ERROR(Snabel, "Missing branch target");
-      return false;
+      tgt = try_pop(cor);
+      
+      if (!tgt) {
+	ERROR(Snabel, "Missing branch target");
+	return false;
+      }
+      
+      if (!tgt->type->call) {
+	ERROR(Snabel, fmt("Invalid branch target: %0", *tgt));
+	return false;
+      }
     }
 
-    pop(cor);
-    
-    if (!tgt->type->call) {
-      ERROR(Snabel, fmt("Invalid branch target: %0", *tgt));
-      return false;
-    }
-
-    auto cnd(peek(cor));
+    auto cnd(try_pop(cor));
 
     if (!cnd) {
       ERROR(Snabel, "Missing branch condition");
       return false;
     }
-    
-    pop(cor);
 
     if (cnd->type != &cor.exec.bool_type) {
       ERROR(Snabel, fmt("Invalid branch condition: %0", *cnd));
@@ -245,6 +254,66 @@ namespace snabel {
     }
 
     s.push_back(s.back());
+    return true;
+  }
+
+  For::For():
+    OpImp(OP_FOR, "for"), compiled(false)
+  { }
+
+  OpImp &For::get_imp(Op &op) const {
+    return std::get<For>(op.data);
+  }
+
+  bool For::compile(const Op &op, Scope &scp, OpSeq &out) {
+    if (compiled) { return false; }
+    compiled = true;
+    auto &lbl(add_label(scp.exec, fmt("_for%0", gensym(scp.exec))));
+    out.emplace_back(Target(lbl));
+    out.push_back(op);
+    out.emplace_back(Branch(Box(scp.exec.label_type, &lbl)));
+    return true;
+  }
+
+  bool For::run(Scope &scp) {
+    Coro &cor(scp.coro);
+    Exec &exe(scp.exec);
+    
+    if (!iter) {
+      auto tgt(try_pop(cor));
+
+      if (!tgt) {
+	ERROR(Snabel, "Missing for target");
+	return false;
+      }
+
+      if (!tgt->type->call) {
+	ERROR(Snabel, fmt("Invalid for target: %0", *tgt));
+	return false;
+      }
+
+      auto cnd(try_pop(cor));
+
+      if (!cnd) {
+	ERROR(Snabel, "Missing for condition");
+	return false;
+      }
+
+      if (!cnd->type->iter) {
+	ERROR(Snabel, fmt("Invalid for condition: %0", *cnd));
+	return false;
+      }
+
+      iter.emplace((*cnd->type->iter)(*cnd, *tgt));
+    }
+
+    if (next(*iter, scp)) {
+      push(cor, exe.bool_type, true);
+    } else {
+      iter.reset();
+      push(cor, exe.bool_type, false);
+    }
+    
     return true;
   }
 
@@ -437,8 +506,8 @@ namespace snabel {
 
     scp.recall_pcs.push_back(exit_label->pc);
     return true;
-  }  
-  
+  }    
+
   Putenv::Putenv(const str &name):
     OpImp(OP_PUTENV, "putenv"), name(name)
   { }
@@ -639,6 +708,10 @@ namespace snabel {
     OpImp(OP_TARGET, "target"), tag(tag), label(nullptr)
   { }
 
+  Target::Target(Label &label):
+    OpImp(OP_TARGET, "target"), tag(label.tag), label(&label)
+  { }
+
   OpImp &Target::get_imp(Op &op) const {
     return std::get<Target>(op.data);
   }
@@ -649,16 +722,19 @@ namespace snabel {
   }
 
   bool Target::prepare(Scope &scp) {
-    auto &cor(scp.coro);
-    auto &exe(cor.exec);
-    auto fnd(find_label(exe, tag));
+    if (!label) {
+      auto &cor(scp.coro);
+      auto &exe(cor.exec);
+      auto fnd(find_label(exe, tag));
 
-    if (fnd) {
-      ERROR(Snabel, fmt("Duplicate label: %0", tag));
-      return false;
+      if (fnd) {
+	ERROR(Snabel, fmt("Duplicate label: %0", tag));
+	return false;
+      }
+      
+      label = &add_label(exe, tag);
     }
     
-    label = &add_label(exe, tag);
     return true;
   }
 

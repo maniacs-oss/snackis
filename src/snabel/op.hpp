@@ -5,6 +5,7 @@
 #include <utility>
 
 #include "snabel/box.hpp"
+#include "snabel/iter.hpp"
 #include "snabel/label.hpp"
 #include "snackis/core/func.hpp"
 #include "snackis/core/str.hpp"
@@ -15,11 +16,12 @@ namespace snabel {
   struct Box;
   struct Func;
   struct FuncImp;
+  struct Iter;
   struct Scope;
   struct Op;
 
   enum OpCode { OP_BACKUP, OP_BRANCH, OP_CALL, OP_DEREF, OP_DROP, OP_DUP,
-		OP_FUNCALL, OP_GETENV, OP_GROUP, OP_JUMP, OP_LAMBDA,
+		OP_FOR, OP_FUNCALL, OP_GETENV, OP_GROUP, OP_JUMP, OP_LAMBDA,
 		OP_PUSH, OP_PUTENV, OP_RECALL, OP_RESET, OP_RESTORE, OP_RETURN,
 		OP_STASH, OP_SWAP, OP_TARGET, OP_UNGROUP, OP_UNLAMBDA };
 
@@ -47,8 +49,11 @@ namespace snabel {
   };
 
   struct Branch: OpImp {
-    Branch();
+    opt<Box> target;
+    
+    Branch(opt<Box> target=nullopt);
     OpImp &get_imp(Op &op) const override;
+    bool prepare(Scope &scp) override;
     bool run(Scope &scp) override;
   };
 
@@ -83,6 +88,16 @@ namespace snabel {
   struct Dup: OpImp {
     Dup();
     OpImp &get_imp(Op &op) const override;
+    bool run(Scope &scp) override;
+  };
+
+  struct For: OpImp {
+    bool compiled;
+    opt<Iter> iter;
+    
+    For();
+    OpImp &get_imp(Op &op) const override;
+    bool compile(const Op &op, Scope &scp, OpSeq & out) override;
     bool run(Scope &scp) override;
   };
 
@@ -138,7 +153,7 @@ namespace snabel {
     bool compile(const Op &op, Scope &scp, OpSeq & out) override;
     bool run(Scope &scp) override;
   };
-  
+
   struct Push: OpImp {
     Stack vals;
     
@@ -207,6 +222,7 @@ namespace snabel {
     Label *label;
     
     Target(const str &tag);
+    Target(Label &label);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
     bool prepare(Scope &scp) override;
@@ -231,7 +247,7 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
 
-  using OpData = std::variant<Backup, Branch, Call, Deref, Drop, Dup, Funcall,
+  using OpData = std::variant<Backup, Branch, Call, Deref, Drop, Dup, For, Funcall,
 			      Getenv, Group, Jump, Lambda, Push, Putenv, 
 			      Recall, Reset, Restore, Return, Stash, Swap, Target,
 			      Ungroup, Unlambda>;
