@@ -1,6 +1,6 @@
-![logo](images/logo.png?raw=true)
 
-# Snackis
+
+# ![logo](images/logo.png?raw=true) Snackis
 #### post-modern communication
 
 ### Introduction
