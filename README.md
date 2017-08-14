@@ -45,14 +45,6 @@ Once inside, the first thing you probably want to do is to have a look at the se
 
 ![setup example](images/setup.png?raw=true)
 
-### Locking
-Type ```lock``` and press ```Return``` in the reader to lock Snackis and return to the login screen, the application will keep running in the background until closed.
-
-### Undo
-Snackis logs all changes to an undo-stack, type ```undo``` and press ```Return``` in the reader to view and/or manage the stack.
-
-![undo example](images/undo.png?raw=true)
-
 ### Invites
 Type ```"foo@bar.com" invite``` in the reader and press ```Return``` to create a new invite. Snackis will send an email containing your public encryption-key to the specified address. When an invite is accepted, a reply is sent to inform the inviting peer. The easiest way to see how it works is to send an invite to your own address.
 
@@ -129,9 +121,6 @@ Snackis supports encrypting arbitrary data for specific peers. Type ```encrypt``
 ### Decryption
 Type ```decrypt``` and press ```Return``` in the reader to open the decryption view. Decoding is mandatory for files that were encoded as part of the encryption process.
 
-### Algorithms
-Snackis delegates anything concerning encryption to [libsodium](https://github.com/jedisct1/libsodium). The IETF-variant of ```ChaCha20-Poly1305``` is used to encrypt the master password and database, while ```XSalsa20```/```X25519``` with ```Poly1305 MAC```-authentication is used for everything else. The master password is hashed using ```Scrypt```, and encrypted using the hash as key for future validation.
-
 ### Scripts
 Snackis includes a custom scripting language called [Snabel](https://github.com/andreas-gone-wild/snackis/blob/master/snabel.md). Type ```script-new``` and press ```Return``` in the reader to open the script view. Snackis reader is also backed by Snabel, which allows convenient evaluation of arbitrary expressions at any time.
 
@@ -139,6 +128,17 @@ Snackis includes a custom scripting language called [Snabel](https://github.com/
 
 #### Searching
 Type ```script-search``` in the reader and press ```Return``` to search tasks. Scripts are sorted by name and time of creation.  A short-cut is provided to find scripts by id, execute ```"#" script``` to open the specified script, any unique part of the id will do.
+
+### Undo
+Snackis logs all changes to an undo-stack, type ```undo``` and press ```Return``` in the reader to view and/or manage the stack.
+
+![undo example](images/undo.png?raw=true)
+
+### Locking
+Type ```lock``` and press ```Return``` in the reader to lock Snackis and return to the login screen, the application will keep running in the background until closed.
+
+### Algorithms
+Snackis delegates anything concerning encryption to [libsodium](https://github.com/jedisct1/libsodium). The IETF-variant of ```ChaCha20-Poly1305``` is used to encrypt the master password and database, while ```XSalsa20```/```X25519``` with ```Poly1305 MAC```-authentication is used for everything else. The master password is hashed using ```Scrypt```, and encrypted using the hash as key for future validation.
 
 ### License
 Snackis is licensed under the GNU General Public License Version 3.

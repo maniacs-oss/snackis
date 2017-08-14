@@ -40,7 +40,7 @@ namespace gui {
   }
   
   Login::Login(Ctx &ctx):
-    View(ctx, "Login"),
+    View(ctx, ""),
     pass(gtk_entry_new()),
     repeat(nullptr)
   {
