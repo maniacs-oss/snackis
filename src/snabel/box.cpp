@@ -19,6 +19,10 @@ namespace snabel {
   bool operator !=(const Box &x, const Box &y) {
     return x.type != y.type || !x.type->eq(x, y);
   }
+
+  ListRef make_list() {
+    return std::make_shared<List>();
+  }
 }
 
 namespace snackis {

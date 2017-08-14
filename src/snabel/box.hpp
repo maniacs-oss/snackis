@@ -46,6 +46,7 @@ namespace snabel {
 
   bool operator ==(const Box &x, const Box &y);
   bool operator !=(const Box &x, const Box &y);
+  ListRef make_list();
   
   template <typename T>
   const T &get(const Box &b) {

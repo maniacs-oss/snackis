@@ -5,6 +5,17 @@
 #include "snabel/type.hpp"
 
 namespace snabel {
+  static void isa_imp(Scope &scp, FuncImp &fn, const Args &args) {
+    auto &v(args[0]);
+    auto &t(args[1]);
+    push(scp.coro, scp.exec.bool_type, isa(v, *get<Type *>(t)));
+  }
+
+  static void type_imp(Scope &scp, FuncImp &fn, const Args &args) {
+    auto &v(args[0]);
+    push(scp.coro, scp.exec.meta_type, v.type);
+  }
+
   static void zero_i64_imp(Scope &scp, FuncImp &fn, const Args &args) {
     Exec &exe(scp.exec);
     bool res(get<int64_t>(args[0]) == 0);
@@ -71,6 +82,11 @@ namespace snabel {
     push(scp.coro, exe.i64_type, res);
   }
 
+  static void list_imp(Scope &scp, FuncImp &fn, const Args &args) {
+    auto &elt(args[0]);
+    push(scp.coro, get_list_type(scp.exec, *get<Type *>(elt)), make_list());    
+  }
+
   static void list_push_imp(Scope &scp, FuncImp &fn, const Args &args) {
     auto &lst(args[0]);
     auto &el(args[1]);
@@ -109,6 +125,7 @@ namespace snabel {
 				std::forward_as_tuple(*this, 0)).first->second),
     main(main_thread.main),
     main_scope(main.scopes.front()),
+    meta_type("Type"),
     any_type(add_type(*this, "Any")),
     bool_type(add_type(*this, "Bool")),
     callable_type(add_type(*this, "Callable")),
@@ -116,7 +133,6 @@ namespace snabel {
     i64_type(add_type(*this, "I64")),
     label_type(add_type(*this, "Label")),
     lambda_type(add_type(*this, "Lambda")),
-    meta_type(add_type(*this, "Type")),
     str_type(add_type(*this, "Str")),
     thread_type(add_type(*this, "Thread")),
     undef_type(add_type(*this, "Undef")),
@@ -231,6 +247,14 @@ namespace snabel {
       return get<Thread *>(x) == get<Thread *>(y);
     };
  
+    add_func(*this, "isa?",
+	     {ArgType(any_type), ArgType(meta_type)}, {ArgType(bool_type)},
+	     isa_imp);
+
+    add_func(*this, "type",
+	     {ArgType(any_type)}, {ArgType(0)},
+	     type_imp);
+
     add_func(*this, "zero?",
 	     {ArgType(i64_type)}, {ArgType(bool_type)},
 	     zero_i64_imp);
@@ -255,6 +279,11 @@ namespace snabel {
     add_func(*this, "%",
 	     {ArgType(i64_type), ArgType(i64_type)}, {ArgType(i64_type)},
 	     mod_i64_imp);
+
+    add_func(*this, "list",
+	     {ArgType(meta_type)},
+	     {ArgType(0, [this](auto &elt) { return &get_list_type(*this, elt); })},
+	     list_imp);
 
     add_func(*this, "push",
 	     {ArgType(any_list), ArgType(0, 0)}, {ArgType(0)},
@@ -393,7 +422,7 @@ namespace snabel {
   }
   
   Type &add_type(Exec &exe, const str &n) {
-    auto &res(exe.types.emplace_front(n)); 
+    auto &res(exe.types.emplace_back(n)); 
     put_env(exe.main_scope, n, Box(exe.meta_type, &res));
     return res;
   }
@@ -462,7 +491,22 @@ namespace snabel {
       
       return true;
     };
-    
+
+    t.iter = [](auto &cnd, auto &tgt) {
+      Iter it(tgt);      
+      auto lst(get<ListRef>(cnd));
+      auto imp(lst->elems.begin());
+      
+      it.next = [lst, imp](auto &scp) mutable -> opt<Box> {
+	if (imp == lst->elems.end()) { return nullopt; }
+	auto res(*imp);
+	imp++;
+	return res;
+      };
+
+      return it;
+    };
+
     return t;
   }
 

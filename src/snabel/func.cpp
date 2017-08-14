@@ -36,14 +36,29 @@ namespace snabel {
     type(&type)
   { }
 
-  ArgType::ArgType(size_t arg_idx, opt<size_t> type_arg_idx):
+  ArgType::ArgType(size_t arg_idx):
+    type(nullptr), arg_idx(arg_idx)
+  { }
+
+  ArgType::ArgType(size_t arg_idx, size_t type_arg_idx):
     type(nullptr), arg_idx(arg_idx), type_arg_idx(type_arg_idx)
   { }
 
+  ArgType::ArgType(size_t arg_idx, Conv conv):
+    type(nullptr), arg_idx(arg_idx), conv(conv)
+  { }
+
   Type *get_type(const FuncImp &imp, const ArgType &arg_type, const Args &args) {
-    if (arg_type.type) { return arg_type.type; }
-    auto t(args.at(args.size() - imp.args.size() + *arg_type.arg_idx).type);
-    return arg_type.type_arg_idx ? t->args.at(*arg_type.type_arg_idx) : t;
+    Type *t(nullptr);
+    
+    if (arg_type.type) {
+      t = arg_type.type;
+    } else {
+      t = args.at(args.size() - imp.args.size() + *arg_type.arg_idx).type;
+      if (arg_type.type_arg_idx) { t = t->args.at(*arg_type.type_arg_idx); }
+    }
+    
+    return arg_type.conv ? (*arg_type.conv)(*t) : t;
   }
 
   Args pop_args(const FuncImp &imp, Coro &cor) {

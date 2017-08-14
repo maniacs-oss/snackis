@@ -130,6 +130,17 @@ namespace snabel {
     CHECK(get<int64_t>(get_env(scp, "$bar")) == 42, _);
   }
 
+  static void type_tests() {
+    TRY(try_test);    
+    Exec exe;
+    
+    run(exe, "42 I64 isa?");
+    CHECK(get<bool>(pop(exe.main)), _);
+
+    run(exe, "42 type");
+    CHECK(get<Type *>(pop(exe.main)) == &exe.i64_type, _);
+  }
+
   static void stack_tests() {
     TRY(try_test);    
     Exec exe;
@@ -252,6 +263,9 @@ namespace snabel {
       CHECK(get<int64_t>(ls->elems[i]) == i, _);
     }
 
+    run(exe, "Str list \"foo\" push");
+    CHECK(get<ListRef>(pop(exe.main))->elems.size() == 1, _);
+
     list_push_tests();
     list_pop_tests();
     list_reverse_tests();
@@ -264,10 +278,14 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
   
-  static void loop_tests() {
+  static void for_tests() {
     TRY(try_test);    
     Exec exe;
+
     run(exe, "0 7 &+ for");
+    CHECK(get<int64_t>(pop(exe.main)) == 21, _);
+
+    run(exe, "0 [1 2 3 4 5 6] &+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 21, _);
   }
   
@@ -283,6 +301,7 @@ namespace snabel {
     parse_tests();
     parens_tests();
     compile_tests();
+    type_tests();
     stack_tests();
     scope_tests();
     let_tests();
@@ -291,7 +310,7 @@ namespace snabel {
     when_tests();
     list_tests();
     env_tests();
-    loop_tests();
+    for_tests();
     thread_tests();
   }
 }

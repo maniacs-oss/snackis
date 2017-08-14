@@ -99,6 +99,14 @@ Snabel provides first class static, optionally parameterized types with inferenc
 > I64
 I64
 Type
+
+> 42 I64 isa?
+'t
+Bool
+
+> 42 type
+I64
+Type
 ```
 
 #### Lists
@@ -108,6 +116,10 @@ Snabel's lists are based on deques, which means fast inserts/removals in the fro
 > [1 2 3]
 [1 2 3]
 List<I64>
+
+> Str list
+[]
+List<Str>
 
 > 1 2 3 stash
 [1 2 3]
@@ -157,6 +169,10 @@ I64
 
 ```
 > 0 7 &+ for
+21
+I64
+
+> 0 [1 2 3 4 5 6] &+ for
 21
 I64
 ```

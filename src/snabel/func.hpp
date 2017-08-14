@@ -19,11 +19,16 @@ namespace snabel {
   using Args = std::deque<Box>;
 
   struct ArgType {
+    using Conv = func<Type *(Type &)>;
+
     Type *type;
     opt<size_t> arg_idx, type_arg_idx;
-
+    opt<Conv> conv;
+    
     ArgType(Type &type);
-    ArgType(size_t arg_idx, opt<size_t> type_arg_idx=nullopt);
+    ArgType(size_t arg_idx);
+    ArgType(size_t arg_idx, size_t type_arg_idx);
+    ArgType(size_t arg_idx, Conv conv);
   };
   
   using ArgTypes = std::deque<ArgType>;

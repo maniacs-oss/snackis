@@ -14,8 +14,7 @@ namespace snabel {
   
   struct Type {    
     const str name;
-    std::deque<Type *> supers;
-    std::deque<Type *> args;
+    std::deque<Type *> supers, args;
     
     func<bool (const Box &, const Box &)> eq;
     func<str (const Box &)> fmt;

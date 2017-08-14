@@ -1,3 +1,4 @@
+#include <iostream>
 #include "snabel/box.hpp"
 #include "snabel/type.hpp"
 
