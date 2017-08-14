@@ -1,8 +1,5 @@
 *:focused {
     background: #ffff99;
-}
-
-GtkEntry:focused {
     color: #000000;
 }
 
@@ -19,8 +16,12 @@ GtkButton {
     padding: 0.3em 0.6em;
 }
 
+GtkButton:focused GtkLabel {
+    color: #000000;
+}
+
 GtkButton:insensitive GtkLabel {
-    color: #888888;
+    text-decoration: line-through;
 }
 
 GtkCheckButton {

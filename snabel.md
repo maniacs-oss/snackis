@@ -151,7 +151,7 @@ I64
 3
 I64
 
-> let: foo &bar; 0 t $foo when 7 @bar 42 -
+> let: foo &bar; 0 't $foo when 7 @bar 42 -
 42
 I64
 ```

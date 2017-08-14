@@ -59,8 +59,6 @@ Type ```"foo@bar.com" invite``` in the reader and press ```Return``` to create a
 ### Peers
 Type ```peer-search``` in the reader and press ```Return``` to search Peers locally. Peers are sorted by name. A short-cut is provided to find peers by id; execute ```"#" peer``` to open the specified peer, any unique part of the id will do.
 
-![peer search example](images/peer_search.png?raw=true)
-
 ### Messages
 All Snackis-messages look more or less the same to the outside world, the actual data is appended in encrypted (except for invites) and encoded form below the ```__SNACKIS__```-marker.
 
@@ -128,12 +126,8 @@ Type ```todo``` in the reader and press ```Return``` to show a list of the curre
 ### Encryption
 Snackis supports encrypting arbitrary data for specific peers. Type ```encrypt``` and press ```Return``` in the reader to open the encryption view. On top of being encrypted; the resulting file is cryptographically signed, and the signature is verified when decrypting. Encoding ensures that the resulting file can be reliable transferred over text-based protocols, it also rougly doubles the size of the output.
 
-![encrypt example](images/encrypt.png?raw=true)
-
 ### Decryption
 Type ```decrypt``` and press ```Return``` in the reader to open the decryption view. Decoding is mandatory for files that were encoded as part of the encryption process.
-
-![decrypt example](images/decrypt.png?raw=true)
 
 ### Algorithms
 Snackis delegates anything concerning encryption to [libsodium](https://github.com/jedisct1/libsodium). The IETF-variant of ```ChaCha20-Poly1305``` is used to encrypt the master password and database, while ```XSalsa20```/```X25519``` with ```Poly1305 MAC```-authentication is used for everything else. The master password is hashed using ```Scrypt```, and encrypted using the hash as key for future validation.
@@ -145,8 +139,6 @@ Snackis includes a custom scripting language called [Snabel](https://github.com/
 
 #### Searching
 Type ```script-search``` in the reader and press ```Return``` to search tasks. Scripts are sorted by name and time of creation.  A short-cut is provided to find scripts by id, execute ```"#" script``` to open the specified script, any unique part of the id will do.
-
-![script search example](images/script_search.png?raw=true)
 
 ### License
 Snackis is licensed under the GNU General Public License Version 3.
