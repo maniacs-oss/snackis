@@ -23,6 +23,7 @@ namespace snabel {
     if (thd.imp.joinable()) { thd.imp.join(); }
     auto &s(curr_stack(*thd.curr_fiber));
     if (!s.empty()) { push(scp.coro, s.back()); }
+    Exec::Lock lock(scp.exec.mutex);
     thd.exec.threads.erase(thd.id);
   }
 }

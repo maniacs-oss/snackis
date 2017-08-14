@@ -123,6 +123,7 @@ namespace snabel {
 
   bool compile(Coro &cor, const str &in) {
     Exec &exe(cor.exec);
+    Exec::Lock lock(exe.mutex);
     Thread &thd(cor.thread);
     
     thd.ops.clear();

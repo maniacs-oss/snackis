@@ -2,6 +2,7 @@
 #define SNABEL_EXEC_HPP
 
 #include <atomic>
+#include <mutex>
 #include <map>
 
 #include "snabel/fiber.hpp"
@@ -14,6 +15,8 @@
 
 namespace snabel {
   struct Exec {
+    using Lock = std::unique_lock<std::mutex>;
+    
     std::map<str, Macro> macros;
     std::deque<Type> types;
     std::map<str, Func> funcs;
@@ -22,6 +25,7 @@ namespace snabel {
     std::map<Thread::Id, Thread> threads;
     
     Thread &main_thread;
+    std::mutex mutex;
     Fiber &main;
     Scope &main_scope;
     Type &any_type, &meta_type,

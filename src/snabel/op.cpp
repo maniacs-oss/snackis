@@ -415,18 +415,18 @@ namespace snabel {
     scp.exec.lambdas.push_back(tag);
     if (compiled) { return false; }
 
-      if (tag.empty()) {
-	ERROR(Snabel, "Empty lambda tag");
-	return false;
-      }
-
-      compiled = true;
-      out.emplace_back(Jump(fmt("_skip%0", tag)));
-      out.emplace_back(Target(fmt("_enter%0", tag)));
-      out.emplace_back(Group(true));
-      out.push_back(op);
-      out.emplace_back(Target(fmt("_recall%0", tag)));
-      return true;
+    if (tag.empty()) {
+      ERROR(Snabel, "Empty lambda tag");
+      return false;
+    }
+    
+    compiled = true;
+    out.emplace_back(Jump(fmt("_skip%0", tag)));
+    out.emplace_back(Target(fmt("_enter%0", tag)));
+    out.emplace_back(Group(true));
+    out.push_back(op);
+    out.emplace_back(Target(fmt("_recall%0", tag)));
+    return true;
   }
 
   bool Lambda::run(Scope &scp) {

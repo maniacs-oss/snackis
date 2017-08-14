@@ -85,25 +85,32 @@ namespace snabel {
     Exec &exe(scp.exec);
     
     Thread::Id id(gensym(exe));
-    Thread &t(exe.threads.emplace(std::piecewise_construct,
-				  std::forward_as_tuple(id),
-				  std::forward_as_tuple(exe, id)).first->second);
+
+    Thread *t(nullptr);
+
+    {
+      Exec::Lock lock(exe.mutex);
+      t = &exe.threads.emplace(std::piecewise_construct,
+			       std::forward_as_tuple(id),
+			       std::forward_as_tuple(exe, id)).first->second;
+    }
+    
     auto &s(curr_stack(cor));
-    std::copy(s.begin(), s.end(), std::back_inserter(curr_stack(t.main)));
+    std::copy(s.begin(), s.end(), std::back_inserter(curr_stack(t->main)));
 
     auto &e(curr_env(scp));
-    auto &te(t.main_scope.root_env);
+    auto &te(t->main_scope.root_env);
     std::copy(e.begin(), e.end(), std::inserter(te, te.end()));
 
-    std::copy(thd.ops.begin(), thd.ops.end(), std::back_inserter(t.ops));
-    t.main.pc = t.ops.size();
+    std::copy(thd.ops.begin(), thd.ops.end(), std::back_inserter(t->ops));
+    t->main.pc = t->ops.size();
     
-    if ((*init.type->call)(curr_scope(t.main), init)) {
-      run(t.main, false);
+    if ((*init.type->call)(curr_scope(t->main), init)) {
+      run(t->main, false);
     } else {
       ERROR(Snabel, "Failed calling thread init");
     }
     
-    return t;
+    return *t;
   }
 }
