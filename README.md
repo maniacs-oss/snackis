@@ -1,4 +1,4 @@
-<center>![logo](images/logo.png?raw=true)</center>
+![logo](images/logo.png?raw=true)
 
 ### Introduction
 Snackis aims to be an effective tool for most secure communication needs using any regular email-account as transport. Peers, encryption-keys, messages and and settings are stored locally, encrypted using a master password. At present; Snackis supports invites/accepts, threaded feeds/posts and projects/tasks.
