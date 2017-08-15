@@ -643,7 +643,8 @@ namespace snabel {
     Coro &cor(scp.coro);
 
     if (scp.recall_pcs.empty()) {
-      if (scoped && !end_scope(scp.coro)) { return false; }
+      auto &s(curr_stack(scp.coro));
+      if (scoped && !end_scope(scp.coro, s.size())) { return false; }
       auto &ret_scp(curr_scope(cor));
       
       if (ret_scp.return_pc == -1) {

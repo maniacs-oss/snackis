@@ -62,7 +62,7 @@ add_func(exe, "+",
 ```
 
 ### Lambdas
-Using braces instead of parentheses pushes a pointer to the compiled expression on the stack. Lambdas may be exited early by calling ```return``` and called recursively using ```recall```.
+Wrapping code in braces instead of parentheses pushes a pointer to the compiled expression on the stack. Lambdas may be exited early by calling ```return```, everything on the stack at the point of return is pushed on the outer stack. Use ```recall``` to call the current lambda recursively.
 
 ```
 > {1 2 +}
