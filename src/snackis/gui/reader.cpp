@@ -61,11 +61,8 @@ namespace gui {
 		      Reader::Cmd cmd) {
     CHECK(rdr.cmds.insert(id).second, _);
     snabel::add_func(rdr.exec, id, args, {},
-		     [cmd](snabel::Scope &scp,
-			   snabel::FuncImp &fn,
-			   const snabel::Args &args) {
-		       cmd(args);
-		     });
+		     [cmd](auto &scp,
+			   auto &args) { cmd(args); });
   }
   
   template <typename SearchT, typename ViewT, typename RecT>

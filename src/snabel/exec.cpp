@@ -8,47 +8,47 @@
 #include "snabel/type.hpp"
 
 namespace snabel {
-  static void nop_imp(Scope &scp, FuncImp &fn, const Args &args)
+  static void nop_imp(Scope &scp, const Args &args)
   { }
 
-  static void isa_imp(Scope &scp, FuncImp &fn, const Args &args) {
+  static void isa_imp(Scope &scp, const Args &args) {
     auto &v(args[0]);
     auto &t(args[1]);
     push(scp.coro, scp.exec.bool_type, isa(v, *get<Type *>(t)));
   }
 
-  static void type_imp(Scope &scp, FuncImp &fn, const Args &args) {
+  static void type_imp(Scope &scp, const Args &args) {
     auto &v(args[0]);
     push(scp.coro, scp.exec.meta_type, v.type);
   }
 
-  static void eq_imp(Scope &scp, FuncImp &fn, const Args &args) {
+  static void eq_imp(Scope &scp, const Args &args) {
     auto &x(args[0]), &y(args[1]);
     push(scp.coro, scp.exec.bool_type, x.type->eq(x, y));
   }
 
-  static void equal_imp(Scope &scp, FuncImp &fn, const Args &args) {
+  static void equal_imp(Scope &scp, const Args &args) {
     auto &x(args[0]), &y(args[1]);
     push(scp.coro, scp.exec.bool_type, x.type->equal(x, y));
   }
   
-  static void zero_i64_imp(Scope &scp, FuncImp &fn, const Args &args) {
+  static void zero_i64_imp(Scope &scp, const Args &args) {
     Exec &exe(scp.exec);
     bool res(get<int64_t>(args[0]) == 0);
     push(scp.coro, exe.bool_type, res);
   }
 
-  static void inc_i64_imp(Scope &scp, FuncImp &fn, const Args &args) {
+  static void inc_i64_imp(Scope &scp, const Args &args) {
     auto &a(args[0]);
     push(scp.coro, *a.type, get<int64_t>(a)+1);
   }
 
-  static void dec_i64_imp(Scope &scp, FuncImp &fn, const Args &args) {
+  static void dec_i64_imp(Scope &scp, const Args &args) {
     auto &a(args[0]);
     push(scp.coro, *a.type, get<int64_t>(a)-1);
   }
 
-  static void add_i64_imp(Scope &scp, FuncImp &fn, const Args &args) {
+  static void add_i64_imp(Scope &scp, const Args &args) {
     Exec &exe(scp.exec);
     int64_t res(0);
 
@@ -60,7 +60,7 @@ namespace snabel {
     push(scp.coro, exe.i64_type, res);
   }
 
-  static void sub_i64_imp(Scope &scp, FuncImp &fn, const Args &args) {
+  static void sub_i64_imp(Scope &scp, const Args &args) {
     Exec &exe(scp.exec);
     int64_t res(get<int64_t>(args[0]));
 
@@ -75,7 +75,7 @@ namespace snabel {
     push(scp.coro, exe.i64_type, res);
   }
 
-  static void mul_i64_imp(Scope &scp, FuncImp &fn, const Args &args) {
+  static void mul_i64_imp(Scope &scp, const Args &args) {
     Exec &exe(scp.exec);
     int64_t res(1);
 
@@ -87,7 +87,7 @@ namespace snabel {
     push(scp.coro, exe.i64_type, res);
   }
 
-  static void mod_i64_imp(Scope &scp, FuncImp &fn, const Args &args) {
+  static void mod_i64_imp(Scope &scp, const Args &args) {
     Exec &exe(scp.exec);
     int64_t res(get<int64_t>(args[0]));
     for (auto i=std::next(args.begin()); i != args.end(); i++) {
@@ -98,13 +98,13 @@ namespace snabel {
     push(scp.coro, exe.i64_type, res);
   }
 
-  static void iter_imp(Scope &scp, FuncImp &fn, const Args &args) {
+  static void iter_imp(Scope &scp, const Args &args) {
     auto &in(args[0]);
     auto it((*in.type->iter)(in));
     push(scp.coro, *it.first, std::make_shared<Iter>(it.second));
   }
 
-  static void iter_join_imp(Scope &scp, FuncImp &fn, const Args &args) {
+  static void iter_join_imp(Scope &scp, const Args &args) {
     auto &in(args[0]);
     auto &sep(args[1]);
     OutStream out;
@@ -122,7 +122,7 @@ namespace snabel {
     push(scp.coro, scp.exec.str_type, out.str()); 
   }
 
-  static void iter_list_imp(Scope &scp, FuncImp &fn, const Args &args) {
+  static void iter_list_imp(Scope &scp, const Args &args) {
     auto &in(args[0]);
     auto out(make_list());
     auto i((*in.type->iter)(in).second);
@@ -136,7 +136,7 @@ namespace snabel {
     push(scp.coro, get_list_type(scp.exec, *in.type->args[0]), out); 
   }
 
-  static void iter_pop_imp(Scope &scp, FuncImp &fn, const Args &args) {
+  static void iter_pop_imp(Scope &scp, const Args &args) {
     auto &cor(scp.coro);
     auto &it(args[0]);
     push(cor, it);
@@ -145,19 +145,19 @@ namespace snabel {
     push(cor, v ? *v : Box(scp.exec.undef_type, undef));
   }
   
-  static void list_imp(Scope &scp, FuncImp &fn, const Args &args) {
+  static void list_imp(Scope &scp, const Args &args) {
     auto &elt(args[0]);
     push(scp.coro, get_list_type(scp.exec, *get<Type *>(elt)), make_list());    
   }
 
-  static void list_push_imp(Scope &scp, FuncImp &fn, const Args &args) {
+  static void list_push_imp(Scope &scp, const Args &args) {
     auto &lst(args[0]);
     auto &el(args[1]);
     get<ListRef>(lst)->elems.push_back(el);
     push(scp.coro, lst);    
   }
 
-  static void list_pop_imp(Scope &scp, FuncImp &fn, const Args &args) {
+  static void list_pop_imp(Scope &scp, const Args &args) {
     auto &lst_arg(args[0]);
     auto &lst(get<ListRef>(lst_arg)->elems);
     push(scp.coro, lst_arg);
@@ -165,7 +165,7 @@ namespace snabel {
     lst.pop_back();
   }
 
-  static void list_reverse_imp(Scope &scp, FuncImp &fn, const Args &args) {
+  static void list_reverse_imp(Scope &scp, const Args &args) {
     auto &in_arg(args[0]);
     auto &in(get<ListRef>(in_arg)->elems);
     ListRef out(new List());
@@ -173,12 +173,12 @@ namespace snabel {
     push(scp.coro, *in_arg.type, out); 
   }
 
-  static void thread_imp(Scope &scp, FuncImp &fn, const Args &args) {
+  static void thread_imp(Scope &scp, const Args &args) {
     auto &t(start_thread(scp, args[0]));
     push(scp.coro, scp.exec.thread_type, &t);
   }
 
-  static void thread_join_imp(Scope &scp, FuncImp &fn, const Args &args) {
+  static void thread_join_imp(Scope &scp, const Args &args) {
     join(*get<Thread *>(args[0]), scp);
   }
 
@@ -275,7 +275,7 @@ namespace snabel {
 	  return false;
 	}
 
-	(*imp)(cor);
+	(*imp)(scp);
 	return true;
       });
 

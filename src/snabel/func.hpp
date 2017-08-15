@@ -35,7 +35,7 @@ namespace snabel {
   using ArgTypes = std::deque<ArgType>;
 
   struct FuncImp {
-    using Imp = func<void (Scope &, FuncImp &, const Args &)>;
+    using Imp = func<void (Scope &, const Args &)>;
 
     Func &func;
     ArgTypes args;
@@ -48,8 +48,8 @@ namespace snabel {
 	    const ArgTypes &results,
 	    Imp imp,
 	    bool pure=true);
-    void operator ()(Coro &cor, const Args &args);
-    void operator ()(Coro &cor);
+    void operator ()(Scope &scp, const Args &args);
+    void operator ()(Scope &scp);
   };
 
   struct Func {

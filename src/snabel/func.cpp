@@ -19,13 +19,13 @@ namespace snabel {
     func(fn), args(args), results(results), imp(imp), pure(pure)
   { }
   
-  void FuncImp::operator ()(Coro &cor, const Args &args) {
-    imp(curr_scope(cor), *this, args);
+  void FuncImp::operator ()(Scope &scp, const Args &args) {
+    imp(scp, args);
   }
 
-  void FuncImp::operator ()(Coro &cor) {
-    auto args(pop_args(*this, cor));
-    (*this)(cor, args);
+  void FuncImp::operator ()(Scope &scp) {
+    auto args(pop_args(*this, scp.coro));
+    (*this)(scp, args);
   }
 
   Func::Func(const str &nam):
