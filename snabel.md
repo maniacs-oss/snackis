@@ -219,7 +219,7 @@ Str
 ```
 
 ### Threads
-Snabel was designed from the ground up to support multi-threading. Starting a new thread copies the entire program, stack and environment to a separate structure to minimize locking; sets the program counter after the last instruction, and calls the specified target. The target is only a starting point, threads are free to go wherever they want; a thread is finished once the program counter passes the last instruction. The last value on the thread stack is pushed on the calling stack when returning from ```join```.
+Snabel was designed from the ground up to support multi-threading. Starting a new thread copies the entire program, stack and environment to a separate structure to minimize locking; sets the program counter after the last instruction, and calls the specified target. The target is only a starting point, threads are free to go wherever they want; a thread is finished once the program counter passes the last instruction. Anything remaining on the thread stack is pushed on the calling stack in ```join```
 
 ```
 > 7 {35 +} thread join
