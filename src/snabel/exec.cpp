@@ -520,10 +520,6 @@ namespace snabel {
 	out.emplace_back(For());
       });
 
-    add_macro(*this, "getenv", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(Getenv());
-      });
-
     add_macro(*this, "recall", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Recall());
       });

@@ -8,14 +8,16 @@
 
 namespace snabel {
   struct Thread;
-  
+
   struct Coro {
     Thread &thread;
     Exec &exec;
-    int64_t pc;
+    int64_t pc;    
+    Env env;
     
     std::deque<Scope> scopes;
     std::deque<Stack> stacks;
+    Scope &main_scope;
     
     Coro(Thread &thread);
     Coro(const Coro &) = delete;

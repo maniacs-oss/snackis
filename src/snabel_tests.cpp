@@ -302,13 +302,6 @@ namespace snabel {
     list_reverse_tests();
   }
 
-  static void env_tests() {
-    TRY(try_test);    
-    Exec exe;
-    run(exe, "let: foo {42}; \"$foo\" getenv call");
-    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
-  }
-  
   static void for_tests() {
     TRY(try_test);    
     Exec exe;
@@ -345,7 +338,6 @@ namespace snabel {
     when_tests();
     iter_tests();
     list_tests();
-    env_tests();
     for_tests();
     thread_tests();
   }

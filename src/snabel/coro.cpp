@@ -9,10 +9,9 @@
 
 namespace snabel {
   Coro::Coro(Thread &thd):
-    thread(thd), exec(thd.exec), pc(0)
+    thread(thd), exec(thd.exec), pc(0), main_scope(scopes.emplace_back(*this))
   {
     backup_stack(*this);
-    scopes.emplace_back(*this);
   }
 
   Scope &curr_scope(Coro &cor) {
@@ -113,11 +112,7 @@ namespace snabel {
   void rewind(Coro &cor) {
     while (cor.scopes.size() > 1) { cor.scopes.pop_back(); }
     while (cor.stacks.size() > 1) { cor.stacks.pop_back(); }
-    curr_stack(cor).clear();
-
-    Scope &scp(curr_scope(cor));
-    while (scp.envs.size() > 1) { scp.envs.pop_back(); }
-    
+    cor.stacks.front().clear();
     cor.pc = 0;
   }
 

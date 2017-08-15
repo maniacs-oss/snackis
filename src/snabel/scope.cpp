@@ -7,69 +7,58 @@
 
 namespace snabel {  
   Scope::Scope(const Scope &src):
-    coro(src.coro), thread(src.thread), exec(src.exec),
-    envs(src.envs),
-    root_env(envs.front()),
-    return_pc(-1)
+    coro(src.coro), thread(src.thread), exec(src.exec), return_pc(-1)
   { }
 
   Scope::Scope(Coro &cor):
-    coro(cor), thread(cor.thread), exec(thread.exec),
-    root_env(push_env(*this)),
-    return_pc(-1)
+    coro(cor), thread(cor.thread), exec(thread.exec), return_pc(-1)
   { }
 
-  Env &curr_env(Scope &scp) {
-    CHECK(!scp.envs.empty(), _);
-    return scp.envs.back();
+  Scope::~Scope() {
+    for (auto &k: env_keys) { coro.env.erase(k); }
   }
 
-  Env &push_env(Scope &scp) {
-    if (scp.envs.empty()) {
-      return scp.envs.emplace_back(Env());
-    }
-
-    return scp.envs.emplace_back(Env(curr_env(scp)));
-  }
-  
-  void pop_env(Scope &scp) {
-    CHECK(!scp.envs.empty(), _);
-    scp.envs.pop_back();
-    CHECK(!scp.envs.empty(), _);
-  }
-
-  Box *find_env(Scope &scp, const str &n) {
-    auto &env(curr_env(scp));
-    auto fnd(env.find(n));
+  Box *find_env(Scope &scp, const str &key) {
+    auto &env(scp.coro.env);
+    auto fnd(env.find(key));
     if (fnd == env.end()) { return nullptr; }
     return &fnd->second;
   }
 
-  Box get_env(Scope &scp, const str &n) {
-    auto fnd(find_env(scp, n));
+  Box get_env(Scope &scp, const str &key) {
+    auto fnd(find_env(scp, key));
     CHECK(fnd, _);
     return *fnd;
   }
 
-  void put_env(Scope &scp, const str &n, const Box &val, bool force) {
-    auto &env(curr_env(scp));
-    auto fnd(env.find(n));
+  void put_env(Scope &scp, const str &key, const Box &val) {
+    auto &env(scp.coro.env);
+    auto fnd(env.find(key));
 
-    if (fnd != env.end() && !force) {
-      ERROR(Snabel, fmt("'%0' is already bound to: %1", n, fnd->second));
+    if (fnd != env.end()) {
+      ERROR(Snabel, fmt("'%0' is already bound to: %1", key, fnd->second));
     }
 
     if (fnd == env.end()) {
       env.emplace(std::piecewise_construct,
-		  std::forward_as_tuple(n),
+		  std::forward_as_tuple(key),
 		  std::forward_as_tuple(val));
     } else {
       fnd->second = val;
     }
+
+    if (&scp != &scp.coro.main_scope) { scp.env_keys.insert(key); }
   }
 
-  bool rem_env(Scope &scp, const str &n) {
-    return curr_env(scp).erase(n) == 1;
+  bool rem_env(Scope &scp, const str &key) {
+    if (&scp != &scp.coro.main_scope) {
+      auto fnd(scp.env_keys.find(key));
+      if (fnd == scp.env_keys.end()) { return false; }
+      scp.env_keys.erase(fnd);
+    }
+    
+    scp.coro.env.erase(key);
+    return true;
   }
 
   void call(Scope &scp, const Label &lbl) {
@@ -98,8 +87,8 @@ namespace snabel {
     auto &s(curr_stack(cor));
     std::copy(s.begin(), s.end(), std::back_inserter(curr_stack(t->main)));
 
-    auto &e(curr_env(scp));
-    auto &te(t->main_scope.root_env);
+    auto &e(scp.coro.env);
+    auto &te(t->main.env);
     std::copy(e.begin(), e.end(), std::inserter(te, te.end()));
 
     std::copy(thd.ops.begin(), thd.ops.end(), std::back_inserter(t->ops));
