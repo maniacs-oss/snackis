@@ -161,6 +161,17 @@ namespace snabel {
     CHECK(!find_env(scp1, "foo"), _);
   }
 
+  static void equality_tests() {
+    TRY(try_test);    
+    Exec exe;
+
+    run(exe, "[1 2 3] [1 2 3] =");
+    CHECK(!get<bool>(pop(exe.main)), _);
+
+    run(exe, "[1 2 3] [1 2 3] ==");
+    CHECK(get<bool>(pop(exe.main)), _);
+  }
+
   static void let_tests() {
     TRY(try_test);    
     Exec exe;
@@ -256,8 +267,11 @@ namespace snabel {
 
     run(exe, "7 \\, join");
     CHECK(get<str>(pop(exe.main)) == "0,1,2,3,4,5,6", _);
+
+    run(exe, "3 iter pop swap pop swap pop swap drop + +");
+    CHECK(get<int64_t>(pop(exe.main)) == 3, _);
     
-    run(exe, "let: foo "bar" iter; $foo list");
+    run(exe, "let: foo \"bar\" iter; $foo list");
     CHECK(get<ListRef>(pop(exe.main))->elems.size() == 3, _);
   }
   
@@ -318,6 +332,7 @@ namespace snabel {
     type_tests();
     stack_tests();
     scope_tests();
+    equality_tests();
     let_tests();
     jump_tests();
     lambda_tests();

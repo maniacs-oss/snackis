@@ -27,6 +27,11 @@ namespace snabel {
     push(scp.coro, scp.exec.bool_type, x.type->eq(x, y));
   }
 
+  static void equal_imp(Scope &scp, FuncImp &fn, const Args &args) {
+    auto &x(args[0]), &y(args[1]);
+    push(scp.coro, scp.exec.bool_type, x.type->equal(x, y));
+  }
+  
   static void zero_i64_imp(Scope &scp, FuncImp &fn, const Args &args) {
     Exec &exe(scp.exec);
     bool res(get<int64_t>(args[0]) == 0);
@@ -131,6 +136,15 @@ namespace snabel {
     push(scp.coro, get_list_type(scp.exec, *in.type->args[0]), out); 
   }
 
+  static void iter_pop_imp(Scope &scp, FuncImp &fn, const Args &args) {
+    auto &cor(scp.coro);
+    auto &it(args[0]);
+    push(cor, it);
+    auto v((*get<IterRef>(it))(scp));
+    if (!v) { ERROR(Snabel, "Pop of emptied iterator"); }
+    push(cor, v ? *v : Box(scp.exec.undef_type, undef));
+  }
+  
   static void list_imp(Scope &scp, FuncImp &fn, const Args &args) {
     auto &elt(args[0]);
     push(scp.coro, get_list_type(scp.exec, *get<Type *>(elt)), make_list());    
@@ -350,6 +364,10 @@ namespace snabel {
 	     {ArgType(any_type), ArgType(0)}, {ArgType(bool_type)},
 	     eq_imp);
 
+    add_func(*this, "==",
+	     {ArgType(any_type), ArgType(0)}, {ArgType(bool_type)},
+	     equal_imp);
+    
     add_func(*this, "zero?",
 	     {ArgType(i64_type)}, {ArgType(bool_type)},
 	     zero_i64_imp);
@@ -393,6 +411,10 @@ namespace snabel {
 		 })},
 	     iter_list_imp);
 
+    add_func(*this, "pop",
+	     {ArgType(iter_type)}, {ArgType(0), ArgType(0, 0)},
+	     iter_pop_imp);
+    
     add_func(*this, "list",
 	     {ArgType(meta_type)},
 	     {ArgType(0, [this](auto &elt) { return &get_list_type(*this, elt); })},
@@ -544,6 +566,7 @@ namespace snabel {
     auto fnd(find_env(exe.main_scope, n));
     if (fnd) { return *get<Type *>(*fnd); }
     auto &t(add_type(exe, n));
+    t.supers.push_back(&exe.any_type);
     t.supers.push_back(&exe.iter_type);
     t.supers.push_back(&get_iterable_type(exe, elt));    
     t.args.push_back(&elt);
@@ -562,6 +585,7 @@ namespace snabel {
     auto fnd(find_env(exe.main_scope, n));
     if (fnd) { return *get<Type *>(*fnd); }
     auto &t(add_type(exe, n));
+    t.supers.push_back(&exe.any_type);
     t.supers.push_back(&exe.iterable_type);
     t.args.push_back(&elt);
     t.fmt = [&elt](auto &v) { return "n/a"; };
@@ -574,10 +598,11 @@ namespace snabel {
     auto fnd(find_env(exe.main_scope, n));
     if (fnd) { return *get<Type *>(*fnd); }
     auto &t(add_type(exe, n));
+    t.supers.push_back(&exe.any_type);
     t.supers.push_back(&exe.list_type);
     t.supers.push_back(&get_iterable_type(exe, elt));
     t.args.push_back(&elt);
-
+    
     t.dump = [&elt](auto &v) {
       auto &ls(get<ListRef>(v)->elems);
 
@@ -624,17 +649,17 @@ namespace snabel {
       return buf.str();
     };
     
-    t.eq = [&elt](auto &_x, auto &_y) {
-      auto &x(get<ListRef>(_x)), &y(get<ListRef>(_y));
-      
-      if (x->elems.size() != y->elems.size()) { return false; }
-      
-      for (auto i = x->elems.begin(), j = y->elems.begin();
-	   i != x->elems.end();
-	   i++, j++) {
-	if (!elt.eq(*i, *j)) { return false; }
+    t.eq = [](auto &x, auto &y) { return get<ListRef>(x) == get<ListRef>(y); };
+
+    t.equal = [](auto &x, auto &y) {
+      auto &xs(get<ListRef>(x)->elems), &ys(get<ListRef>(y)->elems);
+      if (xs.size() != ys.size()) { return false; }
+      auto xi(xs.begin()), yi(ys.begin());
+
+      for (; xi != xs.end() && yi != ys.end(); xi++, yi++) {
+	if (xi->type != yi->type || !xi->type->equal(*xi, *yi)) { return false; }
       }
-      
+
       return true;
     };
 

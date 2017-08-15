@@ -7,6 +7,7 @@ namespace snabel {
     name(n)
   {
     dump = [this](auto &v) { return fmt(v); };
+    equal = [this](auto &x, auto &y) { return eq(x, y); };
   }
 
   Type::~Type()

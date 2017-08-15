@@ -84,6 +84,20 @@ I64
   {dec dup zero? &return when recall}
   call
 0
+I64
+```
+
+### Equality
+Snabel cares about two kinds of equality, shallow and deep. A separate operator is provided for each kind, ```=``` for shallow and ```==``` for deep.
+
+```
+> [3 4 35] [3 4 35] =
+'f
+Bool
+
+> [3 4 35] [3 4 35] ==
+'t
+Bool
 ```
 
 ### Bindings
@@ -174,6 +188,13 @@ Iteration is currently supported for numbers, which will return 0..N; lists, whi
 > 7 \, join
 "0,1,2,3,4,5,6"
 Str
+
+> 3 iter
+  pop swap
+  pop swap
+  pop swap
+  drop + +
+3
 
 > let: foo "bar" iter; $foo list
 [\b \a \r]

@@ -17,6 +17,7 @@ namespace snabel {
     std::deque<Type *> supers, args;
     
     func<bool (const Box &, const Box &)> eq;
+    func<bool (const Box &, const Box &)> equal;
     func<str (const Box &)> dump;
     func<str (const Box &)> fmt;
     opt<func<bool (Scope &, const Box &)>> call;

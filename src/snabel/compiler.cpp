@@ -32,8 +32,10 @@ namespace snabel {
 	c = '\n';
       } else if (tok.text == "\\t") {
 	c = '\t';
-      } else if (tok.text.size() > 2 && c == '\\') { 
+      } else if (tok.text.size() > 2 && tok.text[1] == '\\') { 
 	c = tok.text[2];
+      } else {
+	c = tok.text[1];
       }
       
       out.emplace_back(Push(Box(exe.char_type, c)));
