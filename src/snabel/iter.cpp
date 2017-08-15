@@ -3,8 +3,8 @@
 #include "snabel/coro.hpp"
 
 namespace snabel {
-  Iter::Iter(const Box &target):
-    target(target)
+  Iter::Iter(const Box &target, Next next):
+    target(target), next(next)
   { }
 
   bool next(Iter &iter, Scope &scp) {

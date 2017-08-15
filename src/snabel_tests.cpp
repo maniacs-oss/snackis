@@ -265,7 +265,7 @@ namespace snabel {
 
     run(exe, "Str list \"foo\" push");
     CHECK(get<ListRef>(pop(exe.main))->elems.size() == 1, _);
-
+    
     list_push_tests();
     list_pop_tests();
     list_reverse_tests();
@@ -287,6 +287,9 @@ namespace snabel {
 
     run(exe, "0 [1 2 3 4 5 6] &+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 21, _);
+
+    run(exe, "\"foo\" &nop for stash \\- join");
+    CHECK(get<str>(pop(exe.main)) == "f-o-o", _);
   }
   
   static void thread_tests() {

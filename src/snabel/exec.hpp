@@ -29,8 +29,9 @@ namespace snabel {
     Fiber &main;
     Scope &main_scope;
     Type meta_type;
-    Type &any_type, &bool_type, &callable_type, &func_type, &i64_type, &label_type,
-      &lambda_type, &str_type, &thread_type, &undef_type, &void_type;
+    Type &any_type, &bool_type, &callable_type, &char_type, &func_type, &i64_type,
+      &iterable_type, &label_type, &lambda_type, &list_type, &str_type, &thread_type,
+      &undef_type, &void_type;
     std::atomic<Sym> next_gensym;
     
     Exec();

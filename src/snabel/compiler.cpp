@@ -18,7 +18,25 @@ namespace snabel {
     } else if (tok.text.front() == '"') {
       out.emplace_back(Push(Box(exe.str_type,
 				tok.text.substr(1, tok.text.size()-2))));
-    } else if (isdigit(tok.text[0]) || 
+    } else if (tok.text.front() == '\\') {
+      if (tok.text.size() < 2) {
+	ERROR(Snabel, fmt("Invalid char literal on row %0, col %1: %2",
+			  lnr, tok.start, tok.text));
+      }
+
+      char c(tok.text[1]);
+      
+      if (c == 'n') {
+	c = '\n';
+      } else if (c == 't') {
+	c = '\t';
+      } else if (tok.text.size() > 2 && c == '\\') { 
+	c = tok.text[2];
+      }
+      
+      out.emplace_back(Push(Box(exe.char_type, c)));
+    }
+    else if (isdigit(tok.text[0]) || 
 	(tok.text.size() > 1 && tok.text[0] == '-' && isdigit(tok.text[1]))) {
       out.emplace_back(Push(Box(exe.i64_type, to_int64(tok.text))));
     } else {
@@ -27,7 +45,7 @@ namespace snabel {
       if (fnd == exe.macros.end()) {
 	out.emplace_back(Deref(tok.text));
       } else {
-	fnd->second(Pos(lnr, tok.i), in, out);
+	fnd->second(Pos(lnr, tok.start), in, out);
       }
     }
   }

@@ -25,6 +25,9 @@ I64
 Literals, identifiers and results from function calls are pushed on the current fibers stack in order of appearance. Thanks to lexical scoping and named bindings, keeping the stack squeaky clean is less critical in Snabel.
 
 ```
+> 1 2 3 stash
+[1 2 3]
+
 > 42 7 drop
 42
 I64
@@ -165,7 +168,7 @@ I64
 ```
 
 ### Loops
-```for``` accepts an iterable and a call target, and will call the target as long as the iterator returns more values. Possible conditions are numbers, which will call the target N times with N pushed on the stack; and lists, which will call the target with successive items pushed on the stack.
+The ```for```-loop accepts an iterable and a call target, and will call the target as long as the iterator returns more values. Possible iterables are numbers, which will call the target N times with N pushed on the stack; lists, which will call the target with successive items pushed on the stack; and strings, which will call the target with successive characters pushed on the stack.
 
 ```
 > 0 7 &+ for
@@ -175,6 +178,10 @@ I64
 > 0 [1 2 3 4 5 6] &+ for
 21
 I64
+
+> "foo" &nop for stash \- join
+"f-o-o"
+Str
 ```
 
 ### Threads

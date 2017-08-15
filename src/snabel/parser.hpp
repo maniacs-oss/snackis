@@ -14,9 +14,9 @@ namespace snabel {
 
   struct Tok {
     str text;
-    size_t i;
+    size_t start;
     
-    Tok(const str &txt, size_t i=-1);
+    Tok(const str &text, size_t start=-1);
   };
 
   using StrSeq = std::deque<str>;

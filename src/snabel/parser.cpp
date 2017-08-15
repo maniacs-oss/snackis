@@ -8,9 +8,9 @@ namespace snabel {
     row(row), col(col)
   { }
 
-  Tok::Tok(const str &txt, size_t i):
-    text(txt),
-    i(i)
+  Tok::Tok(const str &text, size_t start):
+    text(text),
+    start(start)
   { }
 
   StrSeq parse_lines(const str &in) {

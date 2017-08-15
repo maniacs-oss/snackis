@@ -9,9 +9,12 @@ namespace snabel {
   struct Scope;
 
   struct Iter {
+    using Next = func<opt<Box> (Scope &)>;
+    
     Box target;    
-    func<opt<Box> (Scope &)> next;
-    Iter(const Box &target);
+    Next next;
+
+    Iter(const Box &target, Next next);
   };
 
   bool next(Iter &iter, Scope &scp);

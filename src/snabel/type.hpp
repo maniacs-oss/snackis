@@ -17,9 +17,10 @@ namespace snabel {
     std::deque<Type *> supers, args;
     
     func<bool (const Box &, const Box &)> eq;
+    func<str (const Box &)> dump;
     func<str (const Box &)> fmt;
     opt<func<bool (Scope &, const Box &)>> call;
-    opt<func<Iter (const Box &, const Box &)>> iter;
+    opt<func<Iter::Next (const Box &)>> iter;
     
     Type(const str &n);
     Type(const Type &) = delete;

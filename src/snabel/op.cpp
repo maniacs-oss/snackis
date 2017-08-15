@@ -304,7 +304,7 @@ namespace snabel {
 	return false;
       }
 
-      iter.emplace((*cnd->type->iter)(*cnd, *tgt));
+      iter.emplace(*tgt, (*cnd->type->iter)(*cnd));
     }
 
     if (next(*iter, scp)) {

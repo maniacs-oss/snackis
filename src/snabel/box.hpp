@@ -25,7 +25,7 @@ namespace snabel {
   using ListRef = std::shared_ptr<List>;
     
   using Val = std::variant<Undef,
-			   bool, int64_t, str,
+			   bool, char, int64_t, str,
 			   ListRef,
 			   Func *, Label *, Thread *, Type *>;
   
