@@ -47,7 +47,7 @@ Adding functions from C++ is as easy as this:
 ```
 using namespace snabel;
 
-static void add_i64(Scope &scp, FuncImp &fn, const Args &args) {
+static void add_i64(Scope &scp, const Args &args) {
   Coro &cor(scp.coro);
   int64_t res(0);
   for (auto &a: args) { res += get<int64_t>(a); }
