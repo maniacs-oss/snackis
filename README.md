@@ -68,8 +68,6 @@ If you haven't previously used external clients with your email-address, it's qu
 ### Inbox
 Incoming messages arrive in the inbox, type ```inbox``` end press ```Return``` in the reader to open the inbox form.
 
-![inbox example](images/inbox.png?raw=true)
-
 ### Feeds
 Snackis main mode of communication is using feeds/posts. Type ```feed-new``` in the reader and press ```Return``` to start a new feed.
 
