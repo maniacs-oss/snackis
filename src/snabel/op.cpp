@@ -271,13 +271,12 @@ namespace snabel {
     auto &lbl(add_label(scp.exec, fmt("_for%0", gensym(scp.exec))));
     out.emplace_back(Target(lbl));
     out.push_back(op);
-    out.emplace_back(Branch(Box(scp.exec.label_type, &lbl)));
+    out.emplace_back(Jump(lbl));
     return true;
   }
 
   bool For::run(Scope &scp) {
     Coro &cor(scp.coro);
-    Exec &exe(scp.exec);
     
     if (!iter) {
       auto tgt(try_pop(cor));
@@ -304,14 +303,19 @@ namespace snabel {
 	return false;
       }
 
-      iter.emplace(*tgt, (*cnd->type->iter)(*cnd));
+      iter.emplace((*cnd->type->iter)(*cnd));
+      target.emplace(*tgt);
     }
 
-    if (next(*iter, scp)) {
-      push(cor, exe.bool_type, true);
+    auto nxt((*iter)(scp));
+    
+    if (nxt) {
+      push(cor, *nxt);
+      (*target->type->call)(scp, *target);
     } else {
       iter.reset();
-      push(cor, exe.bool_type, false);
+      target.reset();
+      cor.pc += 1;
     }
     
     return true;

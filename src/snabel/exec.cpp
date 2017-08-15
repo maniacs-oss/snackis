@@ -1,7 +1,9 @@
 #include <iostream>
+
 #include "snabel/compiler.hpp"
 #include "snabel/error.hpp"
 #include "snabel/exec.hpp"
+#include "snabel/range.hpp"
 #include "snabel/type.hpp"
 
 namespace snabel {
@@ -158,6 +160,7 @@ namespace snabel {
     char_type(add_type(*this, "Char")),
     func_type(add_type(*this, "Func")),
     i64_type(add_type(*this, "I64")),
+    iter_type(add_type(*this, "Iter")),
     iterable_type(add_type(*this, "Iterable")),
     label_type(add_type(*this, "Label")),
     lambda_type(add_type(*this, "Lambda")),
@@ -184,6 +187,9 @@ namespace snabel {
 
     callable_type.fmt = [](auto &v) { return "n/a"; };
     callable_type.eq = [](auto &x, auto &y) { return false; };
+
+    iter_type.fmt = [](auto &v) { return "n/a"; };
+    iter_type.eq = [](auto &x, auto &y) { return false; };
 
     iterable_type.fmt = [](auto &v) { return "n/a"; };
     iterable_type.eq = [](auto &x, auto &y) { return false; };

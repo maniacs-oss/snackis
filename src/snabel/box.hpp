@@ -15,6 +15,7 @@ namespace snabel {
   struct Exec;
   struct Label;
   struct List;
+  struct Scope;
   struct Thread;
   struct Type;
 
@@ -23,10 +24,13 @@ namespace snabel {
   };
   
   using ListRef = std::shared_ptr<List>;
-    
+
+  using Iter = func<opt<Box> (Scope &)>;
+  using IterRef = std::shared_ptr<Iter>;
+  
   using Val = std::variant<Undef,
 			   bool, char, int64_t, str,
-			   ListRef,
+			   ListRef, IterRef,
 			   Func *, Label *, Thread *, Type *>;
   
   struct Box {

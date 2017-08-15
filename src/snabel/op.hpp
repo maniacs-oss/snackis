@@ -5,7 +5,6 @@
 #include <utility>
 
 #include "snabel/box.hpp"
-#include "snabel/iter.hpp"
 #include "snabel/label.hpp"
 #include "snackis/core/func.hpp"
 #include "snackis/core/str.hpp"
@@ -16,7 +15,6 @@ namespace snabel {
   struct Box;
   struct Func;
   struct FuncImp;
-  struct Iter;
   struct Scope;
   struct Op;
 
@@ -94,6 +92,7 @@ namespace snabel {
   struct For: OpImp {
     bool compiled;
     opt<Iter> iter;
+    opt<Box> target;
     
     For();
     OpImp &get_imp(Op &op) const override;
