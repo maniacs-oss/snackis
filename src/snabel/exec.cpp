@@ -454,7 +454,7 @@ namespace snabel {
       });
 
     add_macro(*this, "[", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(Backup(false));
+	out.emplace_back(Backup());
       });
 
     add_macro(*this, "]", [](auto pos, auto &in, auto &out) {
@@ -467,7 +467,7 @@ namespace snabel {
 	  ERROR(Snabel, fmt("Malformed func on row %0, col %1",
 			    pos.row, pos.col));
 	} else {
-	  out.emplace_back(Backup(false));
+	  out.emplace_back(Backup());
 	  const str n(in.front().text);
 	  auto i(std::next(in.begin()));
 	  
@@ -488,7 +488,7 @@ namespace snabel {
 	  ERROR(Snabel, fmt("Malformed let on row %0, col %1",
 			    pos.row, pos.col));
 	} else {
-	  out.emplace_back(Backup(false));
+	  out.emplace_back(Backup());
 	  const str n(in.front().text);
 	  auto i(std::next(in.begin()));
 	  

@@ -11,7 +11,8 @@ namespace snabel {
   Coro::Coro(Thread &thd):
     thread(thd), exec(thd.exec), pc(0)
   {
-    begin_scope(*this, false);
+    backup_stack(*this);
+    scopes.emplace_back(*this);
   }
 
   Scope &curr_scope(Coro &cor) {
@@ -63,12 +64,8 @@ namespace snabel {
     return res;
   }
 
-  Stack &backup_stack(Coro &cor, bool copy) {
-    if (cor.stacks.empty() || !copy) {
-      return cor.stacks.emplace_back();
-    }
-
-    return cor.stacks.emplace_back(cor.stacks.back());
+  Stack &backup_stack(Coro &cor) {
+    return cor.stacks.emplace_back();
   }
   
   void restore_stack(Coro &cor, size_t len) {
@@ -87,12 +84,7 @@ namespace snabel {
   }
 
   Scope &begin_scope(Coro &cor, bool copy_stack) {
-    backup_stack(cor, copy_stack);
-
-    if (cor.scopes.empty()) {
-      return cor.scopes.emplace_back(cor);
-    }
-
+    //backup_stack(cor, copy_stack);
     return cor.scopes.emplace_back(cor.scopes.back());
   }
   
@@ -102,7 +94,7 @@ namespace snabel {
       return false;
     }
 
-    restore_stack(cor, stack_len);
+    //restore_stack(cor, stack_len);
     cor.scopes.pop_back();
     return true;
   }

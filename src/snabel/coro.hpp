@@ -34,7 +34,7 @@ namespace snabel {
   opt<Box> try_pop(Coro &cor);
   Box pop(Coro &cor);
 
-  Stack &backup_stack(Coro &cor, bool copy=false);
+  Stack &backup_stack(Coro &cor);
   void restore_stack(Coro &cor, size_t len=1);
   
   Scope &begin_scope(Coro &cor, bool copy_stack=false);
