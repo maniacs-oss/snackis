@@ -273,6 +273,12 @@ namespace snabel {
     
     run(exe, "let: foo \"bar\" iter; $foo list");
     CHECK(get<ListRef>(pop(exe.main))->elems.size() == 3, _);
+
+    run(exe, "7 iter 7 iter =");
+    CHECK(!get<bool>(pop(exe.main)), _);
+
+    run(exe, "7 iter 7 iter ==");
+    CHECK(get<bool>(pop(exe.main)), _);
   }
   
   static void list_tests() {

@@ -307,7 +307,7 @@ namespace snabel {
       target.emplace(*tgt);
     }
 
-    auto nxt((*iter)(scp));
+    auto nxt((*iter)(scp.exec));
     
     if (nxt) {
       push(cor, *nxt);

@@ -88,7 +88,7 @@ I64
 ```
 
 ### Equality
-Snabel cares about two kinds of equality, shallow and deep. A separate operator is provided for each kind, ```=``` for shallow and ```==``` for deep.
+Snabel cares about two kinds of equality, shallow and deep. A separate operator is provided for each, ```=``` for shallow comparisons and ```==``` for deep.
 
 ```
 > [3 4 35] [3 4 35] =

@@ -112,7 +112,7 @@ namespace snabel {
     bool first(true);
     
     while (true) {
-      auto v(i(scp));
+      auto v(i(scp.exec));
       if (!v) { break; }
       if (!first) { out << sep.type->fmt(sep); }
       out << v->type->fmt(*v);
@@ -128,7 +128,7 @@ namespace snabel {
     auto i((*in.type->iter)(in).second);
     
     while (true) {
-      auto v(i(scp));
+      auto v(i(scp.exec));
       if (!v) { break; }
       out->elems.push_back(*v);
     }
@@ -140,7 +140,7 @@ namespace snabel {
     auto &cor(scp.coro);
     auto &it(args[0]);
     push(cor, it);
-    auto v((*get<IterRef>(it))(scp));
+    auto v((*get<IterRef>(it))(scp.exec));
     if (!v) { ERROR(Snabel, "Pop of emptied iterator"); }
     push(cor, v ? *v : Box(scp.exec.undef_type, undef));
   }
@@ -288,11 +288,11 @@ namespace snabel {
       Range cnd(0, get<int64_t>(_cnd));
       
       return std::make_pair(&get_iter_type(*this, i64_type),
-			    [cnd](auto &scp) mutable -> opt<Box> {
+			    [cnd](auto &exe) mutable -> opt<Box> {
 			      if (cnd.beg == cnd.end) { return nullopt; }
 			      auto res(cnd.beg);
 			      cnd.beg++;
-			      return Box(scp.exec.i64_type, res);
+			      return Box(exe.i64_type, res);
 			    });
     };
     
@@ -336,11 +336,11 @@ namespace snabel {
       size_t pos(0);
       
       return std::make_pair(&get_iter_type(*this, char_type),
-			    [s, pos](auto &scp) mutable -> opt<Box> {
+			    [s, pos](auto &exe) mutable -> opt<Box> {
 			      if (pos == s.size()) { return nullopt; }
 			      auto res(s[pos]);
 			      pos++;
-			      return Box(scp.exec.char_type, res);
+			      return Box(exe.char_type, res);
 			    });
     };
 
@@ -571,8 +571,22 @@ namespace snabel {
     t.supers.push_back(&get_iterable_type(exe, elt));    
     t.args.push_back(&elt);
     t.fmt = [&elt](auto &v) { return "n/a"; };
-    t.eq = [&elt](auto &x, auto &y) { return x == y; };
+    t.eq = [&elt](auto &x, auto &y) { return get<IterRef>(x) == get<IterRef>(y); };
 
+    t.equal = [&exe](auto &x, auto &y) {
+      auto &xi(*get<IterRef>(x)), &yi(*get<IterRef>(y));
+      opt<Box> xv, yv;
+      
+      while (true) {
+	xv = xi(exe);
+	yv = yi(exe);
+	if (!xv || !yv) { break; }
+	if (xv->type != yv->type || !xv->type->equal(*xv, *yv)) { return false; }
+      }
+
+      return !xv && !yv;
+    };
+    
     t.iter = [&exe](auto &cnd) {
       return std::make_pair(cnd.type, *get<IterRef>(cnd));
     };
@@ -589,7 +603,7 @@ namespace snabel {
     t.supers.push_back(&exe.iterable_type);
     t.args.push_back(&elt);
     t.fmt = [&elt](auto &v) { return "n/a"; };
-    t.eq = [&elt](auto &x, auto &y) { return x == y; };
+    t.eq = [&elt](auto &x, auto &y) { return false; };
     return t;
   }
 
@@ -668,7 +682,7 @@ namespace snabel {
       auto imp(lst->elems.begin());
       
       return std::make_pair(&get_iter_type(exe, *cnd.type->args.front()),
-			    [lst, imp](auto &scp) mutable -> opt<Box> {
+			    [lst, imp](auto &exe) mutable -> opt<Box> {
 			      if (imp == lst->elems.end()) { return nullopt; }
 			      auto res(*imp);
 			      imp++;

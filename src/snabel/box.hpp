@@ -25,7 +25,7 @@ namespace snabel {
   
   using ListRef = std::shared_ptr<List>;
 
-  using Iter = func<opt<Box> (Scope &)>;
+  using Iter = func<opt<Box> (Exec &)>;
   using IterRef = std::shared_ptr<Iter>;
   
   using Val = std::variant<Undef,
