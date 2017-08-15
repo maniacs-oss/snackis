@@ -24,11 +24,13 @@ namespace snabel {
 			  lnr, tok.start, tok.text));
       }
 
-      char c(tok.text[1]);
-      
-      if (c == 'n') {
+      char c(0);
+
+      if (tok.text == "\\space") {
+	c = ' ';
+      } else if (tok.text == "\\n") {
 	c = '\n';
-      } else if (c == 't') {
+      } else if (tok.text == "\\t") {
 	c = '\t';
       } else if (tok.text.size() > 2 && c == '\\') { 
 	c = tok.text[2];

@@ -20,6 +20,10 @@ namespace snabel {
     return x.type != y.type || !x.type->eq(x, y);
   }
 
+  IterRef make_iter(const Box &in) {
+    return std::make_shared<Iter>((*in.type->iter)(in).second);
+  }
+
   ListRef make_list() {
     return std::make_shared<List>();
   }

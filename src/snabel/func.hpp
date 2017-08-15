@@ -29,6 +29,7 @@ namespace snabel {
     ArgType(size_t arg_idx);
     ArgType(size_t arg_idx, size_t type_arg_idx);
     ArgType(size_t arg_idx, Conv conv);
+    ArgType(size_t arg_idx, size_t type_arg_idx, Conv conv);
   };
   
   using ArgTypes = std::deque<ArgType>;

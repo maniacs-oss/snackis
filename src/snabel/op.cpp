@@ -303,7 +303,7 @@ namespace snabel {
 	return false;
       }
 
-      iter.emplace((*cnd->type->iter)(*cnd));
+      iter.emplace((*cnd->type->iter)(*cnd).second);
       target.emplace(*tgt);
     }
 

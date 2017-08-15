@@ -90,7 +90,7 @@ namespace gui {
       auto res(peek(v->exec.main));
       if (res) {
 	log(v->ctx, "Script result:\n%0\n%1",
-	    res->type->fmt(*res), res->type->name);
+	    res->type->dump(*res), res->type->name);
       } else {
 	log(v->ctx, "Script result: n/a");
       }

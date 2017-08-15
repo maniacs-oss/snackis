@@ -20,7 +20,7 @@ namespace snabel {
     func<str (const Box &)> dump;
     func<str (const Box &)> fmt;
     opt<func<bool (Scope &, const Box &)>> call;
-    opt<func<Iter (const Box &)>> iter;
+    opt<func<std::pair<Type *, Iter> (const Box &)>> iter;
     
     Type(const str &n);
     Type(const Type &) = delete;

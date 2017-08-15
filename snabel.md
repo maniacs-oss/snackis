@@ -167,8 +167,21 @@ I64
 I64
 ```
 
-### Loops
-The ```for```-loop accepts an iterable and a call target, and will call the target as long as the iterator returns more values. Possible iterables are numbers, which will call the target N times with N pushed on the stack; lists, which will call the target with successive items pushed on the stack; and strings, which will call the target with successive characters pushed on the stack.
+### Iterators
+Iteration is currently supported for numbers, which will return 0..N; lists, which will return successive items; and strings, which will return successive characters. And last, but not least; iterators themselves.
+
+```
+> 7 \, join
+"0,1,2,3,4,5,6"
+Str
+
+> let: foo "bar" iter; $foo list
+[\b \a \r]
+List<Char>
+```
+
+#### Loops
+The ```for```-loop accepts an iterable and a call target, and will call the target with the last value pushed on the stack as long as the iterator returns values.
 
 ```
 > 0 7 &+ for

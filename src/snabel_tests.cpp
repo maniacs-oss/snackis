@@ -250,6 +250,17 @@ namespace snabel {
     }
   }
 
+  static void iter_tests() {
+    TRY(try_test);    
+    Exec exe;
+
+    run(exe, "7 \\, join");
+    CHECK(get<str>(pop(exe.main)) == "0,1,2,3,4,5,6", _);
+    
+    run(exe, "let: foo "bar" iter; $foo list");
+    CHECK(get<ListRef>(pop(exe.main))->elems.size() == 3, _);
+  }
+  
   static void list_tests() {
     TRY(try_test);    
     Exec exe;
@@ -311,6 +322,7 @@ namespace snabel {
     jump_tests();
     lambda_tests();
     when_tests();
+    iter_tests();
     list_tests();
     env_tests();
     for_tests();

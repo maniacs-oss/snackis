@@ -48,6 +48,10 @@ namespace snabel {
     type(nullptr), arg_idx(arg_idx), conv(conv)
   { }
 
+  ArgType::ArgType(size_t arg_idx, size_t type_arg_idx, Conv conv):
+    type(nullptr), arg_idx(arg_idx), type_arg_idx(type_arg_idx), conv(conv)
+  { }
+
   Type *get_type(const FuncImp &imp, const ArgType &arg_type, const Args &args) {
     Type *t(nullptr);
     

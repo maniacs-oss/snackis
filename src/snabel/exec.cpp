@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "snabel/box.hpp"
 #include "snabel/compiler.hpp"
 #include "snabel/error.hpp"
 #include "snabel/exec.hpp"
@@ -92,11 +93,17 @@ namespace snabel {
     push(scp.coro, exe.i64_type, res);
   }
 
-  static void iterable_join_imp(Scope &scp, FuncImp &fn, const Args &args) {
+  static void iter_imp(Scope &scp, FuncImp &fn, const Args &args) {
+    auto &in(args[0]);
+    auto it((*in.type->iter)(in));
+    push(scp.coro, *it.first, std::make_shared<Iter>(it.second));
+  }
+
+  static void iter_join_imp(Scope &scp, FuncImp &fn, const Args &args) {
     auto &in(args[0]);
     auto &sep(args[1]);
     OutStream out;
-    auto i((*in.type->iter)(in));
+    auto i((*in.type->iter)(in).second);
     bool first(true);
     
     while (true) {
@@ -108,6 +115,20 @@ namespace snabel {
     }
     
     push(scp.coro, scp.exec.str_type, out.str()); 
+  }
+
+  static void iter_list_imp(Scope &scp, FuncImp &fn, const Args &args) {
+    auto &in(args[0]);
+    auto out(make_list());
+    auto i((*in.type->iter)(in).second);
+    
+    while (true) {
+      auto v(i(scp));
+      if (!v) { break; }
+      out->elems.push_back(*v);
+    }
+    
+    push(scp.coro, get_list_type(scp.exec, *in.type->args[0]), out); 
   }
 
   static void list_imp(Scope &scp, FuncImp &fn, const Args &args) {
@@ -205,20 +226,19 @@ namespace snabel {
 
     char_type.supers.push_back(&any_type);
 
-    char_type.dump = [](auto &v) {
+    char_type.dump = [](auto &v) -> str {
       auto c(get<char>(v));
-      str s(1, c);
       
       switch (c) {
+      case ' ':
+	return "\\space";
       case '\n':
-	s = "\\n";
-	break;
+	return "\\n";
       case '\t':
-	s = "\\t";
-	break;
+	return "\\t";
       }
-      
-      return fmt("%0 (%1)", s, c);
+
+      return fmt("\\%0", str(1, c));
     };
 
     char_type.fmt = [](auto &v) { return str(1, get<char>(v)); };
@@ -250,15 +270,16 @@ namespace snabel {
     i64_type.fmt = [](auto &v) { return fmt_arg(get<int64_t>(v)); };
     i64_type.eq = [](auto &x, auto &y) { return get<int64_t>(x) == get<int64_t>(y); };
 
-    i64_type.iter = [](auto &_cnd) {
+    i64_type.iter = [this](auto &_cnd) {
       Range cnd(0, get<int64_t>(_cnd));
       
-      return [cnd](auto &scp) mutable -> opt<Box> {
-	if (cnd.beg == cnd.end) { return nullopt; }
-	auto res(cnd.beg);
-	cnd.beg++;
-	return Box(scp.exec.i64_type, res);
-      };
+      return std::make_pair(&get_iter_type(*this, i64_type),
+			    [cnd](auto &scp) mutable -> opt<Box> {
+			      if (cnd.beg == cnd.end) { return nullopt; }
+			      auto res(cnd.beg);
+			      cnd.beg++;
+			      return Box(scp.exec.i64_type, res);
+			    });
     };
     
     label_type.supers.push_back(&any_type);
@@ -292,20 +313,21 @@ namespace snabel {
       });
 
     str_type.supers.push_back(&any_type);
-    str_type.supers.push_back(&iterable_type);
+    str_type.supers.push_back(&get_iterable_type(*this, char_type));
     str_type.fmt = [](auto &v) { return fmt("\"%0\"", get<str>(v)); };
     str_type.eq = [](auto &x, auto &y) { return get<str>(x) == get<str>(y); };
 
-    str_type.iter = [](auto &cnd) mutable {
+    str_type.iter = [this](auto &cnd) mutable {
       auto s(get<str>(cnd));
       size_t pos(0);
       
-      return [s, pos](auto &scp) mutable -> opt<Box> {
-	if (pos == s.size()) { return nullopt; }
-	auto res(s[pos]);
-	pos++;
-	return Box(scp.exec.char_type, res);
-      };
+      return std::make_pair(&get_iter_type(*this, char_type),
+			    [s, pos](auto &scp) mutable -> opt<Box> {
+			      if (pos == s.size()) { return nullopt; }
+			      auto res(s[pos]);
+			      pos++;
+			      return Box(scp.exec.char_type, res);
+			    });
     };
 
     thread_type.supers.push_back(&any_type);
@@ -353,9 +375,23 @@ namespace snabel {
 	     {ArgType(i64_type), ArgType(i64_type)}, {ArgType(i64_type)},
 	     mod_i64_imp);
 
+    add_func(*this, "iter",
+	     {ArgType(iterable_type)},
+	     {ArgType(0, 0, [this](auto &elt) { 
+		   return &get_iter_type(*this, elt); 
+		 })},
+	     iter_imp);
+
     add_func(*this, "join",
 	     {ArgType(iterable_type), ArgType(any_type)}, {ArgType(str_type)},
-	     iterable_join_imp);
+	     iter_join_imp);
+
+    add_func(*this, "list",
+	     {ArgType(iterable_type)},
+	     {ArgType(0, 0, [this](auto &elt) {
+		   return &get_list_type(*this, elt);
+		 })},
+	     iter_list_imp);
 
     add_func(*this, "list",
 	     {ArgType(meta_type)},
@@ -503,6 +539,24 @@ namespace snabel {
     return res;
   }
 
+  Type &get_iter_type(Exec &exe, Type &elt) {    
+    str n(fmt("Iter<%0>", elt.name));
+    auto fnd(find_env(exe.main_scope, n));
+    if (fnd) { return *get<Type *>(*fnd); }
+    auto &t(add_type(exe, n));
+    t.supers.push_back(&exe.iter_type);
+    t.supers.push_back(&get_iterable_type(exe, elt));    
+    t.args.push_back(&elt);
+    t.fmt = [&elt](auto &v) { return "n/a"; };
+    t.eq = [&elt](auto &x, auto &y) { return x == y; };
+
+    t.iter = [&exe](auto &cnd) {
+      return std::make_pair(cnd.type, *get<IterRef>(cnd));
+    };
+    
+    return t;
+  }
+
   Type &get_iterable_type(Exec &exe, Type &elt) {    
     str n(fmt("Iterable<%0>", elt.name));
     auto fnd(find_env(exe.main_scope, n));
@@ -510,7 +564,6 @@ namespace snabel {
     auto &t(add_type(exe, n));
     t.supers.push_back(&exe.iterable_type);
     t.args.push_back(&elt);
-
     t.fmt = [&elt](auto &v) { return "n/a"; };
     t.eq = [&elt](auto &x, auto &y) { return x == y; };
     return t;
@@ -524,6 +577,29 @@ namespace snabel {
     t.supers.push_back(&exe.list_type);
     t.supers.push_back(&get_iterable_type(exe, elt));
     t.args.push_back(&elt);
+
+    t.dump = [&elt](auto &v) {
+      auto &ls(get<ListRef>(v)->elems);
+
+      OutStream buf;
+      buf << '[';
+
+      if (ls.size() < 4) {
+	for (size_t i(0); i < ls.size(); i++) {
+	  if (i > 0) { buf << ' '; }
+	  auto &v(ls[i]);
+	  buf << v.type->dump(v);
+	};
+      } else {
+	buf <<
+	ls.front().type->dump(ls.front()) <<
+	"..." <<
+	ls.back().type->dump(ls.back());
+      }
+      
+      buf << ']';
+      return buf.str();
+    };
 
     t.fmt = [&elt](auto &v) {
       auto &ls(get<ListRef>(v)->elems);
@@ -540,7 +616,7 @@ namespace snabel {
       } else {
 	buf <<
 	ls.front().type->fmt(ls.front()) <<
-	" : " <<
+	"..." <<
 	ls.back().type->fmt(ls.back());
       }
       
@@ -562,16 +638,17 @@ namespace snabel {
       return true;
     };
 
-    t.iter = [](auto &cnd) {
+    t.iter = [&exe](auto &cnd) {
       auto lst(get<ListRef>(cnd));
       auto imp(lst->elems.begin());
       
-      return [lst, imp](auto &scp) mutable -> opt<Box> {
-	if (imp == lst->elems.end()) { return nullopt; }
-	auto res(*imp);
-	imp++;
-	return res;
-      };
+      return std::make_pair(&get_iter_type(exe, *cnd.type->args.front()),
+			    [lst, imp](auto &scp) mutable -> opt<Box> {
+			      if (imp == lst->elems.end()) { return nullopt; }
+			      auto res(*imp);
+			      imp++;
+			      return res;
+			    });
     };
 
     return t;
