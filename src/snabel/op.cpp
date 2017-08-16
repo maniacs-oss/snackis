@@ -190,7 +190,7 @@ namespace snabel {
     }
     
     if (!isa(*v, *t)) {
-      ERROR(Snabel, fmt("Check failed, expected %0:\n%1", t->name, *v));
+      ERROR(Snabel, fmt("Check failed, expected %0!\n%1", t->name, *v));
       return false;
     }
 

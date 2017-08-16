@@ -127,6 +127,10 @@ Bool!
 > 42 type
 I64
 Type!
+
+> 42 Str!
+Check failed, expected Str!
+42 I64!
 ```
 
 #### Lists
