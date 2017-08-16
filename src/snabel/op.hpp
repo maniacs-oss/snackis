@@ -6,6 +6,7 @@
 
 #include "snabel/box.hpp"
 #include "snabel/label.hpp"
+#include "snabel/type.hpp"
 #include "snackis/core/func.hpp"
 #include "snackis/core/str.hpp"
 
@@ -20,8 +21,9 @@ namespace snabel {
 
   enum OpCode { OP_BACKUP, OP_BRANCH, OP_CALL, OP_CHECK, OP_DEREF, OP_DROP, OP_DUP,
 		OP_FOR, OP_FUNCALL, OP_GETENV, OP_GROUP, OP_JUMP, OP_LAMBDA,
-		OP_PUSH, OP_PUTENV, OP_RECALL, OP_RESET, OP_RESTORE, OP_RETURN,
-		OP_STASH, OP_SWAP, OP_TARGET, OP_UNGROUP, OP_UNLAMBDA };
+		OP_PARAM, OP_PUSH, OP_PUTENV, OP_RECALL, OP_RESET, OP_RESTORE,
+		OP_RETURN, OP_STASH, OP_SWAP, OP_TARGET, OP_UNGROUP, OP_UNLAMBDA,
+		OP_UNPARAM };
 
   using OpSeq = std::deque<Op>;
 
@@ -164,6 +166,11 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
 
+  struct Param: OpImp {
+    Param();
+    OpImp &get_imp(Op &op) const override;
+  };
+
   struct Push: OpImp {
     Stack vals;
     
@@ -257,10 +264,20 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
 
+  struct Unparam: OpImp {
+    Types types;
+    bool done;
+
+    Unparam();
+    OpImp &get_imp(Op &op) const override;
+    bool compile(const Op &op, Scope &scp, OpSeq & out) override;
+    bool run(Scope &scp) override;
+  };
+  
   using OpData = std::variant<Backup, Branch, Call, Check, Deref, Drop, Dup, For,
-			      Funcall, Getenv, Group, Jump, Lambda, Push, Putenv, 
-			      Recall, Reset, Restore, Return, Stash, Swap, Target,
-			      Ungroup, Unlambda>;
+			      Funcall, Getenv, Group, Jump, Lambda, Param, Push,
+			      Putenv, Recall, Reset, Restore, Return, Stash, Swap,
+			      Target, Ungroup, Unlambda, Unparam>;
 
   struct Op {
     OpData data;

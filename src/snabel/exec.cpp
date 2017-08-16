@@ -245,12 +245,12 @@ namespace snabel {
     char_type(add_type(*this, "Char")),
     func_type(add_type(*this, "Func")),
     i64_type(add_type(*this, "I64")),
-    iter_type(add_type(*this, "Iter<Any>")),
-    iterable_type(add_type(*this, "Iterable<Any>")),
+    iter_type(add_type(*this, "Iter")),
+    iterable_type(add_type(*this, "Iterable")),
     label_type(add_type(*this, "Label")),
     lambda_type(add_type(*this, "Lambda")),
-    list_type(add_type(*this, "List<Any>")),
-    pair_type(add_type(*this, "Pair<Any Any>")),
+    list_type(add_type(*this, "List")),
+    pair_type(add_type(*this, "Pair")),
     str_type(add_type(*this, "Str")),
     thread_type(add_type(*this, "Thread")),
     undef_type(add_type(*this, "Undef")),
@@ -554,6 +554,14 @@ namespace snabel {
     add_macro(*this, "]", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Stash());	
 	out.emplace_back(Restore());
+      });
+
+    add_macro(*this, "<", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(Param());
+      });
+
+    add_macro(*this, ">", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(Unparam());
       });
 
     add_macro(*this, "func:", [this](auto pos, auto &in, auto &out) {

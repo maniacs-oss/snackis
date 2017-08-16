@@ -582,6 +582,14 @@ namespace snabel {
     return true;
   }    
 
+  Param::Param():
+    OpImp(OP_PARAM, "param")
+  { }
+
+  OpImp &Param::get_imp(Op &op) const {
+    return std::get<Param>(op.data);
+  }
+  
   Putenv::Putenv(const str &name):
     OpImp(OP_PUTENV, "putenv"), name(name)
   { }
@@ -883,6 +891,63 @@ namespace snabel {
 
   bool Unlambda::run(Scope &scp) {
     if (!scp.recall_pcs.empty()) { scp.recall_pcs.pop_back(); }
+    return true;
+  }
+
+  Unparam::Unparam():
+    OpImp(OP_UNPARAM, "unparam"), done(false)
+  { }
+
+  OpImp &Unparam::get_imp(Op &op) const {
+    return std::get<Unparam>(op.data);
+  }
+
+  bool Unparam::compile(const Op &op, Scope &scp, OpSeq &out) {
+    if (done) { return false; }
+    
+    auto &exe(scp.exec);
+    auto i(out.rbegin());
+    size_t cnt(0);
+    
+    for (; i != out.rend(); i++, cnt++) {
+      if (i->imp.code == OP_PARAM) {
+	cnt++;
+	done = true;
+	break;
+      } else if (i->imp.code == OP_UNPARAM) {
+	ERROR(Snabel, "Missing param start");
+	return false;
+      } else if (i->imp.code == OP_PUSH) {
+	auto &p(get<Push>(i->data));
+
+	while (!p.vals.empty()) {
+	  if (!isa(p.vals.back(), exe.meta_type)) { break; }
+	  types.push_back(get<Type *>(p.vals.back()));
+	  p.vals.pop_back();
+	}
+
+	if (!p.vals.empty()) {
+	  break;
+	}
+      } else {
+	break;
+      }
+    }
+
+    if (cnt > 0) {
+      while (cnt > 0) {
+	out.pop_back();
+	cnt--;
+      }
+      
+      out.push_back(op);
+      return true;
+    }
+
+    return false;
+  }
+
+  bool Unparam::run(Scope &scp) {
     return true;
   }
   
