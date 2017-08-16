@@ -32,7 +32,7 @@ namespace snabel {
   void push(Coro &cor, Type &typ, const Val &val);
   void push(Coro &cor, const Stack &vals);
   
-  opt<Box> peek(Coro &cor);
+  Box *peek(Coro &cor);
   opt<Box> try_pop(Coro &cor);
   Box pop(Coro &cor);
 

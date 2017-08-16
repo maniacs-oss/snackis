@@ -139,6 +139,19 @@ namespace snabel {
 
     run(exe, "42 type");
     CHECK(get<Type *>(pop(exe.main)) == &exe.i64_type, _);
+
+    run(exe, "Iter<>");
+    CHECK(get<Type *>(pop(exe.main)) == &exe.iter_type, _);
+
+    run(exe, "List<Str>");
+    CHECK(get<Type *>(pop(exe.main)) == &get_list_type(exe, exe.str_type), _);
+
+    run(exe, "Pair<Str>");
+    CHECK(get<Type *>(pop(exe.main)) ==
+	  &get_pair_type(exe, exe.str_type, exe.any_type), _);
+
+    run(exe, "(List)<I64>");
+    CHECK(get<Type *>(pop(exe.main)) == &get_list_type(exe, exe.i64_type), _);
   }
 
   static void stack_tests() {

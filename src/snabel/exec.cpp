@@ -673,6 +673,32 @@ namespace snabel {
     return res;
   }
 
+  Type &get_type(Exec &exe, Type &raw, Types args) {
+    if (args.empty()) { return raw; }
+    
+    if (args.size() > raw.args.size()) {
+      ERROR(Snabel, fmt("Too many params for type %0", raw.name));
+      return raw;
+    }
+
+    for (size_t i(args.size()); i < raw.args.size(); i++) {
+      args.push_back(raw.args.at(i));
+    }
+		  
+    if (&raw == &exe.iter_type) {
+      return get_iter_type(exe, *args.at(0));
+    } else if (&raw == &exe.iterable_type) {      
+      return get_iterable_type(exe, *args.at(0));
+    } else if (&raw == &exe.list_type) {      
+      return get_list_type(exe, *args.at(0));
+    } else if (&raw == &exe.pair_type) {      
+      return get_pair_type(exe, *args.at(0), *args.at(1));
+    }
+
+    ERROR(Snabel, fmt("Invalid type: %1", raw.name));
+    return raw;
+  }
+  
   Type &get_iter_type(Exec &exe, Type &elt) {    
     str n(fmt("Iter<%0>", elt.name));
     auto fnd(find_env(exe.main_scope, n));

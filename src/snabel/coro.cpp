@@ -41,10 +41,10 @@ namespace snabel {
     std::copy(vals.begin(), vals.end(), std::back_inserter(curr_stack(cor)));
   }
 
-  opt<Box> peek(Coro &cor) {
+  Box *peek(Coro &cor) {
     auto &s(curr_stack(cor));
-    if (s.empty()) { return nullopt; }
-    return s.back();
+    if (s.empty()) { return nullptr; }
+    return &s.back();
   }
 
   opt<Box> try_pop(Coro &cor) {
@@ -145,7 +145,8 @@ namespace snabel {
       rewind(cor);
       
       for (auto &op: thd.ops) {
-	if (!op.prepared && !prepare(op, exe.main_scope)) {
+	if ((!op.prepared && !prepare(op, exe.main_scope)) ||
+	    !try_compile.errors.empty()) {
 	  goto exit;
 	}
 	
@@ -155,7 +156,8 @@ namespace snabel {
       cor.pc = 0;
       exe.lambdas.clear();
       for (auto &op: thd.ops) {
-	if (!refresh(op, exe.main_scope)) { goto exit; }
+	if (!refresh(op, exe.main_scope) ||
+	    !try_compile.errors.empty()) { goto exit; }
 	cor.pc++;
       }
 
@@ -163,6 +165,7 @@ namespace snabel {
       exe.lambdas.clear();
       for (auto &op: thd.ops) {
 	if (compile(op, exe.main_scope, out)) { done = false; }
+	if (!try_compile.errors.empty()) { goto exit; }
       }
 
       if (done) { goto exit; }

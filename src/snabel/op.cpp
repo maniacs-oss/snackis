@@ -112,14 +112,12 @@ namespace snabel {
     if (target) { return (*target->type->call)(scp, *target); }
 
     auto &cor(scp.coro);
-    auto tgt(peek(cor));
+    auto tgt(try_pop(cor));
     
     if (!tgt) {
       ERROR(Snabel, "Missing call target");
       return false;
     }
-    
-    pop(cor);
     
     if (!tgt->type->call) {
       ERROR(Snabel, fmt("Invalid call target: %0", *tgt));
@@ -457,14 +455,12 @@ namespace snabel {
 
     auto &cor(scp.coro);
     auto &exe(scp.exec);
-    auto id_arg(peek(cor));
+    auto id_arg(try_pop(cor));
 
     if (!id_arg) {
       ERROR(Snabel, "Missing identifier");
       return false;
     }
-
-    pop(cor);
 
     if (id_arg->type != &exe.str_type) {
       ERROR(Snabel, fmt("Invalid identifier: %0", *id_arg));
@@ -903,9 +899,26 @@ namespace snabel {
   }
 
   bool Unparam::compile(const Op &op, Scope &scp, OpSeq &out) {
-    if (done) { return false; }
-    
     auto &exe(scp.exec);
+
+    if (done) {
+      if (out.empty()) { return false; }
+      auto &prev(out.back());
+      if (prev.imp.code == OP_PUSH) {
+	auto &p(get<Push>(prev.data));
+	auto &v(p.vals.back());
+	
+	if (isa(*v.type, exe.meta_type)) {
+	  auto &t(get_type(exe, *get<Type *>(v)->raw, types));
+	  v.type = &get_meta_type(exe, t);
+	  get<Type *>(v) = &t;
+	  return true;
+	}
+      }
+      
+      return false;
+    }
+    
     auto i(out.rbegin());
     size_t cnt(0);
     
@@ -922,7 +935,7 @@ namespace snabel {
 
 	while (!p.vals.empty()) {
 	  if (!isa(p.vals.back(), exe.meta_type)) { break; }
-	  types.push_back(get<Type *>(p.vals.back()));
+	  types.push_front(get<Type *>(p.vals.back()));
 	  p.vals.pop_back();
 	}
 
@@ -948,6 +961,26 @@ namespace snabel {
   }
 
   bool Unparam::run(Scope &scp) {
+    if (!done) {
+      ERROR(Snabel, "Failed parsing params");
+      return false;
+    }
+
+    auto &exe(scp.exec);
+    auto t(peek(scp.coro));
+
+    if (!t) {
+      ERROR(Snabel, "Missing param type");
+    }
+    
+    if (!isa(*t->type, exe.meta_type)) {
+      ERROR(Snabel, fmt("Invalid param type: %0", *t));
+      return false;
+    }
+
+    auto &pt(get_type(exe, *get<Type *>(*t)->raw, types));
+    t->type = &get_meta_type(exe, pt);
+    get<Type *>(*t) = &pt;
     return true;
   }
   
