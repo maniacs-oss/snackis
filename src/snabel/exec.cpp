@@ -22,7 +22,7 @@ namespace snabel {
 
   static void type_imp(Scope &scp, const Args &args) {
     auto &v(args.at(0));
-    push(scp.coro, scp.exec.meta_type, v.type);
+    push(scp.coro, get_meta_type(scp.exec, *v.type), v.type);
   }
 
   static void eq_imp(Scope &scp, const Args &args) {
@@ -655,9 +655,9 @@ namespace snabel {
   
   Type &get_meta_type(Exec &exe, Type &t) {    
     str n(fmt("Type<%0>", t.name));
-    auto fnd(find_env(exe.main_scope, n));
-    if (fnd) { return *get<Type *>(*fnd); }
-    auto &mt(add_type(exe, n, true));
+    auto fnd(find_type(exe, n));
+    if (fnd) { return *fnd; }
+    auto &mt(add_type(exe, n));
     mt.raw = &exe.meta_type;
     mt.supers.push_back(&exe.meta_type);
     mt.args.push_back(&t);
@@ -666,11 +666,16 @@ namespace snabel {
     return mt;
   }
 
-  Type &add_type(Exec &exe, const str &n, bool meta) {
-    auto &res(exe.types.emplace_back(n)); 
-    put_env(exe.main_scope, n,
-	    Box(meta ? exe.meta_type : get_meta_type(exe, res), &res));
-    return res;
+  Type &add_type(Exec &exe, const str &n) {
+    return exe.types.emplace(std::piecewise_construct,
+			     std::forward_as_tuple(n),
+			     std::forward_as_tuple(n)).first->second; 
+  }
+
+  Type *find_type(Exec &exe, const str &n) {
+    auto fnd(exe.types.find(n));
+    if (fnd == exe.types.end()) { return nullptr; }
+    return &fnd->second;
   }
 
   Type &get_type(Exec &exe, Type &raw, Types args) {
@@ -701,8 +706,8 @@ namespace snabel {
   
   Type &get_iter_type(Exec &exe, Type &elt) {    
     str n(fmt("Iter<%0>", elt.name));
-    auto fnd(find_env(exe.main_scope, n));
-    if (fnd) { return *get<Type *>(*fnd); }
+    auto fnd(find_type(exe, n));
+    if (fnd) { return *fnd; }
     auto &t(add_type(exe, n));
     t.raw = &exe.iter_type;
     t.supers.push_back(&exe.any_type);
@@ -735,8 +740,8 @@ namespace snabel {
 
   Type &get_iterable_type(Exec &exe, Type &elt) {    
     str n(fmt("Iterable<%0>", elt.name));
-    auto fnd(find_env(exe.main_scope, n));
-    if (fnd) { return *get<Type *>(*fnd); }
+    auto fnd(find_type(exe, n));
+    if (fnd) { return *fnd; }
     auto &t(add_type(exe, n));
     t.raw = &exe.iterable_type;
     t.supers.push_back(&exe.any_type);
@@ -749,8 +754,8 @@ namespace snabel {
   
   Type &get_list_type(Exec &exe, Type &elt) {    
     str n(fmt("List<%0>", elt.name));
-    auto fnd(find_env(exe.main_scope, n));
-    if (fnd) { return *get<Type *>(*fnd); }
+    auto fnd(find_type(exe, n));
+    if (fnd) { return *fnd; }
     auto &t(add_type(exe, n));
     t.raw = &exe.list_type;
     t.supers.push_back(&exe.any_type);
@@ -783,8 +788,8 @@ namespace snabel {
 
   Type &get_pair_type(Exec &exe, Type &lt, Type &rt) {    
     str n(fmt("Pair<%0 %1>", lt.name, rt.name));
-    auto fnd(find_env(exe.main_scope, n));
-    if (fnd) { return *get<Type *>(*fnd); }
+    auto fnd(find_type(exe, n));
+    if (fnd) { return *fnd; }
     
     auto &t(add_type(exe, n));
     t.raw = &exe.pair_type;

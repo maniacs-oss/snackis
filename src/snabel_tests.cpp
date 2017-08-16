@@ -152,6 +152,9 @@ namespace snabel {
 
     run(exe, "(List)<I64>");
     CHECK(get<Type *>(pop(exe.main)) == &get_list_type(exe, exe.i64_type), _);
+
+    run(exe, "I64 list List<I64>!");
+    CHECK(pop(exe.main).type == &get_list_type(exe, exe.i64_type), _);
   }
 
   static void stack_tests() {

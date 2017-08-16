@@ -18,7 +18,7 @@ namespace snabel {
     using Lock = std::unique_lock<std::mutex>;
     
     std::map<str, Macro> macros;
-    std::deque<Type> types;
+    std::map<str, Type> types;
     std::map<str, Func> funcs;
     std::map<str, Label> labels;
     std::deque<str> lambdas;
@@ -43,7 +43,8 @@ namespace snabel {
   Macro &add_macro(Exec &exe, const str &n, Macro::Imp imp);
 
   Type &get_meta_type(Exec &exe, Type &t);
-  Type &add_type(Exec &exe, const str &n, bool meta=false);
+  Type &add_type(Exec &exe, const str &n);
+  Type *find_type(Exec &exe, const str &n);
   Type &get_type(Exec &exe, Type &raw, Types args);
   Type &get_iter_type(Exec &exe, Type &elt);
   Type &get_iterable_type(Exec &exe, Type &elt);

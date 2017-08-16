@@ -41,10 +41,10 @@ namespace snabel {
       out.emplace_back(Push(Box(exe.char_type, c)));
     }
     else if (isupper(tok.text[0])) {
-      auto fnd(find_env(exe.main_scope, tok.text));
+      auto fnd(find_type(exe, tok.text));
 
       if (fnd) {
-	out.emplace_back(Push(*fnd));
+	out.emplace_back(Push(Box(get_meta_type(exe, *fnd), fnd)));
       } else {
 	ERROR(Snabel, fmt("Type not found: %0", tok.text));
       }
