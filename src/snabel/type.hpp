@@ -12,10 +12,13 @@ namespace snabel {
 
   struct Box;
   struct Scope;
+
+  using Types = std::deque<Type *>;
   
   struct Type {    
     const str name;
-    std::deque<Type *> supers, args;
+    Type *raw;
+    Types supers, args;
     
     func<bool (const Box &, const Box &)> eq;
     func<bool (const Box &, const Box &)> equal;
@@ -26,11 +29,12 @@ namespace snabel {
     
     Type(const str &n);
     Type(const Type &) = delete;
-    virtual ~Type();
+    ~Type();
     const Type &operator =(const Type &) = delete;
   };
   
   bool operator <(const Type &x, const Type &y);
+  bool isa(const Types &x, const Types &y);
   bool isa(const Type &x, const Type &y);
   bool isa(const Box &val, const Type &typ);
   Type *get_super(Type &x, Type &y);

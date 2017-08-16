@@ -134,7 +134,6 @@ namespace snabel {
     TRY(try_test);    
     Exec exe;
 
-    std::cout << "---" << std::endl;
     run(exe, "42 I64 isa?");
     CHECK(get<bool>(pop(exe.main)), _);
 
@@ -303,6 +302,9 @@ namespace snabel {
 
     run(exe, "Str list \"foo\" push");
     CHECK(get<ListRef>(pop(exe.main))->size() == 1, _);
+
+    run(exe, "[\"foo\" \"bar\"] 7 list zip list unzip drop list");
+    CHECK(get<str>(get<ListRef>(pop(exe.main))->back()) == "bar", _);
     
     list_push_tests();
     list_pop_tests();

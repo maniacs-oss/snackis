@@ -190,6 +190,25 @@ namespace snabel {
     push(scp.coro, *in_arg.type, out); 
   }
 
+  static void list_unzip_imp(Scope &scp, const Args &args) {
+    auto &exe(scp.exec);
+    auto &in(args.at(0));
+
+    auto &yt(*in.type->args.at(0)->args.at(0));
+    push(scp.coro,
+	 get_iter_type(exe, yt),
+	 Iter::Ref(new ListIter(exe, yt, get<ListRef>(in), [](auto &el) {
+	       return get<PairRef>(el)->first;
+	     })));
+
+    auto &xt(*in.type->args.at(0)->args.at(1));
+    push(scp.coro,
+	 get_iter_type(exe, xt),
+	 Iter::Ref(new ListIter(exe, xt, get<ListRef>(in), [](auto &el) {
+	       return get<PairRef>(el)->second;
+	     })));
+  }
+
   static void zip_imp(Scope &scp, const Args &args) {
     auto &l(args.at(0)), &r(args.at(1));
     
@@ -285,7 +304,6 @@ namespace snabel {
     pair_type.equal = [](auto &x, auto &y) { 
       return *get<PairRef>(x) == *get<PairRef>(y); 
     };
-
 
     bool_type.supers.push_back(&any_type);
     bool_type.fmt = [](auto &v) { return get<bool>(v) ? "'t" : "'f"; };
@@ -478,6 +496,18 @@ namespace snabel {
 	     {ArgType(list_type)}, {ArgType(0)},
 	     list_reverse_imp);
 
+    add_func(*this, "unzip",
+	     {ArgType(get_list_type(*this, pair_type))},
+	     {ArgType([this](auto &args) {
+		   return &get_iter_type(*this,
+					 *args.at(0).type->args.at(0)->args.at(0));
+		 }),
+		 ArgType([this](auto &args) {
+		     return &get_iter_type(*this,
+					   *args.at(0).type->args.at(0)->args.at(1));
+		   })},			
+	     list_unzip_imp);
+
     add_func(*this, ".",
 	     {ArgType(any_type), ArgType(any_type)},
 	     {ArgType([this](auto &args) {
@@ -616,10 +646,11 @@ namespace snabel {
     auto fnd(find_env(exe.main_scope, n));
     if (fnd) { return *get<Type *>(*fnd); }
     auto &mt(add_type(exe, n, true));
+    mt.raw = &exe.meta_type;
     mt.supers.push_back(&exe.meta_type);
     mt.args.push_back(&t);
-    mt.fmt = exe.meta_type.fmt;
-    mt.eq = exe.meta_type.eq;
+    mt.fmt = [](auto &v) { return get<Type *>(v)->name; };
+    mt.eq = [](auto &x, auto &y) { return get<Type *>(x) == get<Type *>(y); };
     return mt;
   }
 
@@ -635,6 +666,7 @@ namespace snabel {
     auto fnd(find_env(exe.main_scope, n));
     if (fnd) { return *get<Type *>(*fnd); }
     auto &t(add_type(exe, n));
+    t.raw = &exe.iter_type;
     t.supers.push_back(&exe.any_type);
     t.supers.push_back(&exe.iter_type);
     t.supers.push_back(&get_iterable_type(exe, elt));    
@@ -668,6 +700,7 @@ namespace snabel {
     auto fnd(find_env(exe.main_scope, n));
     if (fnd) { return *get<Type *>(*fnd); }
     auto &t(add_type(exe, n));
+    t.raw = &exe.iterable_type;
     t.supers.push_back(&exe.any_type);
     t.supers.push_back(&exe.iterable_type);
     t.args.push_back(&elt);
@@ -681,6 +714,7 @@ namespace snabel {
     auto fnd(find_env(exe.main_scope, n));
     if (fnd) { return *get<Type *>(*fnd); }
     auto &t(add_type(exe, n));
+    t.raw = &exe.list_type;
     t.supers.push_back(&exe.any_type);
     t.supers.push_back(&exe.list_type);
     t.supers.push_back(&get_iterable_type(exe, elt));
@@ -710,11 +744,12 @@ namespace snabel {
   }
 
   Type &get_pair_type(Exec &exe, Type &lt, Type &rt) {    
-    str n(fmt("Pair<%0, %1>", lt.name, rt.name));
+    str n(fmt("Pair<%0 %1>", lt.name, rt.name));
     auto fnd(find_env(exe.main_scope, n));
     if (fnd) { return *get<Type *>(*fnd); }
+    
     auto &t(add_type(exe, n));
-
+    t.raw = &exe.pair_type;
     t.supers.push_back(&exe.any_type);
     t.supers.push_back(&exe.pair_type);
     t.args.push_back(&lt);

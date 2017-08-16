@@ -7,11 +7,14 @@
 
 namespace snabel {
   struct ListIter: Iter {
+    using Fn = func<Box (const Box &)>;
+    
     Type &elt;
     ListRef in;
     List::const_iterator it;
+    opt<Fn> fn;
     
-    ListIter(Exec &exe, Type &elt, const ListRef &in);
+    ListIter(Exec &exe, Type &elt, const ListRef &in, opt<Fn> fn=nullopt);
     opt<Box> next() override;
   };
 }

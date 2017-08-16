@@ -1,12 +1,19 @@
 #include <iostream>
 #include "snabel/box.hpp"
+#include "snabel/error.hpp"
 #include "snabel/type.hpp"
 
 namespace snabel {
   Type::Type(const str &n):
-    name(n)
+    name(n), raw(this)
   {
     dump = [this](auto &v) { return fmt(v); };
+
+    fmt = [this](auto &v) {
+      ERROR(Snabel, snackis::fmt("Failed formatting value for type: %0", name));
+      return "n/a";
+    };
+    
     equal = [this](auto &x, auto &y) { return eq(x, y); };
   }
 
@@ -17,8 +24,19 @@ namespace snabel {
     return x.name < y.name;
   }
 
+  bool isa(const Types &x, const Types &y) {
+    auto i(x.begin()), j(y.begin());
+
+    for (; i != x.end() && j != y.end(); i++, j++) {
+      if (!isa(**i, **j)) { return false; }
+    }
+    
+    return i == x.end() && j == y.end();
+  }
+  
   bool isa(const Type &x, const Type &y) {
-    if (&x == &y) { return true; }
+    if (&x == &y ||
+	(x.raw == y.raw && isa(x.args, y.args))) { return true; }
     
     for (Type *xs: x.supers) {
       if (isa(*xs, y)) { return true; }
