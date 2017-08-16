@@ -238,19 +238,19 @@ namespace snabel {
 				std::forward_as_tuple(*this, 0)).first->second),
     main(main_thread.main),
     main_scope(main.scopes.at(0)),
-    meta_type("Type"),
+    meta_type("Type<Any>"),
     any_type(add_type(*this, "Any")),
     bool_type(add_type(*this, "Bool")),
     callable_type(add_type(*this, "Callable")),
     char_type(add_type(*this, "Char")),
     func_type(add_type(*this, "Func")),
     i64_type(add_type(*this, "I64")),
-    iter_type(add_type(*this, "Iter")),
-    iterable_type(add_type(*this, "Iterable")),
+    iter_type(add_type(*this, "Iter<Any>")),
+    iterable_type(add_type(*this, "Iterable<Any>")),
     label_type(add_type(*this, "Label")),
     lambda_type(add_type(*this, "Lambda")),
-    list_type(add_type(*this, "List")),
-    pair_type(add_type(*this, "Pair")),
+    list_type(add_type(*this, "List<Any>")),
+    pair_type(add_type(*this, "Pair<Any Any>")),
     str_type(add_type(*this, "Str")),
     thread_type(add_type(*this, "Thread")),
     undef_type(add_type(*this, "Undef")),
@@ -668,8 +668,8 @@ namespace snabel {
     auto &t(add_type(exe, n));
     t.raw = &exe.iter_type;
     t.supers.push_back(&exe.any_type);
-    t.supers.push_back(&exe.iter_type);
     t.supers.push_back(&get_iterable_type(exe, elt));    
+    t.supers.push_back(&exe.iter_type);
     t.args.push_back(&elt);
     t.fmt = [&elt](auto &v) { return "n/a"; };
 
@@ -716,8 +716,8 @@ namespace snabel {
     auto &t(add_type(exe, n));
     t.raw = &exe.list_type;
     t.supers.push_back(&exe.any_type);
-    t.supers.push_back(&exe.list_type);
     t.supers.push_back(&get_iterable_type(exe, elt));
+    t.supers.push_back(&exe.list_type);
     t.args.push_back(&elt);
     
     t.dump = [](auto &v) { return dump(*get<ListRef>(v)); };

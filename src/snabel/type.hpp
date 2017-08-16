@@ -15,7 +15,7 @@ namespace snabel {
 
   using Types = std::deque<Type *>;
   
-  struct Type {    
+  struct Type {
     const str name;
     Type *raw;
     Types supers, args;

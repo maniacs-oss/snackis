@@ -22,7 +22,7 @@ I64
 ```
 
 ### Stacks
-Literals, identifiers and results from function calls are pushed on the current fibers stack in order of appearance. Thanks to lexical scoping and named bindings, keeping the stack squeaky clean is less critical in Snabel.
+Literals, identifiers and results from function calls are pushed on the current stack in order of appearance. Thanks to lexical scoping and named bindings, keeping the stack squeaky clean is less critical in Snabel.
 
 ```
 > 1 2 3 stash
@@ -149,6 +149,23 @@ List<Any>
 > [1 2] 3 push reverse pop drop
 [3 2]
 List<I64>
+```
+
+#### Pairs
+Snackis supports first class pairs and zipping/unzipping iterables. Pairs of values are created using ```.``` while ```zip``` is reserved to zip iterables, both values and iterables support ```unzip```.
+
+```
+> "foo" 42 .
+"foo".42
+Pair<Str I64>
+
+> ["foo" "bar"] 7 list zip list
+["foo".0 "bar".1]
+List<Pair<Str I64>>
+
+> ["foo" 0 . "bar" 1 .] unzip list swap list stash
+[[0 1] ["foo" "bar"]]
+List<List<Any>>
 ```
 
 ### Labels

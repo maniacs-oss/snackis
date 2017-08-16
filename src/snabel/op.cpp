@@ -681,7 +681,7 @@ namespace snabel {
       elt = get_super(*elt, *i->type);
     }
 
-    push(cor, Box(get_list_type(exe, elt ? *elt : exe.undef_type), lst));
+    push(cor, Box(get_list_type(exe, elt ? *elt : exe.any_type), lst));
     return true;
   }
 

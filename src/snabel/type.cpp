@@ -51,10 +51,10 @@ namespace snabel {
 
   Type *get_super(Type &x, Type &y) {
     if (&x == &y) { return &x; }
-    
-    for (Type *i: x.supers) {
-      for (Type *j: y.supers) {
-	auto res(get_super(*i, *j));
+
+    for (auto i(x.supers.rbegin()); i != x.supers.rend(); i++) {
+      for (auto j(y.supers.rbegin()); j != y.supers.rend(); j++) {
+	auto res(get_super(**i, **j));
 	if (res) { return res; }
       }
     }
