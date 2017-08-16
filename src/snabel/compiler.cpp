@@ -40,7 +40,15 @@ namespace snabel {
       
       out.emplace_back(Push(Box(exe.char_type, c)));
     }
-    else if (isdigit(tok.text[0]) || 
+    else if (isupper(tok.text[0])) {
+      auto fnd(find_env(exe.main_scope, tok.text));
+
+      if (fnd) {
+	out.emplace_back(Push(*fnd));
+      } else {
+	ERROR(Snabel, fmt("Type not found: %0", tok.text));
+      }
+    } else if (isdigit(tok.text[0]) || 
 	(tok.text.size() > 1 && tok.text[0] == '-' && isdigit(tok.text[1]))) {
       out.emplace_back(Push(Box(exe.i64_type, to_int64(tok.text))));
     } else {

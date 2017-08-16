@@ -206,10 +206,10 @@ namespace snabel {
     run(exe, "{7 35 + return 99} call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run(exe, "{:t {42} when} call");
+    run(exe, "{#t {42} when} call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run(exe, ":t {dup &return when :f} call");
+    run(exe, "#t {dup &return when #f} call");
     CHECK(get<bool>(pop(exe.main)), _);
 
     run(exe, "42 {dec dup zero? &return when recall} call");
@@ -220,10 +220,10 @@ namespace snabel {
     TRY(try_test);    
     Exec exe;
     
-    run(exe, "7 :t {35 +} when");
+    run(exe, "7 #t {35 +} when");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run(exe, "7 :f {35 +} when");
+    run(exe, "7 #f {35 +} when");
     CHECK(get<int64_t>(pop(exe.main)) == 7, _);
   }
 

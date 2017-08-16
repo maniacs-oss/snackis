@@ -95,11 +95,11 @@ Snabel cares about two kinds of equality, shallow and deep. A separate operator 
 
 ```
 > [3 4 35] [3 4 35] =
-:f
+#f
 Bool!
 
 > [3 4 35] [3 4 35] ==
-:t
+#t
 Bool!
 ```
 
@@ -121,7 +121,7 @@ I64
 Type!
 
 > 42 I64 is?
-:t
+#t
 Bool!
 
 > 42 type
@@ -188,15 +188,15 @@ I64!
 ```when``` accepts a condition and a callable target, the target is called if the condition is true. Possible targets are functions, lambdas and labels.
 
 ```
-> 7 :f {35 +} when
+> 7 #f {35 +} when
 7
 I64!
 
-> 7 :t {35 +} when
+> 7 #t {35 +} when
 42
 I64!
 
-> 7 35 :t &+ when
+> 7 35 #t &+ when
 42
 I64!
 ```
