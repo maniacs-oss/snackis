@@ -42,6 +42,8 @@ namespace snabel {
     return std::get<Backup>(op.data);
   }
 
+  str Backup::info() const { return copy ? "copy" : ""; }
+
   bool Backup::run(Scope &scp) {
     backup_stack(scp.coro, copy);
     return true;
@@ -125,6 +127,74 @@ namespace snabel {
     }
     
     return (*tgt->type->call)(scp, *tgt);
+  }
+
+  Check::Check(Type *type):
+    OpImp(OP_CHECK, "check"), type(type)
+  { }
+
+  OpImp &Check::get_imp(Op &op) const {
+    return std::get<Check>(op.data);
+  }
+
+  str Check::info() const { return type ? type->name : ""; }
+
+  bool Check::compile(const Op &op, Scope &scp, OpSeq &out) {
+    if (out.empty()) { return false; }
+    
+    auto &prev(out.back());
+    
+    if (prev.imp.code == OP_PUSH) {
+      auto &p(get<Push>(prev.data));
+      auto &v(p.vals.back());
+      
+      if (isa(*v.type, scp.exec.meta_type)) {
+	type = get<Type *>(v);
+	p.vals.pop_back();
+	if (p.vals.empty()) { out.pop_back(); }
+	out.push_back(op);
+	return true;
+      }
+    }
+
+    return false;
+  }
+
+  
+  bool Check::run(Scope &scp) {
+    auto &exe(scp.exec);
+    auto &cor(scp.coro);
+    auto t(type);
+    
+    if (!t) {
+      auto _t(try_pop(cor));
+    
+      if (!_t) {
+	ERROR(Snabel, "Missing check type");
+	return false;
+      }
+      
+      if (!isa(*_t, exe.meta_type)) {
+	ERROR(Snabel, fmt("Invalid check type: %0", *_t));
+	return false;
+      }
+
+      t = get<Type *>(*_t);
+    }
+
+    auto v(peek(cor));
+
+    if (!v) {
+      ERROR(Snabel, "Missing check value");
+      return false;
+    }
+    
+    if (!isa(*v, *t)) {
+      ERROR(Snabel, fmt("Check failed, expected %0:\n%1", t->name, *v));
+      return false;
+    }
+
+    return true;
   }
 
   Deref::Deref(const str &name):

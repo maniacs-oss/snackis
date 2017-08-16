@@ -20,18 +20,6 @@ namespace snabel {
     push(scp.coro, scp.exec.bool_type, isa(v, *get<Type *>(t)));
   }
 
-  static void typecheck_imp(Scope &scp, const Args &args) {
-    auto &v(args.at(0));
-    auto &t(args.at(1));
-
-    if (!isa(v, *get<Type *>(t))) {
-      ERROR(Snabel, fmt("Typecheck failed, expected %0:\n%1",
-			get<Type *>(t)->name, v));
-    }
-
-    push(scp.coro, v);
-  }
-
   static void type_imp(Scope &scp, const Args &args) {
     auto &v(args.at(0));
     push(scp.coro, scp.exec.meta_type, v.type);
@@ -419,10 +407,6 @@ namespace snabel {
  
     add_func(*this, "nop", {}, {}, nop_imp);
 
-    add_func(*this, "!",
-	     {ArgType(any_type), ArgType(meta_type)}, {ArgType(0)},
-	     typecheck_imp);
-   
     add_func(*this, "is?",
 	     {ArgType(any_type), ArgType(meta_type)}, {ArgType(bool_type)},
 	     is_imp);
@@ -542,7 +526,11 @@ namespace snabel {
     add_func(*this, "join",
 	     {ArgType(thread_type)}, {ArgType(any_type)},
 	     thread_join_imp);
-	     
+
+    add_macro(*this, "!", [](auto pos, auto &in, auto &out) {	
+	out.emplace_back(Check());
+      });
+    
     add_macro(*this, "{", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Lambda());
       });
