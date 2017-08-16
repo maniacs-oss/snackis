@@ -242,6 +242,7 @@ namespace snabel {
     any_type.eq = [](auto &x, auto &y) { return false; };
 
     meta_type.supers.push_back(&any_type);
+    meta_type.args.push_back(&any_type);
     meta_type.fmt = [](auto &v) { return get<Type *>(v)->name; };
     meta_type.eq = [](auto &x, auto &y) { return get<Type *>(x) == get<Type *>(y); };
 
@@ -252,19 +253,30 @@ namespace snabel {
     void_type.fmt = [](auto &v) { return "n/a"; };
     void_type.eq = [](auto &x, auto &y) { return true; };  
 
+    callable_type.supers.push_back(&any_type);
+    callable_type.args.push_back(&any_type);
     callable_type.fmt = [](auto &v) { return "n/a"; };
     callable_type.eq = [](auto &x, auto &y) { return false; };
 
+    iter_type.supers.push_back(&any_type);
+    iter_type.args.push_back(&any_type);
     iter_type.fmt = [](auto &v) { return "n/a"; };
     iter_type.eq = [](auto &x, auto &y) { return false; };
 
+    iterable_type.supers.push_back(&any_type);
+    iterable_type.args.push_back(&any_type);
     iterable_type.fmt = [](auto &v) { return "n/a"; };
     iterable_type.eq = [](auto &x, auto &y) { return false; };
 
+    list_type.supers.push_back(&any_type);
+    list_type.args.push_back(&any_type);
     list_type.dump = [](auto &v) { return dump(*get<ListRef>(v)); };
     list_type.fmt = [](auto &v) { return list_fmt(*get<ListRef>(v)); };
     list_type.eq = [](auto &x, auto &y) { return false; };
 
+    pair_type.supers.push_back(&any_type);
+    pair_type.args.push_back(&any_type);
+    pair_type.args.push_back(&any_type);
     pair_type.dump = [](auto &v) { return dump(*get<PairRef>(v)); };
     pair_type.fmt = [](auto &v) { return pair_fmt(*get<PairRef>(v)); };
     pair_type.eq = [](auto &x, auto &y) { 
@@ -599,9 +611,22 @@ namespace snabel {
 			      std::forward_as_tuple(n, imp)).first->second; 
   }
   
-  Type &add_type(Exec &exe, const str &n) {
+  Type &get_meta_type(Exec &exe, Type &t) {    
+    str n(fmt("Type<%0>", t.name));
+    auto fnd(find_env(exe.main_scope, n));
+    if (fnd) { return *get<Type *>(*fnd); }
+    auto &mt(add_type(exe, n, true));
+    mt.supers.push_back(&exe.meta_type);
+    mt.args.push_back(&t);
+    mt.fmt = exe.meta_type.fmt;
+    mt.eq = exe.meta_type.eq;
+    return mt;
+  }
+
+  Type &add_type(Exec &exe, const str &n, bool meta) {
     auto &res(exe.types.emplace_back(n)); 
-    put_env(exe.main_scope, n, Box(exe.meta_type, &res));
+    put_env(exe.main_scope, n,
+	    Box(meta ? exe.meta_type : get_meta_type(exe, res), &res));
     return res;
   }
 

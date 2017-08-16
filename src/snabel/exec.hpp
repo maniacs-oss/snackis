@@ -42,7 +42,8 @@ namespace snabel {
 
   Macro &add_macro(Exec &exe, const str &n, Macro::Imp imp);
 
-  Type &add_type(Exec &exe, const str &n);
+  Type &get_meta_type(Exec &exe, Type &t);
+  Type &add_type(Exec &exe, const str &n, bool meta=false);
   Type &get_iter_type(Exec &exe, Type &elt);
   Type &get_iterable_type(Exec &exe, Type &elt);
   Type &get_list_type(Exec &exe, Type &elt);

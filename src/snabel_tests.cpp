@@ -133,7 +133,8 @@ namespace snabel {
   static void type_tests() {
     TRY(try_test);    
     Exec exe;
-    
+
+    std::cout << "---" << std::endl;
     run(exe, "42 I64 isa?");
     CHECK(get<bool>(pop(exe.main)), _);
 

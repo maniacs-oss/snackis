@@ -44,3 +44,4 @@ namespace snabel {
     return nullptr;
   }
 }
+
