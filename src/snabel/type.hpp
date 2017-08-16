@@ -3,6 +3,7 @@
 
 #include <deque>
 #include "snabel/box.hpp"
+#include "snabel/iter.hpp"
 #include "snackis/core/func.hpp"
 #include "snackis/core/str.hpp"
 
@@ -21,7 +22,7 @@ namespace snabel {
     func<str (const Box &)> dump;
     func<str (const Box &)> fmt;
     opt<func<bool (Scope &, const Box &)>> call;
-    opt<func<std::pair<Type *, Iter> (const Box &)>> iter;
+    opt<func<Iter::Ref (const Box &)>> iter;
     
     Type(const str &n);
     Type(const Type &) = delete;

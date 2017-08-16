@@ -303,11 +303,11 @@ namespace snabel {
 	return false;
       }
 
-      iter.emplace((*cnd->type->iter)(*cnd).second);
+      iter = (*cnd->type->iter)(*cnd);
       target.emplace(*tgt);
     }
 
-    auto nxt((*iter)(scp.exec));
+    auto nxt(iter->next());
     
     if (nxt) {
       push(cor, *nxt);

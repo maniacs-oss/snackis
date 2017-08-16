@@ -4,7 +4,10 @@
 #include "snabel/compiler.hpp"
 #include "snabel/error.hpp"
 #include "snabel/exec.hpp"
+#include "snabel/iter.hpp"
+#include "snabel/list.hpp"
 #include "snabel/range.hpp"
+#include "snabel/str.hpp"
 #include "snabel/type.hpp"
 
 namespace snabel {
@@ -101,18 +104,18 @@ namespace snabel {
   static void iter_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
     auto it((*in.type->iter)(in));
-    push(scp.coro, *it.first, std::make_shared<Iter>(it.second));
+    push(scp.coro, it->type, it);
   }
 
   static void iterable_join_imp(Scope &scp, const Args &args) {    
     auto &in(args.at(0));
-    auto it((*in.type->iter)(in).second);
+    auto it((*in.type->iter)(in));
     auto &sep(args.at(1));
     OutStream out;
     bool first(true);
     
     while (true) {
-      auto v(it(scp.exec));
+      auto v(it->next());
       if (!v) { break; }
       if (!first) { out << sep.type->fmt(sep); }
       out << v->type->fmt(*v);
@@ -124,45 +127,36 @@ namespace snabel {
 
   static void iterable_list_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
-    auto [it_type, it] = (*in.type->iter)(in);
+    auto it((*in.type->iter)(in));
     auto out(std::make_shared<List>());
     
     while (true) {
-      auto v(it(scp.exec));
+      auto v(it->next());
       if (!v) { break; }
       out->push_back(*v);
     }
     
-    push(scp.coro, get_list_type(scp.exec, *it_type->args.at(0)), out); 
+    push(scp.coro, get_list_type(scp.exec, *it->type.args.at(0)), out); 
   }
 
   static void iterable_zip_imp(Scope &scp, const Args &args) {
     auto &exe(scp.exec);
-    auto &cor(scp.coro);
     auto &x(args.at(0)), &y(args.at(1));
-    auto xi((*x.type->iter)(x).second), yi((*y.type->iter)(y).second);
+    auto xi((*x.type->iter)(x)), yi((*y.type->iter)(y));
 
-    auto out(std::make_shared<Iter>([x, y, xi, yi](auto &exe) mutable -> opt<Box> {
-	  auto xv(xi(exe)), yv(yi(exe));
-	  if (!xv || !yv) { return nullopt; }
-	  return Box(get_pair_type(exe,
-				   *x.type->args.at(0),
-				   *y.type->args.at(0)),
-		     std::make_shared<Pair>(*xv, *yv));
-	}));
-      
-    push(cor, get_iter_type(exe, get_pair_type(exe,
-					       *x.type->args.at(0),
-					       *y.type->args.at(0))),
-	 out);
+    push(scp.coro,
+	 get_iter_type(exe, get_pair_type(exe,
+					   *xi->type.args.at(0),
+					   *yi->type.args.at(0))),
+	 Iter::Ref(new ZipIter(exe, xi, yi)));
   }
 
   static void iter_pop_imp(Scope &scp, const Args &args) {
     auto &cor(scp.coro);
     auto &it(args.at(0));
     push(cor, it);
-    auto v((*get<IterRef>(it))(scp.exec));
-    if (!v) { ERROR(Snabel, "Pop of emptied iterator"); }
+    auto v(get<Iter::Ref>(it)->next());
+    if (!v) { ERROR(Snabel, "Pop of empty iterator"); }
     push(cor, v ? *v : Box(scp.exec.undef_type, undef));
   }
   
@@ -273,9 +267,13 @@ namespace snabel {
 
     pair_type.dump = [](auto &v) { return dump(*get<PairRef>(v)); };
     pair_type.fmt = [](auto &v) { return pair_fmt(*get<PairRef>(v)); };
-    pair_type.eq = [](auto &x, auto &y) {
-      return *get<PairRef>(x) == *get<PairRef>(y);
+    pair_type.eq = [](auto &x, auto &y) { 
+      return get<PairRef>(x) == get<PairRef>(y); 
     };
+    pair_type.equal = [](auto &x, auto &y) { 
+      return *get<PairRef>(x) == *get<PairRef>(y); 
+    };
+
 
     bool_type.supers.push_back(&any_type);
     bool_type.fmt = [](auto &v) { return get<bool>(v) ? "'t" : "'f"; };
@@ -329,16 +327,8 @@ namespace snabel {
     i64_type.fmt = [](auto &v) { return fmt_arg(get<int64_t>(v)); };
     i64_type.eq = [](auto &x, auto &y) { return get<int64_t>(x) == get<int64_t>(y); };
 
-    i64_type.iter = [this](auto &_cnd) {
-      Range cnd(0, get<int64_t>(_cnd));
-      
-      return std::make_pair(&get_iter_type(*this, i64_type),
-			    [cnd](auto &exe) mutable -> opt<Box> {
-			      if (cnd.beg == cnd.end) { return nullopt; }
-			      auto res(cnd.beg);
-			      cnd.beg++;
-			      return Box(exe.i64_type, res);
-			    });
+    i64_type.iter = [this](auto &in) {
+      return Iter::Ref(new RangeIter(*this, Range(0, get<int64_t>(in))));
     };
     
     label_type.supers.push_back(&any_type);
@@ -376,18 +366,8 @@ namespace snabel {
     str_type.fmt = [](auto &v) { return fmt("\"%0\"", get<str>(v)); };
     str_type.eq = [](auto &x, auto &y) { return get<str>(x) == get<str>(y); };
 
-    str_type.iter = [this](auto &cnd) mutable {
-      auto s(get<str>(cnd));
-      size_t pos(0);
-      
-      return std::make_pair(&get_iter_type(*this, char_type),
-			    [s, pos](auto &exe) mutable -> opt<Box> {
-			      if (pos == s.size()) { return nullopt; }
-			      auto res(s[pos]);
-			      pos++;
-			      return Box(exe.char_type, res);
-			    });
-    };
+    str_type.iter = [this](auto &in) {
+      return Iter::Ref(new StrIter(*this, get<str>(in))); };
 
     thread_type.supers.push_back(&any_type);
     thread_type.fmt = [](auto &v) { return fmt_arg(get<Thread *>(v)->id); };
@@ -492,11 +472,11 @@ namespace snabel {
 		   return &get_pair_type(*this, *args.at(0).type, *args.at(1).type);
 		 })},			
 	     zip_imp);
-
+    
     add_func(*this, "unzip",
 	     {ArgType(pair_type)}, {ArgType(0, 0), ArgType(0, 1)},
 	     unzip_imp);
-
+	     
     add_func(*this, "thread",
 	     {ArgType(callable_type)}, {ArgType(bool_type)},
 	     thread_imp);
@@ -504,7 +484,7 @@ namespace snabel {
     add_func(*this, "join",
 	     {ArgType(thread_type)}, {ArgType(any_type)},
 	     thread_join_imp);
-
+	     
     add_macro(*this, "{", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Lambda());
       });
@@ -563,7 +543,7 @@ namespace snabel {
 	  for (; i != in.end(); i++) {
 	    if (i->text == ";") { break; }
 	  }
-	  
+	     
 	  compile(*this, pos.row, TokSeq(std::next(in.begin()), i), out);
 	  if (i != in.end()) { i++; }
 	  in.erase(in.begin(), i);
@@ -635,15 +615,18 @@ namespace snabel {
     t.supers.push_back(&get_iterable_type(exe, elt));    
     t.args.push_back(&elt);
     t.fmt = [&elt](auto &v) { return "n/a"; };
-    t.eq = [&elt](auto &x, auto &y) { return get<IterRef>(x) == get<IterRef>(y); };
+
+    t.eq = [&elt](auto &x, auto &y) {
+      return get<Iter::Ref>(x) == get<Iter::Ref>(y);
+    };
 
     t.equal = [&exe](auto &x, auto &y) {
-      auto &xi(*get<IterRef>(x)), &yi(*get<IterRef>(y));
+      auto xi(get<Iter::Ref>(x)), yi(get<Iter::Ref>(y));
       opt<Box> xv, yv;
       
       while (true) {
-	xv = xi(exe);
-	yv = yi(exe);
+	xv = xi->next();
+	yv = yi->next();
 	if (!xv || !yv) { break; }
 	if (xv->type != yv->type || !xv->type->equal(*xv, *yv)) { return false; }
       }
@@ -651,10 +634,7 @@ namespace snabel {
       return !xv && !yv;
     };
     
-    t.iter = [&exe](auto &in) {
-      return std::make_pair(in.type, *get<IterRef>(in));
-    };
-    
+    t.iter = [&exe](auto &in) { return get<Iter::Ref>(in); };
     return t;
   }
 
@@ -697,19 +677,10 @@ namespace snabel {
       return true;
     };
 
-    t.iter = [&exe](auto &cnd) {
-      auto lst(get<ListRef>(cnd));
-      auto imp(lst->begin());
-      
-      return std::make_pair(&get_iter_type(exe, *cnd.type->args.at(0)),
-			    [lst, imp](auto &exe) mutable -> opt<Box> {
-			      if (imp == lst->end()) { return nullopt; }
-			      auto res(*imp);
-			      imp++;
-			      return res;
-			    });
+    t.iter = [&exe, &elt](auto &in) {
+      return Iter::Ref(new ListIter(exe, elt, get<ListRef>(in)));
     };
-
+	     
     return t;
   }
 
@@ -726,8 +697,8 @@ namespace snabel {
 
     t.dump = [](auto &v) { return dump(*get<PairRef>(v)); };
     t.fmt = [](auto &v) { return pair_fmt(*get<PairRef>(v)); };
-    t.eq = [](auto &x, auto &y) { return *get<PairRef>(x) == *get<PairRef>(y); };
-
+    t.eq = [](auto &x, auto &y) { return get<PairRef>(x) == get<PairRef>(y); };
+    t.equal = [](auto &x, auto &y) { return *get<PairRef>(x) == *get<PairRef>(y); };
     return t;
   }
   

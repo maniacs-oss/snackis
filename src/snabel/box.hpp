@@ -4,6 +4,7 @@
 #include <deque>
 #include <variant>
 
+#include "snabel/iter.hpp"
 #include "snackis/core/error.hpp"
 #include "snackis/core/fmt.hpp"
 
@@ -22,18 +23,14 @@ namespace snabel {
     bool operator ()(const Box &box) const;
   };
 
+  using Pair = std::pair<Box, Box>;
+  using PairRef = std::shared_ptr<Pair>;
   using List = std::deque<Box>;
   using ListRef = std::shared_ptr<List>;
 
-  using Iter = func<opt<Box> (Exec &)>;
-  using IterRef = std::shared_ptr<Iter>;
-
-  using Pair = std::pair<Box, Box>;
-  using PairRef = std::shared_ptr<Pair>;
-  
   using Val = std::variant<Undef,
 			   bool, char, int64_t, str,
-			   ListRef, IterRef, PairRef,
+			   PairRef, ListRef, Iter::Ref,
 			   Func *, Label *, Thread *, Type *>;
   
   struct Box {

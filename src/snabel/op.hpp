@@ -89,7 +89,7 @@ namespace snabel {
 
   struct For: OpImp {
     bool compiled;
-    opt<Iter> iter;
+    Iter::Ref iter;
     opt<Box> target;
     
     For();
