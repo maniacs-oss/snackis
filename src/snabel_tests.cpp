@@ -279,6 +279,12 @@ namespace snabel {
 
     run(exe, "7 iter 7 iter ==");
     CHECK(get<bool>(pop(exe.main)), _);
+
+    run(exe, "7 list");
+    CHECK(get<ListRef>(pop(exe.main))->size() == 7, _);
+
+    run(exe, "[1 2 3] [\"foo\" \"bar\"] zip list");
+    CHECK(get<ListRef>(pop(exe.main))->size() == 2, _);
   }
   
   static void list_tests() {
@@ -306,12 +312,12 @@ namespace snabel {
     TRY(try_test);    
     Exec exe;
 
-    run(exe, "42 \"foo\" zip");
+    run(exe, "42 \"foo\" .");
     auto p(get<PairRef>(pop(exe.main)));
     CHECK(get<int64_t>(p->first) == 42, _);    
     CHECK(get<str>(p->second) == "foo", _);    
 
-    run(exe, "42 \"foo\" zip unzip");
+    run(exe, "42 \"foo\" . unzip");
     CHECK(get<str>(pop(exe.main)) == "foo", _);    
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);    
   }
