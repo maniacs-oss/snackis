@@ -9,7 +9,7 @@ Just like Yoda of Star Wars-fame, and yesterdays scientific calculators; as well
 ```
 > 7 42 + 10 %
 9
-I64
+I64!
 ```
 
 ### Expressions
@@ -18,7 +18,7 @@ Snabel supports dividing expressions into parts using parentheses, each level st
 ```
 > (1 2 +) (2 2 *) +
 7
-I64
+I64!
 ```
 
 ### Stacks
@@ -27,16 +27,19 @@ Literals, identifiers and results from function calls are pushed on the current 
 ```
 > 1 2 3 stash
 [1 2 3]
+List<I64>!
 
 > 42 7 drop
 42
-I64
+I64!
 
 > 42 7 reset stash
 []
+List<Any>!
 
 > 42 35 swap -
 -7
+I64!
 ```
 
 ### Functions
@@ -67,24 +70,24 @@ Wrapping code in braces instead of parentheses pushes a pointer to the compiled 
 ```
 > {1 2 +}
 n/a
-Lambda
+Lambda!
 
 > {1 2 +} call
 3
-I64
+I64!
 
 > {
     1 2 + return
     14 *
   } call
 3
-I64
+I64!
 
 > 42
   {dec dup zero? &return when recall}
   call
 0
-I64
+I64!
 ```
 
 ### Equality
@@ -92,12 +95,12 @@ Snabel cares about two kinds of equality, shallow and deep. A separate operator 
 
 ```
 > [3 4 35] [3 4 35] =
-'f
-Bool
+:f
+Bool!
 
 > [3 4 35] [3 4 35] ==
-'t
-Bool
+:t
+Bool!
 ```
 
 ### Bindings
@@ -106,7 +109,7 @@ Snabel supports named bindings using the ```let:```-macro. Bound names are prefi
 ```
 > let: fn {7 +}; 35 $fn call
 42
-I64
+I64!
 ```
 
 ### Types
@@ -115,15 +118,15 @@ Snabel provides first class static, optionally parameterized types with inferenc
 ```
 > I64
 I64
-Type
+Type!
 
 > 42 I64 is?
-'t
-Bool
+:t
+Bool!
 
 > 42 type
 I64
-Type
+Type!
 ```
 
 #### Lists
@@ -132,40 +135,40 @@ Snabel's lists are based on deques, which means fast inserts/removals in the fro
 ```
 > [1 2 3]
 [1 2 3]
-List<I64>
+List<I64>!
 
 > Str list
 []
-List<Str>
+List<Str>!
 
 > 1 2 3 stash
 [1 2 3]
-List<I64>
+List<I64>!
 
-> [35 7 + "foo"]
-[42 "foo"]
-List<Any>
+> [35 7 + 'foo']
+[42 'foo']
+List<Any>!
 
 > [1 2] 3 push reverse pop drop
 [3 2]
-List<I64>
+List<I64>!
 ```
 
 #### Pairs
 Snackis supports first class pairs and zipping/unzipping iterables. Pairs of values are created using ```.``` while ```zip``` is reserved to zip iterables, both values and iterables support ```unzip```.
 
 ```
-> "foo" 42.
-"foo" 42.
-Pair<Str I64>
+> 'foo' 42.
+'foo' 42.
+Pair<Str I64>!
 
-> ["foo" "bar"] 7 list zip list
-["foo" 0. "bar" 1.]
-List<Pair<Str I64>>
+> ['foo' 'bar'] 7 list zip list
+['foo' 0. 'bar' 1.]
+List<Pair<Str I64>>!
 
-> ["foo" 0. "bar" 1.] unzip list swap list stash
-[[0 1] ["foo" "bar"]]
-List<List<Any>>
+> ['foo' 0. 'bar' 1.] unzip list swap list stash
+[[0 1] ['foo' 'bar']]
+List<List<Any>>!
 ```
 
 ### Labels
@@ -174,28 +177,28 @@ Snabel's control structures are based on the idea of jumping to offsets within t
 ```
 > 1 2 3 +
 5
-I64
+I64!
 
 > 1 2 skip 42 @skip +
 3
-I64
+I64!
 ```
 
 ### Conditions
 ```when``` accepts a condition and a callable target, the target is called if the condition is true. Possible targets are functions, lambdas and labels.
 
 ```
-> 7 'f {35 +} when
+> 7 :f {35 +} when
 7
-I64
+I64!
 
-> 7 't {35 +} when
+> 7 :t {35 +} when
 42
-I64
+I64!
 
-> 7 35 't &+ when
+> 7 35 :t &+ when
 42
-I64
+I64!
 ```
 
 ### Iterators
@@ -203,8 +206,8 @@ Iteration is currently supported for numbers, which will return 0..N; lists, whi
 
 ```
 > 7 \, join
-"0,1,2,3,4,5,6"
-Str
+'0,1,2,3,4,5,6'
+Str!
 
 > 3 iter
   pop swap
@@ -212,10 +215,11 @@ Str
   pop swap
   drop + +
 3
+I64!
 
-> let: foo "bar" iter; $foo list
+> let: foo 'bar' iter; $foo list
 [\b \a \r]
-List<Char>
+List<Char>!
 ```
 
 #### Loops
@@ -224,15 +228,15 @@ The ```for```-loop accepts an iterable and a call target, and will call the targ
 ```
 > 0 7 &+ for
 21
-I64
+I64!
 
 > 0 [1 2 3 4 5 6] &+ for
 21
-I64
+I64!
 
-> "foo" &nop for stash \- join
-"f-o-o"
-Str
+> 'foo' &nop for stash \- join
+'f-o-o'
+Str!
 ```
 
 ### Threads
@@ -241,7 +245,7 @@ Snabel was designed from the ground up to support multi-threading. Starting a ne
 ```
 > 7 {35 +} thread join
 42
-I64
+I64!
 ```
 
 ### Macros

@@ -58,20 +58,20 @@ namespace snabel {
   }
 
   static void parse_string_tests() {
-    auto ts(parse_expr("\"foo \" 1 2"));
+    auto ts(parse_expr("'foo ' 1 2"));
 
     CHECK(ts.size() == 3, _);
-    CHECK(ts[0].text == "\"foo \"", _);
+    CHECK(ts[0].text == "'foo '", _);
     CHECK(ts[1].text == "1", _);
     CHECK(ts[2].text == "2", _);
 
-    ts = parse_expr("1 \"foo\" 2");
+    ts = parse_expr("1 'foo' 2");
     CHECK(ts.size() == 3, _);
     CHECK(ts[0].text == "1", _);
-    CHECK(ts[1].text == "\"foo\"", _);
+    CHECK(ts[1].text == "'foo'", _);
     CHECK(ts[2].text == "2", _);
 
-    ts = parse_expr("let: foo {42}; \"$foo\"");
+    ts = parse_expr("let: foo {42}; '$foo'");
     CHECK(ts.size() == 7, _);
     CHECK(ts[0].text == "let:", _);
     CHECK(ts[1].text == "foo", _);
@@ -79,16 +79,16 @@ namespace snabel {
     CHECK(ts[3].text == "42", _);
     CHECK(ts[4].text == "}", _);
     CHECK(ts[5].text == ";", _);
-    CHECK(ts[6].text == "\"$foo\"", _);
+    CHECK(ts[6].text == "'$foo'", _);
   }
 
   static void parse_list_tests() {
-    auto ts(parse_expr("[42 \"bar\"]"));
+    auto ts(parse_expr("[42 'bar']"));
 
     CHECK(ts.size() == 4, _);
     CHECK(ts[0].text == "[", _);
     CHECK(ts[1].text == "42", _);
-    CHECK(ts[2].text == "\"bar\"", _);
+    CHECK(ts[2].text == "'bar'", _);
     CHECK(ts[3].text == "]", _);
   }
 
@@ -206,10 +206,10 @@ namespace snabel {
     run(exe, "{7 35 + return 99} call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run(exe, "{'t {42} when} call");
+    run(exe, "{:t {42} when} call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run(exe, "'t {dup &return when 'f} call");
+    run(exe, ":t {dup &return when :f} call");
     CHECK(get<bool>(pop(exe.main)), _);
 
     run(exe, "42 {dec dup zero? &return when recall} call");
@@ -220,10 +220,10 @@ namespace snabel {
     TRY(try_test);    
     Exec exe;
     
-    run(exe, "7 't {35 +} when");
+    run(exe, "7 :t {35 +} when");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run(exe, "7 'f {35 +} when");
+    run(exe, "7 :f {35 +} when");
     CHECK(get<int64_t>(pop(exe.main)) == 7, _);
   }
 
@@ -271,7 +271,7 @@ namespace snabel {
     run(exe, "3 iter pop swap pop swap pop swap drop + +");
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
     
-    run(exe, "let: foo \"bar\" iter; $foo list");
+    run(exe, "let: foo 'bar' iter; $foo list");
     CHECK(get<ListRef>(pop(exe.main))->size() == 3, _);
 
     run(exe, "7 iter 7 iter =");
@@ -283,7 +283,7 @@ namespace snabel {
     run(exe, "7 list");
     CHECK(get<ListRef>(pop(exe.main))->size() == 7, _);
 
-    run(exe, "[1 2 3] [\"foo\" \"bar\"] zip list");
+    run(exe, "[1 2 3] ['foo' 'bar'] zip list");
     CHECK(get<ListRef>(pop(exe.main))->size() == 2, _);
   }
   
@@ -300,13 +300,13 @@ namespace snabel {
       CHECK(get<int64_t>(ls->at(i)) == i, _);
     }
 
-    run(exe, "Str list \"foo\" push");
+    run(exe, "Str list 'foo' push");
     CHECK(get<ListRef>(pop(exe.main))->size() == 1, _);
 
-    run(exe, "[\"foo\" \"bar\"] 7 list zip list unzip drop list");
+    run(exe, "['foo' 'bar'] 7 list zip list unzip drop list");
     CHECK(get<str>(get<ListRef>(pop(exe.main))->back()) == "bar", _);
 
-    run(exe, "[\"foo\" 7. \"bar\" 35.] unzip drop list");
+    run(exe, "['foo' 7. 'bar' 35.] unzip drop list");
     CHECK(get<str>(get<ListRef>(pop(exe.main))->back()) == "bar", _);
 
     list_push_tests();
@@ -318,12 +318,12 @@ namespace snabel {
     TRY(try_test);    
     Exec exe;
 
-    run(exe, "42 \"foo\" .");
+    run(exe, "42 'foo' .");
     auto p(get<PairRef>(pop(exe.main)));
     CHECK(get<int64_t>(p->first) == 42, _);    
     CHECK(get<str>(p->second) == "foo", _);    
 
-    run(exe, "42 \"foo\". unzip");
+    run(exe, "42 'foo'. unzip");
     CHECK(get<str>(pop(exe.main)) == "foo", _);    
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);    
   }
@@ -338,7 +338,7 @@ namespace snabel {
     run(exe, "0 [1 2 3 4 5 6] &+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 21, _);
 
-    run(exe, "\"foo\" &nop for stash \\- join");
+    run(exe, "'foo' &nop for stash \\- join");
     CHECK(get<str>(pop(exe.main)) == "f-o-o", _);
   }
   

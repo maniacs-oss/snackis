@@ -69,14 +69,14 @@ namespace snabel {
 
   str pair_fmt(const Pair &pr) {
     auto &l(pr.first), &r(pr.second);
-    return fmt("%0 %1!", l.type->fmt(l), r.type->fmt(r));
+    return fmt("%0 %1.", l.type->fmt(l), r.type->fmt(r));
   }
 }
 
 namespace snackis {
   template <>
   str fmt_arg(const snabel::Box &arg) {
-    return fmt("%0 %1|",
+    return fmt("%0 %1!",
 	       arg.type->dump(arg),
 	       arg.type->name);
   }

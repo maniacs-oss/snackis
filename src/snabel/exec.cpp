@@ -279,7 +279,7 @@ namespace snabel {
 
     undef_type.fmt = [](auto &v) { return "n/a"; };
     undef_type.eq = [](auto &x, auto &y) { return true; };
-    put_env(main_scope, "'undef", Box(undef_type, undef));
+    put_env(main_scope, ":undef", Box(undef_type, undef));
     
     void_type.fmt = [](auto &v) { return "n/a"; };
     void_type.eq = [](auto &x, auto &y) { return true; };  
@@ -318,10 +318,10 @@ namespace snabel {
     };
 
     bool_type.supers.push_back(&any_type);
-    bool_type.fmt = [](auto &v) { return get<bool>(v) ? "'t" : "'f"; };
+    bool_type.fmt = [](auto &v) { return get<bool>(v) ? ":t" : ":f"; };
     bool_type.eq = [](auto &x, auto &y) { return get<bool>(x) == get<bool>(y); };
-    put_env(main_scope, "'t", Box(bool_type, true));
-    put_env(main_scope, "'f", Box(bool_type, false));
+    put_env(main_scope, ":t", Box(bool_type, true));
+    put_env(main_scope, ":f", Box(bool_type, false));
 
     char_type.supers.push_back(&any_type);
 

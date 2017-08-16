@@ -41,7 +41,7 @@ namespace snabel {
     for (size_t i(1); i < in.size(); i++) {
       auto &c(in[i]);
       
-      if (c == '"') {
+      if (c == '\'') {
 	if (i == 0 || in[i-1] != '\\') { quoted = !quoted; }
       } else if (c == fst) {
 	depth++;
@@ -64,21 +64,21 @@ namespace snabel {
     for (size_t j(0); j < in.size(); j++) {
       char c(in[j]);
 
-      while (quoted && c != '"') {
+      while (quoted && c != '\'') {
 	j++;
 	c = in[j];
       }
 
-      if (c == '"' && (j == 0 || in[j-1] != '\\')) { quoted = !quoted; }
+      if (c == '\'' && (j == 0 || in[j-1] != '\\')) { quoted = !quoted; }
       const size_t cp(j);
 
       if ((split.find(c) != split.end() ||
-	   c == '"' || c == '\n' || c == ' ') &&
+	   c == '\'' || c == '\n' || c == ' ') &&
 	  !quoted && j > i) {
 	if (split.find(in[i]) != split.end()) { i++; }
-	const str s(trim(in.substr(i, (c == '"') ? j-i+1 : j-i)));
+	const str s(trim(in.substr(i, (c == '\'') ? j-i+1 : j-i)));
 	if (!s.empty()) { out.emplace_back(s, i); }
-	i = (c == '"') ? j+1 : j;
+	i = (c == '\'') ? j+1 : j;
       }
 
       if (split.find(c) != split.end()) {

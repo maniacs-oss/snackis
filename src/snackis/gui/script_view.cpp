@@ -89,7 +89,7 @@ namespace gui {
     if (snabel::run(cor)) {
       auto res(peek(v->exec.main));
       if (res) {
-	log(v->ctx, "Script result:\n%0\n%1",
+	log(v->ctx, "Script result:\n%0\n%1!",
 	    res->type->dump(*res), res->type->name);
       } else {
 	log(v->ctx, "Script result: n/a");
