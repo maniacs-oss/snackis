@@ -302,6 +302,20 @@ namespace snabel {
     list_reverse_tests();
   }
 
+  static void pair_tests() {
+    TRY(try_test);    
+    Exec exe;
+
+    run(exe, "42 \"foo\" zip");
+    auto p(get<PairRef>(pop(exe.main)));
+    CHECK(get<int64_t>(p->first) == 42, _);    
+    CHECK(get<str>(p->second) == "foo", _);    
+
+    run(exe, "42 \"foo\" zip unzip");
+    CHECK(get<str>(pop(exe.main)) == "foo", _);    
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);    
+  }
+
   static void for_tests() {
     TRY(try_test);    
     Exec exe;
@@ -338,6 +352,7 @@ namespace snabel {
     when_tests();
     iter_tests();
     list_tests();
+    pair_tests();
     for_tests();
     thread_tests();
   }

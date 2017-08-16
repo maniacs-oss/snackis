@@ -8,9 +8,6 @@
 #include "snabel/type.hpp"
 
 namespace snabel {
-  ArgType arg_type_0(0);
-  ArgType arg_type_0_0(0, 0);
-
   FuncImp::FuncImp(Func &fn,
 		   const ArgTypes &args,
 		   const ArgTypes &results,
@@ -44,25 +41,23 @@ namespace snabel {
     type(nullptr), arg_idx(arg_idx), type_arg_idx(type_arg_idx)
   { }
 
-  ArgType::ArgType(size_t arg_idx, Conv conv):
-    type(nullptr), arg_idx(arg_idx), conv(conv)
-  { }
-
-  ArgType::ArgType(size_t arg_idx, size_t type_arg_idx, Conv conv):
-    type(nullptr), arg_idx(arg_idx), type_arg_idx(type_arg_idx), conv(conv)
+  ArgType::ArgType(Fn fn):
+    type(nullptr), fn(fn)
   { }
 
   Type *get_type(const FuncImp &imp, const ArgType &arg_type, const Args &args) {
     Type *t(nullptr);
     
-    if (arg_type.type) {
+    if (arg_type.fn) {
+      t = (*arg_type.fn)(args);
+    } else if (arg_type.type) {
       t = arg_type.type;
     } else {
       t = args.at(args.size() - imp.args.size() + *arg_type.arg_idx).type;
       if (arg_type.type_arg_idx) { t = t->args.at(*arg_type.type_arg_idx); }
     }
     
-    return arg_type.conv ? (*arg_type.conv)(*t) : t;
+    return t;
   }
 
   Args pop_args(const FuncImp &imp, Coro &cor) {

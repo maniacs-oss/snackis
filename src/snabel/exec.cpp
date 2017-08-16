@@ -175,6 +175,20 @@ namespace snabel {
     push(scp.coro, *in_arg.type, out); 
   }
 
+  static void zip_imp(Scope &scp, const Args &args) {
+    auto &l(args.at(0)), &r(args.at(1));
+    
+    push(scp.coro,
+	 get_pair_type(scp.exec, *l.type, *r.type),
+	 std::make_shared<Pair>(l, r));    
+  }
+
+  static void unzip_imp(Scope &scp, const Args &args) {
+    auto &p(*get<PairRef>(args.front()));   
+    push(scp.coro, p.first);
+    push(scp.coro, p.second);
+  }
+
   static void thread_imp(Scope &scp, const Args &args) {
     auto &t(start_thread(scp, args[0]));
     push(scp.coro, scp.exec.thread_type, &t);
@@ -405,8 +419,8 @@ namespace snabel {
 
     add_func(*this, "iter",
 	     {ArgType(iterable_type)},
-	     {ArgType(0, 0, [this](auto &elt) { 
-		   return &get_iter_type(*this, elt); 
+	     {ArgType([this](auto &args) { 
+		   return &get_iter_type(*this, *args.front().type->args.front()); 
 		 })},
 	     iter_imp);
 
@@ -416,8 +430,8 @@ namespace snabel {
 
     add_func(*this, "list",
 	     {ArgType(iterable_type)},
-	     {ArgType(0, 0, [this](auto &elt) {
-		   return &get_list_type(*this, elt);
+	     {ArgType([this](auto &args) {
+		   return &get_list_type(*this, *args.front().type->args.front());
 		 })},
 	     iter_list_imp);
 
@@ -427,7 +441,9 @@ namespace snabel {
     
     add_func(*this, "list",
 	     {ArgType(meta_type)},
-	     {ArgType(0, [this](auto &elt) { return &get_list_type(*this, elt); })},
+	     {ArgType([this](auto &args) {
+		   return &get_list_type(*this, *args.at(0).type);
+		 })},
 	     list_imp);
     add_func(*this, "push",
 	     {ArgType(list_type), ArgType(0, 0)}, {ArgType(0)},
@@ -438,7 +454,18 @@ namespace snabel {
     add_func(*this, "reverse",
 	     {ArgType(list_type)}, {ArgType(0)},
 	     list_reverse_imp);
-    
+
+    add_func(*this, "zip",
+	     {ArgType(any_type), ArgType(any_type)},
+	     {ArgType([this](auto &args) {
+		   return &get_pair_type(*this, *args.at(0).type, *args.at(1).type);
+		 })},			
+	     zip_imp);
+
+    add_func(*this, "unzip",
+	     {ArgType(pair_type)}, {ArgType(0, 0), ArgType(0, 1)},
+	     unzip_imp);
+
     add_func(*this, "thread",
 	     {ArgType(callable_type)}, {ArgType(bool_type)},
 	     thread_imp);
