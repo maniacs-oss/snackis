@@ -20,12 +20,56 @@ namespace snabel {
     return x.type != y.type || !x.type->eq(x, y);
   }
 
-  IterRef make_iter(const Box &in) {
-    return std::make_shared<Iter>((*in.type->iter)(in).second);
+  str dump(const List &lst) {
+    OutStream buf;
+    buf << '[';
+    
+    if (lst.size() < 4) {
+      for (size_t i(0); i < lst.size(); i++) {
+	if (i > 0) { buf << ' '; }
+	auto &v(lst[i]);
+	buf << v.type->dump(v);
+      };
+    } else {
+      buf <<
+	lst.front().type->dump(lst.front()) <<
+	"..." <<
+	lst.back().type->dump(lst.back());
+    }
+    
+    buf << ']';
+    return buf.str();
   }
 
-  ListRef make_list() {
-    return std::make_shared<List>();
+  str list_fmt(const List &lst) {
+    OutStream buf;
+    buf << '[';
+    
+    if (lst.size() < 4) {
+      for (size_t i(0); i < lst.size(); i++) {
+	if (i > 0) { buf << ' '; }
+	auto &v(lst[i]);
+	buf << v.type->fmt(v);
+      };
+    } else {
+      buf <<
+	lst.front().type->fmt(lst.front()) <<
+	"..." <<
+	lst.back().type->fmt(lst.back());
+    }
+    
+    buf << ']';
+    return buf.str();
+  }
+
+  str dump(const Pair &pr) {
+    auto &l(pr.first), &r(pr.second);
+    return fmt("(%0, %1)", l.type->dump(l), r.type->dump(r));
+  }
+
+  str pair_fmt(const Pair &pr) {
+    auto &l(pr.first), &r(pr.second);
+    return fmt("(%0, %1)", l.type->fmt(l), r.type->fmt(r));
   }
 }
 

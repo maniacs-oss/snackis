@@ -233,7 +233,7 @@ namespace snabel {
     run(exe, "[0] 1 push");
     auto lsb(pop(exe.main));
     auto ls(get<ListRef>(lsb));
-    CHECK(ls->elems.size() == 2, _);
+    CHECK(ls->size() == 2, _);
   }
 
   static void list_pop_tests() {
@@ -244,8 +244,8 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 35, _);
     auto lsb(pop(exe.main));
     auto ls(get<ListRef>(lsb));
-    CHECK(ls->elems.size() == 1, _);
-    CHECK(get<int64_t>(ls->elems.front()) == 7, _);
+    CHECK(ls->size() == 1, _);
+    CHECK(get<int64_t>(ls->front()) == 7, _);
   }
 
   static void list_reverse_tests() {
@@ -254,10 +254,10 @@ namespace snabel {
     run(exe, "[0 1 2] reverse");
     auto lsb(pop(exe.main));
     auto ls(get<ListRef>(lsb));
-    CHECK(ls->elems.size() == 3, _);
+    CHECK(ls->size() == 3, _);
     
     for (int64_t i(0); i < 3; i++) {
-      CHECK(get<int64_t>(ls->elems[i]) == 2-i, _);
+      CHECK(get<int64_t>(ls->at(i)) == 2-i, _);
     }
   }
 
@@ -272,7 +272,7 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
     
     run(exe, "let: foo \"bar\" iter; $foo list");
-    CHECK(get<ListRef>(pop(exe.main))->elems.size() == 3, _);
+    CHECK(get<ListRef>(pop(exe.main))->size() == 3, _);
 
     run(exe, "7 iter 7 iter =");
     CHECK(!get<bool>(pop(exe.main)), _);
@@ -288,14 +288,14 @@ namespace snabel {
     auto lsb(pop(exe.main));
     CHECK(lsb.type == &get_list_type(exe, exe.i64_type), _);
     auto ls(get<ListRef>(lsb));
-    CHECK(ls->elems.size() == 3, _);
+    CHECK(ls->size() == 3, _);
     
     for (int64_t i(0); i < 3; i++) {
-      CHECK(get<int64_t>(ls->elems[i]) == i, _);
+      CHECK(get<int64_t>(ls->at(i)) == i, _);
     }
 
     run(exe, "Str list \"foo\" push");
-    CHECK(get<ListRef>(pop(exe.main))->elems.size() == 1, _);
+    CHECK(get<ListRef>(pop(exe.main))->size() == 1, _);
     
     list_push_tests();
     list_pop_tests();

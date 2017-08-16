@@ -674,10 +674,10 @@ namespace snabel {
     Coro &cor(scp.coro);
     Exec &exe(cor.exec);
     std::shared_ptr<List> lst(new List());
-    lst->elems.swap(curr_stack(cor));
+    lst->swap(curr_stack(cor));
 
-    Type *elt(lst->elems.empty() ? &exe.any_type : lst->elems[0].type);  
-    for (auto i(std::next(lst->elems.begin())); i != lst->elems.end() && elt; i++) {
+    Type *elt(lst->empty() ? &exe.any_type : lst->at(0).type);  
+    for (auto i(std::next(lst->begin())); i != lst->end() && elt; i++) {
       elt = get_super(*elt, *i->type);
     }
 

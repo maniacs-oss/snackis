@@ -14,7 +14,6 @@ namespace snabel {
   struct Func;
   struct Exec;
   struct Label;
-  struct List;
   struct Scope;
   struct Thread;
   struct Type;
@@ -22,15 +21,19 @@ namespace snabel {
   struct Undef {
     bool operator ()(const Box &box) const;
   };
-  
+
+  using List = std::deque<Box>;
   using ListRef = std::shared_ptr<List>;
 
   using Iter = func<opt<Box> (Exec &)>;
   using IterRef = std::shared_ptr<Iter>;
+
+  using Pair = std::pair<Box, Box>;
+  using PairRef = std::shared_ptr<Pair>;
   
   using Val = std::variant<Undef,
 			   bool, char, int64_t, str,
-			   ListRef, IterRef,
+			   ListRef, IterRef, PairRef,
 			   Func *, Label *, Thread *, Type *>;
   
   struct Box {
@@ -40,18 +43,16 @@ namespace snabel {
     Box(Type &t, const Val &v);
   };
 
-  struct List {
-    std::deque<Box> elems;
-  };
-
   using Stack = std::deque<Box>;
 
   extern const Undef undef;
 
   bool operator ==(const Box &x, const Box &y);
   bool operator !=(const Box &x, const Box &y);
-  IterRef make_iter(const Box &in);
-  ListRef make_list();
+  str dump(const List &lst);
+  str list_fmt(const List &lst);
+  str dump(const Pair &pr);
+  str pair_fmt(const Pair &pr);
   
   template <typename T>
   const T &get(const Box &b) {

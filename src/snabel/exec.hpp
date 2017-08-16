@@ -30,8 +30,8 @@ namespace snabel {
     Scope &main_scope;
     Type meta_type;
     Type &any_type, &bool_type, &callable_type, &char_type, &func_type, &i64_type,
-      &iter_type, &iterable_type, &label_type, &lambda_type, &list_type, &str_type,
-      &thread_type,
+      &iter_type, &iterable_type, &label_type, &lambda_type, &list_type, &pair_type,
+      &str_type, &thread_type,
       &undef_type, &void_type;
     std::atomic<Sym> next_gensym;
     
@@ -46,6 +46,7 @@ namespace snabel {
   Type &get_iter_type(Exec &exe, Type &elt);
   Type &get_iterable_type(Exec &exe, Type &elt);
   Type &get_list_type(Exec &exe, Type &elt);
+  Type &get_pair_type(Exec &exe, Type &lt, Type &rt);
 
   FuncImp &add_func(Exec &exe,
 		    const str n,
