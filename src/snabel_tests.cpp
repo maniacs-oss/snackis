@@ -134,7 +134,7 @@ namespace snabel {
     TRY(try_test);    
     Exec exe;
 
-    run(exe, "42 I64 isa?");
+    run(exe, "42 I64 is?");
     CHECK(get<bool>(pop(exe.main)), _);
 
     run(exe, "42 type");
@@ -305,7 +305,10 @@ namespace snabel {
 
     run(exe, "[\"foo\" \"bar\"] 7 list zip list unzip drop list");
     CHECK(get<str>(get<ListRef>(pop(exe.main))->back()) == "bar", _);
-    
+
+    run(exe, "[\"foo\" 7. \"bar\" 35.] unzip drop list");
+    CHECK(get<str>(get<ListRef>(pop(exe.main))->back()) == "bar", _);
+
     list_push_tests();
     list_pop_tests();
     list_reverse_tests();
@@ -320,7 +323,7 @@ namespace snabel {
     CHECK(get<int64_t>(p->first) == 42, _);    
     CHECK(get<str>(p->second) == "foo", _);    
 
-    run(exe, "42 \"foo\" . unzip");
+    run(exe, "42 \"foo\". unzip");
     CHECK(get<str>(pop(exe.main)) == "foo", _);    
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);    
   }

@@ -101,7 +101,7 @@ Bool
 ```
 
 ### Bindings
-Snabel supports named bindings using the ```let:```-macro. Bound names are prefixed with ```$```, lexically scoped and never change their value once bound in a specific scope. Semicolons may be used to separate bindings from surrounding code.
+Snabel supports named bindings using the ```let:```-macro. Bound names are prefixed with ```$```, lexically scoped and never change their value once bound in a specific scope. The bound expression is evaluated in a copy of the calling stack, which allows feeding values into a let statement but avoids unintended stack effects. Semicolons may be used to separate bindings from surrounding code.
 
 ```
 > let: fn {7 +}; 35 $fn call
@@ -117,7 +117,7 @@ Snabel provides first class static, optionally parameterized types with inferenc
 I64
 Type
 
-> 42 I64 isa?
+> 42 I64 is?
 't
 Bool
 
@@ -155,15 +155,15 @@ List<I64>
 Snackis supports first class pairs and zipping/unzipping iterables. Pairs of values are created using ```.``` while ```zip``` is reserved to zip iterables, both values and iterables support ```unzip```.
 
 ```
-> "foo" 42 .
-"foo".42
+> "foo" 42.
+"foo" 42.
 Pair<Str I64>
 
 > ["foo" "bar"] 7 list zip list
-["foo".0 "bar".1]
+["foo" 0. "bar" 1.]
 List<Pair<Str I64>>
 
-> ["foo" 0 . "bar" 1 .] unzip list swap list stash
+> ["foo" 0. "bar" 1.] unzip list swap list stash
 [[0 1] ["foo" "bar"]]
 List<List<Any>>
 ```

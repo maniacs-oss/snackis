@@ -55,7 +55,7 @@ namespace snabel {
   }
   
   TokSeq parse_expr(const str &in) {
-    static const std::set<char> split({'{', '}', '(', ')', '[', ']', ';'});
+    static const std::set<char> split({'{', '}', '(', ')', '[', ']', ';', '!', '.'});
     
     size_t i(0);
     bool quoted(false);

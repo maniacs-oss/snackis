@@ -14,10 +14,22 @@ namespace snabel {
   static void nop_imp(Scope &scp, const Args &args)
   { }
 
-  static void isa_imp(Scope &scp, const Args &args) {
+  static void is_imp(Scope &scp, const Args &args) {
     auto &v(args.at(0));
     auto &t(args.at(1));
     push(scp.coro, scp.exec.bool_type, isa(v, *get<Type *>(t)));
+  }
+
+  static void typecheck_imp(Scope &scp, const Args &args) {
+    auto &v(args.at(0));
+    auto &t(args.at(1));
+
+    if (!isa(v, *get<Type *>(t))) {
+      ERROR(Snabel, fmt("Typecheck failed, expected %0:\n%1",
+			get<Type *>(t)->name, v));
+    }
+
+    push(scp.coro, v);
   }
 
   static void type_imp(Scope &scp, const Args &args) {
@@ -146,8 +158,8 @@ namespace snabel {
 
     push(scp.coro,
 	 get_iter_type(exe, get_pair_type(exe,
-					   *xi->type.args.at(0),
-					   *yi->type.args.at(0))),
+					  *xi->type.args.at(0),
+					  *yi->type.args.at(0))),
 	 Iter::Ref(new ZipIter(exe, xi, yi)));
   }
 
@@ -407,26 +419,30 @@ namespace snabel {
  
     add_func(*this, "nop", {}, {}, nop_imp);
 
-    add_func(*this, "isa?",
+    add_func(*this, "!",
+	     {ArgType(any_type), ArgType(meta_type)}, {ArgType(0)},
+	     typecheck_imp);
+   
+    add_func(*this, "is?",
 	     {ArgType(any_type), ArgType(meta_type)}, {ArgType(bool_type)},
-	     isa_imp);
-
+	     is_imp);
+   
     add_func(*this, "type",
 	     {ArgType(any_type)}, {ArgType(0)},
 	     type_imp);
-
+   
     add_func(*this, "=",
 	     {ArgType(any_type), ArgType(0)}, {ArgType(bool_type)},
 	     eq_imp);
-
+   
     add_func(*this, "==",
 	     {ArgType(any_type), ArgType(0)}, {ArgType(bool_type)},
 	     equal_imp);
-    
+   
     add_func(*this, "zero?",
 	     {ArgType(i64_type)}, {ArgType(bool_type)},
 	     zero_i64_imp);
-
+   
     add_func(*this, "inc",
 	     {ArgType(i64_type)}, {ArgType(i64_type)},
 	     inc_i64_imp);
@@ -574,11 +590,11 @@ namespace snabel {
       });
 
     add_macro(*this, "let:", [this](auto pos, auto &in, auto &out) {
-	if (in.size() < 2) {
+	if (in.empty()) {
 	  ERROR(Snabel, fmt("Malformed let on row %0, col %1",
 			    pos.row, pos.col));
 	} else {
-	  out.emplace_back(Backup());
+	  out.emplace_back(Backup(true));
 	  const str n(in.at(0).text);
 	  auto i(std::next(in.begin()));
 	  

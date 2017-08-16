@@ -34,8 +34,8 @@ namespace snabel {
     return true;
   }
 
-  Backup::Backup():
-    OpImp(OP_BACKUP, "backup")
+  Backup::Backup(bool copy):
+    OpImp(OP_BACKUP, "backup"), copy(copy)
   { }
 
   OpImp &Backup::get_imp(Op &op) const {
@@ -43,7 +43,7 @@ namespace snabel {
   }
 
   bool Backup::run(Scope &scp) {
-    backup_stack(scp.coro);
+    backup_stack(scp.coro, copy);
     return true;
   }
   

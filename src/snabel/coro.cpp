@@ -11,7 +11,7 @@ namespace snabel {
   Coro::Coro(Thread &thd):
     thread(thd), exec(thd.exec), pc(0), main_scope(scopes.emplace_back(*this))
   {
-    backup_stack(*this);
+    stacks.emplace_back();
   }
 
   Scope &curr_scope(Coro &cor) {
@@ -63,7 +63,11 @@ namespace snabel {
     return res;
   }
 
-  Stack &backup_stack(Coro &cor) {
+  Stack &backup_stack(Coro &cor, bool copy) {
+    if (copy) {
+      return cor.stacks.emplace_back(cor.stacks.back());
+    }
+    
     return cor.stacks.emplace_back();
   }
   

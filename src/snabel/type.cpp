@@ -35,8 +35,7 @@ namespace snabel {
   }
   
   bool isa(const Type &x, const Type &y) {
-    if (&x == &y ||
-	(x.raw == y.raw && isa(x.args, y.args))) { return true; }
+    if (&x == &y || (x.raw == y.raw && isa(x.args, y.args))) { return true; }
     
     for (Type *xs: x.supers) {
       if (isa(*xs, y)) { return true; }

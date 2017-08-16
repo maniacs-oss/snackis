@@ -39,7 +39,9 @@ namespace snabel {
   };
 
   struct Backup: OpImp {
-    Backup();
+    bool copy;
+    
+    Backup(bool copy=false);
     OpImp &get_imp(Op &op) const override;
     bool run(Scope &scp) override;
   };
