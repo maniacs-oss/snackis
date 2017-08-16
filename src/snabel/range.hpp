@@ -17,7 +17,6 @@ namespace snabel {
     Range in;
     
     RangeIter(Exec &exe, Range in);
-    bool ready() const override;
     opt<Box> next() override;
   };
 }

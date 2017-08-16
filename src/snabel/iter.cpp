@@ -14,10 +14,6 @@ namespace snabel {
     xin(xin), yin(yin)
   { }
   
-  bool ZipIter::ready() const {
-    return xin->ready() && yin->ready();
-  }
-  
   opt<Box> ZipIter::next() {
     auto x(xin->next()), y(yin->next());
     if (!x || !y) { return nullopt; }

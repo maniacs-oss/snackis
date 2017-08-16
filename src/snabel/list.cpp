@@ -6,10 +6,6 @@ namespace snabel {
     Iter(exe, get_iter_type(exe, elt)), elt(elt), in(in), it(in->begin())
   { }
   
-  bool ListIter::ready() const {
-    return it != in->end();
-  }
-  
   opt<Box> ListIter::next(){
     if (it == in->end()) { return nullopt; }
     auto res(*it);

@@ -10,10 +10,6 @@ namespace snabel {
   RangeIter::RangeIter(Exec &exe, Range in):
     Iter(exe, get_iter_type(exe, exe.i64_type)), in(in)
   { }
-
-  bool RangeIter::ready() const {
-    return in.beg < in.end;
-  }
   
   opt<Box> RangeIter::next() {
     if (in.beg == in.end) { return nullopt; }

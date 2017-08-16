@@ -9,10 +9,9 @@ namespace snabel {
   
   struct StrIter: Iter {
     const str in;
-    str::const_iterator it;
+    size_t i;
     
     StrIter(Exec &exe, const str &in);
-    bool ready() const override;
     opt<Box> next() override;
   };
 }

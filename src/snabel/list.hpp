@@ -12,7 +12,6 @@ namespace snabel {
     List::const_iterator it;
     
     ListIter(Exec &exe, Type &elt, const ListRef &in);
-    bool ready() const override;
     opt<Box> next() override;
   };
 }

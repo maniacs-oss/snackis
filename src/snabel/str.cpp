@@ -3,17 +3,13 @@
 
 namespace snabel {
   StrIter::StrIter(Exec &exe, const str &in):
-    Iter(exe, get_iter_type(exe, exe.char_type)), in(in), it(this->in.begin())
+    Iter(exe, get_iter_type(exe, exe.char_type)), in(in), i(0)
   { }
   
-  bool StrIter::ready() const {
-    return it != in.end();
-  }
-  
   opt<Box> StrIter::next(){
-    if (it == in.end()) { return nullopt; }
-    auto res(*it);
-    it++;
+    if (i == in.size()) { return nullopt; }
+    auto res(in[i]);
+    i++;
     return Box(exec.char_type, res);
   }
 }

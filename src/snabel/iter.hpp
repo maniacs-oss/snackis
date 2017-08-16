@@ -18,7 +18,6 @@ namespace snabel {
     Type &type;
     
     Iter(Exec &exec, Type &type);
-    virtual bool ready() const = 0;
     virtual opt<Box> next() = 0;
   };  
 
@@ -26,7 +25,6 @@ namespace snabel {
     Iter::Ref xin, yin;
     
     ZipIter(Exec &exe, const Iter::Ref &xin, const Iter::Ref &yin);
-    bool ready() const override;
     opt<Box> next() override;
   };
 }
