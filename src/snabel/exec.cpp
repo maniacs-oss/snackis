@@ -36,9 +36,8 @@ namespace snabel {
   }
   
   static void zero_i64_imp(Scope &scp, const Args &args) {
-    Exec &exe(scp.exec);
     bool res(get<int64_t>(args.at(0)) == 0);
-    push(scp.coro, exe.bool_type, res);
+    push(scp.coro, scp.exec.bool_type, res);
   }
 
   static void inc_i64_imp(Scope &scp, const Args &args) {
@@ -414,7 +413,14 @@ namespace snabel {
     thread_type.eq = [](auto &x, auto &y) {
       return get<Thread *>(x) == get<Thread *>(y);
     };
- 
+
+    add_conv(*this, i64_type, rat_type, [this](auto &v) {	
+	v.type = &rat_type;
+	auto n(get<int64_t>(v));
+	v.val = Rat(abs(n), 1, n < 0);
+	return true;
+      });
+    
     add_func(*this, "nop", {}, {}, nop_imp);
 
     add_func(*this, "is?",
@@ -875,7 +881,19 @@ namespace snabel {
     if (fnd == exe.labels.end()) { return nullptr; }
     return &fnd->second;
   }
+
+  void add_conv(Exec &exe, Type &from, Type &to, Conv conv) {
+    exe.convs.emplace(std::piecewise_construct,
+		      std::forward_as_tuple(&from, &to),
+		      std::forward_as_tuple(conv));
+  }
   
+  bool conv(Exec &exe, Box &val, Type &type) {
+    auto fnd(exe.convs.find(std::make_pair(val.type, &type)));
+    if (fnd == exe.convs.end()) { return false; }
+    return fnd->second(val);
+  }
+
   Sym gensym(Exec &exe) {
     return exe.next_gensym.fetch_add(1);
   }

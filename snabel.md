@@ -145,8 +145,8 @@ Rat!
 3
 I64!
 
-> 1
-  10 {drop 1 3 / *} for
+> 1 1 /
+  10 {drop 3 /} for
   10 {drop 3 *} for
 1/1
 Rat!

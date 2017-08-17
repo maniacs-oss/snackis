@@ -10,10 +10,10 @@
 namespace snabel {  
   using namespace snackis;
 
-  struct Box;
   struct Scope;
 
   using Types = std::deque<Type *>;
+  using Conv = func<bool (Box &)>;
   
   struct Type {
     const str name;

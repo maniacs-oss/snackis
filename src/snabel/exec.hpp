@@ -15,7 +15,6 @@
 
 namespace snabel {
   struct Exec {
-    using Conv = func<bool (Box &)>;
     using Lock = std::unique_lock<std::mutex>;
     
     std::map<str, Macro> macros;
@@ -63,6 +62,9 @@ namespace snabel {
   Label *find_label(Exec &exe, const str &tag);
   void clear_labels(Exec &exe);
     
+  void add_conv(Exec &exe, Type &from, Type &to, Conv conv);
+  bool conv(Exec &exe, Box &val, Type &type);
+
   Sym gensym(Exec &exe);
   bool run(Exec &exe, const str &in);
 }

@@ -2,9 +2,10 @@
 
 #include "snabel/box.hpp"
 #include "snabel/coro.hpp"
-#include "snabel/scope.hpp"
 #include "snabel/error.hpp"
+#include "snabel/exec.hpp"
 #include "snabel/func.hpp"
+#include "snabel/scope.hpp"
 #include "snabel/type.hpp"
 
 namespace snabel {
@@ -57,20 +58,6 @@ namespace snabel {
     return t;
   }
 
-  Args pop_args(const FuncImp &imp, Coro &cor) {
-    auto i = imp.args.rbegin();
-    auto &s(curr_stack(cor));
-    Args out;
-    
-    while (i != imp.args.rend() && !s.empty()) {
-      out.push_front(s.back());
-      s.pop_back();
-      i++;
-    }
-
-    return out;
-  }
-
   FuncImp &add_imp(Func &fn,
 		   const ArgTypes &args,
 		   const ArgTypes &results,
@@ -78,7 +65,8 @@ namespace snabel {
     return fn.imps.emplace_front(fn, args, results, imp);
   }
 
-  opt<Args> match(const FuncImp &imp, const Coro &cor) {
+  opt<Args> match(const FuncImp &imp, const Coro &cor, bool conv_args) {
+    auto &exe(cor.exec);
     auto &s(curr_stack(cor));
     if (s.size() < imp.args.size()) { return nullopt; }
 
@@ -90,8 +78,13 @@ namespace snabel {
     
     while (i != s.rend() && j != imp.args.rend()) {
       auto t(get_type(imp, *j, s));
-      args.push_front(*i);
-      if (!t || !isa(*i, *t)) { return nullopt; }
+      auto a(*i);
+
+      if (!t || (!isa(a, *t) && (!conv_args || !conv(exe, a, *t)))) {
+	return nullopt;
+      }
+      
+      args.push_front(a);
       i++;
       j++;
     }
@@ -99,12 +92,12 @@ namespace snabel {
     return args;
   }
   
-  opt<std::pair<FuncImp *, Args>> match(Func &fn, const Coro &cor) {
+  opt<std::pair<FuncImp *, Args>> match(Func &fn, const Coro &cor, bool conv_args) {
     for (auto &imp: fn.imps) {
-      auto args(match(imp, cor));
+      auto args(match(imp, cor, conv_args));
       if (args) { return std::make_pair(&imp, *args); }
     }
 
-    return nullopt;
+    return conv_args ? nullopt : match(fn, cor, true);
   }
 }

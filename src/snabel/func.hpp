@@ -58,13 +58,14 @@ namespace snabel {
   };
 
   Type *get_type(const FuncImp &imp, const ArgType &arg_type, const Args &args);
-  Args pop_args(const FuncImp &imp, Coro &cor);
   FuncImp &add_imp(Func &fn,
 		   const ArgTypes &args,
 		   const ArgTypes &results,
 		   FuncImp::Imp imp);
-  opt<Args> match(const FuncImp &imp, const Coro &cor);
-  opt<std::pair<FuncImp *, Args>> match(Func &fn, const Coro &cor);
+  opt<Args> match(const FuncImp &imp, const Coro &cor, bool conv_args);
+  opt<std::pair<FuncImp *, Args>> match(Func &fn,
+					const Coro &cor,
+					bool conv_args=false);
 }
 
 #endif

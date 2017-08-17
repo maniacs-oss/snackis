@@ -94,6 +94,11 @@ namespace snabel {
 
   static void parse_tests() {
     parse_lines_tests();
+
+    auto ts(parse_expr("1"));	
+    CHECK(ts.size() == 1, _);
+    CHECK(ts[0].text == "1", _);
+    
     parse_semicolon_tests();
     parse_braces_tests();
     parse_string_tests();
@@ -377,7 +382,7 @@ namespace snabel {
     run(exe, "2 3 / -1 2 / *");
     CHECK(get<Rat>(pop(exe.main)) == Rat(1, 3, true), _);
 
-    run(exe, "1 3 / -5 1 / /");
+    run(exe, "1 3 / -5 /");
     CHECK(get<Rat>(pop(exe.main)) == Rat(1, 15, true), _);
 
     run(exe, "-8 3 / trunc");
@@ -385,8 +390,8 @@ namespace snabel {
 
     run(exe,
 	"1 1 / "
-	"10 {drop 1 3 / *} for "
-	"10 {drop 3 1 / *} for");
+	"10 {drop 3 /} for "
+	"10 {drop 3 *} for");
     CHECK(get<Rat>(pop(exe.main)) == Rat(1, 1), _);
   }
   

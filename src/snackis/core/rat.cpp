@@ -15,6 +15,8 @@ namespace snackis {
 
   uint64_t gcd(uint64_t x, uint64_t y) {
     while (x && y && x != y) {
+      //std::cout << "gcd " << x << " " << y << std::endl;
+      
       if (x > y) {
 	x -= y;
       } else { 
@@ -54,6 +56,7 @@ namespace snackis {
   }
 
   int64_t trunc(const Rat &r) {
+    if (r.div == 1) { return r.num; }
     auto res(r.num % r.div);
     return r.neg ? -res : res;
   }

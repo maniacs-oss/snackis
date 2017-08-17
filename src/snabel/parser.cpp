@@ -86,7 +86,7 @@ namespace snabel {
 	out.emplace_back(in.substr(cp, 1), cp);
       }
 
-      if (i < j && j == in.size()-1) {
+      if ((i < j || in.size() == 1) && j == in.size()-1) {
 	str s(trim(in.substr(i)));
 	if (!s.empty()) { out.emplace_back(s, i); }
       }
