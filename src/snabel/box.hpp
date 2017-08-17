@@ -7,6 +7,7 @@
 #include "snabel/iter.hpp"
 #include "snackis/core/error.hpp"
 #include "snackis/core/fmt.hpp"
+#include "snackis/core/rat.hpp"
 
 namespace snabel {  
   using namespace snackis;
@@ -29,7 +30,7 @@ namespace snabel {
   using ListRef = std::shared_ptr<List>;
 
   using Val = std::variant<Undef,
-			   bool, char, int64_t, str,
+			   bool, char, int64_t, Rat, str,
 			   PairRef, ListRef, Iter::Ref,
 			   Func *, Label *, Thread *, Type *>;
   

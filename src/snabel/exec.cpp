@@ -52,53 +52,58 @@ namespace snabel {
   }
 
   static void add_i64_imp(Scope &scp, const Args &args) {
-    Exec &exe(scp.exec);
-    int64_t res(0);
-
-    for (auto &a: args) {
-      CHECK(a.type == &exe.i64_type, _);
-      res += get<int64_t>(a);
-    }
-    
-    push(scp.coro, exe.i64_type, res);
+    auto &x(get<int64_t>(args.at(0))), &y(get<int64_t>(args.at(1)));
+    push(scp.coro, scp.exec.i64_type, x+y);
   }
 
   static void sub_i64_imp(Scope &scp, const Args &args) {
-    Exec &exe(scp.exec);
-    int64_t res(get<int64_t>(args.at(0)));
-
-    if (args.size() == 1) { res = -res; }
-    else {
-      for (auto i=std::next(args.begin()); i != args.end(); i++) {
-	CHECK(i->type == &exe.i64_type, _);
-	res -= get<int64_t>(*i);
-      }
-    }
-    
-    push(scp.coro, exe.i64_type, res);
+    auto &x(get<int64_t>(args.at(0))), &y(get<int64_t>(args.at(1)));
+    push(scp.coro, scp.exec.i64_type, x-y);
   }
 
   static void mul_i64_imp(Scope &scp, const Args &args) {
-    Exec &exe(scp.exec);
-    int64_t res(1);
+    auto &x(get<int64_t>(args.at(0))), &y(get<int64_t>(args.at(1)));
+    push(scp.coro, scp.exec.i64_type, x*y);
+  }
 
-    for (auto &a: args) {
-      CHECK(a.type == &exe.i64_type, _);
-      res *= get<int64_t>(a);
-    }
-    
-    push(scp.coro, exe.i64_type, res);
+  static void div_i64_imp(Scope &scp, const Args &args) {
+    auto &num(get<int64_t>(args.at(0)));
+    auto &div(get<int64_t>(args.at(1)));
+    bool neg = (num < 0 && div > 0) || (div < 0 && num >= 0);
+    push(scp.coro, scp.exec.rat_type, Rat(abs(num), abs(div), neg));
   }
 
   static void mod_i64_imp(Scope &scp, const Args &args) {
-    Exec &exe(scp.exec);
-    int64_t res(get<int64_t>(args.at(0)));
-    for (auto i=std::next(args.begin()); i != args.end(); i++) {
-      CHECK(i->type == &exe.i64_type, _);
-      res %= get<int64_t>(*i);
-    }
-    
-    push(scp.coro, exe.i64_type, res);
+    auto &x(get<int64_t>(args.at(0))), &y(get<int64_t>(args.at(1)));
+    push(scp.coro, scp.exec.i64_type, x%y);
+  }
+
+  static void trunc_imp(Scope &scp, const Args &args) {
+    push(scp.coro, scp.exec.i64_type, trunc(get<Rat>(args.at(0))));
+  }
+
+  static void add_rat_imp(Scope &scp, const Args &args) {
+    auto &x(get<Rat>(args.at(0)));
+    auto &y(get<Rat>(args.at(1)));
+    push(scp.coro, scp.exec.rat_type, x+y);
+  }
+
+  static void sub_rat_imp(Scope &scp, const Args &args) {
+    auto &x(get<Rat>(args.at(0)));
+    auto &y(get<Rat>(args.at(1)));
+    push(scp.coro, scp.exec.rat_type, x-y);
+  }
+
+  static void mul_rat_imp(Scope &scp, const Args &args) {
+    auto &x(get<Rat>(args.at(0)));
+    auto &y(get<Rat>(args.at(1)));
+    push(scp.coro, scp.exec.rat_type, x*y);
+  }
+
+  static void div_rat_imp(Scope &scp, const Args &args) {
+    auto &x(get<Rat>(args.at(0)));
+    auto &y(get<Rat>(args.at(1)));
+    push(scp.coro, scp.exec.rat_type, x/y);
   }
 
   static void iter_imp(Scope &scp, const Args &args) {
@@ -251,6 +256,7 @@ namespace snabel {
     lambda_type(add_type(*this, "Lambda")),
     list_type(add_type(*this, "List")),
     pair_type(add_type(*this, "Pair")),
+    rat_type(add_type(*this, "Rat")),
     str_type(add_type(*this, "Str")),
     thread_type(add_type(*this, "Thread")),
     undef_type(add_type(*this, "Undef")),
@@ -393,12 +399,16 @@ namespace snabel {
 
     str_type.supers.push_back(&any_type);
     str_type.supers.push_back(&get_iterable_type(*this, char_type));
-    str_type.fmt = [](auto &v) { return fmt("\"%0\"", get<str>(v)); };
+    str_type.fmt = [](auto &v) { return fmt("'%0'", get<str>(v)); };
     str_type.eq = [](auto &x, auto &y) { return get<str>(x) == get<str>(y); };
 
     str_type.iter = [this](auto &in) {
       return Iter::Ref(new StrIter(*this, get<str>(in))); };
 
+    rat_type.supers.push_back(&any_type);
+    rat_type.fmt = [](auto &v) { return fmt_arg(get<Rat>(v)); };
+    rat_type.eq = [](auto &x, auto &y) { return get<Rat>(x) == get<Rat>(y); };
+    
     thread_type.supers.push_back(&any_type);
     thread_type.fmt = [](auto &v) { return fmt_arg(get<Thread *>(v)->id); };
     thread_type.eq = [](auto &x, auto &y) {
@@ -444,9 +454,28 @@ namespace snabel {
     add_func(*this, "*",
 	     {ArgType(i64_type), ArgType(i64_type)}, {ArgType(i64_type)},
 	     mul_i64_imp);
+    add_func(*this, "/",
+	     {ArgType(i64_type), ArgType(i64_type)}, {ArgType(rat_type)},
+	     div_i64_imp);
     add_func(*this, "%",
 	     {ArgType(i64_type), ArgType(i64_type)}, {ArgType(i64_type)},
 	     mod_i64_imp);
+
+    add_func(*this, "trunc",
+	     {ArgType(rat_type)}, {ArgType(i64_type)},
+	     trunc_imp);
+    add_func(*this, "+",
+	     {ArgType(rat_type), ArgType(rat_type)}, {ArgType(rat_type)},
+	     add_rat_imp);
+    add_func(*this, "-",
+	     {ArgType(rat_type), ArgType(rat_type)}, {ArgType(rat_type)},
+	     sub_rat_imp);
+    add_func(*this, "*",
+	     {ArgType(rat_type), ArgType(rat_type)}, {ArgType(rat_type)},
+	     mul_rat_imp);
+    add_func(*this, "/",
+	     {ArgType(rat_type), ArgType(rat_type)}, {ArgType(rat_type)},
+	     div_rat_imp);
 
     add_func(*this, "iter",
 	     {ArgType(iterable_type)},

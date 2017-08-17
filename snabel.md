@@ -133,6 +133,25 @@ Check failed, expected Str!
 42 I64!
 ```
 
+#### Rationals
+Snabel supports exact arithmetics using rational numbers.
+
+```
+> 1 3 /
+1/3
+Rat!
+
+> 10 3 / trunc
+3
+I64!
+
+> 1
+  10 {drop 1 3 / *} for
+  10 {drop 3 *} for
+1/1
+Rat!
+```
+
 #### Lists
 Snabel's lists are based on deques, which means fast inserts/removals in the front/back and decent random access-performance and memory layout. All list types are parameterized by element type. Lists allocate their memory on the heap and provide reference semantics.
 

@@ -357,6 +357,38 @@ namespace snabel {
     run(exe, "'foo' &nop for stash \\- join");
     CHECK(get<str>(pop(exe.main)) == "f-o-o", _);
   }
+
+  static void rat_tests() {
+    TRY(try_test);    
+    Exec exe;
+
+    run(exe, "1 2 / 2 3 / + -1 6 / +");
+    CHECK(get<Rat>(pop(exe.main)) == Rat(1, 1), _);
+
+    run(exe, "-1 -2 / -1 2 / +");
+    CHECK(get<Rat>(pop(exe.main)) == Rat(0, 1), _);
+
+    run(exe, "4 6 / -1 3 / -");
+    CHECK(get<Rat>(pop(exe.main)) == Rat(1, 1), _);
+
+    run(exe, "-4 6 / 1 3 / -");
+    CHECK(get<Rat>(pop(exe.main)) == Rat(1, 1, true), _);
+
+    run(exe, "2 3 / -1 2 / *");
+    CHECK(get<Rat>(pop(exe.main)) == Rat(1, 3, true), _);
+
+    run(exe, "1 3 / -5 1 / /");
+    CHECK(get<Rat>(pop(exe.main)) == Rat(1, 15, true), _);
+
+    run(exe, "-8 3 / trunc");
+    CHECK(get<int64_t>(pop(exe.main)) == -2, _);
+
+    run(exe,
+	"1 1 / "
+	"10 {drop 1 3 / *} for "
+	"10 {drop 3 1 / *} for");
+    CHECK(get<Rat>(pop(exe.main)) == Rat(1, 1), _);
+  }
   
   static void thread_tests() {
     TRY(try_test);    
@@ -382,6 +414,7 @@ namespace snabel {
     list_tests();
     pair_tests();
     for_tests();
+    rat_tests();
     thread_tests();
   }
 }
