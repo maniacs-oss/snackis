@@ -346,15 +346,15 @@ namespace snabel {
     func_type.call.emplace([](auto &scp, auto &v) {
 	auto &cor(scp.coro);
 	auto &fn(*get<Func *>(v));
-	auto imp(match(fn, cor));
+	auto m(match(fn, cor));
 
-	if (!imp) {
+	if (!m) {
 	  ERROR(Snabel, fmt("Function not applicable: %0\n%1", 
 			    fn.name, curr_stack(cor)));
 	  return false;
 	}
 
-	(*imp)(scp);
+	(*m->first)(scp, m->second);
 	return true;
       });
 

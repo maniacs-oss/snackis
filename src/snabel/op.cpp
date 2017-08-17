@@ -403,15 +403,15 @@ namespace snabel {
 
   bool Funcall::run(Scope &scp) {
     Coro &cor(scp.coro);
-    auto imp = match(fn, cor);
+    auto m(match(fn, cor));
     
-    if (!imp) {
+    if (!m) {
       ERROR(Snabel, fmt("Function not applicable: %0\n%1", 
 			fn.name, curr_stack(scp.coro)));
       return false;
     }
 
-    (*imp)(scp);
+    (*m->first)(scp, m->second);
     return true;
   }
   

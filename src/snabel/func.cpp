@@ -17,12 +17,9 @@ namespace snabel {
   { }
   
   void FuncImp::operator ()(Scope &scp, const Args &args) {
+    auto &s(curr_stack(scp.coro));
+    s.erase(std::next(s.begin(), s.size()-args.size()), s.end());
     imp(scp, args);
-  }
-
-  void FuncImp::operator ()(Scope &scp) {
-    auto args(pop_args(*this, scp.coro));
-    (*this)(scp, args);
   }
 
   Func::Func(const str &nam):
@@ -81,29 +78,33 @@ namespace snabel {
     return fn.imps.emplace_front(fn, args, results, imp);
   }
 
-  bool match(const FuncImp &imp, const Coro &cor) {
-    if (imp.args.empty()) { return true; }
+  opt<Args> match(const FuncImp &imp, const Coro &cor) {
     auto &s(curr_stack(cor));
-    if (s.size() < imp.args.size()) { return false; }
+    if (s.size() < imp.args.size()) { return nullopt; }
+
+    Args args;
+    if (imp.args.empty()) { return args; }
+
     auto i(s.rbegin());
     auto j(imp.args.rbegin());
     
     while (i != s.rend() && j != imp.args.rend()) {
       auto t(get_type(imp, *j, s));
-      if (!t || !isa(*i, *t)) { return false; }
-      
+      args.push_front(*i);
+      if (!t || !isa(*i, *t)) { return nullopt; }
       i++;
       j++;
     }
 
-    return true;
+    return args;
   }
-
-  FuncImp *match(Func &fn, const Coro &cor) {
+  
+  opt<std::pair<FuncImp *, Args>> match(Func &fn, const Coro &cor) {
     for (auto &imp: fn.imps) {
-      if (match(imp, cor)) { return &imp; }
+      auto args(match(imp, cor));
+      if (args) { return std::make_pair(&imp, *args); }
     }
 
-    return nullptr;
+    return nullopt;
   }
 }
