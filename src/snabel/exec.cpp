@@ -81,6 +81,10 @@ namespace snabel {
     push(scp.coro, scp.exec.i64_type, trunc(get<Rat>(args.at(0))));
   }
 
+  static void frac_imp(Scope &scp, const Args &args) {
+    push(scp.coro, scp.exec.rat_type, frac(get<Rat>(args.at(0))));
+  }
+
   static void add_rat_imp(Scope &scp, const Args &args) {
     auto &x(get<Rat>(args.at(0)));
     auto &y(get<Rat>(args.at(1)));
@@ -470,6 +474,9 @@ namespace snabel {
     add_func(*this, "trunc",
 	     {ArgType(rat_type)}, {ArgType(i64_type)},
 	     trunc_imp);
+    add_func(*this, "frac",
+	     {ArgType(rat_type)}, {ArgType(rat_type)},
+	     frac_imp);
     add_func(*this, "+",
 	     {ArgType(rat_type), ArgType(rat_type)}, {ArgType(rat_type)},
 	     add_rat_imp);

@@ -57,10 +57,14 @@ namespace snackis {
 
   int64_t trunc(const Rat &r) {
     if (r.div == 1) { return r.num; }
-    auto res(r.num % r.div);
+    auto res(r.num / r.div);
     return r.neg ? -res : res;
   }
-  
+
+  Rat frac(const Rat &r) {
+    return Rat(r.num % r.div, r.div, r.neg);
+  }
+
   template <>
   str fmt_arg(const Rat &arg) {
     if (!arg.num) { return "0"; }

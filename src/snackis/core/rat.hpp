@@ -22,6 +22,7 @@ namespace snackis {
   Rat operator /(const Rat &x, const Rat &y);
   
   int64_t trunc(const Rat &r);
+  Rat frac(const Rat &r);
 
   template <>
   str fmt_arg(const snackis::Rat &arg);

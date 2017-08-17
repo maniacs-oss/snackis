@@ -4,7 +4,7 @@
 ![script example](images/script.png?raw=true)
 
 ### Postfix
-Just like Yoda of Star Wars-fame, and yesterdays scientific calculators; as well as most printers in active use; yet unlike currently trending programming languages; Snabel expects arguments before operations.
+Like Yoda of Star Wars-fame, and yesterdays scientific calculators; as well as most printers in active use; yet unlike currently trending programming languages; Snabel expects arguments before operations.
 
 ```
 > 7 42 + 10 %
@@ -13,7 +13,7 @@ I64!
 ```
 
 ### The Stack
-Values and results from function calls are pushed on the current stack in order of appearance. Thanks to lexical scoping and named bindings, keeping the stack squeaky clean is less critical in Snabel. ```stash``` collects all values on the stack in a list and pushes it on the stack. ```$1```-```$9``` swaps elements, starting from the end of the stack; while ```$0``` duplicates the last value. Use ```_``` to drop the last element from the stack or ```reset``` to clear all.
+Values and results from function calls are pushed on the current stack in order of appearance. Thanks to lexical scoping and named bindings, keeping the stack squeaky clean is less critical in Snabel. ```stash``` collects all values on the stack in a list and pushes it on the stack. ```$1```-```$9``` swaps in values, starting from the end of the stack; while ```$0``` duplicates the last value. Use ```_``` to drop the last value from the stack or ```reset``` to clear all.
 
 ```
 > 1 2 3 stash
@@ -38,7 +38,7 @@ I64!
 ```
 
 ### Expressions
-Parentheses may be used to divide expressions into separate parts, each level starts with a fresh stack and the last value is pushed on the outer stack.
+Parentheses may be used to divide expressions into separate parts, each level starts with a fresh stack and the last value is pushed on the outer stack on exit.
 
 ```
 > (1 2 +) (2 2 *) +
@@ -54,11 +54,9 @@ Adding functions from C++ is as easy as this:
 ```
 using namespace snabel;
 
-static void add_i64(Scope &scp, const Args &args) {
-  Coro &cor(scp.coro);
-  int64_t res(0);
-  for (auto &a: args) { res += get<int64_t>(a); }
-  push(cor, cor.exec.i64_type, res);
+static void add_i64_imp(Scope &scp, const Args &args) {
+  auto &x(get<int64_t>(args.at(0))), &y(get<int64_t>(args.at(1)));
+  push(scp.coro, scp.exec.i64_type, x+y);
 }
 
 Exec exe;
@@ -69,7 +67,7 @@ add_func(exe, "+",
 ```
 
 ### Lambdas
-Wrapping code in braces instead of parentheses pushes a pointer to the compiled expression on the stack. Lambdas may be exited early by calling ```return```, everything on the stack at the point of return is pushed on the outer stack. Use ```recall``` to call the current lambda recursively.
+Wrapping code in braces pushes a pointer to the compiled expression on the stack. Lambdas may be exited early by calling ```return```, everything on the stack at the point of return is pushed on the outer stack. Use ```recall``` to call the current lambda recursively.
 
 ```
 > {1 2 +}
@@ -95,7 +93,7 @@ I64!
 ```
 
 ### Equality
-Two kinds of equality are provided, shallow and deep. Each use a separate operator, ```=``` for shallow comparisons and ```==``` for deep.
+Two kinds of equality are supported, shallow and deep. Each use a separate operator, ```=``` for shallow comparisons and ```==``` for deep.
 
 ```
 > [3 4 35] [3 4 35] =
@@ -138,7 +136,7 @@ Check failed, expected Str!
 ```
 
 #### Rationals
-Exact arithmetics using rational numbers is supported. Integers are promoted to rationals automatically as needed, ```trunc``` may be used to convert back to integer.
+Snabel provides exact arithmetics using rational numbers. Integers are promoted to rationals automatically as needed, while ```trunc``` may be used to convert rationals to integers.
 
 ```
 > 1 3 /

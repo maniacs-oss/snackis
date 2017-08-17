@@ -387,8 +387,11 @@ namespace snabel {
     run(exe, "1 3 / -5 /");
     CHECK(get<Rat>(pop(exe.main)) == Rat(1, 15, true), _);
 
-    run(exe, "-8 3 / trunc");
+    run(exe, "-7 3 / trunc");
     CHECK(get<int64_t>(pop(exe.main)) == -2, _);
+
+    run(exe, "-7 3 / frac");
+    CHECK(get<Rat>(pop(exe.main)) == Rat(1, 3, true), _);
 
     run(exe,
 	"1 1 / "
