@@ -390,7 +390,7 @@ namespace snabel {
   }
 
   Funcall::Funcall(Func &fn):
-    OpImp(OP_FUNCALL, "funcall"), fn(fn)
+    OpImp(OP_FUNCALL, "funcall"), fn(fn), imp(nullptr)
   { }
 
   OpImp &Funcall::get_imp(Op &op) const {
@@ -403,6 +403,15 @@ namespace snabel {
 
   bool Funcall::run(Scope &scp) {
     Coro &cor(scp.coro);
+    if (imp) {
+      auto m(match(*imp, cor, true));
+
+      if (m) {
+	(*imp)(scp, *m);
+	return true;
+      }
+    }
+
     auto m(match(fn, cor));
     
     if (!m) {
@@ -411,7 +420,8 @@ namespace snabel {
       return false;
     }
 
-    (*m->first)(scp, m->second);
+    imp = m->first;
+    (*imp)(scp, m->second);
     return true;
   }
   

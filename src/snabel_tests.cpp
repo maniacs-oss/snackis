@@ -1,4 +1,6 @@
+#include <chrono>
 #include <iostream>
+
 #include "snabel/compiler.hpp"
 #include "snabel/exec.hpp"
 #include "snabel/op.hpp"
@@ -402,7 +404,7 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
   
-  void all_tests() {
+  static void loop() {
     func_tests();
     parse_tests();
     parens_tests();
@@ -421,5 +423,16 @@ namespace snabel {
     for_tests();
     rat_tests();
     thread_tests();
+  }
+
+  void all_tests() {
+    const int iters(100), warmups(10);
+    for(int i(0); i < warmups; ++i) { loop(); }
+    auto started(std::chrono::high_resolution_clock::now());    
+    for(int i(0); i < iters; ++i) { loop(); }
+    auto stopped = std::chrono::high_resolution_clock::now();
+    auto t =
+      std::chrono::duration_cast<std::chrono::microseconds>(stopped-started).count();
+    std::cout << "Snabel: " << t / iters << "ms" << std::endl;
   }
 }

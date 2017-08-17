@@ -115,7 +115,8 @@ namespace snabel {
 
   struct Funcall: OpImp {
     Func &fn;
-
+    FuncImp *imp;
+    
     Funcall(Func &fn);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
