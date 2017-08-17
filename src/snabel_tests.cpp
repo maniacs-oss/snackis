@@ -170,7 +170,7 @@ namespace snabel {
     run(exe, "42 reset");
     CHECK(!peek(exe.main), _);
 
-    compile(exe.main, "1 2 3 drop drop");
+    compile(exe.main, "1 2 3 _ _");
     CHECK(exe.main_thread.ops.size() == 1, _);
   }
 
@@ -232,10 +232,10 @@ namespace snabel {
     run(exe, "{#t {42} when} call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run(exe, "#t {dup &return when #f} call");
+    run(exe, "#t {$0 &return when #f} call");
     CHECK(get<bool>(pop(exe.main)), _);
 
-    run(exe, "42 {dec dup zero? &return when recall} call");
+    run(exe, "42 {dec $0 zero? &return when recall} call");
     CHECK(get<int64_t>(pop(exe.main)) == 0, _);
   }
 
@@ -291,7 +291,7 @@ namespace snabel {
     run(exe, "7 \\, join");
     CHECK(get<str>(pop(exe.main)) == "0,1,2,3,4,5,6", _);
 
-    run(exe, "3 iter pop swap pop swap pop swap drop + +");
+    run(exe, "3 iter pop $1 pop $1 pop $1 _ + +");
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
     
     run(exe, "let: foo 'bar' iter; $foo list");
@@ -326,10 +326,10 @@ namespace snabel {
     run(exe, "Str list 'foo' push");
     CHECK(get<ListRef>(pop(exe.main))->size() == 1, _);
 
-    run(exe, "['foo' 'bar'] 7 list zip list unzip drop list");
+    run(exe, "['foo' 'bar'] 7 list zip list unzip _ list");
     CHECK(get<str>(get<ListRef>(pop(exe.main))->back()) == "bar", _);
 
-    run(exe, "['foo' 7. 'bar' 35.] unzip drop list");
+    run(exe, "['foo' 7. 'bar' 35.] unzip _ list");
     CHECK(get<str>(get<ListRef>(pop(exe.main))->back()) == "bar", _);
 
     list_push_tests();
@@ -392,8 +392,8 @@ namespace snabel {
 
     run(exe,
 	"1 1 / "
-	"10 {drop 3 /} for "
-	"10 {drop 3 *} for");
+	"10 {_ 3 /} for "
+	"10 {_ 3 *} for");
     CHECK(get<Rat>(pop(exe.main)) == Rat(1, 1), _);
   }
   

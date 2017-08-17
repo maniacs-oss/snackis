@@ -769,27 +769,27 @@ namespace snabel {
     return true;
   }
 
-  Swap::Swap():
-    OpImp(OP_SWAP, "swap")
+  Swap::Swap(size_t pos):
+    OpImp(OP_SWAP, "swap"), pos(pos)
   { }
 
   OpImp &Swap::get_imp(Op &op) const {
     return std::get<Swap>(op.data);
   }
 
+  str Swap::info() const { return fmt_arg(pos); }
+
   bool Swap::run(Scope &scp) {
     auto &s(curr_stack(scp.coro));
-    if (s.size() < 2) {
-      ERROR(Snabel, fmt("Invalid swap:\n%0", s));
+    if (s.size() < pos+1) {
+      ERROR(Snabel, fmt("Invalid swap: %0\n%1", pos, s));
       return false;
     }
-    
-    auto x(s.back());
-    s.pop_back();
-    auto y(s.back());
-    s.pop_back();
-    s.push_back(x);
-    s.push_back(y);
+
+    auto i(s.size()-pos-1);
+    auto v(s.at(i));
+    s.erase(std::next(s.begin(), i));
+    s.push_back(v);
     return true;
   }
 

@@ -12,8 +12,33 @@ Just like Yoda of Star Wars-fame, and yesterdays scientific calculators; as well
 I64!
 ```
 
+### The Stack
+Values and results from function calls are pushed on the current stack in order of appearance. Thanks to lexical scoping and named bindings, keeping the stack squeaky clean is less critical in Snabel. ```stash``` collects all values on the stack in a list and pushes it on the stack. ```$1```-```$9``` swaps elements, starting from the end of the stack; while ```$0``` duplicates the last value. Use ```_``` to drop the last element from the stack or ```reset``` to clear all.
+
+```
+> 1 2 3 stash
+[1 2 3]
+List<I64>!
+
+> 1 2 $0 stash
+[1 2 2]
+List<I64>!
+
+> 42 7 _ stash
+[42]
+I64!
+
+> 42 7 reset stash
+[]
+List<Any>!
+
+> 42 35 $1 -
+-7
+I64!
+```
+
 ### Expressions
-Snabel supports dividing expressions into parts using parentheses, each level starts with a fresh stack and the last result is pushed on the outer stack.
+Parentheses may be used to divide expressions into separate parts, each level starts with a fresh stack and the last value is pushed on the outer stack.
 
 ```
 > (1 2 +) (2 2 *) +
@@ -21,29 +46,8 @@ Snabel supports dividing expressions into parts using parentheses, each level st
 I64!
 ```
 
-### Stacks
-Literals, identifiers and results from function calls are pushed on the current stack in order of appearance. Thanks to lexical scoping and named bindings, keeping the stack squeaky clean is less critical in Snabel.
-
-```
-> 1 2 3 stash
-[1 2 3]
-List<I64>!
-
-> 42 7 drop
-42
-I64!
-
-> 42 7 reset stash
-[]
-List<Any>!
-
-> 42 35 swap -
--7
-I64!
-```
-
 ### Functions
-Snabel derives most of its type-checking powers from functions. Each named function represents a set of implementations, and each implementation may declare its parameter- and result types. Implementations are matched in reverse declared order when resolving function calls, to allow overriding existing functionality at any point. Prefixing the name of a function with ```&``` pushes it on the stack for later use.
+Each named function represents a set of implementations, and each implementation may declare its parameter- and result types. Implementations are matched in reverse declared order when resolving function calls, to allow overriding existing functionality at any point. Prefixing the name of a function with ```&``` pushes it on the stack for later use.
 
 Adding functions from C++ is as easy as this:
 
@@ -84,14 +88,14 @@ I64!
 I64!
 
 > 42
-  {dec dup zero? &return when recall}
+  {dec $0 zero? &return when recall}
   call
 0
 I64!
 ```
 
 ### Equality
-Snabel cares about two kinds of equality, shallow and deep. A separate operator is provided for each, ```=``` for shallow comparisons and ```==``` for deep.
+Two kinds of equality are provided, shallow and deep. Each use a separate operator, ```=``` for shallow comparisons and ```==``` for deep.
 
 ```
 > [3 4 35] [3 4 35] =
@@ -104,7 +108,7 @@ Bool!
 ```
 
 ### Bindings
-Snabel supports named bindings using the ```let:```-macro. Bound names are prefixed with ```$```, lexically scoped and never change their value once bound in a specific scope. The bound expression is evaluated in a copy of the calling stack, which allows feeding values into a let statement but avoids unintended stack effects. Semicolons may be used to separate bindings from surrounding code.
+The ```let:```-macro may be used to introduce named bindings. Bound names are prefixed with ```$```, lexically scoped and not allowed to change their value once bound in a specific scope. The bound expression is evaluated in a copy of the calling stack, which allows feeding values into a let statement but avoids unintended stack effects. Semicolons may be used to separate bindings from surrounding code.
 
 ```
 > let: fn {7 +}; 35 $fn call
@@ -113,7 +117,7 @@ I64!
 ```
 
 ### Types
-Snabel provides first class static, optionally parameterized types with inference.
+Types are first class, optionally parameterized and inferred.
 
 ```
 > I64
@@ -134,7 +138,7 @@ Check failed, expected Str!
 ```
 
 #### Rationals
-Snabel supports exact arithmetics using rational numbers.
+Exact arithmetics using rational numbers is supported. Integers are promoted to rationals automatically as needed, ```trunc``` may be used to convert back to integer.
 
 ```
 > 1 3 /
@@ -146,14 +150,14 @@ Rat!
 I64!
 
 > 1 1 /
-  10 {drop 3 /} for
-  10 {drop 3 *} for
+  10 {_ 3 /} for
+  10 {_ 3 *} for
 1/1
 Rat!
 ```
 
 #### Lists
-Snabel's lists are based on deques, which means fast inserts/removals in the front/back and decent random access-performance and memory layout. All list types are parameterized by element type. Lists allocate their memory on the heap and provide reference semantics.
+Lists are based on deques, which means fast inserts/removals in the front/back and decent random access-performance and memory layout. All list types are parameterized by element type. Lists allocate their memory on the heap and provide reference semantics.
 
 ```
 > [1 2 3]
@@ -172,13 +176,13 @@ List<I64>!
 [42 'foo']
 List<Any>!
 
-> [1 2] 3 push reverse pop drop
+> [1 2] 3 push reverse pop _
 [3 2]
 List<I64>!
 ```
 
 #### Pairs
-Snackis supports first class pairs and zipping/unzipping iterables. Pairs of values are created using ```.``` while ```zip``` is reserved to zip iterables, both values and iterables support ```unzip```.
+Pairs have first class support and all iterables support zipping/unzipping. Pairs of values are created using ```.``` while ```zip``` operates on iterables, both values and iterables support ```unzip```.
 
 ```
 > 'foo' 42.
@@ -189,13 +193,13 @@ Pair<Str I64>!
 ['foo' 0. 'bar' 1.]
 List<Pair<Str I64>>!
 
-> ['foo' 0. 'bar' 1.] unzip list swap list stash
+> ['foo' 0. 'bar' 1.] unzip list $1 list stash
 [[0 1] ['foo' 'bar']]
 List<List<Any>>!
 ```
 
 ### Labels
-Snabel's control structures are based on the idea of jumping to offsets within the instruction stream. Beginning any name with ```@``` will create a label with the specified name at that point, while simply naming a label in scope will result in jumping there. Prefixing the name of a label in scope with ```&``` pushes it on the stack for later use.
+Beginning any name with ```@``` will create a label with the specified name at that point, while simply naming a label in scope will result in jumping there. Prefixing the name of a label in scope with ```&``` pushes it on the stack for later use.
 
 ```
 > 1 2 3 +
@@ -233,10 +237,10 @@ Iteration is currently supported for numbers, which will return 0..N; lists, whi
 Str!
 
 > 3 iter
-  pop swap
-  pop swap
-  pop swap
-  drop + +
+  pop $1
+  pop $1
+  pop $1
+  _ + +
 3
 I64!
 
@@ -263,7 +267,7 @@ Str!
 ```
 
 ### Threads
-Snabel was designed from the ground up to support multi-threading. Starting a new thread copies the entire program, stack and environment to a separate structure to minimize locking; sets the program counter after the last instruction, and calls the specified target. The target is only a starting point, threads are free to go wherever they want; a thread is finished once the program counter passes the last instruction. Anything remaining on the thread stack is pushed on the calling stack in ```join```
+Starting a new thread copies the entire program, stack and environment to a separate structure to minimize locking; sets the program counter after the last instruction, and calls the specified target. The target is only a starting point, threads are free to go wherever they want; a thread is finished once the program counter passes the last instruction. Anything remaining on the thread stack is pushed on the calling stack in ```join```
 
 ```
 > 7 {35 +} thread join
@@ -298,7 +302,7 @@ add_macro(*this, "let:", [this](auto pos, auto &in, auto &out) {
 ```
 
 ### Running the code
-Snabel is designed to eventually be compiled as a standalone library, but the code is currently being developed as part of [Snackis](https://github.com/andreas-gone-wild/snackis). The easiest way to trying out the examples is to first get Snackis up and running, and then execute 'script-new' to open the script view.
+Snabel is designed to eventually be compiled as a standalone library, but is currently being developed as part of [Snackis](https://github.com/andreas-gone-wild/snackis). The easiest way to trying out the examples is to get Snackis up and running, and then execute 'script-new' to open the script view.
 
 ### License
 Snabel is licensed under the GNU General Public License Version 3.

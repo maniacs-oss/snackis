@@ -230,8 +230,11 @@ namespace snabel {
   };
 
   struct Swap: OpImp {
-    Swap();
+    size_t pos;
+    
+    Swap(size_t pos=1);
     OpImp &get_imp(Op &op) const override;
+    str info() const override;
     bool run(Scope &scp) override;
   };
 

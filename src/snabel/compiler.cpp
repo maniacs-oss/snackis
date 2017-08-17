@@ -15,6 +15,16 @@ namespace snabel {
       out.emplace_back(Target(tok.text.substr(1)));
     } else if (tok.text.front() == '&') {
       out.emplace_back(Getenv(tok.text.substr(1)));
+    } else if (tok.text.at(0) == '$' &&
+	       tok.text.size() == 2 &&
+	       isdigit(tok.text.at(1))) {
+      auto i(tok.text.at(1) - '0');
+      
+      if (i) {
+	out.emplace_back(Swap(i));
+      } else {
+	out.emplace_back(Dup());
+      }
     } else if (tok.text.front() == '\'') {
       out.emplace_back(Push(Box(exe.str_type,
 				tok.text.substr(1, tok.text.size()-2))));
