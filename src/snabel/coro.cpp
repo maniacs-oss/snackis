@@ -87,7 +87,6 @@ namespace snabel {
   }
 
   Scope &begin_scope(Coro &cor, bool copy_stack) {
-    //backup_stack(cor, copy_stack);
     return cor.scopes.emplace_back(cor.scopes.back());
   }
   
@@ -97,7 +96,6 @@ namespace snabel {
       return false;
     }
 
-    //restore_stack(cor, stack_len);
     cor.scopes.pop_back();
     return true;
   }
@@ -118,64 +116,6 @@ namespace snabel {
     while (cor.stacks.size() > 1) { cor.stacks.pop_back(); }
     cor.stacks.front().clear();
     cor.pc = 0;
-  }
-
-  bool compile(Coro &cor, const str &in) {
-    Exec &exe(cor.exec);
-    Exec::Lock lock(exe.mutex);
-    Thread &thd(cor.thread);
-    
-    thd.ops.clear();
-    clear_labels(exe);
-    rewind(cor);
-    size_t lnr(0);
-    
-    for (auto &ln: parse_lines(in)) {
-      if (!ln.empty()) {
-	compile(exe, lnr, parse_expr(ln), thd.ops);
-      }
-       
-      lnr++;
-    }
-
-    TRY(try_compile);
-
-    while (true) {
-      OpSeq out;
-      rewind(cor);
-      
-      for (auto &op: thd.ops) {
-	if ((!op.prepared && !prepare(op, exe.main_scope)) ||
-	    !try_compile.errors.empty()) {
-	  goto exit;
-	}
-	
-	cor.pc++;
-      }
-
-      cor.pc = 0;
-      exe.lambdas.clear();
-      for (auto &op: thd.ops) {
-	if (!refresh(op, exe.main_scope) ||
-	    !try_compile.errors.empty()) { goto exit; }
-	cor.pc++;
-      }
-
-      bool done(true);
-      exe.lambdas.clear();
-      for (auto &op: thd.ops) {
-	if (compile(op, exe.main_scope, out)) { done = false; }
-	if (!try_compile.errors.empty()) { goto exit; }
-      }
-
-      if (done) { goto exit; }
-      thd.ops.clear();
-      thd.ops.swap(out);
-      try_compile.errors.clear();
-    }
-  exit:
-    rewind(cor);
-    return try_compile.errors.empty();
   }
 
   bool run(Coro &cor, bool scope) {

@@ -24,8 +24,8 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
     run(exe,
-	"func: foo2 {35 +} "
-	"let: bar &foo2 "
+	"func: foo2 {35 +};"
+	"let: bar &foo2;"
 	"7 $bar call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
@@ -177,7 +177,7 @@ namespace snabel {
     run(exe, "42 reset");
     CHECK(!peek(exe.main), _);
 
-    compile(exe.main, "1 2 3 _ _");
+    compile(exe, "1 2 3 _ _");
     CHECK(exe.main_thread.ops.size() == 1, _);
   }
 
@@ -436,10 +436,16 @@ namespace snabel {
   }
 
   void all_tests() {
+    TRY(try_snabel);
     const int iters(100), warmups(10);
     for(int i(0); i < warmups; ++i) { loop(); }
     auto started(std::chrono::high_resolution_clock::now());    
-    for(int i(0); i < iters; ++i) { loop(); }
+
+    for(int i(0); i < iters; ++i) {
+      loop();
+      if (i < iters-1) { try_snabel.errors.clear(); }
+    }
+    
     auto stopped = std::chrono::high_resolution_clock::now();
     auto t =
       std::chrono::duration_cast<std::chrono::microseconds>(stopped-started).count();

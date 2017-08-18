@@ -896,9 +896,65 @@ namespace snabel {
   Sym gensym(Exec &exe) {
     return exe.next_gensym.fetch_add(1);
   }
+
+  bool compile(Exec &exe, const str &in) {
+    Exec::Lock lock(exe.mutex);
+    
+    exe.main_thread.ops.clear();
+    clear_labels(exe);
+    rewind(exe.main);
+    size_t lnr(0);
+    
+    for (auto &ln: parse_lines(in)) {
+      if (!ln.empty()) {
+	compile(exe, lnr, parse_expr(ln), exe.main_thread.ops);
+      }
+       
+      lnr++;
+    }
+
+    TRY(try_compile);
+
+    while (true) {
+      OpSeq out;
+      rewind(exe.main);
+      
+      for (auto &op: exe.main_thread.ops) {
+	if ((!op.prepared && !prepare(op, exe.main_scope)) ||
+	    !try_compile.errors.empty()) {
+	  goto exit;
+	}
+	
+	exe.main.pc++;
+      }
+
+      exe.main.pc = 0;
+      exe.lambdas.clear();
+      for (auto &op: exe.main_thread.ops) {
+	if (!refresh(op, exe.main_scope) ||
+	    !try_compile.errors.empty()) { goto exit; }
+	exe.main.pc++;
+      }
+
+      bool done(true);
+      exe.lambdas.clear();
+      for (auto &op: exe.main_thread.ops) {
+	if (compile(op, exe.main_scope, out)) { done = false; }
+	if (!try_compile.errors.empty()) { goto exit; }
+      }
+
+      if (done) { goto exit; }
+      exe.main_thread.ops.clear();
+      exe.main_thread.ops.swap(out);
+      try_compile.errors.clear();
+    }
+  exit:
+    rewind(exe.main);
+    return try_compile.errors.empty();
+  }
   
   bool run(Exec &exe, const str &in) {
-    if (!compile(exe.main, in)) { return false; }
+    if (!compile(exe, in)) { return false; }
     return run(exe.main);
   }
 }

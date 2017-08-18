@@ -66,6 +66,7 @@ namespace snabel {
   bool conv(Exec &exe, Box &val, Type &type);
 
   Sym gensym(Exec &exe);
+  bool compile(Exec &exe, const str &in);
   bool run(Exec &exe, const str &in);
 }
 
