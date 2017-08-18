@@ -177,14 +177,14 @@ List<List<Any>>!
 ```
 
 ### Labels
-Beginning any name with ```@``` will create a label with the specified name at that point, while simply naming a label in scope will result in jumping there. Prefixing the name of a label in scope with ```&``` pushes it on the stack for later use.
+The ```label:```-macro will create a label with the specified name at that point, while simply naming a label in scope will result in jumping there. Prefixing the name of a label in scope with ```&``` pushes it on the stack for later use.
 
 ```
 > 1 2 3 +
 5
 I64!
 
-> 1 2 skip 42 @skip +
+> 1 2 skip 42 label: skip; +
 3
 I64!
 ```

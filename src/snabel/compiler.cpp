@@ -11,9 +11,7 @@ namespace snabel {
     Tok tok(in.front());
     in.pop_front();
     
-    if (tok.text.front() == '@') {
-      out.emplace_back(Target(tok.text.substr(1)));
-    } else if (tok.text.front() == '&') {
+    if (tok.text.front() == '&') {
       out.emplace_back(Getenv(tok.text.substr(1)));
     } else if (tok.text.at(0) == '$' &&
 	       tok.text.size() == 2 &&

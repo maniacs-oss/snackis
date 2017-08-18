@@ -627,6 +627,30 @@ namespace snabel {
 	}
       });
 
+    add_macro(*this, "label:", [this](auto pos, auto &in, auto &out) {
+	if (in.empty()) {
+	  ERROR(Snabel, fmt("Malformed label on row %0, col %1",
+			    pos.row, pos.col));
+	  return;
+	}
+
+	out.emplace_back(Backup(true));
+	const str tag(in.at(0).text);
+	in.pop_front();
+
+	if (!in.empty()) {
+	  if (in.at(0).text != ";") {
+	    ERROR(Snabel, fmt("Malformed label on row %0, col %1",
+				pos.row, pos.col));
+	    return;
+	  }
+
+	  in.pop_front();
+	}
+
+	out.emplace_back(Target(add_label(*this, tag)));
+      });
+
     add_macro(*this, "let:", [this](auto pos, auto &in, auto &out) {
 	if (in.empty()) {
 	  ERROR(Snabel, fmt("Malformed let on row %0, col %1",

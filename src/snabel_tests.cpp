@@ -213,7 +213,7 @@ namespace snabel {
     TRY(try_test);    
     Exec exe;
 
-    run(exe, "3 4 exit 35 @exit +");
+    run(exe, "3 4 exit 35 label: exit; +");
     CHECK(get<int64_t>(pop(exe.main)) == 7, _);
   }
 
