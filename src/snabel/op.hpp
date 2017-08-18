@@ -37,8 +37,8 @@ namespace snabel {
     virtual bool prepare(Scope &scp);
     virtual bool refresh(Scope &scp);
     virtual bool compile(const Op &op, Scope &scp, OpSeq &out);
-    virtual bool run(Scope &scp);
     virtual bool finalize(const Op &op, Scope &scp, OpSeq &out);
+    virtual bool run(Scope &scp);
   };
 
   struct Backup: OpImp {
@@ -168,7 +168,7 @@ namespace snabel {
     bool prepare(Scope &scp) override;
     bool refresh(Scope &scp) override;
     bool compile(const Op &op, Scope &scp, OpSeq & out) override;
-    bool run(Scope &scp) override;
+    bool finalize(const Op &op, Scope &scp, OpSeq & out) override;
   };
 
   struct Param: OpImp {
@@ -268,7 +268,7 @@ namespace snabel {
     OpImp &get_imp(Op &op) const override;
     bool refresh(Scope &scp) override;
     bool compile(const Op &op, Scope &scp, OpSeq & out) override;
-    bool run(Scope &scp) override;
+    bool finalize(const Op &op, Scope &scp, OpSeq & out) override;
   };
 
   struct Unparam: OpImp {
@@ -303,8 +303,8 @@ namespace snabel {
   bool prepare(Op &op, Scope &scp);
   bool refresh(Op &op, Scope &scp);
   bool compile(Op &op, Scope &scp, OpSeq &out);
-  bool run(Op &op, Scope &scp);
   bool finalize(Op &op, Scope &scp, OpSeq &out);
+  bool run(Op &op, Scope &scp);
 }
 
 #endif

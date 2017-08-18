@@ -30,12 +30,12 @@ namespace snabel {
     return false;
   }
   
-  bool OpImp::run(Scope &) {
-    return true;
-  }
-
   bool OpImp::finalize(const Op &op, Scope &scp, OpSeq &out) {
     return false;
+  }
+
+  bool OpImp::run(Scope &) {
+    return true;
   }
 
   Backup::Backup(bool copy):
@@ -635,10 +635,10 @@ namespace snabel {
     return true;
   }
 
-  bool Lambda::run(Scope &scp) {
+  bool Lambda::finalize(const Op &op, Scope &scp, OpSeq &out) {
     return true;
-  }    
-
+  }
+  
   Param::Param():
     OpImp(OP_PARAM, "param")
   { }
@@ -966,10 +966,10 @@ namespace snabel {
     return true;
   }
 
-  bool Unlambda::run(Scope &scp) {
+  bool Unlambda::finalize(const Op &op, Scope &scp, OpSeq &out) {
     return true;
   }
-
+  
   Unparam::Unparam():
     OpImp(OP_UNPARAM, "unparam"), done(false)
   { }
@@ -1083,13 +1083,13 @@ namespace snabel {
     return false;
   }
 
-  bool run(Op &op, Scope &scp) {
-    return op.imp.run(scp);
-  }
-
   bool finalize(Op &op, Scope &scp, OpSeq &out) {
     if (op.imp.finalize(op, scp, out)) { return true; }
     out.push_back(op);
     return false;
+  }
+  
+  bool run(Op &op, Scope &scp) {
+    return op.imp.run(scp);
   }
 }
