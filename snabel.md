@@ -66,9 +66,9 @@ I64!
 I64!
 
 > 42
-  {dec $0 zero? &return when recall}
+  {dec $0 zero? &return when recall 2 +}
   call
-0
+82
 I64!
 ```
 

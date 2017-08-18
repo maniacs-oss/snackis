@@ -100,12 +100,6 @@ namespace snabel {
     return true;
   }
 
-  void reset_scope(Coro &cor, size_t depth) {
-    while (cor.scopes.size() > depth) {
-      cor.scopes.pop_back();
-    }
-  }
-  
   void jump(Coro &cor, const Label &lbl) {
     if (lbl.recall) {
       auto &scp(curr_scope(cor));

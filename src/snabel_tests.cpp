@@ -242,8 +242,8 @@ namespace snabel {
     run(exe, "#t {$0 &return when #f} call");
     CHECK(get<bool>(pop(exe.main)), _);
 
-    run(exe, "42 {dec $0 zero? &return when recall} call");
-    CHECK(get<int64_t>(pop(exe.main)) == 0, _);
+    run(exe, "42 {dec $0 zero? &return when recall 2 +} call");
+    CHECK(get<int64_t>(pop(exe.main)) == 82, _);
   }
 
   static void when_tests() {
