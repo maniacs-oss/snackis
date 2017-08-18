@@ -53,6 +53,12 @@ Each named function represents a set of implementations, and each implementation
 > func: foo {35 +}; 7 foo
 42
 I64!
+
+> func: foo {35 +}
+  let: bar &foo
+  7 $bar call
+42
+I64!
 ```
 
 #### C++

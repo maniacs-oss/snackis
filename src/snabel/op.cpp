@@ -460,26 +460,26 @@ namespace snabel {
   }
 
   bool Getenv::run(Scope &scp) {
-    if (!id.empty()) {
-      ERROR(Snabel, fmt("Unknown identifier: %0", id));
-      return false;
-    }
-
     auto &cor(scp.coro);
     auto &exe(scp.exec);
-    auto id_arg(try_pop(cor));
-
-    if (!id_arg) {
-      ERROR(Snabel, "Missing identifier");
-      return false;
+    str id_str(id);
+    
+    if (id_str.empty()) {
+      auto id_arg(try_pop(cor));
+      
+      if (!id_arg) {
+	ERROR(Snabel, "Missing identifier");
+	return false;
+      }
+      
+      if (id_arg->type != &exe.str_type) {
+	ERROR(Snabel, fmt("Invalid identifier: %0", *id_arg));
+	return false;
+      }
+      
+      id_str = get<str>(*id_arg);
     }
-
-    if (id_arg->type != &exe.str_type) {
-      ERROR(Snabel, fmt("Invalid identifier: %0", *id_arg));
-      return false;
-    }
-
-    auto id_str(get<str>(*id_arg));
+    
     auto fnd(find_env(scp, id_str));
 
     if (!fnd) {
