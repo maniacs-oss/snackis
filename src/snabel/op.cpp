@@ -792,21 +792,21 @@ namespace snabel {
   }
 
   bool Return::refresh(Scope &scp) {
-    if (!scoped) {
-      auto &exe(scp.exec);
+    auto &exe(scp.exec);
+    
+    if (exe.lambdas.empty()) {
+      ERROR(Snabel, "Missing lambda");
+      return false;
+    }
+    
+    auto l(exe.lambdas.back());
 
-      if (exe.lambdas.empty()) {
-	ERROR(Snabel, "Missing lambda");
-	return false;
-      }
-
-      auto l(exe.lambdas.back());
-      if (!l->returns) {
-	l->returns = true;
-	return true;
-      }
+    if (!scoped && !l->returns) {
+      l->returns = true;
+      return true;
     }
 
+    tag = l->tag;
     return false;
   }
 
@@ -825,6 +825,7 @@ namespace snabel {
 
       scp.thread.pc = ret_scp.return_pc;
       ret_scp.return_pc = -1;
+      scp.coros.erase(tag);
     } else {
       scp.thread.pc = scp.recall_pcs.back();
       scp.recall_pcs.pop_back();
@@ -947,8 +948,8 @@ namespace snabel {
     
     compiled = true;
     if (exit_label) { out.emplace_back(Target(*exit_label)); }
-    out.push_back(op);
     out.emplace_back(Return(true));
+    out.push_back(op);
     out.emplace_back(Target(*skip_label));
     out.emplace_back(Push(Box(scp.exec.lambda_type, enter_label)));
     return true;

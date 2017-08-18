@@ -221,7 +221,8 @@ namespace snabel {
 
   struct Return: OpImp {
     bool scoped;
-    
+    Sym tag;
+
     Return(bool scoped);
     OpImp &get_imp(Op &op) const override;
     bool refresh(Scope &scp) override;
