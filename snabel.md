@@ -2,6 +2,9 @@
 
 ![script example](images/script.png?raw=true)
 
+### Intro
+Snabel is a Forth-like scripting language with static, parameterized types and generic words.
+
 ### Postfix
 Like Yoda of Star Wars-fame, and yesterdays scientific calculators; as well as most printers in active use; yet unlike currently trending programming languages; Snabel expects arguments before operations.
 
