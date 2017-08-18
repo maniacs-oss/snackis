@@ -167,7 +167,7 @@ namespace snabel {
     bool prepare(Scope &scp) override;
     bool refresh(Scope &scp) override;
     bool compile(const Op &op, Scope &scp, OpSeq & out) override;
-    bool finalize(const Op &op, Scope &scp, OpSeq & out) override;
+    bool run(Scope &scp) override;
   };
 
   struct Param: OpImp {

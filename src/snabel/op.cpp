@@ -624,16 +624,16 @@ namespace snabel {
     compiled = true;
     out.emplace_back(Jump(*skip_label));
     out.emplace_back(Target(*enter_label));
-    out.emplace_back(Group(true));
     out.push_back(op);
     if (recall_label) { out.emplace_back(Target(*recall_label)); }
     return true;
   }
 
-  bool Lambda::finalize(const Op &op, Scope &scp, OpSeq &out) {
+  bool Lambda::run(Scope &scp) {
+    begin_scope(scp.coro, true);
     return true;
   }
-  
+
   Param::Param():
     OpImp(OP_PARAM, "param")
   { }
