@@ -43,9 +43,6 @@ namespace snabel {
   void reset_scope(Coro &cor, size_t depth);
 
   void jump(Coro &cor, const Label &lbl);
-  void rewind(Coro &cor);  
-
-  bool run(Coro &cor, bool scope=true); 
 }
 
 #endif

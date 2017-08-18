@@ -110,30 +110,4 @@ namespace snabel {
     reset_scope(cor, lbl.depth);
     cor.thread.pc = lbl.pc;
   }
-
-  void rewind(Coro &cor) {
-    while (cor.scopes.size() > 1) { cor.scopes.pop_back(); }
-    while (cor.stacks.size() > 1) { cor.stacks.pop_back(); }
-    cor.stacks.front().clear();
-    cor.thread.pc = 0;
-  }
-
-  bool run(Coro &cor, bool scope) {
-    Thread &thd(cor.thread);
-    if (scope) { begin_scope(cor, true); }
-    
-    while (cor.thread.pc < thd.ops.size()) {
-      auto &op(thd.ops[cor.thread.pc]);
-
-      if (!run(op, curr_scope(cor))) {
-	ERROR(Snabel, fmt("Error on line %0: %1 %2",
-			  cor.thread.pc, op.imp.name, op.imp.info()));
-	return false;
-      }
-      
-      cor.thread.pc++;
-    }
-
-    return true;
-  }
 }

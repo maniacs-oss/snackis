@@ -24,6 +24,7 @@ namespace snabel {
 
   void start(Thread &thd);
   void join(Thread &thd, Scope &scp);
+  bool run(Thread &thd, bool scope=true); 
 }
  
 #endif

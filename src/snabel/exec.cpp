@@ -897,12 +897,35 @@ namespace snabel {
     return exe.next_gensym.fetch_add(1);
   }
 
+  void rewind(Exec &exe) {
+    for (auto i(exe.threads.begin()); i != exe.threads.end();) {
+      if (i->first == exe.main_thread.id) {
+	i++;
+      } else {
+	i = exe.threads.erase(i);
+      }
+    }
+
+    for (auto i(exe.main_thread.fibers.begin()); i != exe.main_thread.fibers.end();) {
+      if (i->first == exe.main.id) {
+	i++;
+      } else {
+	i = exe.main_thread.fibers.erase(i);
+      }
+    }
+
+    while (exe.main.scopes.size() > 1) { exe.main.scopes.pop_back(); }
+    while (exe.main.stacks.size() > 1) { exe.main.stacks.pop_back(); }
+    exe.main.stacks.front().clear();
+    exe.main_thread.pc = 0;
+  }
+
   bool compile(Exec &exe, const str &in) {
     Exec::Lock lock(exe.mutex);
     
     exe.main_thread.ops.clear();
     clear_labels(exe);
-    rewind(exe.main);
+    rewind(exe);
     size_t lnr(0);
     
     for (auto &ln: parse_lines(in)) {
@@ -917,7 +940,7 @@ namespace snabel {
 
     while (true) {
       OpSeq out;
-      rewind(exe.main);
+      rewind(exe);
       
       for (auto &op: exe.main_thread.ops) {
 	if ((!op.prepared && !prepare(op, exe.main_scope)) ||
@@ -949,12 +972,12 @@ namespace snabel {
       try_compile.errors.clear();
     }
   exit:
-    rewind(exe.main);
+    rewind(exe);
     return try_compile.errors.empty();
   }
   
   bool run(Exec &exe, const str &in) {
     if (!compile(exe, in)) { return false; }
-    return run(exe.main);
+    return run(exe.main_thread);
   }
 }
