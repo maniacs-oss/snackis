@@ -558,7 +558,7 @@ namespace snabel {
   }
 
   str Jump::info() const {
-    return fmt("%0 (%1)", tag, label ? to_str(label->pc) : "?");
+    return fmt("%0:%1", tag, label ? to_str(label->pc) : "?");
   }
 
   bool Jump::refresh(Scope &scp) {
