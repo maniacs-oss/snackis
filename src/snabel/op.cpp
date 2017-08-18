@@ -588,7 +588,6 @@ namespace snabel {
   }
 
   bool Lambda::run(Scope &scp) {
-    if (exit_label) { scp.recall_pcs.push_back(exit_label->pc); }
     return true;
   }    
 
@@ -761,7 +760,7 @@ namespace snabel {
 
     if (scp.recall_pcs.empty()) {
       auto &s(curr_stack(scp.coro));
-      if (scoped && !end_scope(scp.coro, s.size())) { return false; }
+      if (!end_scope(scp.coro, s.size())) { return false; }
       auto &ret_scp(curr_scope(cor));
       
       if (ret_scp.return_pc == -1) {
@@ -931,7 +930,6 @@ namespace snabel {
   }
 
   bool Unlambda::run(Scope &scp) {
-    if (!scp.recall_pcs.empty()) { scp.recall_pcs.pop_back(); }
     return true;
   }
 
