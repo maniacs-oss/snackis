@@ -913,7 +913,7 @@ namespace snabel {
 
   Unlambda::Unlambda():
     OpImp(OP_UNLAMBDA, "unlambda"),
-    exit_label(nullptr), skip_label(nullptr),
+    enter_label(nullptr), exit_label(nullptr), skip_label(nullptr),
     compiled(false)
   { }
 
@@ -944,7 +944,8 @@ namespace snabel {
       l->exit_label = exit_label;
       changed = true;
     }
-    
+
+    enter_label = l->enter_label;
     skip_label = l->skip_label;
     exe.lambdas.pop_back();
     return changed;
@@ -958,7 +959,7 @@ namespace snabel {
     out.push_back(op);
     out.emplace_back(Return(true));
     out.emplace_back(Target(*skip_label));
-    out.emplace_back(Push(Box(scp.exec.lambda_type, fmt("_enter%0", tag))));
+    out.emplace_back(Push(Box(scp.exec.lambda_type, enter_label)));
     return true;
   }
 

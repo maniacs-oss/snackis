@@ -385,18 +385,13 @@ namespace snabel {
 
     lambda_type.supers.push_back(&any_type);
     lambda_type.supers.push_back(&callable_type);
-    lambda_type.fmt = [](auto &v) { return get<str>(v); };
-    lambda_type.eq = [](auto &x, auto &y) { return get<str>(x) == get<str>(y); };
+    lambda_type.fmt = [](auto &v) { return get<Label *>(v)->tag; };
+    lambda_type.eq = [](auto &x, auto &y) {
+      return get<Label *>(x) == get<Label *>(y);
+    };
 
     lambda_type.call.emplace([](auto &scp, auto &v) {
-	auto lbl(find_label(scp.exec, get<str>(v)));
-
-	if (!lbl) {
-	  ERROR(Snabel, "Missing lambda label");
-	  return false;
-	}
-
-	call(scp, *lbl);
+	call(scp, *get<Label *>(v));
 	return true;
       });
 

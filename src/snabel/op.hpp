@@ -260,7 +260,7 @@ namespace snabel {
 
   struct Unlambda: OpImp {
     str tag;
-    Label *exit_label, *skip_label;
+    Label *enter_label, *exit_label, *skip_label;
     bool compiled;
 
     Unlambda();
