@@ -215,6 +215,9 @@ namespace snabel {
 
     run(exe, "3 4 exit 35 label: exit; +");
     CHECK(get<int64_t>(pop(exe.main)) == 7, _);
+
+    run(exe, "bar label: foo; 35 +) baz label: bar; (7 foo label: baz");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
   static void lambda_tests() {
