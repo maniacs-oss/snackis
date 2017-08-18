@@ -679,6 +679,10 @@ namespace snabel {
     add_macro(*this, "when", [this](auto pos, auto &in, auto &out) {
 	out.emplace_back(Branch());
       });
+
+    add_macro(*this, "yield", [this](auto pos, auto &in, auto &out) {
+	//out.emplace_back(Yield());
+      });
   }
 
   Macro &add_macro(Exec &exe, const str &n, Macro::Imp imp) {
@@ -953,13 +957,19 @@ namespace snabel {
 
       exe.main_thread.pc = 0;
       exe.lambdas.clear();
-      for (auto &op: exe.main_thread.ops) {
-	if (!refresh(op, exe.main_scope) ||
-	    !try_compile.errors.empty()) { goto exit; }
-	exe.main_thread.pc++;
+      bool done(false);
+
+      while (!done) {
+	done = true;
+	
+	for (auto &op: exe.main_thread.ops) {
+	  if (refresh(op, exe.main_scope)) { done = false; }
+	  if (!try_compile.errors.empty()) { goto exit; }
+	  exe.main_thread.pc++;
+	}
       }
 
-      bool done(true);
+      done = true;
       exe.lambdas.clear();
       for (auto &op: exe.main_thread.ops) {
 	if (compile(op, exe.main_scope, out)) { done = false; }

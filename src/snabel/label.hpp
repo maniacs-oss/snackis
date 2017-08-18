@@ -8,7 +8,8 @@ namespace snabel {
   using namespace snackis;
   
   struct Label {
-    const str tag;
+    str tag;
+    bool recall;
     int64_t depth, pc;
     
     Label(const str &tag);

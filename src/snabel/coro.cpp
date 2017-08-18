@@ -107,7 +107,13 @@ namespace snabel {
   }
   
   void jump(Coro &cor, const Label &lbl) {
-    reset_scope(cor, lbl.depth);
+    if (lbl.recall) {
+      auto &scp(curr_scope(cor));
+      scp.recall_pcs.push_back(scp.thread.pc);
+    } else {
+      reset_scope(cor, lbl.depth);
+    }
+    
     cor.thread.pc = lbl.pc;
   }
 }

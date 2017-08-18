@@ -23,7 +23,7 @@ namespace snabel {
   }
 
   bool OpImp::refresh(Scope &scp) {
-    return true;
+    return false;
   }
 
   bool OpImp::compile(const Op &op, Scope &scp, OpSeq &out) {
@@ -436,21 +436,49 @@ namespace snabel {
   str Getenv::info() const { return id; }
 
   bool Getenv::refresh(Scope &scp) {
-    if (val) { return true; }
+    if (val) { return false; }
+    auto &exe(scp.exec);
     
     if (id == "return") {
-      if (scp.exec.lambdas.empty()) {
+      if (exe.lambdas.empty()) {
 	ERROR(Snabel, "Missing lambda for return");
 	return false;
       }
 
-      auto l(scp.exec.lambdas.back());
-      auto fnd(find_env(scp, fmt("_exit%0", l->tag)));
-      if (fnd) { val = *fnd; }
+      auto l(exe.lambdas.back());
       l->returns = true;
+
+      if (l->exit_label) {
+	val.emplace(exe.label_type, l->exit_label);
+      }
+
+      return true;
+    } else if (id == "recall") {
+      if (exe.lambdas.empty()) {
+	ERROR(Snabel, "Missing lambda for return");
+	return false;
+      }
+
+      auto l(exe.lambdas.back());
+      l->recalls = true;
+
+      if (l->recall_label) {
+	val.emplace(exe.label_type, l->recall_label);
+      }      
+
+      return true;
+    } else if (id == "yield") {      
+      if (exe.lambdas.empty()) {
+	ERROR(Snabel, "Missing lambda for return");
+	return false;
+      }
+
+      auto l(exe.lambdas.back());
+      l->yields = true;
+      return true;
     }
 
-    return true;
+    return false;
   }
   
   bool Getenv::compile(const Op &op, Scope &scp, OpSeq &out) {
@@ -509,7 +537,8 @@ namespace snabel {
   str Group::info() const { return copy ? "copy" : ""; }
 
   bool Group::refresh(Scope &scp) {
-    return run(scp);
+    run(scp);
+    return false;
   }
   
   bool Group::run(Scope &scp) {
@@ -537,7 +566,7 @@ namespace snabel {
     auto &cor(scp.coro);
     auto &exe(cor.exec);
     if (!label) { label = find_label(exe, tag); }
-    return true;
+    return false;
   }
 
   bool Jump::run(Scope &scp) {
@@ -551,8 +580,9 @@ namespace snabel {
   }
   
   Lambda::Lambda():
-    OpImp(OP_LAMBDA, "lambda"), exit_label(nullptr),
-    recalls(false), returns(false), compiled(false)
+    OpImp(OP_LAMBDA, "lambda"), recall_label(nullptr), exit_label(nullptr),
+    recalls(false), returns(false), yields(false),
+    compiled(false)
   { }
 
   OpImp &Lambda::get_imp(Op &op) const {
@@ -565,9 +595,15 @@ namespace snabel {
   }
 
   bool Lambda::refresh(Scope &scp) {
-    exit_label = find_label(scp.exec, fmt("_exit%0", tag));
     scp.exec.lambdas.push_back(this);
-    return true;
+
+    if (recalls && !recall_label) {
+      recall_label = &add_label(scp.exec, fmt("_recall%0", tag));
+      recall_label->recall = true;
+      return true;
+    }
+    
+    return false;
   }
 
   bool Lambda::compile(const Op &op, Scope &scp, OpSeq &out) {
@@ -583,7 +619,7 @@ namespace snabel {
     out.emplace_back(Target(fmt("_enter%0", tag)));
     out.emplace_back(Group(true));
     out.push_back(op);
-    if (recalls) { out.emplace_back(Target(fmt("_recall%0", tag))); }
+    if (recall_label) { out.emplace_back(Target(*recall_label)); }
     return true;
   }
 
@@ -687,8 +723,13 @@ namespace snabel {
     }
     
     auto l(exe.lambdas.back());
+    
+    if (l->recalls) {
+      label = l->recall_label;
+      return false;
+    }
+
     l->recalls = true;
-    label = find_label(exe, fmt("_recall%0", l->tag));
     return true;
   }
 
@@ -698,9 +739,7 @@ namespace snabel {
       return false;
     }
 
-    Coro &cor(scp.coro);
-    scp.recall_pcs.push_back(scp.thread.pc);
-    jump(cor, *label);
+    jump(scp.coro, *label);
     return true;
   }
   
@@ -749,10 +788,13 @@ namespace snabel {
       }
 
       auto l(exe.lambdas.back());
-      l->returns = true;
+      if (!l->returns) {
+	l->returns = true;
+	return true;
+      }
     }
 
-    return true;
+    return false;
   }
 
   bool Return::run(Scope &scp) {
@@ -868,7 +910,7 @@ namespace snabel {
     auto &cor(scp.coro);
     label->pc = scp.thread.pc;
     label->depth = cor.scopes.size()+1;
-    return true;
+    return false;
   }
   
   Ungroup::Ungroup():
@@ -880,7 +922,8 @@ namespace snabel {
   }
 
   bool Ungroup::refresh(Scope &scp) {
-    return run(scp);
+    run(scp);
+    return false;
   }
 
   bool Ungroup::run(Scope &scp) {
@@ -888,7 +931,7 @@ namespace snabel {
   }
 
   Unlambda::Unlambda():
-    OpImp(OP_UNLAMBDA, "unlambda"), exits(false), compiled(false)
+    OpImp(OP_UNLAMBDA, "unlambda"), exit_label(nullptr), compiled(false)
   { }
 
   OpImp &Unlambda::get_imp(Op &op) const {
@@ -912,16 +955,20 @@ namespace snabel {
       return false;
     }
 
-    exits = l->returns || l->recalls;
+    if (!l->exit_label && (l->returns || l->recalls)) {
+      exit_label = &add_label(exe, fmt("_exit%0", tag));
+      l->exit_label = exit_label;      
+    }
+    
     exe.lambdas.pop_back();
-    return true;
+    return false;
   }
   
   bool Unlambda::compile(const Op &op, Scope &scp, OpSeq &out) {
     if (compiled || tag.empty()) { return false; }  
     
     compiled = true;
-    if (exits) { out.emplace_back(Target(fmt("_exit%0", tag))); }
+    if (exit_label) { out.emplace_back(Target(*exit_label)); }
     out.push_back(op);
     out.emplace_back(Return(true));
     out.emplace_back(Target(fmt("_skip%0", tag)));
