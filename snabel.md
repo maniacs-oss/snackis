@@ -13,7 +13,7 @@ I64!
 ```
 
 ### Streaming
-Another difference that's important to be aware of is that Snabel views code as a stream of operations, rather than a graph. As long as the final sequence of operations make sense, Snabel mostly doesn't care how it got there. With the exception of lambdas, Snabel needs to see the final code between braces during compilation.
+Another difference that's important to be aware of is that Snabel views code as a stream, rather than a graph of operations. As long as the final sequence makes sense, Snabel mostly doesn't care how it got there. A notable exception is lambdas, Snabel needs to see the final code between braces during compilation.
 
 ```
 > bar label: foo; 35 +) baz label: bar; (7 foo label: baz
