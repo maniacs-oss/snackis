@@ -110,8 +110,6 @@ namespace snabel {
     if (lbl.recall) {
       auto &scp(curr_scope(cor));
       scp.recall_pcs.push_back(scp.thread.pc);
-    } else {
-      reset_scope(cor, lbl.depth);
     }
     
     cor.thread.pc = lbl.pc;
