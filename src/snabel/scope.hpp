@@ -24,6 +24,7 @@ namespace snabel {
     
     int64_t return_pc;
     std::deque<int64_t> recall_pcs;
+    std::map<Coro *, int64_t> coro_pcs;
     std::set<str> env_keys;
     
     Scope(const Scope &src);

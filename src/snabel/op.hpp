@@ -125,10 +125,12 @@ namespace snabel {
 
   struct Getenv: OpImp {
     const str id;
+    opt<Box> val;
     
     Getenv(const str &id="");
     OpImp &get_imp(Op &op) const override;
     str info() const override;
+    bool refresh(Scope &scp) override;
     bool compile(const Op &op, Scope &scp, OpSeq & out) override;
     bool run(Scope &scp) override;
   };

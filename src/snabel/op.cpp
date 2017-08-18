@@ -435,28 +435,33 @@ namespace snabel {
 
   str Getenv::info() const { return id; }
 
-  bool Getenv::compile(const Op &op, Scope &scp, OpSeq &out) {
-    if (id.empty()) { return false; }
-
+  bool Getenv::refresh(Scope &scp) {
+    if (val) { return true; }
+    
     if (id == "return") {
       if (scp.exec.lambdas.empty()) {
 	ERROR(Snabel, "Missing lambda for return");
 	return false;
       }
 
-      auto fnd(find_env(scp, fmt("_exit%0", scp.exec.lambdas.back())));
-      if (fnd) {
-	out.emplace_back(Push(*fnd));
-	return true;
-      }
-    } else {
-      auto fnd(find_env(scp, id));
-      if (!fnd) { return false; }
-      out.emplace_back(Push(*fnd));
+      auto fnd(find_env(scp, fmt("_exit%0", scp.exec.lambdas.back()->tag)));
+      if (fnd) { val = *fnd; }
+    }
+
+    return true;
+  }
+  
+  bool Getenv::compile(const Op &op, Scope &scp, OpSeq &out) {
+    if (val) {
+      out.emplace_back(Push(*val));
       return true;
     }
 
-    return false;
+    if (id.empty()) { return false; }
+    auto fnd(find_env(scp, id));
+    if (!fnd) { return false; }
+    out.emplace_back(Push(*fnd));
+    return true;
   }
 
   bool Getenv::run(Scope &scp) {
@@ -558,12 +563,11 @@ namespace snabel {
 
   bool Lambda::refresh(Scope &scp) {
     exit_label = find_label(scp.exec, fmt("_exit%0", tag));
-    scp.exec.lambdas.push_back(tag);
+    scp.exec.lambdas.push_back(this);
     return true;
   }
 
   bool Lambda::compile(const Op &op, Scope &scp, OpSeq &out) {
-    scp.exec.lambdas.push_back(tag);
     if (compiled) { return false; }
 
     if (tag.empty()) {
@@ -686,7 +690,7 @@ namespace snabel {
       return false;
     }
     
-    auto tag = exe.lambdas.back();
+    auto tag = exe.lambdas.back()->tag;
     label = find_label(exe, fmt("_recall%0", tag));
     return true;
   }
@@ -891,8 +895,8 @@ namespace snabel {
     }
 
     if (tag.empty()) {
-      tag = exe.lambdas.back();
-    } else if (tag != exe.lambdas.back()) {
+      tag = exe.lambdas.back()->tag;
+    } else if (tag != exe.lambdas.back()->tag) {
       ERROR(Snabel, "Lambda tag changed");
       return false;
     }
@@ -902,7 +906,6 @@ namespace snabel {
   }
   
   bool Unlambda::compile(const Op &op, Scope &scp, OpSeq &out) {
-    scp.exec.lambdas.pop_back();
     if (compiled || tag.empty()) { return false; }  
     
     compiled = true;

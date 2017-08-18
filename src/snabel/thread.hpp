@@ -10,6 +10,7 @@ namespace snabel {
     using Id = Sym;
   
     std::thread imp;
+    std::map<Fiber::Id, Coro> coros;
     std::map<Fiber::Id, Fiber> fibers;
 
     Exec &exec;

@@ -14,6 +14,8 @@
 #include "snackis/core/uid.hpp"
 
 namespace snabel {
+  struct Op;
+  
   struct Exec {
     using Lock = std::unique_lock<std::mutex>;
     
@@ -22,7 +24,7 @@ namespace snabel {
     std::map<std::pair<Type *, Type *>, Conv> convs;
     std::map<str, Func> funcs;
     std::map<str, Label> labels;
-    std::deque<str> lambdas;
+    std::deque<Lambda *> lambdas;
     std::map<Thread::Id, Thread> threads;
     
     Thread &main_thread;
