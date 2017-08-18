@@ -18,8 +18,15 @@ namespace snabel {
   
   static void func_tests() {
     TRY(try_test);
-    Exec exe;    
-    run(exe, "func: foo {35 +}; 7 foo");
+    Exec exe;
+    
+    run(exe, "func: foo1 {35 +}; 7 foo1");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+
+    run(exe,
+	"func: foo2 {35 +} "
+	"let: bar &foo2 "
+	"7 $bar call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
