@@ -444,8 +444,10 @@ namespace snabel {
 	return false;
       }
 
-      auto fnd(find_env(scp, fmt("_exit%0", scp.exec.lambdas.back()->tag)));
+      auto l(scp.exec.lambdas.back());
+      auto fnd(find_env(scp, fmt("_exit%0", l->tag)));
       if (fnd) { val = *fnd; }
+      l->returns = true;
     }
 
     return true;
@@ -549,7 +551,8 @@ namespace snabel {
   }
   
   Lambda::Lambda():
-    OpImp(OP_LAMBDA, "lambda"), exit_label(nullptr), compiled(false)
+    OpImp(OP_LAMBDA, "lambda"), exit_label(nullptr),
+    recalls(false), returns(false), compiled(false)
   { }
 
   OpImp &Lambda::get_imp(Op &op) const {
@@ -580,17 +583,12 @@ namespace snabel {
     out.emplace_back(Target(fmt("_enter%0", tag)));
     out.emplace_back(Group(true));
     out.push_back(op);
-    out.emplace_back(Target(fmt("_recall%0", tag)));
+    if (recalls) { out.emplace_back(Target(fmt("_recall%0", tag))); }
     return true;
   }
 
   bool Lambda::run(Scope &scp) {
-    if (!exit_label) {
-      ERROR(Snabel, fmt("Missing lambda exit label: %0", tag));
-      return false;
-    }
-
-    scp.recall_pcs.push_back(exit_label->pc);
+    if (exit_label) { scp.recall_pcs.push_back(exit_label->pc); }
     return true;
   }    
 
@@ -682,16 +680,16 @@ namespace snabel {
   }
   
   bool Recall::refresh(Scope &scp) {
-    Coro &cor(scp.coro);
-    Exec &exe(cor.exec);
+    auto &exe(scp.exec);
 
     if (exe.lambdas.empty()) {
       ERROR(Snabel, "Missing lambda");
       return false;
     }
     
-    auto tag = exe.lambdas.back()->tag;
-    label = find_label(exe, fmt("_recall%0", tag));
+    auto l(exe.lambdas.back());
+    l->recalls = true;
+    label = find_label(exe, fmt("_recall%0", l->tag));
     return true;
   }
 
@@ -743,6 +741,18 @@ namespace snabel {
 
   bool Return::refresh(Scope &scp) {
     if (scoped) { end_scope(scp.coro); }
+    else {
+      auto &exe(scp.exec);
+
+      if (exe.lambdas.empty()) {
+	ERROR(Snabel, "Missing lambda");
+	return false;
+      }
+
+      auto l(exe.lambdas.back());
+      l->returns = true;
+    }
+
     return true;
   }
 
@@ -879,7 +889,7 @@ namespace snabel {
   }
 
   Unlambda::Unlambda():
-    OpImp(OP_UNLAMBDA, "unlambda"), compiled(false)
+    OpImp(OP_UNLAMBDA, "unlambda"), exits(false), compiled(false)
   { }
 
   OpImp &Unlambda::get_imp(Op &op) const {
@@ -894,13 +904,16 @@ namespace snabel {
       return false;
     }
 
+    auto l(exe.lambdas.back());
+    
     if (tag.empty()) {
-      tag = exe.lambdas.back()->tag;
-    } else if (tag != exe.lambdas.back()->tag) {
+      tag = l->tag;
+    } else if (tag != l->tag) {
       ERROR(Snabel, "Lambda tag changed");
       return false;
     }
-    
+
+    exits = l->returns || l->recalls;
     exe.lambdas.pop_back();
     return true;
   }
@@ -909,7 +922,7 @@ namespace snabel {
     if (compiled || tag.empty()) { return false; }  
     
     compiled = true;
-    out.emplace_back(Target(fmt("_exit%0", tag)));
+    if (exits) { out.emplace_back(Target(fmt("_exit%0", tag))); }
     out.push_back(op);
     out.emplace_back(Return(true));
     out.emplace_back(Target(fmt("_skip%0", tag)));

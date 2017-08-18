@@ -227,11 +227,10 @@ namespace gui {
   static bool exec_cmd(Reader &rdr, const str &in) {
     TRY(try_exec);
 
-    auto &cor(rdr.exec.main);
-    snabel::compile(cor, in);    
-    begin_scope(cor, false);
-    snabel::run(cor);
-    end_scope(cor);
+    snabel::compile(rdr.exec, in);    
+    begin_scope(rdr.exec.main, false);
+    snabel::run(rdr.exec.main_thread);
+    end_scope(rdr.exec.main);
      
     if (try_exec.errors.empty()) {
       rdr.last_cmd = in;

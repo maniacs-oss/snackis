@@ -56,7 +56,7 @@ namespace gui {
   static void on_compile(gpointer *_, ScriptView *v) {
     TRY(try_compile);
     auto code(get_str(GTK_TEXT_VIEW(v->code_fld)));
-    snabel::compile(v->exec.main, code);    
+    snabel::compile(v->exec, code);    
     gtk_list_store_clear(v->bcode_store);
 
     for (auto &op: v->exec.main_thread.ops) {
@@ -83,10 +83,9 @@ namespace gui {
 
   static void on_run(gpointer *_, ScriptView *v) {
     TRY(try_run);
-    auto &cor(v->exec.main);
-    snabel::rewind(cor);
+    snabel::rewind(v->exec);
 
-    if (snabel::run(cor)) {
+    if (snabel::run(v->exec.main_thread)) {
       auto res(peek(v->exec.main));
       if (res) {
 	log(v->ctx, "Script result:\n%0\n%1!",

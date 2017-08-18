@@ -160,7 +160,7 @@ namespace snabel {
   struct Lambda: OpImp {
     str tag;
     Label *exit_label;
-    bool compiled;
+    bool recalls, returns, compiled;
     
     Lambda();
     OpImp &get_imp(Op &op) const override;
@@ -263,7 +263,7 @@ namespace snabel {
 
   struct Unlambda: OpImp {
     str tag;
-    bool compiled;
+    bool exits, compiled;
 
     Unlambda();
     OpImp &get_imp(Op &op) const override;
