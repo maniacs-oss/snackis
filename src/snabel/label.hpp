@@ -10,7 +10,7 @@ namespace snabel {
   struct Label {
     str tag;
     bool recall;
-    int64_t depth, pc;
+    int64_t pc;
     
     Label(const str &tag);
   };

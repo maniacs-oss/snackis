@@ -540,11 +540,6 @@ namespace snabel {
 
   str Group::info() const { return copy ? "copy" : ""; }
 
-  bool Group::refresh(Scope &scp) {
-    run(scp);
-    return false;
-  }
-  
   bool Group::run(Scope &scp) {
     begin_scope(scp.coro, copy);
     return true;
@@ -790,8 +785,7 @@ namespace snabel {
   }
 
   bool Return::refresh(Scope &scp) {
-    if (scoped) { end_scope(scp.coro); }
-    else {
+    if (!scoped) {
       auto &exe(scp.exec);
 
       if (exe.lambdas.empty()) {
@@ -888,12 +882,11 @@ namespace snabel {
   }
 
   str Target::info() const {
-    return fmt("%0 (%1:%2)", label.tag, label.depth, label.pc);
+    return fmt("%0:%1", label.tag, label.pc);
   }
 
   bool Target::finalize(const Op &op, Scope &scp, OpSeq &out) {
     label.pc = scp.thread.pc;
-    label.depth = scp.coro.scopes.size()+1;
     return true;
   }
   
@@ -903,11 +896,6 @@ namespace snabel {
 
   OpImp &Ungroup::get_imp(Op &op) const {
     return std::get<Ungroup>(op.data);
-  }
-
-  bool Ungroup::refresh(Scope &scp) {
-    run(scp);
-    return false;
   }
 
   bool Ungroup::run(Scope &scp) {

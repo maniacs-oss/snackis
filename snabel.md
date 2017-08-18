@@ -12,6 +12,15 @@ Like Yoda of Star Wars-fame, and yesterdays scientific calculators; as well as m
 I64!
 ```
 
+### Streaming
+Another difference that's important to be aware of is that Snabel views code as a stream of operations, rather than a graph. As long as the final sequence of operations make sense, Snabel mostly doesn't care how it got there. With the exception of lambdas, Snabel needs to see the final code for lambdas during compilation.
+
+```
+> bar label: foo; 35 +) baz label: bar; (7 foo label: baz
+42
+I64!
+```
+
 ### The Stack
 Values and results from function calls are pushed on the current stack in order of appearance. Thanks to lexical scoping and named bindings, keeping the stack squeaky clean is less critical in Snabel. ```stash``` collects all values on the stack in a list and pushes it on the stack. ```$1```-```$9``` swaps in values, starting from the end of the stack; while ```$0``` duplicates the last value. Use ```_``` to drop the last value from the stack or ```reset``` to clear all.
 
