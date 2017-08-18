@@ -1,5 +1,5 @@
 # Snabel
-#### A statically typed scripting-language embedded in C++
+#### A statically typed scripting-language
 
 ![script example](images/script.png?raw=true)
 
@@ -49,6 +49,13 @@ I64!
 ### Functions
 Each named function represents a set of implementations, and each implementation may declare its parameter- and result types. Implementations are matched in reverse declared order when resolving function calls, to allow overriding existing functionality at any point. Prefixing the name of a function with ```&``` pushes it on the stack for later use.
 
+```
+> func: foo {35 +}; 7 foo
+42
+I64!
+```
+
+#### C++
 Adding functions from C++ is as easy as this:
 
 ```

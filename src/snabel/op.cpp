@@ -433,6 +433,8 @@ namespace snabel {
     return std::get<Getenv>(op.data);
   }
 
+  str Getenv::info() const { return id; }
+
   bool Getenv::compile(const Op &op, Scope &scp, OpSeq &out) {
     if (id.empty()) { return false; }
 
