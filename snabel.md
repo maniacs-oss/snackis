@@ -46,39 +46,6 @@ Parentheses may be used to divide expressions into separate parts, each level st
 I64!
 ```
 
-### Functions
-Each function name represents a set of implementations, and each implementation may declare its parameter- and result types. Implementations are matched in reverse declared order when resolving function calls, to allow overriding existing functionality at any point. Prefixing the name of a function with ```&``` pushes it on the stack for later use.
-
-```
-> func: foo {35 +}; 7 foo
-42
-I64!
-
-> func: foo {35 +}
-  let: bar &foo
-  7 $bar call
-42
-I64!
-```
-
-#### C++
-Adding functions from C++ is as easy as this:
-
-```
-using namespace snabel;
-
-static void add_i64_imp(Scope &scp, const Args &args) {
-  auto &x(get<int64_t>(args.at(0))), &y(get<int64_t>(args.at(1)));
-  push(scp.coro, scp.exec.i64_type, x+y);
-}
-
-Exec exe;
-add_func(exe, "+",
-         {ArgType(exe.i64_type), ArgType(exe.i64_type)},
-	 {ArgType(exe.i64_type)},
-	 add_i64);
-```
-
 ### Lambdas
 Wrapping code in braces pushes a pointer to the compiled expression on the stack. Lambdas may be exited early by calling ```return```, everything on the stack at the point of return is pushed on the outer stack. Use ```recall``` to call the current lambda recursively.
 
@@ -275,6 +242,39 @@ I64!
 > 'foo' &nop for stash \- join
 'f-o-o'
 Str!
+```
+
+### Functions
+Each function name represents a set of implementations, and each implementation may declare its parameter- and result types. Implementations are matched in reverse declared order when resolving function calls, to allow overriding existing functionality at any point. Prefixing the name of a function with ```&``` pushes it on the stack for later use.
+
+```
+> func: foo {35 +}; 7 foo
+42
+I64!
+
+> func: foo {35 +}
+  let: bar &foo
+  7 $bar call
+42
+I64!
+```
+
+#### C++
+Adding functions from C++ is as easy as this:
+
+```
+using namespace snabel;
+
+static void add_i64_imp(Scope &scp, const Args &args) {
+  auto &x(get<int64_t>(args.at(0))), &y(get<int64_t>(args.at(1)));
+  push(scp.coro, scp.exec.i64_type, x+y);
+}
+
+Exec exe;
+add_func(exe, "+",
+         {ArgType(exe.i64_type), ArgType(exe.i64_type)},
+	 {ArgType(exe.i64_type)},
+	 add_i64);
 ```
 
 ### Threads
