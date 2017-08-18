@@ -733,13 +733,13 @@ namespace snabel {
     return true;
   }
 
-  bool Recall::run(Scope &scp) {
+  bool Recall::compile(const Op &op, Scope &scp, OpSeq &out) {
     if (!label) {
       ERROR(Snabel, "Missing recall label");
       return false;
     }
 
-    jump(scp.coro, *label);
+    out.emplace_back(Jump(*label));
     return true;
   }
   
