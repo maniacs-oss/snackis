@@ -22,7 +22,7 @@ namespace snabel {
   void start(Thread &thd) { thd.imp = std::thread(do_run, &thd); }
 
   void join(Thread &thd, Scope &scp) {
-    if (thd.imp.joinable()) { thd.imp.join(); }
+    thd.imp.join();
     auto &s(curr_stack(*thd.curr_fiber));
     if (!s.empty()) { push(scp.coro, s); }
     Exec::Lock lock(scp.exec.mutex);
