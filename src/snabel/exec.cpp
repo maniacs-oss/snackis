@@ -962,7 +962,6 @@ namespace snabel {
     TRY(try_compile);
 
     while (true) {
-      OpSeq out;
       rewind(exe);
       
       for (auto &op: exe.main_thread.ops) {
@@ -977,7 +976,7 @@ namespace snabel {
       exe.main_thread.pc = 0;
       exe.lambdas.clear();
       bool done(false);
-
+      
       while (!done) {
 	done = true;
 	
@@ -988,17 +987,34 @@ namespace snabel {
 	}
       }
 
+      OpSeq out;
       done = true;
-      exe.lambdas.clear();
+
       for (auto &op: exe.main_thread.ops) {
 	if (compile(op, exe.main_scope, out)) { done = false; }
 	if (!try_compile.errors.empty()) { goto exit; }
       }
 
-      if (done) { goto exit; }
+      if (done) { break; }
       exe.main_thread.ops.clear();
       exe.main_thread.ops.swap(out);
       try_compile.errors.clear();
+    }
+
+    {
+      OpSeq out;
+      exe.main_thread.pc = 0;
+      
+      for (auto &op: exe.main_thread.ops) {
+	if (!finalize(op, exe.main_scope, out)) {
+	  exe.main_thread.pc++;
+	}
+	
+	if (!try_compile.errors.empty()) { goto exit; }
+      }
+      
+      exe.main_thread.ops.clear();
+      exe.main_thread.ops.swap(out);
     }
   exit:
     rewind(exe);

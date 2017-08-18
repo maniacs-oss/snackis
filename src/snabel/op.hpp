@@ -38,6 +38,7 @@ namespace snabel {
     virtual bool refresh(Scope &scp);
     virtual bool compile(const Op &op, Scope &scp, OpSeq &out);
     virtual bool run(Scope &scp);
+    virtual bool finalize(const Op &op, Scope &scp, OpSeq &out);
   };
 
   struct Backup: OpImp {
@@ -248,7 +249,7 @@ namespace snabel {
     Target(Label &label);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
-    bool refresh(Scope &scp) override;
+    bool finalize(const Op &op, Scope &scp, OpSeq & out) override;
   };
 
   struct Ungroup: OpImp {
@@ -303,6 +304,7 @@ namespace snabel {
   bool refresh(Op &op, Scope &scp);
   bool compile(Op &op, Scope &scp, OpSeq &out);
   bool run(Op &op, Scope &scp);
+  bool finalize(Op &op, Scope &scp, OpSeq &out);
 }
 
 #endif

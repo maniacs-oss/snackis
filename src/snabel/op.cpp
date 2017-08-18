@@ -34,6 +34,10 @@ namespace snabel {
     return true;
   }
 
+  bool OpImp::finalize(const Op &op, Scope &scp, OpSeq &out) {
+    return false;
+  }
+
   Backup::Backup(bool copy):
     OpImp(OP_BACKUP, "backup"), copy(copy)
   { }
@@ -383,7 +387,7 @@ namespace snabel {
     } else {
       iter.reset();
       target.reset();
-      scp.thread.pc += 1;
+      scp.thread.pc += 2;
     }
     
     return true;
@@ -887,11 +891,10 @@ namespace snabel {
     return fmt("%0 (%1:%2)", label.tag, label.depth, label.pc);
   }
 
-  bool Target::refresh(Scope &scp) {
-    auto &cor(scp.coro);
+  bool Target::finalize(const Op &op, Scope &scp, OpSeq &out) {
     label.pc = scp.thread.pc;
-    label.depth = cor.scopes.size()+1;
-    return false;
+    label.depth = scp.coro.scopes.size()+1;
+    return true;
   }
   
   Ungroup::Ungroup():
@@ -1082,5 +1085,11 @@ namespace snabel {
 
   bool run(Op &op, Scope &scp) {
     return op.imp.run(scp);
+  }
+
+  bool finalize(Op &op, Scope &scp, OpSeq &out) {
+    if (op.imp.finalize(op, scp, out)) { return true; }
+    out.push_back(op);
+    return false;
   }
 }

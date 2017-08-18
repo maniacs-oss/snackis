@@ -1,3 +1,4 @@
+#include <iostream>
 #include "snabel/error.hpp"
 #include "snabel/exec.hpp"
 #include "snabel/thread.hpp"
@@ -34,6 +35,7 @@ namespace snabel {
     
     while (thd.pc < thd.ops.size()) {
       auto &op(thd.ops[thd.pc]);
+      auto prev_pc(thd.pc);
 
       if (!run(op, curr_scope(*thd.curr_fiber))) {
 	ERROR(Snabel, fmt("Error on line %0: %1 %2",
@@ -41,7 +43,7 @@ namespace snabel {
 	return false;
       }
       
-      thd.pc++;
+      if (thd.pc == prev_pc) { thd.pc++; }
     }
 
     return true;

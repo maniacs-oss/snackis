@@ -64,7 +64,7 @@ namespace snabel {
   void call(Scope &scp, const Label &lbl) {
     Coro &cor(scp.coro);
     CHECK(scp.return_pc == -1, _);
-    scp.return_pc = scp.thread.pc;
+    scp.return_pc = scp.thread.pc+1;
     jump(cor, lbl);
   }
 
