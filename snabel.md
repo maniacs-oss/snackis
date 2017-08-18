@@ -1,5 +1,5 @@
 # Snabel
-#### A statically typed scripting-language
+#### A hacker-friendly scripting-language in the Forth tradition
 
 ![script example](images/script.png?raw=true)
 
