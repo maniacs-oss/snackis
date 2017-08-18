@@ -4,12 +4,13 @@
 namespace snabel {
   static void do_run(Thread *thread) {
     TRY(try_thread);
-    run(thread->main);
+    run(thread->main, false);
   }
   
   Thread::Thread(Exec &exe, Id id):
     exec(exe),
     id(id),
+    pc(0),
     main(fibers.emplace(std::piecewise_construct,
 			std::forward_as_tuple(0),
 			std::forward_as_tuple(*this, 0)).first->second),
@@ -17,7 +18,7 @@ namespace snabel {
     main_scope(main.scopes.front())
   { }
 
-  void run(Thread &thd) { thd.imp = std::thread(do_run, &thd); }
+  void start(Thread &thd) { thd.imp = std::thread(do_run, &thd); }
 
   void join(Thread &thd, Scope &scp) {
     if (thd.imp.joinable()) { thd.imp.join(); }

@@ -383,7 +383,7 @@ namespace snabel {
     } else {
       iter.reset();
       target.reset();
-      cor.pc += 1;
+      scp.thread.pc += 1;
     }
     
     return true;
@@ -698,7 +698,7 @@ namespace snabel {
     }
 
     Coro &cor(scp.coro);
-    scp.recall_pcs.push_back(cor.pc);
+    scp.recall_pcs.push_back(scp.thread.pc);
     jump(cor, *label);
     return true;
   }
@@ -755,10 +755,10 @@ namespace snabel {
 	return false;
       }
 
-      cor.pc = ret_scp.return_pc;
+      scp.thread.pc = ret_scp.return_pc;
       ret_scp.return_pc = -1;
     } else {
-      cor.pc = scp.recall_pcs.back();
+      scp.thread.pc = scp.recall_pcs.back();
       scp.recall_pcs.pop_back();
     }
     
@@ -853,7 +853,7 @@ namespace snabel {
     }
 
     auto &cor(scp.coro);
-    label->pc = cor.pc;
+    label->pc = scp.thread.pc;
     label->depth = cor.scopes.size()+1;
     return true;
   }

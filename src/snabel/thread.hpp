@@ -9,19 +9,20 @@ namespace snabel {
   struct Thread {
     using Id = Sym;
   
-    OpSeq ops;
     std::thread imp;
     std::map<Fiber::Id, Fiber> fibers;
 
     Exec &exec;
     const Id id;
+    OpSeq ops;
+    int64_t pc;    
     Fiber &main, *curr_fiber;
     Scope &main_scope;
     
     Thread(Exec &exe, Id id);
   };
 
-  void run(Thread &thd);
+  void start(Thread &thd);
   void join(Thread &thd, Scope &scp);
 }
  

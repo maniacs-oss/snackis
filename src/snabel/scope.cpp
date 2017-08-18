@@ -64,7 +64,7 @@ namespace snabel {
   void call(Scope &scp, const Label &lbl) {
     Coro &cor(scp.coro);
     CHECK(scp.return_pc == -1, _);
-    scp.return_pc = cor.pc;
+    scp.return_pc = scp.thread.pc;
     jump(cor, lbl);
   }
 
@@ -92,12 +92,12 @@ namespace snabel {
     std::copy(e.begin(), e.end(), std::inserter(te, te.end()));
 
     std::copy(thd.ops.begin(), thd.ops.end(), std::back_inserter(t->ops));
-    t->main.pc = t->ops.size();
+    t->pc = t->ops.size();
     
     if ((*init.type->call)(curr_scope(t->main), init)) {
-      run(t->main, false);
+      start(*t);
     } else {
-      ERROR(Snabel, "Failed calling thread init");
+      ERROR(Snabel, "Failed initializing thread");
     }
     
     return *t;

@@ -9,7 +9,7 @@
 
 namespace snabel {
   Coro::Coro(Thread &thd):
-    thread(thd), exec(thd.exec), pc(0), main_scope(scopes.emplace_back(*this))
+    thread(thd), exec(thd.exec), main_scope(scopes.emplace_back(*this))
   {
     stacks.emplace_back();
   }
@@ -108,30 +108,30 @@ namespace snabel {
   
   void jump(Coro &cor, const Label &lbl) {
     reset_scope(cor, lbl.depth);
-    cor.pc = lbl.pc;
+    cor.thread.pc = lbl.pc;
   }
 
   void rewind(Coro &cor) {
     while (cor.scopes.size() > 1) { cor.scopes.pop_back(); }
     while (cor.stacks.size() > 1) { cor.stacks.pop_back(); }
     cor.stacks.front().clear();
-    cor.pc = 0;
+    cor.thread.pc = 0;
   }
 
   bool run(Coro &cor, bool scope) {
     Thread &thd(cor.thread);
     if (scope) { begin_scope(cor, true); }
     
-    while (cor.pc < thd.ops.size()) {
-      auto &op(thd.ops[cor.pc]);
+    while (cor.thread.pc < thd.ops.size()) {
+      auto &op(thd.ops[cor.thread.pc]);
 
       if (!run(op, curr_scope(cor))) {
 	ERROR(Snabel, fmt("Error on line %0: %1 %2",
-			  cor.pc, op.imp.name, op.imp.info()));
+			  cor.thread.pc, op.imp.name, op.imp.info()));
 	return false;
       }
       
-      cor.pc++;
+      cor.thread.pc++;
     }
 
     return true;

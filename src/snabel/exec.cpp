@@ -925,15 +925,15 @@ namespace snabel {
 	  goto exit;
 	}
 	
-	exe.main.pc++;
+	exe.main_thread.pc++;
       }
 
-      exe.main.pc = 0;
+      exe.main_thread.pc = 0;
       exe.lambdas.clear();
       for (auto &op: exe.main_thread.ops) {
 	if (!refresh(op, exe.main_scope) ||
 	    !try_compile.errors.empty()) { goto exit; }
-	exe.main.pc++;
+	exe.main_thread.pc++;
       }
 
       bool done(true);

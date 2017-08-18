@@ -12,7 +12,6 @@ namespace snabel {
   struct Coro {
     Thread &thread;
     Exec &exec;
-    int64_t pc;    
     Env env;
     
     std::deque<Scope> scopes;
