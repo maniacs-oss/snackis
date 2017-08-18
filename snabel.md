@@ -13,7 +13,7 @@ I64!
 ```
 
 ### Streaming
-Another difference that's important to be aware of is that Snabel views code as a stream, rather than a graph of operations. As long as the final sequence makes sense, Snabel mostly doesn't care how it got there. Notable exceptions are strings, type parameter list and lambdas, where Snabel needs to see the final sequence to compile the code.
+Another difference that's important to be aware of is that Snabel views code as a stream, rather than a graph of operations. As long as the final sequence makes sense, Snabel mostly doesn't care how it got there. Notable exceptions are contents of strings, type parameter list and lambdas, where Snabel needs to see the final sequence to compile the code.
 
 ```
 > bar label: foo; 35 +) baz label: bar; (7 foo label: baz
