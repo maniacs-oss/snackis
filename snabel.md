@@ -325,7 +325,7 @@ add_macro(*this, "let:", [this](auto pos, auto &in, auto &out) {
 ```
 
 ### Running the code
-Snabel is designed to eventually be compiled as a standalone library, but is currently being developed as part of [Snackis](https://github.com/andreas-gone-wild/snackis). The easiest way to trying out the examples is to get Snackis up and running, and then execute 'script-new' to open the script view.
+Snabel is designed to eventually be compiled as a standalone library, but is currently being developed as part of [Snackis](https://github.com/andreas-gone-wild/snackis). The easiest way to trying out the examples is to get Snackis up and running, and execute 'script-new' to open the script view.
 
 ### License
 Snabel is licensed under the GNU General Public License Version 3.
