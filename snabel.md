@@ -1,5 +1,5 @@
 # Snabel
-#### a Forth-like scripting language with static, parameterized types and generic words
+#### an embedded Forth with static, parameterized types and generic words
 
 ![script example](images/script.png?raw=true)
 
