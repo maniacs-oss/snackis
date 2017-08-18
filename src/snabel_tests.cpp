@@ -436,6 +436,6 @@ namespace snabel {
     auto stopped = std::chrono::high_resolution_clock::now();
     auto t =
       std::chrono::duration_cast<std::chrono::microseconds>(stopped-started).count();
-    std::cout << "Snabel: " << t / iters << "ms" << std::endl;
+    std::cout << "Snabel: " << t / iters << "us" << std::endl;
   }
 }

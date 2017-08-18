@@ -645,6 +645,23 @@ namespace snabel {
 
   str Push::info() const { return fmt_arg(vals); }
 
+  bool Push::compile(const Op &op, Scope &scp, OpSeq &out) {
+    int popped(0);
+    
+    while (!out.empty()) {
+      auto op(out.back());
+      if (op.imp.code != OP_PUSH) { break; }
+      auto vs(get<Push>(op.data).vals);
+      std::copy(vs.rbegin(), vs.rend(), std::front_inserter(vals));
+      out.pop_back();
+      popped++;
+    }
+
+    if (!popped) { return false; }    
+    out.push_back(op);
+    return true;
+  }
+  
   bool Push::run(Scope &scp) {
     push(scp.coro, vals);
     return true;

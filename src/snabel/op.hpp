@@ -179,6 +179,7 @@ namespace snabel {
     Push(const Stack &vals);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
+    bool compile(const Op &op, Scope &scp, OpSeq & out) override;
     bool run(Scope &scp) override;
   };
 
