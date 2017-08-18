@@ -160,8 +160,8 @@ namespace snabel {
 
   struct Lambda: OpImp {
     Sym tag;
-    Label *enter_label, *recall_label, *exit_label, *skip_label;
-    bool recalls, returns,  compiled;
+    Label *enter_label, *recall_label, *yield_label, *exit_label, *skip_label;
+    bool recalls, returns, yields, compiled;
     
     Lambda();
     OpImp &get_imp(Op &op) const override;

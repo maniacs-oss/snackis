@@ -2,6 +2,7 @@
 #define SNABEL_LABEL_HPP
 
 #include <cstdint>
+#include "snabel/sym.hpp"
 #include "snackis/core/str.hpp"
 
 namespace snabel {
@@ -10,6 +11,7 @@ namespace snabel {
   struct Label {
     str tag;
     bool recall;
+    opt<Sym> yield_tag;
     int64_t pc;
     
     Label(const str &tag);

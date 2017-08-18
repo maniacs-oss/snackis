@@ -379,7 +379,7 @@ namespace snabel {
     };
 
     label_type.call.emplace([](auto &scp, auto &v) {
-	jump(scp.coro, *get<Label *>(v));
+	jump(scp, *get<Label *>(v));
 	return true;
       });
 

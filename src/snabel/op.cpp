@@ -471,8 +471,21 @@ namespace snabel {
       }      
 
       return true;
-    } else if (id == "yield")
-      { }
+    } else if (id == "yield") {
+      if (exe.lambdas.empty()) {
+	ERROR(Snabel, "Missing lambda for return");
+	return false;
+      }
+
+      auto l(exe.lambdas.back());
+      l->yields = true;
+
+      if (l->yield_label) {
+	val.emplace(exe.label_type, l->yield_label);
+      }
+
+      return true;
+    }
 
     return false;
   }
@@ -566,7 +579,7 @@ namespace snabel {
       return false;
     }
 
-    jump(scp.coro, *label);
+    jump(scp, *label);
     return true;
   }
   
@@ -574,9 +587,10 @@ namespace snabel {
     OpImp(OP_LAMBDA, "lambda"),
     enter_label(nullptr),
     recall_label(nullptr),
+    yield_label(nullptr),
     exit_label(nullptr),
     skip_label(nullptr),
-    recalls(false), returns(false),
+    recalls(false), returns(false), yields(false),
     compiled(false)
   { }
 
@@ -595,14 +609,21 @@ namespace snabel {
   bool Lambda::refresh(Scope &scp) {
     auto &exe(scp.exec);
     exe.lambdas.push_back(this);
-
+    bool changed(false);
+    
     if (recalls && !recall_label) {
       recall_label = &add_label(exe, fmt("_recall%0", tag));
       recall_label->recall = true;
-      return true;
+      changed = true;
+    }
+
+    if (yields && !yield_label) {
+      yield_label = &add_label(exe, fmt("_yield%0", tag));
+      yield_label->yield_tag.emplace(tag);
+      changed = true;
     }
     
-    return false;
+    return changed;
   }
 
   bool Lambda::compile(const Op &op, Scope &scp, OpSeq &out) {
@@ -1053,38 +1074,7 @@ namespace snabel {
   }
 
   bool Yield::run(Scope &scp) {
-    Coro &cor(scp.coro);
-    auto yield_pc(scp.thread.pc);
-    auto yield_stack(curr_stack(scp.coro));
-    
-    if (scp.recall_pcs.empty()) {
-      if (!end_scope(scp.coro, 1)) { return false; }
-      auto &ret_scp(curr_scope(cor));
-      
-      if (ret_scp.return_pc == -1) {
-	ERROR(Snabel, "Missing return pc");
-	return false;
-      }
-
-      scp.thread.pc = ret_scp.return_pc;
-      ret_scp.return_pc = -1;
-    } else {
-      scp.thread.pc = scp.recall_pcs.back();
-      scp.recall_pcs.pop_back();
-    }
-
-    auto fnd(scp.coros.find(tag));
-    
-    if (fnd == scp.coros.end()) {
-      scp.coros.emplace(std::piecewise_construct,
-			std::forward_as_tuple(tag),
-			std::forward_as_tuple(yield_pc, yield_stack));
-    } else {
-      fnd->second.first = yield_pc;
-      fnd->second.second.assign(yield_stack.begin(), yield_stack.end());
-    }
-
-    return true;
+    return yield(scp, tag);
   }
 
   Op::Op(const Op &src):

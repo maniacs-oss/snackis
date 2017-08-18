@@ -99,13 +99,4 @@ namespace snabel {
     cor.scopes.pop_back();
     return true;
   }
-
-  void jump(Coro &cor, const Label &lbl) {
-    if (lbl.recall) {
-      auto &scp(curr_scope(cor));
-      scp.recall_pcs.push_back(scp.thread.pc+1);
-    }
-    
-    cor.thread.pc = lbl.pc;
-  }
 }

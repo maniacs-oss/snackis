@@ -61,11 +61,54 @@ namespace snabel {
     return true;
   }
 
+  void jump(Scope &scp, const Label &lbl) {
+    if (lbl.yield_tag) {
+      yield(scp, *lbl.yield_tag);
+    } else {
+      if (lbl.recall) { scp.recall_pcs.push_back(scp.thread.pc+1); }
+      scp.thread.pc = lbl.pc;
+    }
+  }
+
   void call(Scope &scp, const Label &lbl) {
-    Coro &cor(scp.coro);
     CHECK(scp.return_pc == -1, _);
     scp.return_pc = scp.thread.pc+1;
-    jump(cor, lbl);
+    jump(scp, lbl);
+  }
+
+  bool yield(Scope &scp, Sym tag) {
+    Coro &cor(scp.coro);
+    auto yield_pc(scp.thread.pc);
+    auto yield_stack(curr_stack(scp.coro));
+    
+    if (scp.recall_pcs.empty()) {
+      if (!end_scope(scp.coro, 1)) { return false; }
+      auto &ret_scp(curr_scope(cor));
+      
+      if (ret_scp.return_pc == -1) {
+	ERROR(Snabel, "Missing return pc");
+	return false;
+      }
+
+      scp.thread.pc = ret_scp.return_pc;
+      ret_scp.return_pc = -1;
+    } else {
+      scp.thread.pc = scp.recall_pcs.back();
+      scp.recall_pcs.pop_back();
+    }
+
+    auto fnd(scp.coros.find(tag));
+    
+    if (fnd == scp.coros.end()) {
+      scp.coros.emplace(std::piecewise_construct,
+			std::forward_as_tuple(tag),
+			std::forward_as_tuple(yield_pc, yield_stack));
+    } else {
+      fnd->second.first = yield_pc;
+      fnd->second.second.assign(yield_stack.begin(), yield_stack.end());
+    }
+
+    return true;
   }
 
   Thread &start_thread(Scope &scp, const Box &init) {
