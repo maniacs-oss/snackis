@@ -6,6 +6,7 @@
 
 #include "snabel/box.hpp"
 #include "snabel/label.hpp"
+#include "snabel/sym.hpp"
 #include "snabel/type.hpp"
 #include "snackis/core/func.hpp"
 #include "snackis/core/str.hpp"
@@ -23,7 +24,7 @@ namespace snabel {
 		OP_FOR, OP_FUNCALL, OP_GETENV, OP_GROUP, OP_JUMP, OP_LAMBDA,
 		OP_PARAM, OP_PUSH, OP_PUTENV, OP_RECALL, OP_RESET, OP_RESTORE,
 		OP_RETURN, OP_STASH, OP_SWAP, OP_TARGET, OP_UNGROUP, OP_UNLAMBDA,
-		OP_UNPARAM };
+		OP_UNPARAM, OP_YIELD };
 
   using OpSeq = std::deque<Op>;
 
@@ -158,9 +159,9 @@ namespace snabel {
   };
 
   struct Lambda: OpImp {
-    str tag;
+    Sym tag;
     Label *enter_label, *recall_label, *exit_label, *skip_label;
-    bool recalls, returns, yields, compiled;
+    bool recalls, returns,  compiled;
     
     Lambda();
     OpImp &get_imp(Op &op) const override;
@@ -258,7 +259,6 @@ namespace snabel {
   };
 
   struct Unlambda: OpImp {
-    str tag;
     Label *enter_label, *exit_label, *skip_label;
     bool compiled;
 
@@ -279,10 +279,19 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
   
+  struct Yield: OpImp {
+    Sym tag;
+    
+    Yield();
+    OpImp &get_imp(Op &op) const override;
+    bool refresh(Scope &scp) override;
+    bool run(Scope &scp) override;
+  };
+
   using OpData = std::variant<Backup, Branch, Call, Check, Deref, Drop, Dup, For,
 			      Funcall, Getenv, Group, Jump, Lambda, Param, Push,
 			      Putenv, Recall, Reset, Restore, Return, Stash, Swap,
-			      Target, Ungroup, Unlambda, Unparam>;
+			      Target, Ungroup, Unlambda, Unparam, Yield>;
 
   struct Op {
     OpData data;

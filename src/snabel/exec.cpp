@@ -705,7 +705,7 @@ namespace snabel {
       });
 
     add_macro(*this, "yield", [this](auto pos, auto &in, auto &out) {
-	//out.emplace_back(Yield());
+	out.emplace_back(Yield());
       });
   }
 

@@ -471,16 +471,8 @@ namespace snabel {
       }      
 
       return true;
-    } else if (id == "yield") {      
-      if (exe.lambdas.empty()) {
-	ERROR(Snabel, "Missing lambda for return");
-	return false;
-      }
-
-      auto l(exe.lambdas.back());
-      l->yields = true;
-      return true;
-    }
+    } else if (id == "yield")
+      { }
 
     return false;
   }
@@ -584,7 +576,7 @@ namespace snabel {
     recall_label(nullptr),
     exit_label(nullptr),
     skip_label(nullptr),
-    recalls(false), returns(false), yields(false),
+    recalls(false), returns(false),
     compiled(false)
   { }
 
@@ -594,7 +586,7 @@ namespace snabel {
 
   bool Lambda::prepare(Scope &scp) {
     auto &exe(scp.exec);
-    tag = fmt_arg(gensym(exe));
+    tag = gensym(exe);
     enter_label = &add_label(exe, fmt("_enter%0", tag));
     skip_label = &add_label(exe, fmt("_skip%0", tag));    
     return true;
@@ -615,12 +607,6 @@ namespace snabel {
 
   bool Lambda::compile(const Op &op, Scope &scp, OpSeq &out) {
     if (compiled) { return false; }
-
-    if (tag.empty()) {
-      ERROR(Snabel, "Empty lambda tag");
-      return false;
-    }
-    
     compiled = true;
     out.emplace_back(Jump(*skip_label));
     out.emplace_back(Target(*enter_label));
@@ -920,30 +906,23 @@ namespace snabel {
       return false;
     }
 
-    auto l(exe.lambdas.back());
+    auto &l(*exe.lambdas.back());
     bool changed(false);
     
-    if (tag.empty()) {
-      tag = l->tag;
-    } else if (tag != l->tag) {
-      ERROR(Snabel, "Lambda tag changed");
-      return false;
-    }
-    
-    if (!l->exit_label && (l->returns || l->recalls)) {
-      exit_label = &add_label(exe, fmt("_exit%0", tag));
-      l->exit_label = exit_label;
+    if (!l.exit_label && (l.returns || l.recalls)) {
+      exit_label = &add_label(exe, fmt("_exit%0", l.tag));
+      l.exit_label = exit_label;
       changed = true;
     }
 
-    enter_label = l->enter_label;
-    skip_label = l->skip_label;
+    enter_label = l.enter_label;
+    skip_label = l.skip_label;
     exe.lambdas.pop_back();
     return changed;
   }
   
   bool Unlambda::compile(const Op &op, Scope &scp, OpSeq &out) {
-    if (compiled || tag.empty()) { return false; }  
+    if (compiled) { return false; }  
     
     compiled = true;
     if (exit_label) { out.emplace_back(Target(*exit_label)); }
@@ -1051,7 +1030,63 @@ namespace snabel {
     get<Type *>(*t) = &pt;
     return true;
   }
-  
+
+  Yield::Yield():
+    OpImp(OP_YIELD, "yield")
+  { }
+
+  OpImp &Yield::get_imp(Op &op) const {
+    return std::get<Yield>(op.data);
+  }
+
+  bool Yield::refresh(Scope &scp) {
+    auto &exe(scp.exec);
+
+    if (exe.lambdas.empty()) {
+      ERROR(Snabel, "Missing lambda");
+      return false;
+    }
+    
+    auto &l(*exe.lambdas.back());
+    tag = l.tag;
+    return true;
+  }
+
+  bool Yield::run(Scope &scp) {
+    Coro &cor(scp.coro);
+    auto yield_pc(scp.thread.pc);
+    auto yield_stack(curr_stack(scp.coro));
+    
+    if (scp.recall_pcs.empty()) {
+      if (!end_scope(scp.coro, 1)) { return false; }
+      auto &ret_scp(curr_scope(cor));
+      
+      if (ret_scp.return_pc == -1) {
+	ERROR(Snabel, "Missing return pc");
+	return false;
+      }
+
+      scp.thread.pc = ret_scp.return_pc;
+      ret_scp.return_pc = -1;
+    } else {
+      scp.thread.pc = scp.recall_pcs.back();
+      scp.recall_pcs.pop_back();
+    }
+
+    auto fnd(scp.coros.find(tag));
+    
+    if (fnd == scp.coros.end()) {
+      scp.coros.emplace(std::piecewise_construct,
+			std::forward_as_tuple(tag),
+			std::forward_as_tuple(yield_pc, yield_stack));
+    } else {
+      fnd->second.first = yield_pc;
+      fnd->second.second.assign(yield_stack.begin(), yield_stack.end());
+    }
+
+    return true;
+  }
+
   Op::Op(const Op &src):
     data(src.data), imp(src.imp.get_imp(*this)), prepared(src.prepared)
   { }
