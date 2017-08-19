@@ -93,9 +93,10 @@ namespace snabel {
     auto fnd(prev_scp.coros.find(tag));
     
     if (fnd == prev_scp.coros.end()) {
-      prev_scp.coros.emplace(std::piecewise_construct,
-			     std::forward_as_tuple(tag),
-			     std::forward_as_tuple(scp));
+      auto &cor(prev_scp.coros.emplace(std::piecewise_construct,
+				       std::forward_as_tuple(tag),
+				       std::forward_as_tuple(thd)).first->second);
+      refresh(cor, scp);
     } else {
       refresh(fnd->second, scp);
     }

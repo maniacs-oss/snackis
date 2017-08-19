@@ -1,19 +1,14 @@
 #ifndef SNABEL_CORO_HPP
 #define SNABEL_CORO_HPP
 
-#include "snabel/box.hpp"
 #include "snabel/env.hpp"
+#include "snabel/frame.hpp"
 
 namespace snabel {
-  struct Thread;
-  
-  struct Coro {
-    Thread &thread;
-    int64_t pc;
-    std::deque<Stack> stacks;
+  struct Coro: Frame {
     Env env;
 
-    Coro(Scope &Scp);
+    Coro(Thread &thread);
   };
 
   void refresh(Coro &cor, Scope &scp);
