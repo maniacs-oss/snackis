@@ -243,6 +243,9 @@ namespace snabel {
 
     run(exe, "42 {dec $0 zero? &return when recall 2 +} call");
     CHECK(get<int64_t>(pop(exe.main)) == 82, _);
+
+    run(exe, "42 {dec $0 zero? &return when (2 (|recall) +)} call");
+    CHECK(get<int64_t>(pop(exe.main)) == 82, _);
   }
 
   static void coro_tests() {

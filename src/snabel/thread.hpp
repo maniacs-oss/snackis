@@ -37,6 +37,7 @@ namespace snabel {
 
   Stack &backup_stack(Thread &thd, bool copy=false);
   void restore_stack(Thread &thd, size_t len=1);
+  void reset_stack(Thread &thd, int64_t depth);
   
   Scope &begin_scope(Thread &thd, bool copy_stack=false);
   bool end_scope(Thread &thd);

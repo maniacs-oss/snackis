@@ -87,6 +87,15 @@ namespace snabel {
     }
   }
 
+  void reset_stack(Thread &thd, int64_t depth) {
+    if (thd.stacks.size() > depth) {
+      opt<Box> last;
+      if (!thd.stacks.back().empty()) { last = pop(thd); }
+      while (thd.stacks.size() > depth) { thd.stacks.pop_back(); }
+      if (last) { push(thd, *last); }
+    }
+  }
+
   Scope &begin_scope(Thread &thd, bool copy_stack) {
     return thd.scopes.emplace_back(thd.scopes.back());
   }

@@ -16,16 +16,9 @@ namespace snabel {
     return_pc(-1),
     coros(src.coros)
   {}
-
+  
   Scope::~Scope() {
-    if (thread.stacks.size() > stack_depth) {
-      opt<Box> last;
-      if (!thread.stacks.back().empty()) { last = pop(thread); }
-
-      while (thread.stacks.size() > stack_depth) { thread.stacks.pop_back(); }
-      if (last) { push(thread, *last); }
-    }
-    
+    reset_stack(*this);
     for (auto &k: env_keys) { thread.env.erase(k); }
   }
 
@@ -72,15 +65,23 @@ namespace snabel {
     return true;
   }
 
+  void reset_stack(Scope &scp) {
+    reset_stack(scp.thread, scp.stack_depth);
+  }
+
   void jump(Scope &scp, const Label &lbl) {
+    auto &thd(scp.thread);
+    
     if (lbl.yield_tag) {
       yield(scp, *lbl.yield_tag);
-    } else {
+    } else {      
       if (lbl.recall) {
-	auto &frm(scp.recalls.emplace_back(scp.thread));
-	refresh(frm, scp, scp.stack_depth-1);
+	auto &frm(scp.recalls.emplace_back(thd));
+	refresh(frm, scp, thd.stacks.size()-scp.stack_depth-1);
       }
-      scp.thread.pc = lbl.pc;
+      
+      reset_stack(thd, scp.stack_depth+1);
+      thd.pc = lbl.pc;
     }
   }
 
@@ -125,8 +126,11 @@ namespace snabel {
     auto &thd(scp.thread);
     auto &frm(scp.recalls.back());
     thd.pc = frm.pc;
+    opt<Box> last;
+    if (!thd.stacks.back().empty()) { last = pop(thd); }    
     std::copy(frm.stacks.begin(), frm.stacks.end(),
 	      std::back_inserter(thd.stacks));
+    if (last) { push(thd, *last); }
     scp.recalls.pop_back();
   }
 

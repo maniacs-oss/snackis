@@ -37,6 +37,7 @@ namespace snabel {
   Box get_env(Scope &scp, const str &key);
   void put_env(Scope &scp, const str &key, const Box &val);
   bool rem_env(Scope &scp, const str &key);
+  void reset_stack(Scope &scp);
   void jump(Scope &scp, const Label &lbl);
   void call(Scope &scp, const Label &lbl);
   bool yield(Scope &scp, Sym tag);
