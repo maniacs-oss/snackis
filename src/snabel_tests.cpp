@@ -176,14 +176,15 @@ namespace snabel {
     CHECK(exe.main.ops.size() == 1, _);
   }
 
-  static void scope_tests() {
+  static void group_tests() {
     TRY(try_test);    
     Exec exe;
     
-    run(exe, "(let: foo 21; $foo)");
+    run(exe, "(42 let: foo 21; $foo)");
     Scope &scp1(curr_scope(exe.main));
     CHECK(get<int64_t>(pop(scp1.thread)) == 21, _);
-    CHECK(!find_env(scp1, "foo"), _);
+    CHECK(!peek(scp1.thread), _);
+    CHECK(get<int64_t>(get_env(scp1, "$foo")) == 21, _);
   }
 
   static void equality_tests() {
@@ -434,7 +435,7 @@ namespace snabel {
     func_tests();
     type_tests();
     stack_tests();
-    scope_tests();
+    group_tests();
     equality_tests();
     let_tests();
     jump_tests();

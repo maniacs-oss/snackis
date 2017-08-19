@@ -534,21 +534,6 @@ namespace snabel {
     return true;
   }
 
-  Group::Group(bool copy):
-    OpImp(OP_GROUP, "group"), copy(copy)
-  { }
-
-  OpImp &Group::get_imp(Op &op) const {
-    return std::get<Group>(op.data);
-  }
-
-  str Group::info() const { return copy ? "copy" : ""; }
-
-  bool Group::run(Scope &scp) {
-    begin_scope(scp.thread, copy);
-    return true;
-  }
-
   Jump::Jump(const str &tag):
     OpImp(OP_JUMP, "jump"), tag(tag), label(nullptr)
   { }
@@ -905,18 +890,6 @@ namespace snabel {
     return true;
   }
   
-  Ungroup::Ungroup():
-    OpImp(OP_UNGROUP, "ungroup")
-  { }
-
-  OpImp &Ungroup::get_imp(Op &op) const {
-    return std::get<Ungroup>(op.data);
-  }
-
-  bool Ungroup::run(Scope &scp) {
-    return end_scope(scp.thread);
-  }
-
   Unlambda::Unlambda():
     OpImp(OP_UNLAMBDA, "unlambda"),
     enter_label(nullptr), exit_label(nullptr), skip_label(nullptr),

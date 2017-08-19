@@ -568,11 +568,11 @@ namespace snabel {
       });
 
     add_macro(*this, "(", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(Group(false));
+	out.emplace_back(Backup(true));
       });
 
     add_macro(*this, ")", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(Ungroup());
+	out.emplace_back(Restore());
       });
 
     add_macro(*this, "[", [](auto pos, auto &in, auto &out) {
