@@ -88,18 +88,16 @@ namespace snabel {
   }
 
   Scope &begin_scope(Thread &thd, bool copy_stack) {
-    backup_stack(thd, true);
     return thd.scopes.emplace_back(thd.scopes.back());
   }
   
-  bool end_scope(Thread &thd, size_t stack_len) {
+  bool end_scope(Thread &thd) {
     if (thd.scopes.size() < 2) {
       ERROR(Snabel, "Open scope");
       return false;
     }
 
     thd.scopes.pop_back();
-    restore_stack(thd, stack_len);
     return true;
   }
   

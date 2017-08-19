@@ -6,14 +6,19 @@
 
 namespace snabel {  
   Scope::Scope(Thread &thd):
-    thread(thd), exec(thread.exec), return_pc(-1)
+    thread(thd), exec(thread.exec), stack_depth(thread.stacks.size()), return_pc(-1)
   { }
 
   Scope::Scope(const Scope &src):
-    thread(src.thread), exec(src.exec), return_pc(-1), coros(src.coros)
-  { }
+    thread(src.thread),
+    exec(src.exec),
+    stack_depth(thread.stacks.size()),
+    return_pc(-1),
+    coros(src.coros)
+  {}
 
   Scope::~Scope() {
+    while (thread.stacks.size() > stack_depth) { thread.stacks.pop_back(); }
     for (auto &k: env_keys) { thread.env.erase(k); }
   }
 
@@ -89,7 +94,7 @@ namespace snabel {
     }
     
     if (scp.recall_pcs.empty()) {
-      if (!end_scope(thd, 1)) { return false; }
+      if (!end_scope(thd)) { return false; }
       
       if (prev_scp.return_pc == -1) {
 	ERROR(Snabel, "Missing return pc");

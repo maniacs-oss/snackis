@@ -39,7 +39,7 @@ namespace snabel {
   void restore_stack(Thread &thd, size_t len=1);
   
   Scope &begin_scope(Thread &thd, bool copy_stack=false);
-  bool end_scope(Thread &thd, size_t stack_len=1);
+  bool end_scope(Thread &thd);
   
   void start(Thread &thd);
   void join(Thread &thd, Scope &scp);

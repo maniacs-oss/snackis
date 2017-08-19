@@ -21,6 +21,7 @@ namespace snabel {
     Thread &thread;
     Exec &exec;
     
+    size_t stack_depth;
     int64_t return_pc;
     std::deque<int64_t> recall_pcs;
     std::map<Sym, Coro> coros;

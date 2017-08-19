@@ -807,7 +807,7 @@ namespace snabel {
     auto &thd(scp.thread);
     
     if (scp.recall_pcs.empty()) {
-      if (!end_scope(thd, 1)) { return false; }
+      if (!end_scope(thd)) { return false; }
       auto &ret_scp(curr_scope(thd));
       
       if (ret_scp.return_pc == -1) {
