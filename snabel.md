@@ -50,12 +50,20 @@ I64!
 ```
 
 ### Expressions
-Parentheses may be used to divide expressions into separate parts, each level starts with a fresh stack and the last value is pushed on the outer stack on exit.
+Parentheses may be used to divide expressions into separate parts, each level copies the current stack on entry and restores it with the result (if any) pushed on exit.
 
 ```
 > (1 2 +) (2 2 *) +
 7
 I64!
+
+> 1 (2 3 stash)
+[1 2 3]
+List<I64>!
+
+> 1 (|2 3 stash) .
+1.[2 3]
+Pair<I64 List<I64>>!
 ```
 
 ### Lambdas
@@ -88,13 +96,13 @@ I64!
 Calling ```yield``` from within a lambda logs the current position, stack and environment before returning; execution will continue from the yielding position with restored stack and environment on next call from the same scope.
 
 ```
-> let: foo {7 yield 28 +}
-  $foo call $foo call +
+> func: foo {7 yield 28 +}
+  foo foo +
 42
 I64!
 
-> let: foo {let: bar 35; 7 yield $bar +}
-  $foo call $foo call
+> func: foo {let: bar 35; 7 yield $bar +}
+  foo foo
 42
 I64!
 

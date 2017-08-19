@@ -623,7 +623,9 @@ namespace snabel {
     auto fnd(scp.coros.find(tag));
     Scope &new_scp(begin_scope(thd, true));
 
-    if (fnd != scp.coros.end()) {
+    if (fnd == scp.coros.end()) {
+      backup_stack(thd, true);
+    } if (fnd != scp.coros.end()) {
       auto &cor(fnd->second);
       new_scp.thread.pc = cor.pc;
       std::copy(cor.stacks.begin(), cor.stacks.end(),
