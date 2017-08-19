@@ -418,13 +418,11 @@ namespace snabel {
     run(exe, "-7 3 / frac");
     CHECK(get<Rat>(pop(exe.main)) == Rat(1, 3, true), _);
 
-    /*
     run(exe,
 	"1 1 / "
 	"10 {_ 3 /} for "
 	"10 {_ 3 *} for");
     CHECK(get<Rat>(pop(exe.main)) == Rat(1, 1), _);
-    */
   }
   
   static void thread_tests() {
