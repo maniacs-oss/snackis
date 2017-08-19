@@ -25,7 +25,7 @@ SnabelError: Missing lambda
 ```
 
 ### The Stack
-Values and results from function calls are pushed on the current stack in order of appearance. Thanks to lexical scoping and named bindings, keeping the stack squeaky clean is less critical in Snabel. ```stash``` collects all values on the stack in a list and pushes it on the stack. ```$1```-```$9``` swaps in values, starting from the end; while ```$0``` duplicates the last value. ```_``` drops the last value and ```reset``` clears the entire stack.
+Values and results from function calls are pushed on the current stack in order of appearance. Thanks to lexical scoping and named bindings, keeping the stack squeaky clean is less critical in Snabel. ```stash``` collects all values on the stack in a list and pushes it on the stack. ```$1```-```$9``` swaps in values, starting from the end; while ```$0``` duplicates the last value. ```_``` drops the last value and ```|``` clears the entire stack.
 
 ```
 > 1 2 3 stash
@@ -40,7 +40,7 @@ List<I64>!
 [42]
 I64!
 
-> 42 7 reset stash
+> 42 7 | stash
 []
 List<Any>!
 
@@ -98,7 +98,7 @@ I64!
 42
 I64!
 
-> func: foo {[7 35] &yield for reset &+}
+> func: foo {[7 35] &yield for | &+}
   foo foo foo call
 42
 I64!

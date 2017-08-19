@@ -174,7 +174,7 @@ namespace snabel {
   static void stack_tests() {
     TRY(try_test);    
     Exec exe;
-    run(exe, "42 reset");
+    run(exe, "42 |");
     CHECK(!peek(exe.main), _);
 
     compile(exe, "1 2 3 _ _");
@@ -262,7 +262,7 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
     run(exe,
-	"func: foo {[7 35] &yield for reset &+}; "
+	"func: foo {[7 35] &yield for | &+}; "
 	"foo foo foo call");
 	CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }

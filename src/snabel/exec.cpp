@@ -680,7 +680,7 @@ namespace snabel {
 	out.emplace_back(Recall());
       });
 
-    add_macro(*this, "reset", [](auto pos, auto &in, auto &out) {
+    add_macro(*this, "|", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Reset());
       });
 
