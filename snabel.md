@@ -4,7 +4,7 @@
 ![script example](images/script.png?raw=true)
 
 ### Postfix
-Like Yoda of Star Wars-fame, and yesterdays scientific calculators; as well as most printers in active use; yet unlike currently trending programming languages; Snabel expects arguments before operations.
+Like Yoda of Star Wars-fame, and yesterdays scientific calculators; as well as most printers in active use; yet unlike currently trending languages; Snabel expects arguments before operations.
 
 ```
 > 7 42 + 10 %
@@ -13,7 +13,7 @@ I64!
 ```
 
 ### Streams of Tokens
-Another difference that's important to be aware of is that Snabel views code as a stream, rather than a graph of tokens. As long as the final sequence makes sense, Snabel mostly doesn't care how it got there. Notable exceptions are contents of strings, type parameter list and lambdas, where Snabel needs to see the final sequence to compile the code.
+Another thing to be aware of is that Snabel views code as a stream, rather than a graph of tokens. As long as the final sequence makes sense, Snabel mostly doesn't care how it got there. Notable exceptions are contents of strings, type parameter list and lambdas, where Snabel needs to see the final sequence to compile the code.
 
 ```
 > bar label: foo; 35 +) baz label: bar; (7 foo label: baz
@@ -67,7 +67,7 @@ Pair<I64 List<I64>>!
 ```
 
 ### Lambdas
-Wrapping code in braces pushes a pointer to the compiled expression on the stack. Lambdas may be exited early by calling ```return```, everything on the stack at the point of return is pushed on the outer stack. ```recall``` may be used to call the current lambda recursively.
+Wrapping code in braces pushes a pointer on the stack. Lambdas may be exited early by calling ```return```, the final result (if any) is pushed on exit. ```recall``` may be used to call the current lambda recursively.
 
 ```
 > {1 2 +}
@@ -126,7 +126,7 @@ Bool!
 ```
 
 ### Bindings
-The ```let:```-macro may be used to introduce named bindings. Bound names are prefixed with ```$```, lexically scoped and not allowed to change their value once bound in a specific scope. The bound expression is evaluated in a copy of the calling stack, which allows feeding values into a let statement but avoids unintended stack effects. Semicolons may be used to separate bindings from surrounding code.
+The ```let:```-macro may be used to introduce named bindings. Bound names are prefixed with ```$```, lexically scoped and not allowed to change their value once bound in a specific scope. The bound expression is evaluated in a copy of the calling stack, which allows feeding values into a let statement but avoids unintended stack effects. Bindings require termination using ```;``` to separate them from surrounding code.
 
 ```
 > let: fn {7 +}; 35 $fn call
@@ -217,7 +217,7 @@ List<List<Any>>!
 ```
 
 ### Labels
-The ```label:```-macro will create a label with the specified name at that point, while simply naming a label in scope will result in jumping there. Prefixing the name of a label in scope with ```&``` pushes it on the stack for later use.
+The ```label:```-macro will create a label with the specified name at that point, while simply naming a label in scope will result in jumping there. Prefixing the name of a label in scope with ```&``` pushes it on the stack for later use. Labels require termination using ```;``` to separate them from surrounding code.
 
 ```
 > 1 2 3 +
@@ -277,7 +277,7 @@ Str!
 ```
 
 ### Functions
-Each function name represents a set of implementations, and each implementation may declare its parameter- and result types. Implementations are matched in reverse declared order when resolving function calls, to allow overriding existing functionality at any point. Prefixing the name of a function with ```&``` pushes it on the stack for later use.
+Each function name represents a set of implementations, and each implementation may declare its parameter- and result types. Implementations are matched in reverse declared order when resolving function calls, to allow overriding existing functionality at any point. Prefixing the name of a function with ```&``` pushes it on the stack for later use. Functions require termination using ```;``` to separate them from surrounding code.
 
 ```
 > func: foo {35 +}; 7 foo

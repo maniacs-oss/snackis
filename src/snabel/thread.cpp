@@ -109,7 +109,14 @@ namespace snabel {
     thd.scopes.pop_back();
     return true;
   }
-  
+
+  Fiber &add_fiber(Thread &thd, Label &tgt) {
+    auto id(gensym(thd.exec));
+    return thd.fibers.emplace(std::piecewise_construct,
+			      std::forward_as_tuple(id),
+			      std::forward_as_tuple(thd, id, tgt)).first->second;
+  }
+
   void start(Thread &thd) { thd.imp = std::thread(do_run, &thd); }
 
   void join(Thread &thd, Scope &scp) {

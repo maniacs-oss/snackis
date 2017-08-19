@@ -3,6 +3,8 @@
 
 #include <map>
 #include <thread>
+
+#include "snabel/fiber.hpp"
 #include "snabel/scope.hpp"
 
 namespace snabel {
@@ -18,6 +20,7 @@ namespace snabel {
     
     std::deque<Scope> scopes;
     std::deque<Stack> stacks;
+    std::map<Fiber::Id, Fiber> fibers;
     Scope &main_scope;
     
     Thread(Exec &exe, Id id);
@@ -41,6 +44,8 @@ namespace snabel {
   
   Scope &begin_scope(Thread &thd, bool copy_stack=false);
   bool end_scope(Thread &thd);
+
+  Fiber &add_fiber(Label &tgt);
   
   void start(Thread &thd);
   void join(Thread &thd, Scope &scp);

@@ -1,10 +1,20 @@
 #ifndef SNABEL_FIBER_HPP
 #define SNABEL_FIBER_HPP
 
-#include "snabel/coro.hpp"
+#include "snabel/sym.hpp"
 
 namespace snabel {
-  struct Fiber: Coro {
+  struct Label;
+  struct Thread;
+  
+  struct Fiber {
+    using Id = Sym;
+
+    Thread &thread;
+    Id id;
+    Label &target;
+    
+    Fiber(Thread &thd, Id id, Label &tgt);
   };
 }
 
