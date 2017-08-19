@@ -1,7 +1,6 @@
 #include <iostream>
 
 #include "snabel/box.hpp"
-#include "snabel/coro.hpp"
 #include "snabel/error.hpp"
 #include "snabel/exec.hpp"
 #include "snabel/func.hpp"
@@ -18,7 +17,7 @@ namespace snabel {
   { }
   
   void FuncImp::operator ()(Scope &scp, const Args &args) {
-    auto &s(curr_stack(scp.coro));
+    auto &s(curr_stack(scp.thread));
     s.erase(std::next(s.begin(), s.size()-args.size()), s.end());
     imp(scp, args);
   }
@@ -65,9 +64,9 @@ namespace snabel {
     return fn.imps.emplace_front(fn, args, results, imp);
   }
 
-  opt<Args> match(const FuncImp &imp, const Coro &cor, bool conv_args) {
-    auto &exe(cor.exec);
-    auto &s(curr_stack(cor));
+  opt<Args> match(const FuncImp &imp, const Thread &thd, bool conv_args) {
+    auto &exe(thd.exec);
+    auto &s(curr_stack(thd));
     if (s.size() < imp.args.size()) { return nullopt; }
 
     Args args;
@@ -92,12 +91,12 @@ namespace snabel {
     return args;
   }
   
-  opt<std::pair<FuncImp *, Args>> match(Func &fn, const Coro &cor, bool conv_args) {
+  opt<std::pair<FuncImp *, Args>> match(Func &fn, const Thread &thd, bool conv_args) {
     for (auto &imp: fn.imps) {
-      auto args(match(imp, cor, conv_args));
+      auto args(match(imp, thd, conv_args));
       if (args) { return std::make_pair(&imp, *args); }
     }
 
-    return conv_args ? nullopt : match(fn, cor, true);
+    return conv_args ? nullopt : match(fn, thd, true);
   }
 }

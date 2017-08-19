@@ -14,11 +14,9 @@
 namespace snabel {
   using namespace snackis;
   
-  struct Coro;
   struct Thread;
   
   struct Scope {
-    Coro &coro;
     Thread &thread;
     Exec &exec;
     
@@ -27,8 +25,8 @@ namespace snabel {
     std::map<Sym, std::pair<int64_t, Stack>> coros;
     std::set<str> env_keys;
     
+    Scope(Thread &thread);
     Scope(const Scope &src);
-    Scope(Coro &cor);
     ~Scope();
     const Scope &operator =(const Scope &) = delete;
   };

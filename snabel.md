@@ -59,7 +59,7 @@ I64!
 ```
 
 ### Lambdas
-Wrapping code in braces pushes a pointer to the compiled expression on the stack. Lambdas may be exited early by calling ```return```, everything on the stack at the point of return is pushed on the outer stack. Use ```recall``` to call the current lambda recursively.
+Wrapping code in braces pushes a pointer to the compiled expression on the stack. Lambdas may be exited early by calling ```return```, everything on the stack at the point of return is pushed on the outer stack. ```recall``` may be used to call the current lambda recursively.
 
 ```
 > {1 2 +}

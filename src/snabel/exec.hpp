@@ -5,7 +5,6 @@
 #include <mutex>
 #include <map>
 
-#include "snabel/fiber.hpp"
 #include "snabel/label.hpp"
 #include "snabel/macro.hpp"
 #include "snabel/sym.hpp"
@@ -27,9 +26,8 @@ namespace snabel {
     std::deque<Lambda *> lambdas;
     std::map<Thread::Id, Thread> threads;
     
-    Thread &main_thread;
+    Thread &main;
     std::mutex mutex;
-    Fiber &main;
     Scope &main_scope;
     Type meta_type;
     Type &any_type, &bool_type, &callable_type, &char_type, &func_type, &i64_type,

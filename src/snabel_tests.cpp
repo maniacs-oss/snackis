@@ -10,10 +10,10 @@
 
 namespace snabel {
   static void test_func(Scope &scp, FuncImp &fn, const Args &args) {
-    Exec &exe(scp.coro.exec);
+    Exec &exe(scp.exec);
     CHECK(args.size() == 1, _);
     CHECK(args[0].type == &exe.i64_type, _);
-    push(scp.coro, exe.i64_type, 35+get<int64_t>(args[0]));
+    push(scp.thread, exe.i64_type, 35+get<int64_t>(args[0]));
   }
   
   static void func_tests() {
@@ -178,7 +178,7 @@ namespace snabel {
     CHECK(!peek(exe.main), _);
 
     compile(exe, "1 2 3 _ _");
-    CHECK(exe.main_thread.ops.size() == 1, _);
+    CHECK(exe.main.ops.size() == 1, _);
   }
 
   static void scope_tests() {
@@ -187,7 +187,7 @@ namespace snabel {
     
     run(exe, "(let: foo 21;$foo)");
     Scope &scp1(curr_scope(exe.main));
-    CHECK(get<int64_t>(pop(scp1.coro)) == 21, _);
+    CHECK(get<int64_t>(pop(scp1.thread)) == 21, _);
     CHECK(!find_env(scp1, "foo"), _);
   }
 

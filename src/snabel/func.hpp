@@ -11,7 +11,6 @@ namespace snabel {
   using namespace snackis;
 
   struct Box;
-  struct Coro;
   struct Scope;
   struct Type;
   struct Func;
@@ -62,9 +61,9 @@ namespace snabel {
 		   const ArgTypes &args,
 		   const ArgTypes &results,
 		   FuncImp::Imp imp);
-  opt<Args> match(const FuncImp &imp, const Coro &cor, bool conv_args);
+  opt<Args> match(const FuncImp &imp, const Thread &thd, bool conv_args);
   opt<std::pair<FuncImp *, Args>> match(Func &fn,
-					const Coro &cor,
+					const Thread &thd,
 					bool conv_args=false);
 }
 

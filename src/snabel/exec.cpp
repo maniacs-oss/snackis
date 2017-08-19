@@ -17,102 +17,102 @@ namespace snabel {
   static void is_imp(Scope &scp, const Args &args) {
     auto &v(args.at(0));
     auto &t(args.at(1));
-    push(scp.coro, scp.exec.bool_type, isa(v, *get<Type *>(t)));
+    push(scp.thread, scp.exec.bool_type, isa(v, *get<Type *>(t)));
   }
 
   static void type_imp(Scope &scp, const Args &args) {
     auto &v(args.at(0));
-    push(scp.coro, get_meta_type(scp.exec, *v.type), v.type);
+    push(scp.thread, get_meta_type(scp.exec, *v.type), v.type);
   }
 
   static void eq_imp(Scope &scp, const Args &args) {
     auto &x(args.at(0)), &y(args.at(1));
-    push(scp.coro, scp.exec.bool_type, x.type->eq(x, y));
+    push(scp.thread, scp.exec.bool_type, x.type->eq(x, y));
   }
 
   static void equal_imp(Scope &scp, const Args &args) {
     auto &x(args.at(0)), &y(args.at(1));
-    push(scp.coro, scp.exec.bool_type, x.type->equal(x, y));
+    push(scp.thread, scp.exec.bool_type, x.type->equal(x, y));
   }
   
   static void zero_i64_imp(Scope &scp, const Args &args) {
     bool res(get<int64_t>(args.at(0)) == 0);
-    push(scp.coro, scp.exec.bool_type, res);
+    push(scp.thread, scp.exec.bool_type, res);
   }
 
   static void inc_i64_imp(Scope &scp, const Args &args) {
     auto &a(args.at(0));
-    push(scp.coro, *a.type, get<int64_t>(a)+1);
+    push(scp.thread, *a.type, get<int64_t>(a)+1);
   }
 
   static void dec_i64_imp(Scope &scp, const Args &args) {
     auto &a(args.at(0));
-    push(scp.coro, *a.type, get<int64_t>(a)-1);
+    push(scp.thread, *a.type, get<int64_t>(a)-1);
   }
 
   static void add_i64_imp(Scope &scp, const Args &args) {
     auto &x(get<int64_t>(args.at(0))), &y(get<int64_t>(args.at(1)));
-    push(scp.coro, scp.exec.i64_type, x+y);
+    push(scp.thread, scp.exec.i64_type, x+y);
   }
 
   static void sub_i64_imp(Scope &scp, const Args &args) {
     auto &x(get<int64_t>(args.at(0))), &y(get<int64_t>(args.at(1)));
-    push(scp.coro, scp.exec.i64_type, x-y);
+    push(scp.thread, scp.exec.i64_type, x-y);
   }
 
   static void mul_i64_imp(Scope &scp, const Args &args) {
     auto &x(get<int64_t>(args.at(0))), &y(get<int64_t>(args.at(1)));
-    push(scp.coro, scp.exec.i64_type, x*y);
+    push(scp.thread, scp.exec.i64_type, x*y);
   }
 
   static void div_i64_imp(Scope &scp, const Args &args) {
     auto &num(get<int64_t>(args.at(0)));
     auto &div(get<int64_t>(args.at(1)));
     bool neg = (num < 0 && div > 0) || (div < 0 && num >= 0);
-    push(scp.coro, scp.exec.rat_type, Rat(abs(num), abs(div), neg));
+    push(scp.thread, scp.exec.rat_type, Rat(abs(num), abs(div), neg));
   }
 
   static void mod_i64_imp(Scope &scp, const Args &args) {
     auto &x(get<int64_t>(args.at(0))), &y(get<int64_t>(args.at(1)));
-    push(scp.coro, scp.exec.i64_type, x%y);
+    push(scp.thread, scp.exec.i64_type, x%y);
   }
 
   static void trunc_imp(Scope &scp, const Args &args) {
-    push(scp.coro, scp.exec.i64_type, trunc(get<Rat>(args.at(0))));
+    push(scp.thread, scp.exec.i64_type, trunc(get<Rat>(args.at(0))));
   }
 
   static void frac_imp(Scope &scp, const Args &args) {
-    push(scp.coro, scp.exec.rat_type, frac(get<Rat>(args.at(0))));
+    push(scp.thread, scp.exec.rat_type, frac(get<Rat>(args.at(0))));
   }
 
   static void add_rat_imp(Scope &scp, const Args &args) {
     auto &x(get<Rat>(args.at(0)));
     auto &y(get<Rat>(args.at(1)));
-    push(scp.coro, scp.exec.rat_type, x+y);
+    push(scp.thread, scp.exec.rat_type, x+y);
   }
 
   static void sub_rat_imp(Scope &scp, const Args &args) {
     auto &x(get<Rat>(args.at(0)));
     auto &y(get<Rat>(args.at(1)));
-    push(scp.coro, scp.exec.rat_type, x-y);
+    push(scp.thread, scp.exec.rat_type, x-y);
   }
 
   static void mul_rat_imp(Scope &scp, const Args &args) {
     auto &x(get<Rat>(args.at(0)));
     auto &y(get<Rat>(args.at(1)));
-    push(scp.coro, scp.exec.rat_type, x*y);
+    push(scp.thread, scp.exec.rat_type, x*y);
   }
 
   static void div_rat_imp(Scope &scp, const Args &args) {
     auto &x(get<Rat>(args.at(0)));
     auto &y(get<Rat>(args.at(1)));
-    push(scp.coro, scp.exec.rat_type, x/y);
+    push(scp.thread, scp.exec.rat_type, x/y);
   }
 
   static void iter_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
     auto it((*in.type->iter)(in));
-    push(scp.coro, it->type, it);
+    push(scp.thread, it->type, it);
   }
 
   static void iterable_join_imp(Scope &scp, const Args &args) {    
@@ -130,7 +130,7 @@ namespace snabel {
       first = false;
     }
     
-    push(scp.coro, scp.exec.str_type, out.str()); 
+    push(scp.thread, scp.exec.str_type, out.str()); 
   }
 
   static void iterable_list_imp(Scope &scp, const Args &args) {
@@ -144,7 +144,7 @@ namespace snabel {
       out->push_back(*v);
     }
     
-    push(scp.coro, get_list_type(scp.exec, *it->type.args.at(0)), out); 
+    push(scp.thread, get_list_type(scp.exec, *it->type.args.at(0)), out); 
   }
 
   static void iterable_zip_imp(Scope &scp, const Args &args) {
@@ -152,7 +152,7 @@ namespace snabel {
     auto &x(args.at(0)), &y(args.at(1));
     auto xi((*x.type->iter)(x)), yi((*y.type->iter)(y));
 
-    push(scp.coro,
+    push(scp.thread,
 	 get_iter_type(exe, get_pair_type(exe,
 					  *xi->type.args.at(0),
 					  *yi->type.args.at(0))),
@@ -160,17 +160,17 @@ namespace snabel {
   }
 
   static void iter_pop_imp(Scope &scp, const Args &args) {
-    auto &cor(scp.coro);
+    auto &thd(scp.thread);
     auto &it(args.at(0));
-    push(cor, it);
+    push(thd, it);
     auto v(get<Iter::Ref>(it)->next());
     if (!v) { ERROR(Snabel, "Pop of empty iterator"); }
-    push(cor, v ? *v : Box(scp.exec.undef_type, undef));
+    push(thd, v ? *v : Box(scp.exec.undef_type, undef));
   }
   
   static void list_imp(Scope &scp, const Args &args) {
     auto &elt(args.at(0));
-    push(scp.coro,
+    push(scp.thread,
 	 get_list_type(scp.exec, *get<Type *>(elt)),
 	 std::make_shared<List>());    
   }
@@ -179,14 +179,14 @@ namespace snabel {
     auto &lst(args.at(0));
     auto &el(args.at(1));
     get<ListRef>(lst)->push_back(el);
-    push(scp.coro, lst);    
+    push(scp.thread, lst);    
   }
 
   static void list_pop_imp(Scope &scp, const Args &args) {
     auto &lst_arg(args.at(0));
     auto &lst(*get<ListRef>(lst_arg));
-    push(scp.coro, lst_arg);
-    push(scp.coro, lst.back());
+    push(scp.thread, lst_arg);
+    push(scp.thread, lst.back());
     lst.pop_back();
   }
 
@@ -195,7 +195,7 @@ namespace snabel {
     auto &in(*get<ListRef>(in_arg));
     ListRef out(new List());
     std::copy(in.rbegin(), in.rend(), std::back_inserter(*out));
-    push(scp.coro, *in_arg.type, out); 
+    push(scp.thread, *in_arg.type, out); 
   }
 
   static void list_unzip_imp(Scope &scp, const Args &args) {
@@ -203,14 +203,14 @@ namespace snabel {
     auto &in(args.at(0));
 
     auto &yt(*in.type->args.at(0)->args.at(0));
-    push(scp.coro,
+    push(scp.thread,
 	 get_iter_type(exe, yt),
 	 Iter::Ref(new ListIter(exe, yt, get<ListRef>(in), [](auto &el) {
 	       return get<PairRef>(el)->first;
 	     })));
 
     auto &xt(*in.type->args.at(0)->args.at(1));
-    push(scp.coro,
+    push(scp.thread,
 	 get_iter_type(exe, xt),
 	 Iter::Ref(new ListIter(exe, xt, get<ListRef>(in), [](auto &el) {
 	       return get<PairRef>(el)->second;
@@ -220,20 +220,20 @@ namespace snabel {
   static void zip_imp(Scope &scp, const Args &args) {
     auto &l(args.at(0)), &r(args.at(1));
     
-    push(scp.coro,
+    push(scp.thread,
 	 get_pair_type(scp.exec, *l.type, *r.type),
 	 std::make_shared<Pair>(l, r));    
   }
 
   static void unzip_imp(Scope &scp, const Args &args) {
     auto &p(*get<PairRef>(args.at(0)));   
-    push(scp.coro, p.first);
-    push(scp.coro, p.second);
+    push(scp.thread, p.first);
+    push(scp.thread, p.second);
   }
 
   static void thread_imp(Scope &scp, const Args &args) {
     auto &t(start_thread(scp, args.at(0)));
-    push(scp.coro, scp.exec.thread_type, &t);
+    push(scp.thread, scp.exec.thread_type, &t);
   }
 
   static void thread_join_imp(Scope &scp, const Args &args) {
@@ -241,10 +241,9 @@ namespace snabel {
   }
 
   Exec::Exec():
-    main_thread(threads.emplace(std::piecewise_construct,
+    main(threads.emplace(std::piecewise_construct,
 				std::forward_as_tuple(0),
 				std::forward_as_tuple(*this, 0)).first->second),
-    main(main_thread.main),
     main_scope(main.scopes.at(0)),
     meta_type("Type<Any>"),
     any_type(add_type(*this, "Any")),
@@ -347,13 +346,13 @@ namespace snabel {
     func_type.eq = [](auto &x, auto &y) { return get<Func *>(x) == get<Func *>(y); };
     
     func_type.call.emplace([](auto &scp, auto &v) {
-	auto &cor(scp.coro);
+	auto &thd(scp.thread);
 	auto &fn(*get<Func *>(v));
-	auto m(match(fn, cor));
+	auto m(match(fn, thd));
 
 	if (!m) {
 	  ERROR(Snabel, fmt("Function not applicable: %0\n%1", 
-			    fn.name, curr_stack(cor)));
+			    fn.name, curr_stack(thd)));
 	  return false;
 	}
 
@@ -927,38 +926,31 @@ namespace snabel {
 
   void rewind(Exec &exe) {
     for (auto i(exe.threads.begin()); i != exe.threads.end();) {
-      if (i->first == exe.main_thread.id) {
+      if (i->first == exe.main.id) {
 	i++;
       } else {
 	i = exe.threads.erase(i);
       }
     }
 
-    for (auto i(exe.main_thread.fibers.begin()); i != exe.main_thread.fibers.end();) {
-      if (i->first == exe.main.id) {
-	i++;
-      } else {
-	i = exe.main_thread.fibers.erase(i);
-      }
-    }
-
-    while (exe.main.scopes.size() > 1) { exe.main.scopes.pop_back(); }
-    while (exe.main.stacks.size() > 1) { exe.main.stacks.pop_back(); }
-    exe.main.stacks.front().clear();
-    exe.main_thread.pc = 0;
+    auto &thd(exe.main);
+    while (thd.scopes.size() > 1) { thd.scopes.pop_back(); }
+    while (thd.stacks.size() > 1) { thd.stacks.pop_back(); }
+    thd.stacks.front().clear();
+    thd.pc = 0;
   }
 
   bool compile(Exec &exe, const str &in) {
     Exec::Lock lock(exe.mutex);
     
-    exe.main_thread.ops.clear();
+    exe.main.ops.clear();
     clear_labels(exe);
     rewind(exe);
     size_t lnr(0);
     
     for (auto &ln: parse_lines(in)) {
       if (!ln.empty()) {
-	compile(exe, lnr, parse_expr(ln), exe.main_thread.ops);
+	compile(exe, lnr, parse_expr(ln), exe.main.ops);
       }
        
       lnr++;
@@ -969,57 +961,57 @@ namespace snabel {
     while (true) {
       rewind(exe);
       
-      for (auto &op: exe.main_thread.ops) {
+      for (auto &op: exe.main.ops) {
 	if ((!op.prepared && !prepare(op, exe.main_scope)) ||
 	    !try_compile.errors.empty()) {
 	  goto exit;
 	}
 	
-	exe.main_thread.pc++;
+	exe.main.pc++;
       }
 
-      exe.main_thread.pc = 0;
+      exe.main.pc = 0;
       exe.lambdas.clear();
       bool done(false);
       
       while (!done) {
 	done = true;
 	
-	for (auto &op: exe.main_thread.ops) {
+	for (auto &op: exe.main.ops) {
 	  if (refresh(op, exe.main_scope)) { done = false; }
 	  if (!try_compile.errors.empty()) { goto exit; }
-	  exe.main_thread.pc++;
+	  exe.main.pc++;
 	}
       }
 
       OpSeq out;
       done = true;
 
-      for (auto &op: exe.main_thread.ops) {
+      for (auto &op: exe.main.ops) {
 	if (compile(op, exe.main_scope, out)) { done = false; }
 	if (!try_compile.errors.empty()) { goto exit; }
       }
 
       if (done) { break; }
-      exe.main_thread.ops.clear();
-      exe.main_thread.ops.swap(out);
+      exe.main.ops.clear();
+      exe.main.ops.swap(out);
       try_compile.errors.clear();
     }
 
     {
       OpSeq out;
-      exe.main_thread.pc = 0;
+      exe.main.pc = 0;
       
-      for (auto &op: exe.main_thread.ops) {
+      for (auto &op: exe.main.ops) {
 	if (!finalize(op, exe.main_scope, out)) {
-	  exe.main_thread.pc++;
+	  exe.main.pc++;
 	}
 	
 	if (!try_compile.errors.empty()) { goto exit; }
       }
       
-      exe.main_thread.ops.clear();
-      exe.main_thread.ops.swap(out);
+      exe.main.ops.clear();
+      exe.main.ops.swap(out);
     }
   exit:
     rewind(exe);
@@ -1028,6 +1020,6 @@ namespace snabel {
   
   bool run(Exec &exe, const str &in) {
     if (!compile(exe, in)) { return false; }
-    return run(exe.main_thread);
+    return run(exe.main);
   }
 }

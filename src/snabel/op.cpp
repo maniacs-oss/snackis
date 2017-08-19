@@ -2,7 +2,6 @@
 #include <iostream>
 
 #include "snabel/box.hpp"
-#include "snabel/coro.hpp"
 #include "snabel/error.hpp"
 #include "snabel/exec.hpp"
 #include "snabel/func.hpp"
@@ -49,7 +48,7 @@ namespace snabel {
   str Backup::info() const { return copy ? "copy" : ""; }
 
   bool Backup::run(Scope &scp) {
-    backup_stack(scp.coro, copy);
+    backup_stack(scp.thread, copy);
     return true;
   }
   
@@ -71,11 +70,12 @@ namespace snabel {
   }
   
   bool Branch::run(Scope &scp) {
-    auto &cor(scp.coro);
+    auto &exe(scp.exec);
+    auto &thd(scp.thread);
     auto tgt(target);
 
     if (!tgt) {
-      tgt = try_pop(cor);
+      tgt = try_pop(thd);
       
       if (!tgt) {
 	ERROR(Snabel, "Missing branch target");
@@ -88,14 +88,14 @@ namespace snabel {
       }
     }
 
-    auto cnd(try_pop(cor));
+    auto cnd(try_pop(thd));
 
     if (!cnd) {
       ERROR(Snabel, "Missing branch condition");
       return false;
     }
 
-    if (cnd->type != &cor.exec.bool_type) {
+    if (cnd->type != &exe.bool_type) {
       ERROR(Snabel, fmt("Invalid branch condition: %0", *cnd));
       return false;
     }
@@ -114,9 +114,7 @@ namespace snabel {
 
   bool Call::run(Scope &scp) {
     if (target) { return (*target->type->call)(scp, *target); }
-
-    auto &cor(scp.coro);
-    auto tgt(try_pop(cor));
+    auto tgt(try_pop(scp.thread));
     
     if (!tgt) {
       ERROR(Snabel, "Missing call target");
@@ -166,11 +164,11 @@ namespace snabel {
   
   bool Check::run(Scope &scp) {
     auto &exe(scp.exec);
-    auto &cor(scp.coro);
+    auto &thd(scp.thread);
     auto t(type);
     
     if (!t) {
-      auto _t(try_pop(cor));
+      auto _t(try_pop(thd));
     
       if (!_t) {
 	ERROR(Snabel, "Missing check type");
@@ -185,7 +183,7 @@ namespace snabel {
       t = get<Type *>(*_t);
     }
 
-    auto v(peek(cor));
+    auto v(peek(thd));
 
     if (!v) {
       ERROR(Snabel, "Missing check value");
@@ -229,7 +227,6 @@ namespace snabel {
   }
 
   bool Deref::run(Scope &scp) {
-    auto &cor(scp.coro);
     auto &exe(scp.exec);
     auto fnd(find_env(scp, name));
     
@@ -242,7 +239,7 @@ namespace snabel {
       return (*fnd->type->call)(scp, *fnd);
     }
     
-    push(cor, *fnd);
+    push(scp.thread, *fnd);
     return true;
   }
 
@@ -301,13 +298,14 @@ namespace snabel {
   }
   
   bool Drop::run(Scope &scp) {
-    auto &s(curr_stack(scp.coro));
+    auto &s(curr_stack(scp.thread));
+    
     if (s.size() < count) {
       ERROR(Snabel, fmt("Not enough values on stack (%0):\n%1", count, s));
       return false;
     }
     
-    for (size_t i(0); i < count; i++) { pop(scp.coro); }
+    for (size_t i(0); i < count; i++) { pop(scp.thread); }
     return true;
   }
 
@@ -320,7 +318,7 @@ namespace snabel {
   }
 
   bool Dup::run(Scope &scp) {
-    auto &s(curr_stack(scp.coro));
+    auto &s(curr_stack(scp.thread));
     if (s.empty()) {
       ERROR(Snabel, "Invalid dup");
       return false;
@@ -349,10 +347,10 @@ namespace snabel {
   }
 
   bool For::run(Scope &scp) {
-    Coro &cor(scp.coro);
+    auto &thd(scp.thread);
     
     if (!iter) {
-      auto tgt(try_pop(cor));
+      auto tgt(try_pop(thd));
 
       if (!tgt) {
 	ERROR(Snabel, "Missing for target");
@@ -364,7 +362,7 @@ namespace snabel {
 	return false;
       }
 
-      auto cnd(try_pop(cor));
+      auto cnd(try_pop(thd));
 
       if (!cnd) {
 	ERROR(Snabel, "Missing for condition");
@@ -383,7 +381,7 @@ namespace snabel {
     auto nxt(iter->next());
     
     if (nxt) {
-      push(cor, *nxt);
+      push(thd, *nxt);
       (*target->type->call)(scp, *target);
     } else {
       iter.reset();
@@ -407,9 +405,10 @@ namespace snabel {
   }
 
   bool Funcall::run(Scope &scp) {
-    Coro &cor(scp.coro);
+    auto &thd(scp.thread);
+    
     if (imp) {
-      auto m(match(*imp, cor, true));
+      auto m(match(*imp, thd, true));
 
       if (m) {
 	(*imp)(scp, *m);
@@ -417,11 +416,11 @@ namespace snabel {
       }
     }
 
-    auto m(match(fn, cor));
+    auto m(match(fn, thd));
     
     if (!m) {
       ERROR(Snabel, fmt("Function not applicable: %0\n%1", 
-			fn.name, curr_stack(scp.coro)));
+			fn.name, curr_stack(thd)));
       return false;
     }
 
@@ -505,12 +504,12 @@ namespace snabel {
   }
 
   bool Getenv::run(Scope &scp) {
-    auto &cor(scp.coro);
     auto &exe(scp.exec);
+    auto &thd(scp.thread);
     str id_str(id);
     
     if (id_str.empty()) {
-      auto id_arg(try_pop(cor));
+      auto id_arg(try_pop(thd));
       
       if (!id_arg) {
 	ERROR(Snabel, "Missing identifier");
@@ -532,7 +531,7 @@ namespace snabel {
       return false;
     }
     
-    push(cor, *fnd);
+    push(thd, *fnd);
     return true;
   }
 
@@ -547,7 +546,7 @@ namespace snabel {
   str Group::info() const { return copy ? "copy" : ""; }
 
   bool Group::run(Scope &scp) {
-    begin_scope(scp.coro, copy);
+    begin_scope(scp.thread, copy);
     return true;
   }
 
@@ -568,9 +567,7 @@ namespace snabel {
   }
 
   bool Jump::refresh(Scope &scp) {
-    auto &cor(scp.coro);
-    auto &exe(cor.exec);
-    if (!label) { label = find_label(exe, tag); }
+    if (!label) { label = find_label(scp.exec, tag); }
     return false;
   }
 
@@ -638,13 +635,14 @@ namespace snabel {
   }
 
   bool Lambda::run(Scope &scp) {
+    auto &thd(scp.thread);
     auto fnd(scp.coros.find(tag));
-    Scope &new_scp(begin_scope(scp.coro, true));
+    Scope &new_scp(begin_scope(thd, true));
 
     if (fnd != scp.coros.end()) {
       new_scp.thread.pc = fnd->second.first;
       auto &s(fnd->second.second);
-      std::copy(s.begin(), s.end(), std::back_inserter(curr_stack(new_scp.coro)));
+      std::copy(s.begin(), s.end(), std::back_inserter(curr_stack(thd)));
     }
 
     return true;
@@ -680,7 +678,7 @@ namespace snabel {
   }
   
   bool Putenv::run(Scope &scp) {
-    auto &s(curr_stack(scp.coro));
+    auto &s(curr_stack(scp.thread));
 
     if (s.empty()) {
       ERROR(Snabel, fmt("Missing env: %0", name));
@@ -725,7 +723,7 @@ namespace snabel {
   }
   
   bool Push::run(Scope &scp) {
-    push(scp.coro, vals);
+    push(scp.thread, vals);
     return true;
   }
 
@@ -775,7 +773,7 @@ namespace snabel {
   }
 
   bool Reset::run(Scope &scp) {
-    curr_stack(scp.coro).clear();
+    curr_stack(scp.thread).clear();
     return true;
   }
 
@@ -788,7 +786,7 @@ namespace snabel {
   }
 
   bool Restore::run(Scope &scp) {
-    restore_stack(scp.coro);
+    restore_stack(scp.thread);
     return true;
   }
 
@@ -820,23 +818,23 @@ namespace snabel {
   }
 
   bool Return::run(Scope &scp) {
-    Coro &cor(scp.coro);
-
+    auto &thd(scp.thread);
+    
     if (scp.recall_pcs.empty()) {
-      auto &s(curr_stack(scp.coro));
-      if (!end_scope(scp.coro, s.size())) { return false; }
-      auto &ret_scp(curr_scope(cor));
+      auto &s(curr_stack(thd));
+      if (!end_scope(thd, s.size())) { return false; }
+      auto &ret_scp(curr_scope(thd));
       
       if (ret_scp.return_pc == -1) {
 	ERROR(Snabel, "Missing return pc");
 	return false;
       }
 
-      scp.thread.pc = ret_scp.return_pc;
+      thd.pc = ret_scp.return_pc;
       ret_scp.return_pc = -1;
       scp.coros.erase(tag);
     } else {
-      scp.thread.pc = scp.recall_pcs.back();
+      thd.pc = scp.recall_pcs.back();
       scp.recall_pcs.pop_back();
     }
     
@@ -852,17 +850,17 @@ namespace snabel {
   }
 
   bool Stash::run(Scope &scp) {
-    Coro &cor(scp.coro);
-    Exec &exe(cor.exec);
+    auto &exe(scp.exec);
+    auto &thd(scp.thread);
     std::shared_ptr<List> lst(new List());
-    lst->swap(curr_stack(cor));
+    lst->swap(curr_stack(thd));
 
     Type *elt(lst->empty() ? &exe.any_type : lst->at(0).type);  
     for (auto i(std::next(lst->begin())); i != lst->end() && elt; i++) {
       elt = get_super(*elt, *i->type);
     }
 
-    push(cor, Box(get_list_type(exe, elt ? *elt : exe.any_type), lst));
+    push(thd, Box(get_list_type(exe, elt ? *elt : exe.any_type), lst));
     return true;
   }
 
@@ -877,7 +875,7 @@ namespace snabel {
   str Swap::info() const { return fmt_arg(pos); }
 
   bool Swap::run(Scope &scp) {
-    auto &s(curr_stack(scp.coro));
+    auto &s(curr_stack(scp.thread));
     if (s.size() < pos+1) {
       ERROR(Snabel, fmt("Invalid swap: %0\n%1", pos, s));
       return false;
@@ -916,7 +914,7 @@ namespace snabel {
   }
 
   bool Ungroup::run(Scope &scp) {
-    return end_scope(scp.coro);
+    return end_scope(scp.thread);
   }
 
   Unlambda::Unlambda():
@@ -1045,7 +1043,7 @@ namespace snabel {
     }
 
     auto &exe(scp.exec);
-    auto t(peek(scp.coro));
+    auto t(peek(scp.thread));
 
     if (!t) {
       ERROR(Snabel, "Missing param type");
