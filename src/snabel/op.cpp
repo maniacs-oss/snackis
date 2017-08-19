@@ -128,7 +128,8 @@ namespace snabel {
       return false;
     }
     
-    return (*tgt->type->call)(scp, *tgt);
+    bool ok((*tgt->type->call)(scp, *tgt));
+    return ok;
   }
 
   Check::Check(Type *type):
@@ -637,7 +638,15 @@ namespace snabel {
   }
 
   bool Lambda::run(Scope &scp) {
-    begin_scope(scp.coro, true);
+    auto fnd(scp.coros.find(tag));
+    Scope &new_scp(begin_scope(scp.coro, true));
+
+    if (fnd != scp.coros.end()) {
+      new_scp.thread.pc = fnd->second.first;
+      auto &s(fnd->second.second);
+      std::copy(s.begin(), s.end(), std::back_inserter(curr_stack(new_scp.coro)));
+    }
+
     return true;
   }
 
@@ -1071,7 +1080,7 @@ namespace snabel {
     
     auto &l(*exe.lambdas.back());
     tag = l.tag;
-    return true;
+    return false;
   }
 
   bool Yield::run(Scope &scp) {

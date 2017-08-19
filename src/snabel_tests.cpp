@@ -249,6 +249,14 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 82, _);
   }
 
+  static void coro_tests() {
+    TRY(try_test);    
+    Exec exe;
+    
+    run(exe, "{7 yield 28 +} $0 call $1 call $1 _ +");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+  }
+  
   static void when_tests() {
     TRY(try_test);    
     Exec exe;
@@ -429,6 +437,7 @@ namespace snabel {
     let_tests();
     jump_tests();
     lambda_tests();
+    coro_tests();
     when_tests();
     iter_tests();
     list_tests();

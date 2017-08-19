@@ -78,9 +78,9 @@ namespace snabel {
 
   bool yield(Scope &scp, Sym tag) {
     Coro &cor(scp.coro);
-    auto yield_pc(scp.thread.pc);
+    auto yield_pc(scp.thread.pc+1);
     auto yield_stack(curr_stack(scp.coro));
-    
+
     if (scp.recall_pcs.empty()) {
       if (!end_scope(scp.coro, 1)) { return false; }
       auto &ret_scp(curr_scope(cor));
@@ -97,12 +97,13 @@ namespace snabel {
       scp.recall_pcs.pop_back();
     }
 
-    auto fnd(scp.coros.find(tag));
+    auto &prev_scp(curr_scope(cor));
+    auto fnd(prev_scp.coros.find(tag));
     
-    if (fnd == scp.coros.end()) {
-      scp.coros.emplace(std::piecewise_construct,
-			std::forward_as_tuple(tag),
-			std::forward_as_tuple(yield_pc, yield_stack));
+    if (fnd == prev_scp.coros.end()) {
+      prev_scp.coros.emplace(std::piecewise_construct,
+			     std::forward_as_tuple(tag),
+			     std::forward_as_tuple(yield_pc, yield_stack));
     } else {
       fnd->second.first = yield_pc;
       fnd->second.second.assign(yield_stack.begin(), yield_stack.end());
