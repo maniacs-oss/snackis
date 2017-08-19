@@ -1,4 +1,4 @@
-snab# Snabel
+# Snabel
 #### a fresh take on Forth
 
 ![script example](images/script.png?raw=true)
