@@ -59,7 +59,7 @@ namespace gui {
     snabel::compile(v->exec, code);    
     gtk_list_store_clear(v->bcode_store);
 
-    for (auto &op: v->exec.main_thread.ops) {
+    for (auto &op: v->exec.main.ops) {
       GtkTreeIter iter;
       gtk_list_store_append(v->bcode_store, &iter);
       
@@ -85,7 +85,7 @@ namespace gui {
     TRY(try_run);
     snabel::rewind(v->exec);
 
-    if (snabel::run(v->exec.main_thread)) {
+    if (snabel::run(v->exec.main)) {
       auto res(peek(v->exec.main));
       if (res) {
 	log(v->ctx, "Script result:\n%0\n%1!",

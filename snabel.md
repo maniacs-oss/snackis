@@ -88,7 +88,13 @@ I64!
 Calling ```yield``` from within a lambda logs the current position, stack and environment before returning; execution will continue from the yielding position with restored stack and environment on next call from the same scope.
 
 ```
-{7 yield 28 +} $0 call $1 call $1 _ +
+> {7 yield 28 +} $0 call $1 call $1 _ +
+42
+I64!
+
+> {let: foo 28; 7 yield $foo +} $0 call $1 call $1 _ +
+42
+I64!
 ```
 
 ### Equality

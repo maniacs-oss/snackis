@@ -255,6 +255,9 @@ namespace snabel {
     
     run(exe, "{7 yield 28 +} $0 call $1 call $1 _ +");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+
+    run(exe, "{let: foo 28; 7 yield $foo +} $0 call $1 call $1 _ +");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
   
   static void when_tests() {

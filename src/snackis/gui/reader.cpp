@@ -229,7 +229,7 @@ namespace gui {
 
     snabel::compile(rdr.exec, in);    
     begin_scope(rdr.exec.main, false);
-    snabel::run(rdr.exec.main_thread);
+    snabel::run(rdr.exec.main);
     end_scope(rdr.exec.main);
      
     if (try_exec.errors.empty()) {

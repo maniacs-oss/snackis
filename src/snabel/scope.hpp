@@ -5,6 +5,7 @@
 #include <map>
 
 #include "snabel/box.hpp"
+#include "snabel/coro.hpp"
 #include "snabel/env.hpp"
 #include "snabel/func.hpp"
 #include "snabel/sym.hpp"
@@ -22,7 +23,7 @@ namespace snabel {
     
     int64_t return_pc;
     std::deque<int64_t> recall_pcs;
-    std::map<Sym, std::pair<int64_t, Stack>> coros;
+    std::map<Sym, Coro> coros;
     std::set<str> env_keys;
     
     Scope(Thread &thread);

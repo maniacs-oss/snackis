@@ -1,6 +1,7 @@
 #ifndef SNABEL_ENV_HPP
 #define SNABEL_ENV_HPP
 
+#include <map>
 #include "snabel/box.hpp"
 
 namespace snabel {
