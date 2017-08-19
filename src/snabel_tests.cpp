@@ -59,7 +59,7 @@ namespace snabel {
     CHECK(ts[1].text == "'foo'", _);
     CHECK(ts[2].text == "2", _);
 
-    ts = parse_expr("let: foo {42}; '$foo'");
+    ts = parse_expr("let: foo {42}; '@foo'");
     CHECK(ts.size() == 7, _);
     CHECK(ts[0].text == "let:", _);
     CHECK(ts[1].text == "foo", _);
@@ -67,7 +67,7 @@ namespace snabel {
     CHECK(ts[3].text == "42", _);
     CHECK(ts[4].text == "}", _);
     CHECK(ts[5].text == ";", _);
-    CHECK(ts[6].text == "'$foo'", _);
+    CHECK(ts[6].text == "'@foo'", _);
   }
 
   static void parse_list_tests() {
@@ -116,11 +116,11 @@ namespace snabel {
   static void compile_tests() {
     TRY(try_test);
     Exec exe;
-    run(exe, "let: foo 35; let: bar $foo 7 +");
+    run(exe, "let: foo 35; let: bar @foo 7 +");
 
     Scope &scp(curr_scope(exe.main));
-    CHECK(get<int64_t>(get_env(scp, "$foo")) == 35, _);
-    CHECK(get<int64_t>(get_env(scp, "$bar")) == 42, _);
+    CHECK(get<int64_t>(get_env(scp, "@foo")) == 35, _);
+    CHECK(get<int64_t>(get_env(scp, "@bar")) == 42, _);
   }
 
   static void func_tests() {
@@ -135,7 +135,7 @@ namespace snabel {
         "35 +\n"
 	"};\n"
 	"let: bar &foo2;"
-	"7 $bar call");
+	"7 @bar call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
@@ -180,11 +180,11 @@ namespace snabel {
     TRY(try_test);    
     Exec exe;
     
-    run(exe, "(42 let: foo 21; $foo)");
+    run(exe, "(42 let: foo 21; @foo)");
     Scope &scp1(curr_scope(exe.main));
     CHECK(get<int64_t>(pop(scp1.thread)) == 21, _);
     CHECK(!peek(scp1.thread), _);
-    CHECK(get<int64_t>(get_env(scp1, "$foo")) == 21, _);
+    CHECK(get<int64_t>(get_env(scp1, "@foo")) == 21, _);
   }
 
   static void equality_tests() {
@@ -201,7 +201,7 @@ namespace snabel {
   static void let_tests() {
     TRY(try_test);    
     Exec exe;
-    run(exe, "let: foo 35 7 +; $foo");
+    run(exe, "let: foo 35 7 +; @foo");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
@@ -225,11 +225,11 @@ namespace snabel {
     run(exe, "2 {3 +} call");
     CHECK(get<int64_t>(pop(exe.main)) == 5, _);
 
-    run(exe, "{let: bar 42; $bar} call");
+    run(exe, "{let: bar 42; @bar} call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
     CHECK(!find_env(curr_scope(exe.main), "bar"), _);
 
-    run(exe, "let: fn {7 +}; 35 $fn call");
+    run(exe, "let: fn {7 +}; 35 @fn call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
     run(exe, "{7 35 + return 99} call");
@@ -256,7 +256,7 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
     run(exe,
-	"func: foo {let: bar 35; 7 yield $bar +}; "
+	"func: foo {let: bar 35; 7 yield @bar +}; "
 	"foo foo");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
@@ -318,7 +318,7 @@ namespace snabel {
     run(exe, "7 \\, join");
     CHECK(get<str>(pop(exe.main)) == "0,1,2,3,4,5,6", _);
 
-    run(exe, "let: foo 'bar' iter; $foo list");
+    run(exe, "let: foo 'bar' iter; @foo list");
     CHECK(get<ListRef>(pop(exe.main))->size() == 3, _);
 
     run(exe, "7 iter 7 iter =");

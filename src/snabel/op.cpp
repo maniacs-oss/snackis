@@ -213,11 +213,11 @@ namespace snabel {
     auto fnd(find_env(scp, name));
     if (!fnd) { return false; }
 
-    if (fnd->type == &exe.func_type && name.front() != '$') {
+    if (fnd->type == &exe.func_type) {
       out.emplace_back(Funcall(*get<Func *>(*fnd)));
-    } else if (fnd->type == &exe.lambda_type && name.front() != '$') {
+    } else if (fnd->type == &exe.lambda_type) {
       out.emplace_back(Call(*fnd));
-    } else if (fnd->type == &exe.label_type && name.front() != '$') {
+    } else if (fnd->type == &exe.label_type) {
       out.emplace_back(Jump(*get<Label *>(*fnd)));
     } else {
       out.emplace_back(Push(*fnd));
@@ -235,7 +235,7 @@ namespace snabel {
       return false;
     }
 
-    if (isa(*fnd, exe.callable_type) && name.front() != '$') {
+    if (isa(*fnd, exe.callable_type)) {
       return (*fnd->type->call)(scp, *fnd);
     }
     

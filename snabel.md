@@ -101,7 +101,7 @@ Calling ```yield``` from within a lambda logs the current position, stack and en
 42
 I64!
 
-> func: foo {let: bar 35; 7 yield $bar +}
+> func: foo {let: bar 35; 7 yield @bar +}
   foo foo
 42
 I64!
@@ -126,10 +126,10 @@ Bool!
 ```
 
 ### Bindings
-The ```let:```-macro may be used to introduce named bindings. Bound names are prefixed with ```$```, lexically scoped and not allowed to change their value once bound in a specific scope. The bound expression is evaluated in a copy of the calling stack, which allows feeding values into a let statement but avoids unintended stack effects. Bindings require termination using ```;``` to separate them from surrounding code.
+The ```let:```-macro may be used to introduce named bindings. Bound names are prefixed with ```@```, lexically scoped and not allowed to change their value once bound in a specific scope. The bound expression is evaluated in a copy of the calling stack, which allows feeding values into a let statement but avoids unintended stack effects. Bindings require termination using ```;``` to separate them from surrounding code.
 
 ```
-> let: fn {7 +}; 35 $fn call
+> let: fn {7 +}; 35 @fn call
 42
 I64!
 ```
@@ -254,7 +254,7 @@ Iteration is currently supported for numbers, which will return 0..N; lists, whi
 '0,1,2,3,4,5,6'
 Str!
 
-> let: foo 'bar' iter; $foo list
+> let: foo 'bar' iter; @foo list
 [\b \a \r]
 List<Char>!
 ```
@@ -286,7 +286,7 @@ I64!
 
 > func: foo {35 +}
   let: bar &foo
-  7 $bar call
+  7 @bar call
 42
 I64!
 ```
@@ -339,7 +339,7 @@ add_macro(*this, "let:", [this](auto pos, auto &in, auto &out) {
     if (i != in.end()) { i++; }
     in.erase(in.begin(), i);
     out.emplace_back(Restore());
-    out.emplace_back(Let(fmt("$%0", n)));
+    out.emplace_back(Let(fmt("@%0", n)));
   }
 });
 ```
