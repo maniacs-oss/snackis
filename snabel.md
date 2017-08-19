@@ -25,7 +25,7 @@ SnabelError: Missing lambda
 ```
 
 ### The Stack
-Values and results from function calls are pushed on the current stack in order of appearance. Thanks to lexical scoping and named bindings, keeping the stack squeaky clean is less critical in Snabel. ```stash``` collects all values on the stack in a list and pushes it on the stack. ```$1```-```$9``` swaps in values, starting from the end of the stack; while ```$0``` duplicates the last value. Use ```_``` to drop the last value from the stack or ```reset``` to clear all.
+Values and results from function calls are pushed on the current stack in order of appearance. Thanks to lexical scoping and named bindings, keeping the stack squeaky clean is less critical in Snabel. ```stash``` collects all values on the stack in a list and pushes it on the stack. ```$1```-```$9``` swaps in values, starting from the end; while ```$0``` duplicates the last value. ```_``` drops the last value and ```reset``` clears the entire stack.
 
 ```
 > 1 2 3 stash
