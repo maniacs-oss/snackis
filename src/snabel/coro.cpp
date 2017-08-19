@@ -6,22 +6,21 @@
 
 namespace snabel {
   Coro::Coro(Scope &scp):
-    thread(scp.thread),
-    pc(thread.pc+1), stack(curr_stack(thread))
+    thread(scp.thread)
   {
-    for (auto &k: scp.env_keys) {
-      env.insert(std::make_pair(k, thread.env.at(k)));
-    }
+    refresh(*this, scp);
   }
 
   void refresh(Coro &cor, Scope &scp) {
+    auto &thd(cor.thread);
+    cor.pc = thd.pc+1;
     cor.stack.clear();
-    auto &s(curr_stack(cor.thread));
-    cor.stack.assign(s.begin(), s.end());
-
+    auto &s(curr_stack(thd));
+    cor.stack.assign(s.begin(), std::prev(s.end()));
     cor.env.clear();
+    
     for (auto &k: scp.env_keys) {
-      cor.env.insert(std::make_pair(k, cor.thread.env.at(k)));
+      cor.env.insert(std::make_pair(k, thd.env.at(k)));
     }
   }
 }

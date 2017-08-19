@@ -645,9 +645,15 @@ namespace snabel {
 	  out.emplace_back(Backup(true));
 	  const str n(in.at(0).text);
 	  auto i(std::next(in.begin()));
+	  int depth(1);
 	  
 	  for (; i != in.end(); i++) {
-	    if (i->text == ";") { break; }
+	    if (i->text.back() == ':') { depth++; }
+	    
+	    if (i->text.front() == ';') {
+	      depth--;
+	      if (!depth) { break; }
+	    }
 	  }
 	     
 	  compile(*this, pos.row, TokSeq(std::next(in.begin()), i), out);
@@ -923,6 +929,9 @@ namespace snabel {
     auto &thd(exe.main);
     while (thd.scopes.size() > 1) { thd.scopes.pop_back(); }
     while (thd.stacks.size() > 1) { thd.stacks.pop_back(); }
+    thd.main_scope.coros.clear();
+    thd.main_scope.recall_pcs.clear();
+    thd.main_scope.return_pc = -1;
     thd.stacks.front().clear();
     thd.pc = 0;
   }
@@ -1006,6 +1015,7 @@ namespace snabel {
   }
   
   bool run(Exec &exe, const str &in) {
+    rewind(exe);
     if (!compile(exe, in)) { return false; }
     return run(exe.main);
   }

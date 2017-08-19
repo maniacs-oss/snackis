@@ -88,11 +88,18 @@ I64!
 Calling ```yield``` from within a lambda logs the current position, stack and environment before returning; execution will continue from the yielding position with restored stack and environment on next call from the same scope.
 
 ```
-> {7 yield 28 +} $0 call $1 call $1 _ +
+> let: foo {7 yield 28 +}
+  $foo call $foo call +
 42
 I64!
 
-> {let: foo 28; 7 yield $foo +} $0 call $1 call $1 _ +
+> let: foo {let: bar 35; 7 yield $bar +}
+  $foo call $foo call
+42
+I64!
+
+> func: foo {[7 35] &yield for reset &+}
+  foo foo foo call
 42
 I64!
 ```

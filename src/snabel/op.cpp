@@ -445,7 +445,7 @@ namespace snabel {
     
     if (id == "return") {
       if (exe.lambdas.empty()) {
-	ERROR(Snabel, "Missing lambda for return");
+	ERROR(Snabel, "Missing return lambda");
 	return false;
       }
 
@@ -454,12 +454,11 @@ namespace snabel {
 
       if (l->exit_label) {
 	val.emplace(exe.label_type, l->exit_label);
+	return false;
       }
-
-      return true;
     } else if (id == "recall") {
       if (exe.lambdas.empty()) {
-	ERROR(Snabel, "Missing lambda for return");
+	ERROR(Snabel, "Missing recall lambda");
 	return false;
       }
 
@@ -468,12 +467,11 @@ namespace snabel {
 
       if (l->recall_label) {
 	val.emplace(exe.label_type, l->recall_label);
+	return false;
       }      
-
-      return true;
     } else if (id == "yield") {
       if (exe.lambdas.empty()) {
-	ERROR(Snabel, "Missing lambda for return");
+	ERROR(Snabel, "Missing yield lambda");
 	return false;
       }
 
@@ -482,12 +480,13 @@ namespace snabel {
 
       if (l->yield_label) {
 	val.emplace(exe.label_type, l->yield_label);
+	return false;
       }
-
-      return true;
+    } else {
+      return false;
     }
 
-    return false;
+    return true;
   }
   
   bool Getenv::compile(const Op &op, Scope &scp, OpSeq &out) {
@@ -834,7 +833,7 @@ namespace snabel {
 
       thd.pc = ret_scp.return_pc;
       ret_scp.return_pc = -1;
-      scp.coros.erase(tag);
+      ret_scp.coros.erase(tag);
     } else {
       thd.pc = scp.recall_pcs.back();
       scp.recall_pcs.pop_back();

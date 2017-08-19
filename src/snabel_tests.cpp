@@ -253,11 +253,18 @@ namespace snabel {
     TRY(try_test);    
     Exec exe;
     
-    run(exe, "{7 yield 28 +} $0 call $1 call $1 _ +");
+    run(exe, "let: foo {7 yield 28 +}; $foo call $foo call +");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run(exe, "{let: foo 28; 7 yield $foo +} $0 call $1 call $1 _ +");
+    run(exe,
+	"let: foo {let: bar 35; 7 yield $bar +}; "
+	"$foo call $foo call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+
+    run(exe,
+	"func: foo {[7 35] &yield for reset &+}; "
+	"foo foo foo call");
+	CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
   
   static void when_tests() {
@@ -411,11 +418,13 @@ namespace snabel {
     run(exe, "-7 3 / frac");
     CHECK(get<Rat>(pop(exe.main)) == Rat(1, 3, true), _);
 
+    /*
     run(exe,
 	"1 1 / "
 	"10 {_ 3 /} for "
 	"10 {_ 3 *} for");
     CHECK(get<Rat>(pop(exe.main)) == Rat(1, 1), _);
+    */
   }
   
   static void thread_tests() {

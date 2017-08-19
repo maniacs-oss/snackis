@@ -10,7 +10,7 @@ namespace snabel {
   { }
 
   Scope::Scope(const Scope &src):
-    thread(src.thread), exec(src.exec), return_pc(-1)
+    thread(src.thread), exec(src.exec), return_pc(-1), coros(src.coros)
   { }
 
   Scope::~Scope() {
@@ -90,15 +90,14 @@ namespace snabel {
     
     if (scp.recall_pcs.empty()) {
       if (!end_scope(thd, 1)) { return false; }
-      auto &ret_scp(curr_scope(thd));
       
-      if (ret_scp.return_pc == -1) {
+      if (prev_scp.return_pc == -1) {
 	ERROR(Snabel, "Missing return pc");
 	return false;
       }
 
-      scp.thread.pc = ret_scp.return_pc;
-      ret_scp.return_pc = -1;
+      scp.thread.pc = prev_scp.return_pc;
+      prev_scp.return_pc = -1;
     } else {
       scp.thread.pc = scp.recall_pcs.back();
       scp.recall_pcs.pop_back();

@@ -88,6 +88,7 @@ namespace snabel {
   }
 
   Scope &begin_scope(Thread &thd, bool copy_stack) {
+    backup_stack(thd, true);
     return thd.scopes.emplace_back(thd.scopes.back());
   }
   
@@ -98,6 +99,7 @@ namespace snabel {
     }
 
     thd.scopes.pop_back();
+    restore_stack(thd, stack_len);
     return true;
   }
   
