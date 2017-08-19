@@ -12,8 +12,8 @@ Like Yoda of Star Wars-fame, and yesterdays scientific calculators; as well as m
 I64!
 ```
 
-### Streaming
-Another difference that's important to be aware of is that Snabel views code as a stream, rather than a graph of operations. As long as the final sequence makes sense, Snabel mostly doesn't care how it got there. Notable exceptions are contents of strings, type parameter list and lambdas, where Snabel needs to see the final sequence to compile the code.
+### Streams of Tokens
+Another difference that's important to be aware of is that Snabel views code as a stream, rather than a graph of tokens. As long as the final sequence makes sense, Snabel mostly doesn't care how it got there. Notable exceptions are contents of strings, type parameter list and lambdas, where Snabel needs to see the final sequence to compile the code.
 
 ```
 > bar label: foo; 35 +) baz label: bar; (7 foo label: baz
@@ -25,22 +25,22 @@ SnabelError: Missing lambda
 ```
 
 ### The Stack
-Values and results from function calls are pushed on the current stack in order of appearance. Thanks to lexical scoping and named bindings, keeping the stack squeaky clean is less critical in Snabel. ```stash``` collects all values on the stack in a list and pushes it on the stack. ```$1```-```$9``` swaps in values, starting from the end; while ```$0``` duplicates the last value. ```_``` drops the last value and ```|``` clears the entire stack.
+Values and results from function calls are pushed on the current stack in order of appearance. Thanks to lexical scoping and named bindings, keeping the stack squeaky clean is less critical in Snabel. ```$``` collects all values on the stack in a list that is pushed instead. ```$1```-```$9``` swaps in values, starting from the end; while ```$0``` duplicates the last value. ```_``` drops the last value and ```|``` clears the entire stack.
 
 ```
-> 1 2 3 stash
+> 1 2 3 $
 [1 2 3]
 List<I64>!
 
-> 1 2 $0 stash
+> 1 2 $0 $
 [1 2 2]
 List<I64>!
 
-> 42 7 _ stash
+> 42 7 _ $
 [42]
 I64!
 
-> 42 7 | stash
+> 42 7 | $
 []
 List<Any>!
 
@@ -57,11 +57,11 @@ Parentheses may be used to divide expressions into separate parts, each level co
 7
 I64!
 
-> 1 (2 3 stash)
+> 1 (2 3 $)
 [1 2 3]
 List<I64>!
 
-> 1 (|2 3 stash) .
+> 1 (|2 3 $) .
 1.[2 3]
 Pair<I64 List<I64>>!
 ```
@@ -186,7 +186,7 @@ List<I64>!
 []
 List<Str>!
 
-> 1 2 3 stash
+> 1 2 3 $
 [1 2 3]
 List<I64>!
 
@@ -211,7 +211,7 @@ Pair<Str I64>!
 ['foo' 0. 'bar' 1.]
 List<Pair<Str I64>>!
 
-> ['foo' 0. 'bar' 1.] unzip list $1 list stash
+> ['foo' 0. 'bar' 1.] unzip list $1 list $
 [[0 1] ['foo' 'bar']]
 List<List<Any>>!
 ```
@@ -271,7 +271,7 @@ I64!
 21
 I64!
 
-> 'foo' &nop for stash \- join
+> 'foo' &nop for $ \- join
 'f-o-o'
 Str!
 ```

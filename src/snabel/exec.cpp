@@ -674,7 +674,7 @@ namespace snabel {
 	out.emplace_back(Return(false));
       });
 
-    add_macro(*this, "stash", [](auto pos, auto &in, auto &out) {
+    add_macro(*this, "$", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Stash());
       });
 
