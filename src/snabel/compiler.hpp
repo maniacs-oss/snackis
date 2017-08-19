@@ -7,7 +7,7 @@
 namespace snabel {
   struct Exec;
   
-  void compile(Exec &exe, size_t lnr, TokSeq in, OpSeq &out);
+  void compile(Exec &exe, TokSeq in, OpSeq &out);
 }
 
 #endif

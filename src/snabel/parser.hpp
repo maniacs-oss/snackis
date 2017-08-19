@@ -8,15 +8,15 @@ namespace snabel {
   using namespace snackis;
   
   struct Pos {
-    size_t row, col;
-    Pos(size_t row, size_t col);
+    int64_t row, col;
+    Pos(int64_t row, int64_t col);
   };
 
   struct Tok {
     str text;
-    size_t start;
+    Pos pos;
     
-    Tok(const str &text, size_t start=-1);
+    Tok(const str &text, Pos pos=Pos(-1,-1));
   };
 
   using StrSeq = std::deque<str>;
@@ -24,7 +24,10 @@ namespace snabel {
 
   StrSeq parse_lines(const str &in);
   size_t parse_parens(const str &in);
-  TokSeq parse_expr(const str &in);
+  void parse_expr(const str &in, size_t lnr, TokSeq &out);
+  TokSeq parse_expr(const str &in, size_t lnr=0);
+  TokSeq::iterator find_end(TokSeq::iterator i,
+			    const TokSeq::const_iterator &end);
 }
 
 #endif

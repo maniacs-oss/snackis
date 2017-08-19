@@ -9,27 +9,6 @@
 #include "snackis/core/error.hpp"
 
 namespace snabel {
-  static void test_func(Scope &scp, FuncImp &fn, const Args &args) {
-    Exec &exe(scp.exec);
-    CHECK(args.size() == 1, _);
-    CHECK(args[0].type == &exe.i64_type, _);
-    push(scp.thread, exe.i64_type, 35+get<int64_t>(args[0]));
-  }
-  
-  static void func_tests() {
-    TRY(try_test);
-    Exec exe;
-    
-    run(exe, "func: foo1 {35 +}; 7 foo1");
-    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
-
-    run(exe,
-	"func: foo2 {35 +};"
-	"let: bar &foo2;"
-	"7 $bar call");
-    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
-  }
-
   static void parse_lines_tests() {
     TRY(try_test);    
     auto ls(parse_lines("foo\nbar\nbaz"));
@@ -144,6 +123,22 @@ namespace snabel {
     CHECK(get<int64_t>(get_env(scp, "$bar")) == 42, _);
   }
 
+  static void func_tests() {
+    TRY(try_test);
+    Exec exe;
+    
+    run(exe, "func: foo1 {35 +}; 7 foo1");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+
+    run(exe,
+	"func: foo2 {\n"
+        "35 +\n"
+	"};\n"
+	"let: bar &foo2;"
+	"7 $bar call");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+  }
+
   static void type_tests() {
     TRY(try_test);    
     Exec exe;
@@ -185,7 +180,7 @@ namespace snabel {
     TRY(try_test);    
     Exec exe;
     
-    run(exe, "(let: foo 21;$foo)");
+    run(exe, "(let: foo 21; $foo)");
     Scope &scp1(curr_scope(exe.main));
     CHECK(get<int64_t>(pop(scp1.thread)) == 21, _);
     CHECK(!find_env(scp1, "foo"), _);
@@ -433,10 +428,10 @@ namespace snabel {
   }
   
   static void loop() {
-    func_tests();
     parse_tests();
     parens_tests();
     compile_tests();
+    func_tests();
     type_tests();
     stack_tests();
     scope_tests();

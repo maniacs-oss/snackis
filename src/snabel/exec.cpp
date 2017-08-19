@@ -599,15 +599,11 @@ namespace snabel {
 	} else {
 	  out.emplace_back(Backup());
 	  const str n(in.at(0).text);
-	  auto i(std::next(in.begin()));
-	  
-	  for (; i != in.end(); i++) {
-	    if (i->text == ";") { break; }
-	  }
-	  
-	  compile(*this, pos.row, TokSeq(std::next(in.begin()), i), out);
-	  if (i != in.end()) { i++; }
-	  in.erase(in.begin(), i);
+	  auto start(std::next(in.begin()));
+	  auto end(find_end(start, in.end()));
+	  compile(*this, TokSeq(start, end), out);
+	  if (end != in.end()) { end++; }
+	  in.erase(in.begin(), end);
 	  out.emplace_back(Restore());
 	  out.emplace_back(Putenv(n));
 	}
@@ -636,7 +632,7 @@ namespace snabel {
 
 	out.emplace_back(Target(add_label(*this, tag)));
       });
-
+    
     add_macro(*this, "let:", [this](auto pos, auto &in, auto &out) {
 	if (in.empty()) {
 	  ERROR(Snabel, fmt("Malformed let on row %0, col %1",
@@ -644,21 +640,11 @@ namespace snabel {
 	} else {
 	  out.emplace_back(Backup(true));
 	  const str n(in.at(0).text);
-	  auto i(std::next(in.begin()));
-	  int depth(1);
-	  
-	  for (; i != in.end(); i++) {
-	    if (i->text.back() == ':') { depth++; }
-	    
-	    if (i->text.front() == ';') {
-	      depth--;
-	      if (!depth) { break; }
-	    }
-	  }
-	     
-	  compile(*this, pos.row, TokSeq(std::next(in.begin()), i), out);
-	  if (i != in.end()) { i++; }
-	  in.erase(in.begin(), i);
+	  auto start(std::next(in.begin()));
+	  auto end(find_end(start, in.end()));
+	  compile(*this, TokSeq(start, end), out);
+	  if (end != in.end()) { end++; }
+	  in.erase(in.begin(), end);
 	  out.emplace_back(Restore());
 	  out.emplace_back(Putenv(fmt("$%0", n)));
 	}
@@ -943,15 +929,14 @@ namespace snabel {
     clear_labels(exe);
     rewind(exe);
     size_t lnr(0);
+    TokSeq toks;
     
     for (auto &ln: parse_lines(in)) {
-      if (!ln.empty()) {
-	compile(exe, lnr, parse_expr(ln), exe.main.ops);
-      }
-       
+      if (!ln.empty()) { parse_expr(ln, lnr, toks); }
       lnr++;
     }
 
+    compile(exe, toks, exe.main.ops);
     TRY(try_compile);
 
     while (true) {

@@ -4,13 +4,12 @@
 #include "snabel/parser.hpp"
 
 namespace snabel {
-  Pos::Pos(size_t row, size_t col):
+  Pos::Pos(int64_t row, int64_t col):
     row(row), col(col)
   { }
 
-  Tok::Tok(const str &text, size_t start):
-    text(text),
-    start(start)
+  Tok::Tok(const str &text, Pos pos):
+    text(text), pos(pos)
   { }
 
   StrSeq parse_lines(const str &in) {
@@ -54,13 +53,12 @@ namespace snabel {
     return str::npos;
   }
   
-  TokSeq parse_expr(const str &in) {
+  void parse_expr(const str &in, size_t lnr, TokSeq &out) {
     static const std::set<char> split {
       '{', '}', '(', ')', '[', ']', '<', '>', '|', ';', '!', '.' };
     
     size_t i(0);
     bool quoted(false);
-    TokSeq out;
     
     for (size_t j(0); j < in.size(); j++) {
       char c(in[j]);
@@ -78,20 +76,40 @@ namespace snabel {
 	  !quoted && j > i) {
 	if (split.find(in[i]) != split.end()) { i++; }
 	const str s(trim(in.substr(i, (c == '\'') ? j-i+1 : j-i)));
-	if (!s.empty()) { out.emplace_back(s, i); }
+	if (!s.empty()) { out.emplace_back(s, Pos(lnr, i)); }
 	i = (c == '\'') ? j+1 : j;
       }
 
       if (split.find(c) != split.end()) {
-	out.emplace_back(in.substr(cp, 1), cp);
+	out.emplace_back(in.substr(cp, 1), Pos(lnr, cp));
       }
 
       if ((i < j || in.size() == 1) && j == in.size()-1) {
 	str s(trim(in.substr(i)));
-	if (!s.empty()) { out.emplace_back(s, i); }
+	if (!s.empty()) { out.emplace_back(s, Pos(lnr, i)); }
       }
     }
+  }
 
+  TokSeq parse_expr(const str &in, size_t lnr) {
+    TokSeq out;
+    parse_expr(in, lnr, out);
     return out;
-  }  
+  }
+  
+  TokSeq::iterator find_end(TokSeq::iterator i,
+			    const TokSeq::const_iterator &end) {
+    int depth(1);
+    
+    for (; i != end; i++) {
+      if (i->text.back() == ':') { depth++; }
+      
+      if (i->text.front() == ';') {
+	depth--;
+	if (!depth) { break; }
+      }
+    }
+    
+    return i;
+  }
 }

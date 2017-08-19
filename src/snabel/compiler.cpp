@@ -5,7 +5,6 @@
 
 namespace snabel {  
   static void compile_tok(Exec &exe,
-			  size_t lnr,
 			  TokSeq &in,
 			  OpSeq &out) {
     Tok tok(in.front());
@@ -29,7 +28,7 @@ namespace snabel {
     } else if (tok.text.front() == '\\') {
       if (tok.text.size() < 2) {
 	ERROR(Snabel, fmt("Invalid char literal on row %0, col %1: %2",
-			  lnr, tok.start, tok.text));
+			  tok.pos.row, tok.pos.col, tok.text));
       }
 
       char c(0);
@@ -65,12 +64,12 @@ namespace snabel {
       if (fnd == exe.macros.end()) {
 	out.emplace_back(Deref(tok.text));
       } else {
-	fnd->second(Pos(lnr, tok.start), in, out);
+	fnd->second(tok.pos, in, out);
       }
     }
   }
 
-  void compile(Exec &exe, size_t lnr, TokSeq in, OpSeq &out) {
-    while (!in.empty()) { compile_tok(exe, lnr, in, out); }
+  void compile(Exec &exe, TokSeq in, OpSeq &out) {
+    while (!in.empty()) { compile_tok(exe, in, out); }
   }
 }
