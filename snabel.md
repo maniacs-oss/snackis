@@ -1,5 +1,5 @@
 # Snabel
-#### an embedded Forth with static, parameterized types and generic words
+#### a fresh take on Forth
 
 ![script example](images/script.png?raw=true)
 
