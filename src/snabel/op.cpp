@@ -626,8 +626,8 @@ namespace snabel {
     if (fnd != scp.coros.end()) {
       auto &cor(fnd->second);
       new_scp.thread.pc = cor.pc;
-      std::copy(cor.stack.begin(), cor.stack.end(),
-		std::back_inserter(curr_stack(thd)));
+      std::copy(cor.stacks.begin(), cor.stacks.end(),
+		std::back_inserter(thd.stacks));
       for (auto &v: cor.env) { put_env(scp, v.first, v.second); }
     }
 

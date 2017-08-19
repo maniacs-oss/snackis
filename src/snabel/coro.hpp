@@ -10,7 +10,7 @@ namespace snabel {
   struct Coro {
     Thread &thread;
     int64_t pc;
-    Stack stack;
+    std::deque<Stack> stacks;
     Env env;
 
     Coro(Scope &Scp);

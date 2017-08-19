@@ -249,7 +249,7 @@ namespace snabel {
     TRY(try_test);    
     Exec exe;
     
-    run(exe, "let: foo {7 yield (28 +)}; $foo call $foo call +");
+    run(exe, "let: foo {7 yield 28 +}; $foo call $foo call +");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
     run(exe,

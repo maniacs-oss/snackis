@@ -18,7 +18,14 @@ namespace snabel {
   {}
 
   Scope::~Scope() {
-    while (thread.stacks.size() > stack_depth) { thread.stacks.pop_back(); }
+    if (thread.stacks.size() > stack_depth) {
+      opt<Box> last;
+      if (!thread.stacks.back().empty()) { last = pop(thread); }
+
+      while (thread.stacks.size() > stack_depth) { thread.stacks.pop_back(); }
+      if (last) { push(thread, *last); }
+    }
+    
     for (auto &k: env_keys) { thread.env.erase(k); }
   }
 
