@@ -233,14 +233,6 @@ Iteration is currently supported for numbers, which will return 0..N; lists, whi
 '0,1,2,3,4,5,6'
 Str!
 
-> 3 iter
-  pop $1
-  pop $1
-  pop $1
-  _ + +
-3
-I64!
-
 > let: foo 'bar' iter; $foo list
 [\b \a \r]
 List<Char>!

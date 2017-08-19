@@ -159,15 +159,6 @@ namespace snabel {
 	 Iter::Ref(new ZipIter(exe, xi, yi)));
   }
 
-  static void iter_pop_imp(Scope &scp, const Args &args) {
-    auto &thd(scp.thread);
-    auto &it(args.at(0));
-    push(thd, it);
-    auto v(get<Iter::Ref>(it)->next());
-    if (!v) { ERROR(Snabel, "Pop of empty iterator"); }
-    push(thd, v ? *v : Box(scp.exec.undef_type, undef));
-  }
-  
   static void list_imp(Scope &scp, const Args &args) {
     auto &elt(args.at(0));
     push(scp.thread,
@@ -517,10 +508,6 @@ namespace snabel {
 		 })},			
 	     iterable_zip_imp);
 
-    add_func(*this, "pop",
-	     {ArgType(iter_type)}, {ArgType(0), ArgType(0, 0)},
-	     iter_pop_imp);
-    
     add_func(*this, "list",
 	     {ArgType(meta_type)},
 	     {ArgType([this](auto &args) {
