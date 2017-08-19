@@ -10,7 +10,7 @@ namespace snabel {
   { }
 
   void refresh(Coro &cor, Scope &scp) {
-    refresh(dynamic_cast<Frame &>(cor), scp);    
+    refresh(dynamic_cast<Frame &>(cor), scp, scp.stack_depth);    
     auto &thd(cor.thread);
     cor.env.clear();
     

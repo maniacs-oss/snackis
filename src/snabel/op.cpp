@@ -808,7 +808,7 @@ namespace snabel {
   bool Return::run(Scope &scp) {
     auto &thd(scp.thread);
     
-    if (scp.recall_pcs.empty()) {
+    if (scp.recalls.empty()) {
       if (!end_scope(thd)) { return false; }
       auto &ret_scp(curr_scope(thd));
       
@@ -821,8 +821,7 @@ namespace snabel {
       ret_scp.return_pc = -1;
       ret_scp.coros.erase(tag);
     } else {
-      thd.pc = scp.recall_pcs.back();
-      scp.recall_pcs.pop_back();
+      recall_return(scp);
     }
     
     return true;

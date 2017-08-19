@@ -916,7 +916,7 @@ namespace snabel {
     while (thd.scopes.size() > 1) { thd.scopes.pop_back(); }
     while (thd.stacks.size() > 1) { thd.stacks.pop_back(); }
     thd.main_scope.coros.clear();
-    thd.main_scope.recall_pcs.clear();
+    thd.main_scope.recalls.clear();
     thd.main_scope.return_pc = -1;
     thd.stacks.front().clear();
     thd.pc = 0;

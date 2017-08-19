@@ -23,7 +23,7 @@ namespace snabel {
     
     size_t stack_depth;
     int64_t return_pc;
-    std::deque<int64_t> recall_pcs;
+    std::deque<Frame> recalls;
     std::map<Sym, Coro> coros;
     std::set<str> env_keys;
     
@@ -40,6 +40,7 @@ namespace snabel {
   void jump(Scope &scp, const Label &lbl);
   void call(Scope &scp, const Label &lbl);
   bool yield(Scope &scp, Sym tag);
+  void recall_return(Scope &scp);
 
   Thread &start_thread(Scope &scp, const Box &init);
 }

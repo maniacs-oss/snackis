@@ -11,12 +11,11 @@ namespace snabel {
 
   Frame::~Frame() { }
 
-  void refresh(Frame &frm, Scope &scp) {
+  void refresh(Frame &frm, Scope &scp, int64_t depth) {
     auto &thd(frm.thread);
     frm.pc = thd.pc+1;
     
-    frm.stacks.assign(std::next(thd.stacks.begin(),
-				thd.stacks.size()-scp.stack_depth),
+    frm.stacks.assign(std::next(thd.stacks.begin(), thd.stacks.size()-depth),
 		      thd.stacks.end());
   }
 }

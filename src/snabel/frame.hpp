@@ -16,7 +16,7 @@ namespace snabel {
     virtual ~Frame();
   };
 
-  void refresh(Frame &cor, Scope &scp);
+  void refresh(Frame &cor, Scope &scp, int64_t depth);
 }
 
 #endif

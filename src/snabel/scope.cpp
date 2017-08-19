@@ -76,7 +76,10 @@ namespace snabel {
     if (lbl.yield_tag) {
       yield(scp, *lbl.yield_tag);
     } else {
-      if (lbl.recall) { scp.recall_pcs.push_back(scp.thread.pc+1); }
+      if (lbl.recall) {
+	auto &frm(scp.recalls.emplace_back(scp.thread));
+	refresh(frm, scp, scp.stack_depth-1);
+      }
       scp.thread.pc = lbl.pc;
     }
   }
@@ -101,7 +104,7 @@ namespace snabel {
       refresh(fnd->second, scp);
     }
     
-    if (scp.recall_pcs.empty()) {
+    if (scp.recalls.empty()) {
       if (!end_scope(thd)) { return false; }
       
       if (prev_scp.return_pc == -1) {
@@ -112,11 +115,19 @@ namespace snabel {
       scp.thread.pc = prev_scp.return_pc;
       prev_scp.return_pc = -1;
     } else {
-      scp.thread.pc = scp.recall_pcs.back();
-      scp.recall_pcs.pop_back();
+      recall_return(scp);
     }
 
     return true;
+  }
+
+  void recall_return(Scope &scp) {
+    auto &thd(scp.thread);
+    auto &frm(scp.recalls.back());
+    thd.pc = frm.pc;
+    std::copy(frm.stacks.begin(), frm.stacks.end(),
+	      std::back_inserter(thd.stacks));
+    scp.recalls.pop_back();
   }
 
   Thread &start_thread(Scope &scp, const Box &init) {
