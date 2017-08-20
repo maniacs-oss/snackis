@@ -6,7 +6,11 @@
 
 namespace snabel {  
   Scope::Scope(Thread &thd):
-    thread(thd), exec(thread.exec), stack_depth(thread.stacks.size()), return_pc(-1)
+    thread(thd),
+    exec(thread.exec),
+    stack_depth(thread.stacks.size()),
+    return_pc(-1),
+    push_result(true)
   { }
 
   Scope::Scope(const Scope &src):
@@ -14,6 +18,7 @@ namespace snabel {
     exec(src.exec),
     stack_depth(thread.stacks.size()),
     return_pc(-1),
+    push_result(true),
     coros(src.coros)
   {}
   
@@ -66,21 +71,27 @@ namespace snabel {
   }
 
   void reset_stack(Scope &scp) {
-    reset_stack(scp.thread, scp.stack_depth);
+    reset_stack(scp.thread, scp.stack_depth, scp.push_result);
+  }
+
+  Coro *find_coro(Scope &scp, Label &tgt) {
+    auto fnd(scp.coros.find(&tgt));
+    if (fnd == scp.coros.end()) { return nullptr; }
+    return &fnd->second;
   }
 
   void jump(Scope &scp, const Label &lbl) {
     auto &thd(scp.thread);
     
-    if (lbl.yield_tag) {
-      yield(scp, *lbl.yield_tag);
+    if (lbl.yield_target) {
+      yield(scp, *lbl.yield_target);
     } else {      
       if (lbl.recall) {
 	auto &frm(scp.recalls.emplace_back(thd));
 	refresh(frm, scp, thd.stacks.size()-scp.stack_depth-1);
       }
       
-      reset_stack(thd, scp.stack_depth+1);
+      reset_stack(thd, scp.stack_depth+1, true);
       thd.pc = lbl.pc;
     }
   }
@@ -91,18 +102,21 @@ namespace snabel {
     jump(scp, lbl);
   }
 
-  bool yield(Scope &scp, Sym tag) {
+  bool yield(Scope &scp, Label &tgt) {
     Thread &thd(scp.thread);
     auto &prev_scp(*std::next(thd.scopes.rbegin()));
-    auto fnd(prev_scp.coros.find(tag));
+    auto fnd(prev_scp.coros.find(&tgt));
     
     if (fnd == prev_scp.coros.end()) {
       auto &cor(prev_scp.coros.emplace(std::piecewise_construct,
-				       std::forward_as_tuple(tag),
+				       std::forward_as_tuple(&tgt),
 				       std::forward_as_tuple(thd)).first->second);
       refresh(cor, scp);
+      if (cor.fiber && scp.recalls.empty()) { scp.push_result = false; }
     } else {
-      refresh(fnd->second, scp);
+      auto &cor(fnd->second);
+      refresh(cor, scp);
+      if (cor.fiber && scp.recalls.empty()) { scp.push_result = false; }
     }
     
     if (scp.recalls.empty()) {

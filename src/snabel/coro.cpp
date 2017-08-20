@@ -6,11 +6,19 @@
 
 namespace snabel {
   Coro::Coro(Thread &thread):
-    Frame(thread)
+    Frame(thread), fiber(nullptr)
   { }
 
+  Coro::~Coro() {
+    if (fiber) { fiber->coro = nullptr; }
+  }
+  
   void refresh(Coro &cor, Scope &scp) {
     refresh(dynamic_cast<Frame &>(cor), scp, scp.stack_depth);    
+    refresh_env(cor, scp);
+  }
+
+  void refresh_env(Coro &cor, Scope &scp) {
     auto &thd(cor.thread);
     cor.env.clear();
     

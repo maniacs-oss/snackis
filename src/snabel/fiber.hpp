@@ -4,7 +4,9 @@
 #include "snabel/sym.hpp"
 
 namespace snabel {
+  struct Coro;
   struct Label;
+  struct Scope;
   struct Thread;
   
   struct Fiber {
@@ -13,9 +15,13 @@ namespace snabel {
     Thread &thread;
     Id id;
     Label &target;
+    Coro *coro;
     
     Fiber(Thread &thd, Id id, Label &tgt);
   };
+
+  void init(Fiber &fib, Scope &scp);
+  void call(Fiber &fib, Scope &scp);
 }
 
 #endif

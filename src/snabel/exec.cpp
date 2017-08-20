@@ -222,6 +222,13 @@ namespace snabel {
     push(scp.thread, p.second);
   }
 
+  static void fiber_imp(Scope &scp, const Args &args) {
+    auto &thd(scp.thread);
+    auto &f(add_fiber(thd, *get<Label *>(args.at(0))));
+    init(f, scp);
+    push(thd, scp.exec.fiber_type, &f);
+  }
+
   static void thread_imp(Scope &scp, const Args &args) {
     auto &t(start_thread(scp, args.at(0)));
     push(scp.thread, scp.exec.thread_type, &t);
@@ -241,6 +248,7 @@ namespace snabel {
     bool_type(add_type(*this, "Bool")),
     callable_type(add_type(*this, "Callable")),
     char_type(add_type(*this, "Char")),
+    fiber_type(add_type(*this, "Fiber")),    
     func_type(add_type(*this, "Func")),
     i64_type(add_type(*this, "I64")),
     iter_type(add_type(*this, "Iter")),
@@ -331,9 +339,23 @@ namespace snabel {
     
     char_type.eq = [](auto &x, auto &y) { return get<char>(x) == get<char>(y); };
     
+    fiber_type.supers.push_back(&any_type);
+    fiber_type.supers.push_back(&callable_type);
+    fiber_type.fmt = [](auto &v) { return fmt("#%0", get<Fiber *>(v)->id); };
+    fiber_type.eq = [](auto &x, auto &y) {
+      return get<Fiber *>(x) == get<Fiber *>(y);
+    };
+
+    fiber_type.call.emplace([](auto &scp, auto &v) {
+	call(*get<Fiber *>(v), scp);
+	return true;
+      });
+
     func_type.supers.push_back(&any_type);
     func_type.supers.push_back(&callable_type);
-    func_type.fmt = [](auto &v) { return fmt_arg(size_t(get<Func *>(v))); };
+    func_type.fmt = [](auto &v) {
+      return fmt("#%0", fmt_arg(size_t(get<Func *>(v))));
+    };
     func_type.eq = [](auto &x, auto &y) { return get<Func *>(x) == get<Func *>(y); };
     
     func_type.call.emplace([](auto &scp, auto &v) {
@@ -547,8 +569,12 @@ namespace snabel {
 	     {ArgType(pair_type)}, {ArgType(0, 0), ArgType(0, 1)},
 	     unzip_imp);
 	     
+    add_func(*this, "fiber",
+	     {ArgType(lambda_type)}, {ArgType(fiber_type)},
+	     fiber_imp);
+
     add_func(*this, "thread",
-	     {ArgType(callable_type)}, {ArgType(bool_type)},
+	     {ArgType(callable_type)}, {ArgType(thread_type)},
 	     thread_imp);
 
     add_func(*this, "join",

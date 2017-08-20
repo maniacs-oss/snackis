@@ -2,6 +2,6 @@
 
 namespace snabel {
   Label::Label(const str &tag):
-    tag(tag), recall(false), pc(-1)
+    tag(tag), recall(false), yield_target(nullptr), pc(-1)
   { }
 }

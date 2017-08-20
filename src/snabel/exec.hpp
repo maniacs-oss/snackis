@@ -30,9 +30,9 @@ namespace snabel {
     std::mutex mutex;
     Scope &main_scope;
     Type meta_type;
-    Type &any_type, &bool_type, &callable_type, &char_type, &func_type, &i64_type,
-      &iter_type, &iterable_type, &label_type, &lambda_type, &list_type, &pair_type,
-      &rat_type, &str_type, &thread_type,
+    Type &any_type, &bool_type, &callable_type, &char_type, &fiber_type, &func_type,
+      &i64_type, &iter_type, &iterable_type, &label_type, &lambda_type, &list_type,
+      &pair_type, &rat_type, &str_type, &thread_type,
       &undef_type, &void_type;
     std::atomic<Sym> next_gensym;
     

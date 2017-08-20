@@ -11,7 +11,7 @@ namespace snabel {
   struct Label {
     str tag;
     bool recall;
-    opt<Sym> yield_tag;
+    Label *yield_target;
     int64_t pc;
     
     Label(const str &tag);

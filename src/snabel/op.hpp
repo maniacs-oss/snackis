@@ -212,7 +212,7 @@ namespace snabel {
 
   struct Return: OpImp {
     bool scoped;
-    Sym tag;
+    Label *target;
 
     Return(bool scoped);
     OpImp &get_imp(Op &op) const override;
@@ -266,7 +266,7 @@ namespace snabel {
   };
   
   struct Yield: OpImp {
-    Sym tag;
+    Label *target;
     
     Yield();
     OpImp &get_imp(Op &op) const override;

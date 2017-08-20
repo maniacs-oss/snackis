@@ -5,6 +5,7 @@
 #include <thread>
 
 #include "snabel/fiber.hpp"
+#include "snabel/op.hpp"
 #include "snabel/scope.hpp"
 
 namespace snabel {
@@ -40,12 +41,12 @@ namespace snabel {
 
   Stack &backup_stack(Thread &thd, bool copy=false);
   void restore_stack(Thread &thd, size_t len=1);
-  void reset_stack(Thread &thd, int64_t depth);
+  void reset_stack(Thread &thd, int64_t depth, bool push_result);
   
   Scope &begin_scope(Thread &thd, bool copy_stack=false);
   bool end_scope(Thread &thd);
 
-  Fiber &add_fiber(Label &tgt);
+  Fiber &add_fiber(Thread &thd, Label &tgt);
   
   void start(Thread &thd);
   void join(Thread &thd, Scope &scp);

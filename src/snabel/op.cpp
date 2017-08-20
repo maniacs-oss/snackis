@@ -601,7 +601,7 @@ namespace snabel {
 
     if (yields && !yield_label) {
       yield_label = &add_label(exe, fmt("_yield%0", tag));
-      yield_label->yield_tag.emplace(tag);
+      yield_label->yield_target = enter_label;
       changed = true;
     }
     
@@ -620,14 +620,14 @@ namespace snabel {
 
   bool Lambda::run(Scope &scp) {
     auto &thd(scp.thread);
-    auto fnd(scp.coros.find(tag));
+    auto fnd(scp.coros.find(enter_label));
     Scope &new_scp(begin_scope(thd, true));
 
     if (fnd == scp.coros.end()) {
       backup_stack(thd, true);
     } if (fnd != scp.coros.end()) {
       auto &cor(fnd->second);
-      new_scp.thread.pc = cor.pc;
+      if (cor.pc != -1) { new_scp.thread.pc = cor.pc; }
       std::copy(cor.stacks.begin(), cor.stacks.end(),
 		std::back_inserter(thd.stacks));
       for (auto &v: cor.env) { put_env(scp, v.first, v.second); }
@@ -779,7 +779,7 @@ namespace snabel {
   }
 
   Return::Return(bool scoped):
-    OpImp(OP_RETURN, "return"), scoped(scoped)
+    OpImp(OP_RETURN, "return"), scoped(scoped), target(nullptr)
   { }
 
   OpImp &Return::get_imp(Op &op) const {
@@ -801,13 +801,13 @@ namespace snabel {
       return true;
     }
 
-    tag = l->tag;
+    target = l->enter_label;
     return false;
   }
 
   bool Return::run(Scope &scp) {
     auto &thd(scp.thread);
-    
+
     if (scp.recalls.empty()) {
       if (!end_scope(thd)) { return false; }
       auto &ret_scp(curr_scope(thd));
@@ -819,7 +819,7 @@ namespace snabel {
 
       thd.pc = ret_scp.return_pc;
       ret_scp.return_pc = -1;
-      ret_scp.coros.erase(tag);
+      ret_scp.coros.erase(target);
     } else {
       recall_return(scp);
     }
@@ -1035,7 +1035,7 @@ namespace snabel {
   }
 
   Yield::Yield():
-    OpImp(OP_YIELD, "yield")
+    OpImp(OP_YIELD, "yield"), target(nullptr)
   { }
 
   OpImp &Yield::get_imp(Op &op) const {
@@ -1051,12 +1051,12 @@ namespace snabel {
     }
     
     auto &l(*exe.lambdas.back());
-    tag = l.tag;
+    target = l.enter_label;
     return false;
   }
 
   bool Yield::run(Scope &scp) {
-    return yield(scp, tag);
+    return yield(scp, *target);
   }
 
   Op::Op(const Op &src):

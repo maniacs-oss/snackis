@@ -20,11 +20,13 @@ namespace snabel {
   struct Scope {
     Thread &thread;
     Exec &exec;
+    opt<Fiber *> fiber;
     
-    size_t stack_depth;
-    int64_t return_pc;
+    int64_t stack_depth, return_pc;
+    bool push_result;
+
     std::deque<Frame> recalls;
-    std::map<Sym, Coro> coros;
+    std::map<Label *, Coro> coros;
     std::set<str> env_keys;
     
     Scope(Thread &thread);
@@ -38,9 +40,10 @@ namespace snabel {
   void put_env(Scope &scp, const str &key, const Box &val);
   bool rem_env(Scope &scp, const str &key);
   void reset_stack(Scope &scp);
+  Coro *find_coro(Scope &scp, Label &tgt);
   void jump(Scope &scp, const Label &lbl);
   void call(Scope &scp, const Label &lbl);
-  bool yield(Scope &scp, Sym tag);
+  bool yield(Scope &scp, Label &tgt);
   void recall_return(Scope &scp);
 
   Thread &start_thread(Scope &scp, const Box &init);

@@ -87,10 +87,10 @@ namespace snabel {
     }
   }
 
-  void reset_stack(Thread &thd, int64_t depth) {
+  void reset_stack(Thread &thd, int64_t depth, bool push_result) {
     if (thd.stacks.size() > depth) {
       opt<Box> last;
-      if (!thd.stacks.back().empty()) { last = pop(thd); }
+      if (push_result && !thd.stacks.back().empty()) { last = pop(thd); }
       while (thd.stacks.size() > depth) { thd.stacks.pop_back(); }
       if (last) { push(thd, *last); }
     }
