@@ -309,21 +309,21 @@ add_func(exe, "+",
 	 add_i64);
 ```
 
+### Fibers
+Any lambda may be registered as a fiber by calling ```fiber```. Fibers allow interleaving multiple cooperative processes in the same thread. Yielding from within a fiber transfers control to the next fiber waiting to run.
+
+```
+> func: foo {(yield 35 push)} fiber;
+  0 [7] foo foo iter &+ for
+42
+I64!
+```
+
 ### Threads
 Starting a new thread copies the entire program, stack and environment to a separate structure to minimize locking; sets the program counter after the last instruction, and calls the specified target. The target is only a starting point, threads are free to go wherever they want; a thread is finished once the program counter passes the last instruction. Anything remaining on the thread stack is pushed on the calling stack in ```join```
 
 ```
 > 7 {35 +} thread join
-42
-I64!
-```
-
-#### Fibers
-Any lambda may be registered as a fiber by calling ```fiber```, yielding from within a fiber transfers control to the next fiber waiting to run.
-
-```
-> func: foo {(yield 35 push)} fiber;
-  0 [7] foo foo iter &+ for
 42
 I64!
 ```
