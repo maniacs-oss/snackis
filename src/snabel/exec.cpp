@@ -341,7 +341,7 @@ namespace snabel {
     
     fiber_type.supers.push_back(&any_type);
     fiber_type.supers.push_back(&callable_type);
-    fiber_type.fmt = [](auto &v) { return fmt("#%0", get<Fiber *>(v)->id); };
+    fiber_type.fmt = [](auto &v) { return fmt("fiber(%0)", get<Fiber *>(v)->id); };
     fiber_type.eq = [](auto &x, auto &y) {
       return get<Fiber *>(x) == get<Fiber *>(y);
     };
@@ -353,9 +353,7 @@ namespace snabel {
 
     func_type.supers.push_back(&any_type);
     func_type.supers.push_back(&callable_type);
-    func_type.fmt = [](auto &v) {
-      return fmt("#%0", fmt_arg(size_t(get<Func *>(v))));
-    };
+    func_type.fmt = [](auto &v) { return fmt("func(%0)", get<Func *>(v)->name); };
     func_type.eq = [](auto &x, auto &y) { return get<Func *>(x) == get<Func *>(y); };
     
     func_type.call.emplace([](auto &scp, auto &v) {
@@ -384,7 +382,10 @@ namespace snabel {
     
     label_type.supers.push_back(&any_type);
     label_type.supers.push_back(&callable_type);
-    label_type.fmt = [](auto &v) { return get<Label *>(v)->tag; };
+    label_type.fmt = [](auto &v) {
+      auto &l(*get<Label *>(v));
+      return fmt("%0:%1", l.tag, l.pc);
+    };
 
     label_type.eq = [](auto &x, auto &y) {
       return get<Label *>(x) == get<Label *>(y);
@@ -400,7 +401,7 @@ namespace snabel {
 
     lambda_type.fmt = [](auto &v) {
       auto &l(*get<Label *>(v));
-      return fmt("%0:%1", l.tag, l.pc);
+      return fmt("lambda(%0:%1)", l.tag, l.pc);
     };
     
     lambda_type.eq = [](auto &x, auto &y) {
@@ -425,7 +426,7 @@ namespace snabel {
     rat_type.eq = [](auto &x, auto &y) { return get<Rat>(x) == get<Rat>(y); };
     
     thread_type.supers.push_back(&any_type);
-    thread_type.fmt = [](auto &v) { return fmt_arg(get<Thread *>(v)->id); };
+    thread_type.fmt = [](auto &v) { return fmt("thread_%0", get<Thread *>(v)->id); };
     thread_type.eq = [](auto &x, auto &y) {
       return get<Thread *>(x) == get<Thread *>(y);
     };
