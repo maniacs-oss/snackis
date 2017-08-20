@@ -5,8 +5,8 @@
 #include "snabel/thread.hpp"
 
 namespace snabel {
-  Coro::Coro(Thread &thread):
-    Frame(thread), fiber(nullptr)
+  Coro::Coro(Scope &scope):
+    Frame(scope), fiber(nullptr)
   { }
 
   Coro::~Coro() {

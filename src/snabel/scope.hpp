@@ -35,11 +35,13 @@ namespace snabel {
     const Scope &operator =(const Scope &) = delete;
   };
 
+  void restore_stack(Scope &scp, size_t len=1);
   Box *find_env(Scope &scp, const str &key);
   Box get_env(Scope &scp, const str &key);
   void put_env(Scope &scp, const str &key, const Box &val);
   bool rem_env(Scope &scp, const str &key);
   void reset_stack(Scope &scp);
+  Coro &add_coro(Scope &scp, Label &tgt);
   Coro *find_coro(Scope &scp, Label &tgt);
   void jump(Scope &scp, const Label &lbl);
   void call(Scope &scp, const Label &lbl);

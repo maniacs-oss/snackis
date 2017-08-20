@@ -112,20 +112,6 @@ I64!
 I64!
 ```
 
-### Fibers
-Any lambda may be registered as a fiber by calling ```fiber```, the original lambda is still there and still usable in other ways. Yielding from within a fiber transfers control to the next fiber waiting to run.
-
-```
-> let: acc 0;
-  func: foo {label: again @acc inc yield again};
-  let: fib foo fiber
-  fib call
-  foo
-  @acc
-2
-I64
-```
-
 ### Equality
 Two kinds of equality are supported, shallow and deep. Each use a separate operator, ```=``` for shallow comparisons and ```==``` for deep.
 
@@ -328,6 +314,16 @@ Starting a new thread copies the entire program, stack and environment to a sepa
 
 ```
 > 7 {35 +} thread join
+42
+I64!
+```
+
+#### Fibers
+Any lambda may be registered as a fiber by calling ```fiber```, yielding from within a fiber transfers control to the next fiber waiting to run.
+
+```
+> func: foo {(yield 35 push)} fiber;
+  0 [7] foo foo iter &+ for
 42
 I64!
 ```

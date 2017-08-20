@@ -424,6 +424,15 @@ namespace snabel {
     CHECK(get<Rat>(pop(exe.main)) == Rat(1, 1), _);
   }
   
+  static void fiber_tests() {
+    TRY(try_test);    
+    Exec exe;
+    run(exe,
+	"func: foo {(yield 35 push)} fiber;"
+	"0 [7] foo foo iter &+ for");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+  }
+  
   static void thread_tests() {
     TRY(try_test);    
     Exec exe;
@@ -450,6 +459,7 @@ namespace snabel {
     pair_tests();
     for_tests();
     rat_tests();
+    fiber_tests();
     thread_tests();
   }
 

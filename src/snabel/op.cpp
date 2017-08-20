@@ -620,12 +620,13 @@ namespace snabel {
 
   bool Lambda::run(Scope &scp) {
     auto &thd(scp.thread);
-    auto fnd(scp.coros.find(enter_label));
     Scope &new_scp(begin_scope(thd, true));
+    auto fnd(scp.coros.find(enter_label));
 
     if (fnd != scp.coros.end()) {
       auto &cor(fnd->second);
-      if (cor.pc != -1) { new_scp.thread.pc = cor.pc; }
+      if (cor.pc != -1) { thd.pc = cor.pc; }
+      if (cor.fiber) { new_scp.push_result = false; }
       std::copy(cor.stacks.begin(), cor.stacks.end(),
 		std::back_inserter(thd.stacks));
       for (auto &v: cor.env) { put_env(scp, v.first, v.second); }
@@ -784,7 +785,7 @@ namespace snabel {
   }
 
   bool Restore::run(Scope &scp) {
-    restore_stack(scp.thread);
+    restore_stack(scp);
     return true;
   }
 
@@ -816,20 +817,19 @@ namespace snabel {
   }
 
   bool Return::run(Scope &scp) {
-    auto &thd(scp.thread);
-
     if (scp.recalls.empty()) {
+      auto &thd(scp.thread);
+      auto &prev_scp(*std::next(thd.scopes.rbegin()));
       if (!end_scope(thd)) { return false; }
-      auto &ret_scp(curr_scope(thd));
       
-      if (ret_scp.return_pc == -1) {
+      if (prev_scp.return_pc == -1) {
 	ERROR(Snabel, "Missing return pc");
 	return false;
       }
 
-      thd.pc = ret_scp.return_pc;
-      ret_scp.return_pc = -1;
-      ret_scp.coros.erase(target);
+      thd.pc = prev_scp.return_pc;
+      prev_scp.return_pc = -1;
+      prev_scp.coros.erase(target);
     } else {
       recall_return(scp);
     }

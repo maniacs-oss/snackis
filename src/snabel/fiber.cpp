@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "snabel/fiber.hpp"
 #include "snabel/label.hpp"
 #include "snabel/scope.hpp"
@@ -5,16 +7,16 @@
 
 namespace snabel {
   Fiber::Fiber(Thread &thd, Id id, Label &tgt):
-    thread(thd), id(id), target(tgt)
+    thread(thd), id(id), target(tgt), coro(nullptr)
   { }
 
-  void init(Fiber &fib, Scope &scp) {
-    call(fib, scp);
-    fib.coro = find_coro(scp, fib.target);
-    if (fib.coro) { fib.coro->fiber = &fib; }
-  }
-  
-  void call(Fiber &fib, Scope &scp) {
+  bool call(Fiber &fib, Scope &scp) {
+    if (!fib.coro) {
+      fib.coro = &add_coro(scp, fib.target);
+      fib.coro->fiber = &fib;
+    }
+
     call(scp, fib.target);
+    return !fib.coro;
   }
 }

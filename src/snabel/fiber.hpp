@@ -2,8 +2,11 @@
 #define SNABEL_FIBER_HPP
 
 #include "snabel/sym.hpp"
+#include "snackis/core/opt.hpp"
 
 namespace snabel {
+  using namespace snackis;
+  
   struct Coro;
   struct Label;
   struct Scope;
@@ -16,12 +19,12 @@ namespace snabel {
     Id id;
     Label &target;
     Coro *coro;
-    
+      
     Fiber(Thread &thd, Id id, Label &tgt);
   };
 
   void init(Fiber &fib, Scope &scp);
-  void call(Fiber &fib, Scope &scp);
+  bool call(Fiber &fib, Scope &scp);
 }
 
 #endif

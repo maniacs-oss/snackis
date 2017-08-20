@@ -27,6 +27,22 @@ namespace snabel {
     for (auto &k: env_keys) { thread.env.erase(k); }
   }
 
+  void restore_stack(Scope &scp, size_t len) {
+    auto &thd(scp.thread);
+    CHECK(!thd.stacks.empty(), _);
+    auto prev(thd.stacks.back());
+    thd.stacks.pop_back();
+    CHECK(!thd.stacks.empty(), _);
+
+    if (len && (thd.stacks.size() > scp.stack_depth || scp.push_result)) {
+      std::copy((prev.size() <= len)
+		? prev.begin()
+		: std::next(prev.begin(), prev.size()-len),
+		prev.end(),
+		std::back_inserter(curr_stack(thd)));
+    }
+  }
+
   Box *find_env(Scope &scp, const str &key) {
     auto &env(scp.thread.env);
     auto fnd(env.find(key));
@@ -74,6 +90,12 @@ namespace snabel {
     reset_stack(scp.thread, scp.stack_depth, scp.push_result);
   }
 
+  Coro &add_coro(Scope &scp, Label &tgt) {
+    return scp.coros.emplace(std::piecewise_construct,
+			     std::forward_as_tuple(&tgt),
+			     std::forward_as_tuple(scp)).first->second;
+  }
+
   Coro *find_coro(Scope &scp, Label &tgt) {
     auto fnd(scp.coros.find(&tgt));
     if (fnd == scp.coros.end()) { return nullptr; }
@@ -87,7 +109,7 @@ namespace snabel {
       yield(scp, *lbl.yield_target);
     } else {      
       if (lbl.recall) {
-	auto &frm(scp.recalls.emplace_back(thd));
+	auto &frm(scp.recalls.emplace_back(scp));
 	refresh(frm, scp);
 	reset_stack(thd, scp.stack_depth, true);
       }
@@ -105,34 +127,18 @@ namespace snabel {
   bool yield(Scope &scp, Label &tgt) {
     Thread &thd(scp.thread);
     auto &prev_scp(*std::next(thd.scopes.rbegin()));
-    auto fnd(prev_scp.coros.find(&tgt));
-    
-    if (fnd == prev_scp.coros.end()) {
-      auto &cor(prev_scp.coros.emplace(std::piecewise_construct,
-				       std::forward_as_tuple(&tgt),
-				       std::forward_as_tuple(thd)).first->second);
-      refresh(cor, scp);
-      if (cor.fiber && scp.recalls.empty()) { scp.push_result = false; }
-    } else {
-      auto &cor(fnd->second);
-      refresh(cor, scp);
-      if (cor.fiber && scp.recalls.empty()) { scp.push_result = false; }
+    auto fnd(find_coro(prev_scp, tgt));
+    auto &cor(fnd ? *fnd : add_coro(prev_scp, tgt));
+    refresh(cor, scp);
+    if (!end_scope(thd)) { return false; }
+
+    if (prev_scp.return_pc == -1) {
+      ERROR(Snabel, "Missing return pc");
+      return false;
     }
     
-    if (scp.recalls.empty()) {
-      if (!end_scope(thd)) { return false; }
-      
-      if (prev_scp.return_pc == -1) {
-	ERROR(Snabel, "Missing return pc");
-	return false;
-      }
-
-      scp.thread.pc = prev_scp.return_pc;
-      prev_scp.return_pc = -1;
-    } else {
-      recall_return(scp);
-    }
-
+    thd.pc = prev_scp.return_pc;
+    prev_scp.return_pc = -1;
     return true;
   }
 

@@ -5,8 +5,8 @@
 #include "snabel/thread.hpp"
 
 namespace snabel {
-  Frame::Frame(Thread &thread):
-    thread(thread), pc(-1)
+  Frame::Frame(Scope &scope):
+    scope(scope), thread(scope.thread), pc(-1)
   { }
 
   Frame::~Frame() { }

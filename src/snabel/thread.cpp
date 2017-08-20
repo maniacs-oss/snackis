@@ -72,21 +72,6 @@ namespace snabel {
     return thd.stacks.emplace_back();
   }
   
-  void restore_stack(Thread &thd, size_t len) {
-    CHECK(!thd.stacks.empty(), _);
-    auto prev(thd.stacks.back());
-    thd.stacks.pop_back();
-    CHECK(!thd.stacks.empty(), _);
-
-    if (len) {
-      std::copy((prev.size() <= len)
-		? prev.begin()
-		: std::next(prev.begin(), prev.size()-len),
-		prev.end(),
-		std::back_inserter(curr_stack(thd)));
-    }
-  }
-
   void reset_stack(Thread &thd, int64_t depth, bool push_result) {
     if (thd.stacks.size() > depth) {
       opt<Box> last;

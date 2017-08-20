@@ -9,7 +9,7 @@ namespace snabel {
     Env env;
     Fiber* fiber;
     
-    Coro(Thread &thread);
+    Coro(Scope &scope);
     virtual ~Coro();
   };
 

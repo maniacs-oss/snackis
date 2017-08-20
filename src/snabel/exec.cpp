@@ -225,7 +225,6 @@ namespace snabel {
   static void fiber_imp(Scope &scp, const Args &args) {
     auto &thd(scp.thread);
     auto &f(add_fiber(thd, *get<Label *>(args.at(0))));
-    init(f, scp);
     push(thd, scp.exec.fiber_type, &f);
   }
 
