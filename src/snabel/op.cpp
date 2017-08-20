@@ -758,7 +758,7 @@ namespace snabel {
     return std::get<Reset>(op.data);
   }
 
-  bool Reset::compile(const Op &op, Scope &scp, OpSeq &out) {
+  bool Reset::finalize(const Op &op, Scope &scp, OpSeq &out) {
     for (auto i(out.rbegin()); i != out.rend(); i++) {
       if (i->imp.code == OP_BACKUP) {
 	get<Backup>(i->data).copy = false;

@@ -202,7 +202,7 @@ namespace snabel {
     Reset();
     OpImp &get_imp(Op &op) const override;
     bool run(Scope &scp) override;
-    bool compile(const Op &op, Scope &scp, OpSeq & out) override;
+    bool finalize(const Op &op, Scope &scp, OpSeq & out) override;
   };
 
   struct Restore: OpImp {
