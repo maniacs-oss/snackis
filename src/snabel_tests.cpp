@@ -252,16 +252,16 @@ namespace snabel {
     TRY(try_test);    
     Exec exe;
     
-    run(exe, "func: foo {7 yield 28 +}; foo foo +");
+    run(exe, "func: foo {|(7 yield 28 +)}; foo foo +");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
     run(exe,
-	"func: foo {let: bar 35; 7 yield @bar +}; "
+	"func: foo {|let: bar 35; 7 yield @bar +}; "
 	"foo foo");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
     run(exe,
-	"func: foo {[7 35] &yield for | &+}; "
+	"func: foo {|[7 35] &yield for &+}; "
 	"foo foo foo call");
 	CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }

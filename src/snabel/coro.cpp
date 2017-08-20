@@ -14,7 +14,7 @@ namespace snabel {
   }
   
   void refresh(Coro &cor, Scope &scp) {
-    refresh(dynamic_cast<Frame &>(cor), scp, scp.stack_depth);    
+    refresh(dynamic_cast<Frame &>(cor), scp);    
     refresh_env(cor, scp);
   }
 

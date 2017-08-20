@@ -67,7 +67,7 @@ Pair<I64 List<I64>>!
 ```
 
 ### Lambdas
-Wrapping code in braces pushes a pointer on the stack. Lambdas may be exited early by calling ```return```, the final result (if any) is pushed on exit. ```recall``` may be used to call the current lambda recursively.
+Wrapping code in braces pushes a pointer on the stack. Lambdas may be exited early by calling ```return```, the final result (if any) is pushed on exit. ```recall``` may be used to call the current lambda recursively. Use ```&return```/```&recall``` to get a call-target that performs the specified action when called.
 
 ```
 > {1 2 +}
@@ -93,20 +93,20 @@ I64!
 ```
 
 ### Coroutines
-Calling ```yield``` from within a lambda logs the current position, stack and environment before returning; execution will continue from the yielding position with restored stack and environment on next call from the same scope.
+Calling ```yield``` from within a lambda logs the current position, stack and environment before returning; execution will continue from the yielding position with restored stack and environment on next call from the same scope. Use ```&yield``` to get a call-target that yields when called.
 
 ```
-> func: foo {7 yield 28 +}
+> func: foo {|(7 yield 28 +)}
   foo foo +
 42
 I64!
 
-> func: foo {let: bar 35; 7 yield @bar +}
+> func: foo {|let: bar 35; 7 yield @bar +}
   foo foo
 42
 I64!
 
-> func: foo {[7 35] &yield for | &+}
+> func: foo {|[7 35] &yield for &+}
   foo foo foo call
 42
 I64!

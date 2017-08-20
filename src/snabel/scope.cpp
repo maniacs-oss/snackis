@@ -88,10 +88,10 @@ namespace snabel {
     } else {      
       if (lbl.recall) {
 	auto &frm(scp.recalls.emplace_back(thd));
-	refresh(frm, scp, thd.stacks.size()-scp.stack_depth-1);
+	refresh(frm, scp);
+	reset_stack(thd, scp.stack_depth, true);
       }
       
-      reset_stack(thd, scp.stack_depth+1, true);
       thd.pc = lbl.pc;
     }
   }
