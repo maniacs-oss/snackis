@@ -1055,8 +1055,8 @@ namespace snabel {
     return true;
   }
 
-  Yield::Yield():
-    OpImp(OP_YIELD, "yield"), target(nullptr)
+  Yield::Yield(int64_t depth):
+    OpImp(OP_YIELD, "yield"), depth(depth), target(nullptr)
   { }
 
   OpImp &Yield::get_imp(Op &op) const {
@@ -1077,7 +1077,7 @@ namespace snabel {
   }
 
   bool Yield::run(Scope &scp) {
-    return yield(scp, *target);
+    return yield(scp, *target, depth);
   }
 
   Op::Op(const Op &src):

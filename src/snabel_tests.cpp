@@ -453,6 +453,14 @@ namespace snabel {
 	"0 &foo result [-1] or "
 	"&+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+
+    run(exe,
+	"let: acc Str list; "
+	"func: ping {(label: reping; @acc 'ping' push yield reping)} fiber; "
+	"func: pong {(label: repong; @acc 'pong' push yield repong)} fiber; "
+	"let: fibs [&ping &pong]; "
+	"3 {@fibs { call } for} for");
+    CHECK(get<ListRef>(get_env(exe.main_scope, "@acc"))->size() == 6, _);
   }
   
   static void thread_tests() {

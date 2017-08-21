@@ -20,17 +20,12 @@ namespace snabel {
     OutStream buf;
     buf << '[';
     
-    if (lst.size() < 4) {
+    if (lst.size() < 100) {
       for (size_t i(0); i < lst.size(); i++) {
 	if (i > 0) { buf << ' '; }
 	auto &v(lst[i]);
 	buf << v.type->dump(v);
       };
-    } else {
-      buf <<
-	lst.front().type->dump(lst.front()) <<
-	"..." <<
-	lst.back().type->dump(lst.back());
     }
     
     buf << ']';
@@ -41,7 +36,7 @@ namespace snabel {
     OutStream buf;
     buf << '[';
     
-    if (lst.size() < 4) {
+    if (lst.size() < 100) {
       for (size_t i(0); i < lst.size(); i++) {
 	if (i > 0) { buf << ' '; }
 	auto &v(lst[i]);

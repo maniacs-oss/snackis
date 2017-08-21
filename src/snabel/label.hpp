@@ -15,7 +15,7 @@ namespace snabel {
     str tag;
     bool recall;
     Label *yield_target;
-    int64_t pc;
+    int64_t pc, yield_depth;
     
     Label(Exec &exe, const str &tag);
   };

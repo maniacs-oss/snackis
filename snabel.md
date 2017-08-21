@@ -345,6 +345,15 @@ I64!
   &+ for
 42
 I64!
+
+> let: acc Str list;
+  func: ping {(label: reping; @acc 'ping' push yield reping)} fiber;
+  func: pong {(label: repong; @acc 'pong' push yield repong)} fiber;
+  let: fibs [&ping &pong];
+  3 {@fibs { call } for} for
+  @acc
+['ping' 'pong' 'ping' 'pong 'ping' 'pong']
+List<Str>!
 ```
 
 ### Threads

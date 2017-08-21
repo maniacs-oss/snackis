@@ -106,7 +106,7 @@ namespace snabel {
     auto &thd(scp.thread);
     
     if (lbl.yield_target) {
-      yield(scp, *lbl.yield_target);
+      yield(scp, *lbl.yield_target, lbl.yield_depth);
     } else {      
       if (lbl.recall) {
 	auto &frm(scp.recalls.emplace_back(scp));
@@ -124,21 +124,26 @@ namespace snabel {
     jump(scp, lbl);
   }
 
-  bool yield(Scope &scp, Label &tgt) {
+  bool yield(Scope &scp, Label &tgt, int64_t depth) {
     Thread &thd(scp.thread);
-    auto &prev_scp(*std::next(thd.scopes.rbegin()));
-    auto fnd(find_coro(prev_scp, tgt));
-    auto &cor(fnd ? *fnd : add_coro(prev_scp, tgt));
-    refresh(cor, scp);
-    if (!end_scope(thd)) { return false; }
 
-    if (prev_scp.return_pc == -1) {
-      ERROR(Snabel, "Missing return pc");
-      return false;
+    while (depth) {
+      auto &prev_scp(*std::next(thd.scopes.rbegin()));
+      auto fnd(find_coro(prev_scp, tgt));
+      auto &cor(fnd ? *fnd : add_coro(prev_scp, tgt));
+      refresh(cor, scp);
+      if (!end_scope(thd)) { return false; }
+
+      if (prev_scp.return_pc == -1) {
+	ERROR(Snabel, "Missing return pc");
+	return false;
+      }
+    
+      thd.pc = prev_scp.return_pc;
+      prev_scp.return_pc = -1;
+      depth--;
     }
     
-    thd.pc = prev_scp.return_pc;
-    prev_scp.return_pc = -1;
     return true;
   }
 

@@ -775,7 +775,15 @@ namespace snabel {
       });
 
     add_macro(*this, "yield", [this](auto pos, auto &in, auto &out) {
-	out.emplace_back(Yield());
+	out.emplace_back(Yield(1));
+      });
+
+    add_macro(*this, "yield1", [this](auto pos, auto &in, auto &out) {
+	out.emplace_back(Yield(2));
+      });
+
+    add_macro(*this, "yield2", [this](auto pos, auto &in, auto &out) {
+	out.emplace_back(Yield(3));
       });
   }
 
