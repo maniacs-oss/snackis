@@ -16,13 +16,12 @@ namespace snabel {
   struct Fiber {
     using Id = Sym;
 
-    Thread &thread;
     Id id;
     Label &target;
     Coro *coro;
     opt<Box> result;
     
-    Fiber(Thread &thd, Id id, Label &tgt);
+    Fiber(Label &tgt);
   };
 
   void init(Fiber &fib, Scope &scp);

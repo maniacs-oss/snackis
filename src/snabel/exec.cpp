@@ -245,14 +245,13 @@ namespace snabel {
   }
 
   static void fiber_imp(Scope &scp, const Args &args) {
-    auto &thd(scp.thread);
-    auto &f(add_fiber(thd, *get<Label *>(args.at(0))));
-    push(thd, scp.exec.fiber_type, &f);
+    push(scp.thread, scp.exec.fiber_type,
+	 std::make_shared<Fiber>(*get<Label *>(args.at(0))));
   }
   
   static void fiber_result_imp(Scope &scp, const Args &args) {
     auto &thd(scp.thread);
-    auto &f(*get<Fiber *>(args.at(0)));
+    auto &f(*get<FiberRef>(args.at(0)));
     push(thd, make_opt(scp.exec, f.result));
   }
 
@@ -386,13 +385,13 @@ namespace snabel {
     
     fiber_type.supers.push_back(&any_type);
     fiber_type.supers.push_back(&callable_type);
-    fiber_type.fmt = [](auto &v) { return fmt("fiber(%0)", get<Fiber *>(v)->id); };
+    fiber_type.fmt = [](auto &v) { return fmt("fiber(%0)", get<FiberRef>(v)->id); };
     fiber_type.eq = [](auto &x, auto &y) {
-      return get<Fiber *>(x) == get<Fiber *>(y);
+      return get<FiberRef>(x) == get<FiberRef>(y);
     };
 
     fiber_type.call.emplace([](auto &scp, auto &v) {
-	call(*get<Fiber *>(v), scp);
+	call(*get<FiberRef>(v), scp);
 	return true;
       });
 
@@ -976,7 +975,7 @@ namespace snabel {
     auto &l(exe.labels
       .emplace(std::piecewise_construct,
 	       std::forward_as_tuple(tag),
-	       std::forward_as_tuple(tag))
+	       std::forward_as_tuple(exe, tag))
 	    .first->second);
     put_env(exe.main_scope, tag, Box(exe.label_type, &l));
     return l;

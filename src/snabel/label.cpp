@@ -1,7 +1,7 @@
 #include "snabel/label.hpp"
 
 namespace snabel {
-  Label::Label(const str &tag):
-    tag(tag), recall(false), yield_target(nullptr), pc(-1)
+  Label::Label(Exec &exe, const str &tag):
+    exec(exe), tag(tag), recall(false), yield_target(nullptr), pc(-1)
   { }
 }

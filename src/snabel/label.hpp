@@ -7,14 +7,17 @@
 
 namespace snabel {
   using namespace snackis;
+
+  struct Exec;
   
   struct Label {
+    Exec &exec;
     str tag;
     bool recall;
     Label *yield_target;
     int64_t pc;
     
-    Label(const str &tag);
+    Label(Exec &exe, const str &tag);
   };
 }
 

@@ -25,13 +25,14 @@ namespace snabel {
   using PairRef = std::shared_ptr<Pair>;
   using List = std::deque<Box>;
   using ListRef = std::shared_ptr<List>;
-
+  using FiberRef = std::shared_ptr<Fiber>;
+  
   struct Empty
   { };
   
   using Val = std::variant<Empty, bool, char, int64_t, Rat, str,
 			   PairRef, ListRef, Iter::Ref,
-			   Fiber *, Func *, Label *, Thread *, Type *>;
+			   FiberRef, Func *, Label *, Thread *, Type *>;
   
   struct Box {
     Type *type;
