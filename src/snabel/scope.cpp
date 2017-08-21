@@ -34,7 +34,7 @@ namespace snabel {
     thd.stacks.pop_back();
     CHECK(!thd.stacks.empty(), _);
 
-    if (len && (thd.stacks.size() > scp.stack_depth || scp.push_result)) {
+    if (len && ((thd.stacks.size() > scp.stack_depth) || scp.push_result)) {
       std::copy((prev.size() <= len)
 		? prev.begin()
 		: std::next(prev.begin(), prev.size()-len),

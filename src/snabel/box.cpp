@@ -2,11 +2,7 @@
 #include "snabel/exec.hpp"
 
 namespace snabel {
-  const Undef undef;
-
-  bool Undef::operator ()(const Box &box) const {
-    return box.val.index() == 0;
-  }
+  Empty empty_val;
 
   Box::Box(Type &t, const Val &v):
     type(&t), val(v)
@@ -70,6 +66,10 @@ namespace snabel {
   str pair_fmt(const Pair &pr) {
     auto &l(pr.first), &r(pr.second);
     return fmt("%0 %1.", l.type->fmt(l), r.type->fmt(r));
+  }
+
+  bool empty(const Box &b) {
+    return std::holds_alternative<Empty>(b.val);
   }
 }
 

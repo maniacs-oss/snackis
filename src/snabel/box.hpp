@@ -21,17 +21,15 @@ namespace snabel {
   struct Thread;
   struct Type;
 
-  struct Undef {
-    bool operator ()(const Box &box) const;
-  };
-
   using Pair = std::pair<Box, Box>;
   using PairRef = std::shared_ptr<Pair>;
   using List = std::deque<Box>;
   using ListRef = std::shared_ptr<List>;
 
-  using Val = std::variant<Undef,
-			   bool, char, int64_t, Rat, str,
+  struct Empty
+  { };
+  
+  using Val = std::variant<Empty, bool, char, int64_t, Rat, str,
 			   PairRef, ListRef, Iter::Ref,
 			   Fiber *, Func *, Label *, Thread *, Type *>;
   
@@ -43,26 +41,24 @@ namespace snabel {
   };
 
   using Stack = std::deque<Box>;
-
-  extern const Undef undef;
-
+  extern Empty empty_val;
+  
   bool operator ==(const Box &x, const Box &y);
   bool operator !=(const Box &x, const Box &y);
   str dump(const List &lst);
   str list_fmt(const List &lst);
   str dump(const Pair &pr);
   str pair_fmt(const Pair &pr);
+  bool empty(const Box &b);
   
   template <typename T>
   const T &get(const Box &b) {
-    CHECK(!undef(b), _);
     CHECK(std::holds_alternative<T>(b.val), _);
     return std::get<T>(b.val);
   }
 
   template <typename T>
   T &get(Box &b) {
-    CHECK(!undef(b), _);
     CHECK(std::holds_alternative<T>(b.val), _);
     return std::get<T>(b.val);
   }

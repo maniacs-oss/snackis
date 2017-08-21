@@ -50,8 +50,15 @@ namespace snabel {
     } else if (arg_type.type) {
       t = arg_type.type;
     } else {
-      t = args.at(args.size() - imp.args.size() + *arg_type.arg_idx).type;
-      if (arg_type.type_arg_idx) { t = t->args.at(*arg_type.type_arg_idx); }
+      t = args.at(*arg_type.arg_idx).type;
+      
+      if (arg_type.type_arg_idx) {
+	if (t->args.size() > *arg_type.type_arg_idx) {
+	  t = t->args.at(*arg_type.type_arg_idx);
+	} else {
+	  t = nullptr;
+	}
+      }
     }
     
     return t;
@@ -68,27 +75,26 @@ namespace snabel {
     auto &exe(thd.exec);
     auto &s(curr_stack(thd));
     if (s.size() < imp.args.size()) { return nullopt; }
-
-    Args args;
-    if (imp.args.empty()) { return args; }
-
+    Args in(std::next(s.begin(), s.size()-imp.args.size()), s.end());
+    if (imp.args.empty()) { return in; }
     auto i(s.rbegin());
     auto j(imp.args.rbegin());
+    Args out;
     
     while (i != s.rend() && j != imp.args.rend()) {
-      auto t(get_type(imp, *j, s));
       auto a(*i);
-
+      auto t(get_type(imp, *j, in));
+  
       if (!t || (!isa(a, *t) && (!conv_args || !conv(exe, a, *t)))) {
 	return nullopt;
       }
       
-      args.push_front(a);
+      out.push_front(a);      
       i++;
       j++;
     }
 
-    return args;
+    return out;
   }
   
   opt<std::pair<FuncImp *, Args>> match(Func &fn, const Thread &thd, bool conv_args) {

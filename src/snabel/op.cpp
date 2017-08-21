@@ -820,8 +820,14 @@ namespace snabel {
     if (scp.recalls.empty()) {
       auto &thd(scp.thread);
       auto &prev_scp(*std::next(thd.scopes.rbegin()));
-      if (!end_scope(thd)) { return false; }
+      auto cor(find_coro(prev_scp, *target));
+
+      if (cor && cor->fiber) {
+	auto v(peek(thd));
+	if (v) { cor->fiber->result.emplace(*v); }
+      }
       
+      if (!end_scope(thd)) { return false; }
       if (prev_scp.return_pc == -1) {
 	ERROR(Snabel, "Missing return pc");
 	return false;
@@ -851,11 +857,14 @@ namespace snabel {
     std::shared_ptr<List> lst(new List());
     lst->swap(curr_stack(thd));
 
-    Type *elt(lst->empty() ? &exe.any_type : lst->at(0).type);  
-    for (auto i(std::next(lst->begin())); i != lst->end() && elt; i++) {
-      elt = get_super(*elt, *i->type);
-    }
+    Type *elt(lst->empty() ? &exe.any_type : lst->at(0).type);
 
+    if (!lst->empty()) {
+      for (auto i(std::next(lst->begin())); i != lst->end() && elt; i++) {
+	elt = get_super(*elt, *i->type);
+      }
+    }
+    
     push(thd, Box(get_list_type(exe, elt ? *elt : exe.any_type), lst));
     return true;
   }

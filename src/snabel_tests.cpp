@@ -423,13 +423,28 @@ namespace snabel {
 	"10 {_ 3 *} for");
     CHECK(get<Rat>(pop(exe.main)) == Rat(1, 1), _);
   }
+
+  static void opt_tests() {
+    TRY(try_test);    
+    Exec exe;
+    run(exe, "#n/a 42 or");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+  }
   
   static void fiber_tests() {
     TRY(try_test);    
     Exec exe;
+    
     run(exe,
 	"func: foo {(yield 35 push)} fiber;"
 	"0 [7] foo foo iter &+ for");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+
+    run(exe,
+	"func: foo {(let: bar [] $1 push; @bar yield 35 push return)} fiber;"
+	"7 foo _ foo "
+	"0 &foo result [-1] or "
+	"&+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
   
@@ -459,6 +474,7 @@ namespace snabel {
     pair_tests();
     for_tests();
     rat_tests();
+    opt_tests();
     fiber_tests();
     thread_tests();
   }

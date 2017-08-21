@@ -109,6 +109,17 @@ namespace snabel {
     push(scp.thread, scp.exec.rat_type, x/y);
   }
 
+  static void opt_or(Scope &scp, const Args &args) {
+    auto &in(args.at(0));
+    auto &alt(args.at(1));
+
+    if (empty(in)) {
+      push(scp.thread, alt);
+    } else {
+      push(scp.thread, *in.type->args.at(0), in.val);
+    }
+  }
+
   static void iter_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
     auto it((*in.type->iter)(in));
@@ -227,6 +238,12 @@ namespace snabel {
     auto &f(add_fiber(thd, *get<Label *>(args.at(0))));
     push(thd, scp.exec.fiber_type, &f);
   }
+  
+  static void fiber_result_imp(Scope &scp, const Args &args) {
+    auto &thd(scp.thread);
+    auto &f(*get<Fiber *>(args.at(0)));
+    push(thd, make_opt(scp.exec, f.result));
+  }
 
   static void thread_imp(Scope &scp, const Args &args) {
     auto &t(start_thread(scp, args.at(0)));
@@ -255,11 +272,11 @@ namespace snabel {
     label_type(add_type(*this, "Label")),
     lambda_type(add_type(*this, "Lambda")),
     list_type(add_type(*this, "List")),
+    opt_type(add_type(*this, "Opt")),
     pair_type(add_type(*this, "Pair")),
     rat_type(add_type(*this, "Rat")),
     str_type(add_type(*this, "Str")),
     thread_type(add_type(*this, "Thread")),
-    undef_type(add_type(*this, "Undef")),
     void_type(add_type(*this, "Void")),
     next_gensym(1)
   {    
@@ -271,12 +288,30 @@ namespace snabel {
     meta_type.fmt = [](auto &v) { return get<Type *>(v)->name; };
     meta_type.eq = [](auto &x, auto &y) { return get<Type *>(x) == get<Type *>(y); };
 
-    undef_type.fmt = [](auto &v) { return "n/a"; };
-    undef_type.eq = [](auto &x, auto &y) { return true; };
-    put_env(main_scope, "#undef", Box(undef_type, undef));
-    
     void_type.fmt = [](auto &v) { return "n/a"; };
     void_type.eq = [](auto &x, auto &y) { return true; };  
+
+    opt_type.supers.push_back(&any_type);
+    opt_type.args.push_back(&any_type);
+    opt_type.dump = [](auto &v) -> str {
+      if (empty(v)) { return "#n/a"; }
+      return v.type->args.at(0)->dump(v);
+    };
+    opt_type.fmt = [](auto &v) -> str {
+      if (empty(v)) { return "#n/a"; }
+      return v.type->args.at(0)->fmt(v);
+    };    
+    opt_type.eq = [](auto &x, auto &y) {
+      if (empty(x) && !empty(y)) { return true; }
+      if (!empty(x) || !empty(y)) { return false; }
+      return x.type->eq(x, y);
+    };
+    opt_type.equal = [](auto &x, auto &y) {
+      if (empty(x) && !empty(y)) { return true; }
+      if (!empty(x) || !empty(y)) { return false; }
+      return x.type->equal(x, y);
+    };
+    put_env(main_scope, "#n/a", Box(opt_type, empty_val));
 
     callable_type.supers.push_back(&any_type);
     callable_type.args.push_back(&any_type);
@@ -502,6 +537,12 @@ namespace snabel {
 	     {ArgType(rat_type), ArgType(rat_type)}, {ArgType(rat_type)},
 	     div_rat_imp);
 
+    add_func(*this, "or",
+	     {ArgType(opt_type),
+		 ArgType([](auto &args) { return args.at(0).type->args.at(0); })},
+	     {ArgType([](auto &args) { return args.at(0).type->args.at(0); })},
+	     opt_or);
+
     add_func(*this, "iter",
 	     {ArgType(iterable_type)},
 	     {ArgType([this](auto &args) { 
@@ -572,6 +613,10 @@ namespace snabel {
     add_func(*this, "fiber",
 	     {ArgType(lambda_type)}, {ArgType(fiber_type)},
 	     fiber_imp);
+
+    add_func(*this, "result",
+	     {ArgType(fiber_type)}, {ArgType(opt_type)},
+	     fiber_result_imp);
 
     add_func(*this, "thread",
 	     {ArgType(callable_type)}, {ArgType(thread_type)},
@@ -769,7 +814,23 @@ namespace snabel {
     ERROR(Snabel, fmt("Invalid type: %1", raw.name));
     return raw;
   }
-  
+
+  Type &get_opt_type(Exec &exe, Type &elt) {    
+    str n(fmt("Opt<%0>", elt.name));
+    auto fnd(find_type(exe, n));
+    if (fnd) { return *fnd; }
+    auto &t(add_type(exe, n));
+    t.raw = &exe.opt_type;
+    t.supers.push_back(&exe.any_type);
+    t.supers.push_back(&exe.opt_type);
+    t.args.push_back(&elt);
+    t.fmt = exe.opt_type.fmt;
+    t.dump = exe.opt_type.dump;
+    t.eq = exe.opt_type.eq;
+    t.equal = exe.opt_type.equal;
+    return t;
+  }
+
   Type &get_iter_type(Exec &exe, Type &elt) {    
     str n(fmt("Iter<%0>", elt.name));
     auto fnd(find_type(exe, n));
@@ -927,6 +988,12 @@ namespace snabel {
 
   Sym gensym(Exec &exe) {
     return exe.next_gensym.fetch_add(1);
+  }
+
+  Box make_opt(Exec &exe, opt<Box> in) {
+    return in
+      ? Box(get_opt_type(exe, *in->type), in->val)
+      : Box(exe.opt_type, empty_val);
   }
 
   void rewind(Exec &exe) {

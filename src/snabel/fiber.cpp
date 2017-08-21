@@ -14,6 +14,7 @@ namespace snabel {
     if (!fib.coro) {
       fib.coro = &add_coro(scp, fib.target);
       fib.coro->fiber = &fib;
+      fib.result.reset();
     }
 
     call(scp, fib.target);

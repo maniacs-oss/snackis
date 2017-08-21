@@ -32,8 +32,8 @@ namespace snabel {
     Type meta_type;
     Type &any_type, &bool_type, &callable_type, &char_type, &fiber_type, &func_type,
       &i64_type, &iter_type, &iterable_type, &label_type, &lambda_type, &list_type,
-      &pair_type, &rat_type, &str_type, &thread_type,
-      &undef_type, &void_type;
+      &opt_type, &pair_type, &rat_type, &str_type, &thread_type,
+      &void_type;
     std::atomic<Sym> next_gensym;
     
     Exec();
@@ -47,6 +47,7 @@ namespace snabel {
   Type &add_type(Exec &exe, const str &n);
   Type *find_type(Exec &exe, const str &n);
   Type &get_type(Exec &exe, Type &raw, Types args);
+  Type &get_opt_type(Exec &exe, Type &elt);
   Type &get_iter_type(Exec &exe, Type &elt);
   Type &get_iterable_type(Exec &exe, Type &elt);
   Type &get_list_type(Exec &exe, Type &elt);
@@ -66,6 +67,7 @@ namespace snabel {
   bool conv(Exec &exe, Box &val, Type &type);
 
   Sym gensym(Exec &exe);
+  Box make_opt(Exec &exe, opt<Box> in);
 
   void rewind(Exec &exe);  
   bool compile(Exec &exe, const str &in);

@@ -309,12 +309,28 @@ add_func(exe, "+",
 	 add_i64);
 ```
 
+### Optionals
+Optional values are supported through the ```Opt<T>```-type. The empty value is named ```#n/a``` and values may be wrapped using ```or```.
+
+```
+> #n/a 42 or
+42
+I64!
+```
+
 ### Fibers
-Any lambda may be registered as a fiber by calling ```fiber```. Fibers allow interleaving multiple cooperative processes in the same thread. Yielding from within a fiber transfers control to the next fiber waiting to run.
+Any lambda may be treated as a fiber using ```fiber```. Fibers allow interleaving multiple cooperative computations in the same thread and optionally collecting their results. Adding an initial yield allows catching the stack and/or environment by calling the fiber. Fibers provide reference semantics, the same fiber may shared between threads as long as it's only run from one thread at a time.
 
 ```
 > func: foo {(yield 35 push)} fiber;
-  0 [7] foo foo iter &+ for
+  0 [7] foo foo &+ for
+42
+I64!
+
+> func: foo {(let: bar [] $1 push; @bar yield 35 push return)} fiber;
+  7 foo _ foo
+  0 &foo result [-1] or
+  &+ for
 42
 I64!
 ```
