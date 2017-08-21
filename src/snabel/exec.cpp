@@ -109,7 +109,12 @@ namespace snabel {
     push(scp.thread, scp.exec.rat_type, x/y);
   }
 
-  static void opt_or(Scope &scp, const Args &args) {
+  static void opt_imp(Scope &scp, const Args &args) {
+    auto &in(args.at(0));
+    push(scp.thread, get_opt_type(scp.exec, *in.type), in.val);
+  }
+
+  static void opt_or_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
     auto &alt(args.at(1));
 
@@ -118,6 +123,12 @@ namespace snabel {
     } else {
       push(scp.thread, *in.type->args.at(0), in.val);
     }
+  }
+
+  static void opt_or_opt_imp(Scope &scp, const Args &args) {
+    auto &in(args.at(0));
+    auto &alt(args.at(1));
+    push(scp.thread, empty(in) ? alt : in);
   }
 
   static void iter_imp(Scope &scp, const Args &args) {
@@ -537,11 +548,22 @@ namespace snabel {
 	     {ArgType(rat_type), ArgType(rat_type)}, {ArgType(rat_type)},
 	     div_rat_imp);
 
+    add_func(*this, "opt",
+	     {ArgType(any_type)},
+	     {ArgType([this](auto &args) {
+		   return &get_opt_type(*this, *args.at(0).type);
+		 })},
+	     opt_imp);
+
     add_func(*this, "or",
 	     {ArgType(opt_type),
 		 ArgType([](auto &args) { return args.at(0).type->args.at(0); })},
 	     {ArgType([](auto &args) { return args.at(0).type->args.at(0); })},
-	     opt_or);
+	     opt_or_imp);
+
+    add_func(*this, "or",
+	     {ArgType(opt_type), ArgType(0)}, {ArgType(0)},
+	     opt_or_opt_imp);
 
     add_func(*this, "iter",
 	     {ArgType(iterable_type)},

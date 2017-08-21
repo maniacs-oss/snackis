@@ -313,9 +313,21 @@ add_func(exe, "+",
 Optional values are supported through the ```Opt<T>```-type. The empty value is named ```#n/a``` and values may be wrapped using ```or```.
 
 ```
+> 42 opt
+42
+Opt<I64>!
+
 > #n/a 42 or
 42
 I64!
+
+> #n/a 42 opt or
+42
+Opt<I64>!
+
+> 7 opt 42 opt or
+7
+Opt<I64>!
 ```
 
 ### Fibers

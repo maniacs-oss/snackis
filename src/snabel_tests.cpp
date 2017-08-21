@@ -427,8 +427,15 @@ namespace snabel {
   static void opt_tests() {
     TRY(try_test);    
     Exec exe;
+
+    run(exe, "42 opt");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+
     run(exe, "#n/a 42 or");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+
+    run(exe, "7 opt 42 opt or");
+    CHECK(get<int64_t>(pop(exe.main)) == 7, _);
   }
   
   static void fiber_tests() {
