@@ -264,6 +264,17 @@ namespace snabel {
 	"func: foo {|[7 35] &yield for &+}; "
 	"foo foo foo call");
 	CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+
+    run(exe,
+	"let: acc I64 list; "
+
+	"func: foo {( "
+	"  7 {@acc $1 push yield1} for "
+	")}; "
+
+	"7 &foo for "
+	"0 @acc &+ for");
+    CHECK(get<int64_t>(pop(exe.main)) == 21, _);
   }
   
   static void when_tests() {

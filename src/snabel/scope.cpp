@@ -130,29 +130,35 @@ namespace snabel {
 
   bool yield(Scope &scp, int64_t depth) {
     Thread &thd(scp.thread);
-
-    while (depth && thd.scopes.size() > 1) {
-      auto &curr_scp(thd.scopes.back());
-      auto &prev_scp(*std::next(thd.scopes.rbegin()));
-      
-      if (!curr_scp.target) {
-	ERROR(Snabel, "Missing yield target");
-	return false;
-      }
-
-      auto fnd(find_coro(prev_scp, *curr_scp.target));
-      auto &cor(fnd ? *fnd : add_coro(prev_scp, *curr_scp.target));
-      refresh(cor, curr_scp);
-      if (!end_scope(thd)) { return false; }
-
-      if (prev_scp.return_pc == -1) {
-	ERROR(Snabel, "Missing return pc");
-	return false;
-      }
+    bool dec_pc(false);
     
+    while (depth && thd.scopes.size() > 1) {
+      depth--;
+      auto &prev_scp(*std::next(thd.scopes.rbegin()));
+
+      if (!depth) {
+	auto &curr_scp(thd.scopes.back());
+	
+	if (!curr_scp.target) {
+	  ERROR(Snabel, "Missing yield target");
+	  return false;
+	}
+	
+	auto fnd(find_coro(prev_scp, *curr_scp.target));
+	auto &cor(fnd ? *fnd : add_coro(prev_scp, *curr_scp.target));
+	refresh(cor, curr_scp);
+	if (dec_pc) { cor.pc--; }
+	
+	if (prev_scp.return_pc == -1) {
+	  ERROR(Snabel, "Missing return pc");
+	  return false;
+	}	
+      }
+
+      dec_pc = true;
       thd.pc = prev_scp.return_pc;
       prev_scp.return_pc = -1;
-      depth--;
+      if (!end_scope(thd)) { return false; }
     }
     
     return true;
