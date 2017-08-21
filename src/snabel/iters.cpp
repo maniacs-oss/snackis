@@ -4,6 +4,37 @@
 #include "snabel/type.hpp"
 
 namespace snabel {
+  FilterIter::FilterIter(Exec &exe, const Iter::Ref &in, Type &elt, const Box &tgt):
+    Iter(exe, get_iter_type(exe, elt)),
+    in(in), target(tgt)
+  { }
+  
+  opt<Box> FilterIter::next(Scope &scp) {
+    auto &thd(scp.thread);
+
+    while (true) {
+      auto x(in->next(scp));
+      if (!x) { return nullopt; }
+      push(thd, *x);
+      (*target.type->call)(scp, target);
+      auto out(peek(thd));
+      
+      if (!out) {
+	ERROR(Snabel, "Filter iterator target failed");
+	return nullopt;
+      }
+      
+      if (out->type != &scp.exec.bool_type) {
+	ERROR(Snabel, fmt("Invalid filter target result: %0", *out));
+	return nullopt;
+      }
+      
+      if (get<bool>(*out)) { return *x; }
+    }
+    
+    return nullopt;
+  }
+
   MapIter::MapIter(Exec &exe, const Iter::Ref &in, Type &elt, const Box &tgt):
     Iter(exe, get_iter_type(exe, elt)),
     in(in), target(tgt)

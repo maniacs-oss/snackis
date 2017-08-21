@@ -329,6 +329,12 @@ namespace snabel {
 
     run(exe, "[1 2 3] ['foo' 'bar'] zip list");
     CHECK(get<ListRef>(pop(exe.main))->size() == 2, _);
+
+    run(exe, "[1 2 3] {7 *} map &+ for");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+
+    run(exe, "'abcabcabc' {\\a =} filter str");
+    CHECK(get<str>(pop(exe.main)) == "aaa", _);
   }
   
   static void list_tests() {

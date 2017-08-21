@@ -138,6 +138,20 @@ namespace snabel {
     push(scp.thread, it->type, it);
   }
 
+  static void iterable_str_imp(Scope &scp, const Args &args) {    
+    auto &in(args.at(0));
+    auto it((*in.type->iter)(in));
+    str out;
+    
+    while (true) {
+      auto c(it->next(scp));
+      if (!c) { break; }
+      out.push_back(get<char>(*c));
+    }
+    
+    push(scp.thread, scp.exec.str_type, out); 
+  }
+
   static void iterable_join_imp(Scope &scp, const Args &args) {    
     auto &in(args.at(0));
     auto it((*in.type->iter)(in));
@@ -168,6 +182,17 @@ namespace snabel {
     }
     
     push(scp.thread, get_list_type(scp.exec, *it->type.args.at(0)), out); 
+  }
+
+  static void iterable_filter_imp(Scope &scp, const Args &args) {
+    auto &exe(scp.exec);
+    auto &in(args.at(0)), &tgt(args.at(1));
+    auto it((*in.type->iter)(in));
+    auto &elt(*it->type.args.at(0));
+    
+    push(scp.thread,
+	 get_iter_type(exe, elt),
+	 Iter::Ref(new FilterIter(exe, it, elt, tgt)));
   }
 
   static void iterable_map_imp(Scope &scp, const Args &args) {
@@ -585,6 +610,11 @@ namespace snabel {
 		 })},
 	     iter_imp);
 
+    add_func(*this, "str",
+	     {ArgType(get_iterable_type(*this, char_type))},
+	     {ArgType(str_type)},
+	     iterable_str_imp);
+
     add_func(*this, "join",
 	     {ArgType(iterable_type), ArgType(any_type)}, {ArgType(str_type)},
 	     iterable_join_imp);
@@ -606,6 +636,13 @@ namespace snabel {
 		 })},			
 	     iterable_zip_imp);
 
+    add_func(*this, "filter",
+	     {ArgType(iterable_type), ArgType(callable_type)},
+	     {ArgType([this](auto &args) {
+		   return &get_iter_type(*this, *args.at(0).type->args.at(0));
+		 })},			
+	     iterable_filter_imp);
+
     add_func(*this, "map",
 	     {ArgType(iterable_type), ArgType(callable_type)},
 	     {ArgType([this](auto &args) {
@@ -619,6 +656,7 @@ namespace snabel {
 		   return &get_list_type(*this, *args.at(0).type);
 		 })},
 	     list_imp);
+    
     add_func(*this, "push",
 	     {ArgType(list_type), ArgType(0, 0)}, {ArgType(0)},
 	     list_push_imp);

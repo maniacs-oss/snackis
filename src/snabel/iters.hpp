@@ -12,6 +12,14 @@ namespace snabel {
   struct Scope;
   struct Type;
   
+  struct FilterIter: Iter {
+    Iter::Ref in;
+    Box target;
+    
+    FilterIter(Exec &exe, const Iter::Ref &in, Type &elt, const Box &tgt);
+    opt<Box> next(Scope &scp) override;
+  };
+
   struct MapIter: Iter {
     Iter::Ref in;
     Box target;

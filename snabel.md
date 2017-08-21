@@ -278,6 +278,14 @@ Str!
 > let: foo 'bar' iter; @foo list
 [\b \a \r]
 List<Char>!
+
+> [1 2 3] {7 *} map list
+[7 14 27]
+List<I64>!
+
+> 'abcabcabc' {\a =} filter str
+"aaa"
+Str!
 ```
 
 #### Loops
@@ -295,10 +303,6 @@ I64!
 > 'foo' &nop for $ \- join
 'f-o-o'
 Str!
-
-> [1 2 3] {7 *} map list
-[7 14 27]
-List<I64>!
 ```
 
 ### Functions
