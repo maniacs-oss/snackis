@@ -448,8 +448,10 @@ namespace snabel {
     };
 
     label_type.call.emplace([](auto &scp, auto &v) {
+	auto &thd(scp.thread);
+	auto break_pc(thd.pc);
 	jump(scp, *get<Label *>(v));
-	return true;
+	return run(thd, break_pc);
       });
 
     lambda_type.supers.push_back(&any_type);
