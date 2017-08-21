@@ -296,7 +296,13 @@ I64!
 'f-o-o'
 Str!
 
-> func: map {let fn; _ ({@fn call yield _} for)|};
+> func: map {
+    let: fn; _
+    let: in; _
+    (@in {@fn call yield1 _} for)
+  };
+  
+  [1 2 3] {inc} map map $
 ```
 
 ### Functions

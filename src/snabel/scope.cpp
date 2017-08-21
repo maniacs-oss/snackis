@@ -131,7 +131,7 @@ namespace snabel {
       auto &prev_scp(*std::next(thd.scopes.rbegin()));
       auto fnd(find_coro(prev_scp, tgt));
       auto &cor(fnd ? *fnd : add_coro(prev_scp, tgt));
-      refresh(cor, scp);
+      refresh(cor, thd.scopes.back());
       if (!end_scope(thd)) { return false; }
 
       if (prev_scp.return_pc == -1) {
