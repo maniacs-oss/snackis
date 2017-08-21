@@ -708,7 +708,6 @@ namespace snabel {
 	  return;
 	}
 
-	out.emplace_back(Backup(true));
 	const str tag(in.at(0).text);
 	in.pop_front();
 

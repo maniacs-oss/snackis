@@ -295,6 +295,8 @@ I64!
 > 'foo' &nop for $ \- join
 'f-o-o'
 Str!
+
+> func: map {let fn; _ ({@fn call yield _} for)|};
 ```
 
 ### Functions
