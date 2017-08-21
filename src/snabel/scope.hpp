@@ -21,7 +21,8 @@ namespace snabel {
     Thread &thread;
     Exec &exec;
     opt<Fiber *> fiber;
-    
+
+    Label *target;
     int64_t stack_depth, return_pc;
     bool push_result;
 
@@ -45,7 +46,7 @@ namespace snabel {
   Coro *find_coro(Scope &scp, Label &tgt);
   void jump(Scope &scp, const Label &lbl);
   void call(Scope &scp, const Label &lbl);
-  bool yield(Scope &scp, Label &tgt, int64_t depth);
+  bool yield(Scope &scp, int64_t depth);
   void recall_return(Scope &scp);
 
   Thread &start_thread(Scope &scp, const Box &init);

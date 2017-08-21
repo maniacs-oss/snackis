@@ -2,6 +2,6 @@
 
 namespace snabel {
   Label::Label(Exec &exe, const str &tag):
-    exec(exe), tag(tag), recall(false), yield_target(nullptr), pc(-1), yield_depth(1)
+    exec(exe), tag(tag), recall(false), pc(-1), yield_depth(0)
   { }
 }

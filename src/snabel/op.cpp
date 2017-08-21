@@ -601,7 +601,7 @@ namespace snabel {
 
     if (yields && !yield_label) {
       yield_label = &add_label(exe, fmt("_yield%0", tag));
-      yield_label->yield_target = enter_label;
+      yield_label->yield_depth = 1;
       changed = true;
     }
     
@@ -621,6 +621,7 @@ namespace snabel {
   bool Lambda::run(Scope &scp) {
     auto &thd(scp.thread);
     Scope &new_scp(begin_scope(thd, true));
+    new_scp.target = enter_label;
     auto fnd(scp.coros.find(enter_label));
 
     if (fnd != scp.coros.end()) {
@@ -1056,28 +1057,17 @@ namespace snabel {
   }
 
   Yield::Yield(int64_t depth):
-    OpImp(OP_YIELD, "yield"), depth(depth), target(nullptr)
+    OpImp(OP_YIELD, "yield"), depth(depth)
   { }
 
   OpImp &Yield::get_imp(Op &op) const {
     return std::get<Yield>(op.data);
   }
 
-  bool Yield::refresh(Scope &scp) {
-    auto &exe(scp.exec);
-
-    if (exe.lambdas.empty()) {
-      ERROR(Snabel, "Missing lambda");
-      return false;
-    }
-    
-    auto &l(*exe.lambdas.back());
-    target = l.enter_label;
-    return false;
-  }
+  str Yield::info() const { return fmt_arg(depth); }
 
   bool Yield::run(Scope &scp) {
-    return yield(scp, *target, depth);
+    return yield(scp, depth);
   }
 
   Op::Op(const Op &src):

@@ -8,6 +8,7 @@ namespace snabel {
   Scope::Scope(Thread &thd):
     thread(thd),
     exec(thread.exec),
+    target(nullptr),
     stack_depth(thread.stacks.size()),
     return_pc(-1),
     push_result(true)
@@ -16,6 +17,7 @@ namespace snabel {
   Scope::Scope(const Scope &src):
     thread(src.thread),
     exec(src.exec),
+    target(nullptr),
     stack_depth(thread.stacks.size()),
     return_pc(-1),
     push_result(true),
@@ -105,8 +107,8 @@ namespace snabel {
   void jump(Scope &scp, const Label &lbl) {
     auto &thd(scp.thread);
     
-    if (lbl.yield_target) {
-      yield(scp, *lbl.yield_target, lbl.yield_depth);
+    if (lbl.yield_depth) {
+      yield(scp, lbl.yield_depth);
     } else {      
       if (lbl.recall) {
 	auto &frm(scp.recalls.emplace_back(scp));
@@ -124,14 +126,21 @@ namespace snabel {
     jump(scp, lbl);
   }
 
-  bool yield(Scope &scp, Label &tgt, int64_t depth) {
+  bool yield(Scope &scp, int64_t depth) {
     Thread &thd(scp.thread);
 
-    while (depth) {
+    while (depth && thd.scopes.size() > 1) {
+      auto &curr_scp(thd.scopes.back());
       auto &prev_scp(*std::next(thd.scopes.rbegin()));
-      auto fnd(find_coro(prev_scp, tgt));
-      auto &cor(fnd ? *fnd : add_coro(prev_scp, tgt));
-      refresh(cor, thd.scopes.back());
+      
+      if (!curr_scp.target) {
+	ERROR(Snabel, "Missing yield target");
+	return false;
+      }
+
+      auto fnd(find_coro(prev_scp, *curr_scp.target));
+      auto &cor(fnd ? *fnd : add_coro(prev_scp, *curr_scp.target));
+      refresh(cor, curr_scp);
       if (!end_scope(thd)) { return false; }
 
       if (prev_scp.return_pc == -1) {

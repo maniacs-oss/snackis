@@ -268,11 +268,10 @@ namespace snabel {
   
   struct Yield: OpImp {
     int64_t depth;
-    Label *target;
     
     Yield(int64_t depth);
     OpImp &get_imp(Op &op) const override;
-    bool refresh(Scope &scp) override;
+    str info() const override;    
     bool run(Scope &scp) override;
   };
 
