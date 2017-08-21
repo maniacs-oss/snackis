@@ -12,7 +12,7 @@ namespace snabel {
     size_t i;
     
     StrIter(Exec &exe, const str &in);
-    opt<Box> next() override;
+    opt<Box> next(Scope &scp) override;
   };
 }
 

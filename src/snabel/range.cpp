@@ -11,7 +11,7 @@ namespace snabel {
     Iter(exe, get_iter_type(exe, exe.i64_type)), in(in)
   { }
   
-  opt<Box> RangeIter::next() {
+  opt<Box> RangeIter::next(Scope &scp) {
     if (in.beg == in.end) { return nullopt; }
     auto res(in.beg);
     in.beg++;

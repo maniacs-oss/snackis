@@ -25,7 +25,7 @@ namespace snabel {
   };
 
   void init(Fiber &fib, Scope &scp);
-  bool call(Fiber &fib, Scope &scp);
+  bool call(Fiber &fib, Scope &scp, bool now=false);
 }
 
 #endif

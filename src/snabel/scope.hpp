@@ -45,7 +45,7 @@ namespace snabel {
   Coro &add_coro(Scope &scp, Label &tgt);
   Coro *find_coro(Scope &scp, Label &tgt);
   void jump(Scope &scp, const Label &lbl);
-  void call(Scope &scp, const Label &lbl);
+  void call(Scope &scp, const Label &lbl, bool now=false);
   bool yield(Scope &scp, int64_t depth);
   void recall_return(Scope &scp);
 

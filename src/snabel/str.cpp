@@ -6,7 +6,7 @@ namespace snabel {
     Iter(exe, get_iter_type(exe, exe.char_type)), in(in), i(0)
   { }
   
-  opt<Box> StrIter::next(){
+  opt<Box> StrIter::next(Scope &scp){
     if (i == in.size()) { return nullopt; }
     auto res(in[i]);
     i++;

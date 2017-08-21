@@ -15,7 +15,7 @@ namespace snabel {
     opt<Fn> fn;
     
     ListIter(Exec &exe, Type &elt, const ListRef &in, opt<Fn> fn=nullopt);
-    opt<Box> next() override;
+    opt<Box> next(Scope &scp) override;
   };
 }
 

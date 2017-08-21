@@ -9,6 +9,7 @@ namespace snabel {
   
   struct Box;
   struct Exec;
+  struct Scope;
   struct Type;
   
   struct Iter {
@@ -18,15 +19,8 @@ namespace snabel {
     Type &type;
     
     Iter(Exec &exec, Type &type);
-    virtual opt<Box> next() = 0;
+    virtual opt<Box> next(Scope &scp) = 0;
   };  
-
-  struct ZipIter: Iter {
-    Iter::Ref xin, yin;
-    
-    ZipIter(Exec &exe, const Iter::Ref &xin, const Iter::Ref &yin);
-    opt<Box> next() override;
-  };
 }
 
 #endif

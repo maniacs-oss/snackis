@@ -11,14 +11,14 @@ namespace snabel {
     id(gensym(tgt.exec)), target(tgt), coro(nullptr)
   { }
 
-  bool call(Fiber &fib, Scope &scp) {
+  bool call(Fiber &fib, Scope &scp, bool now) {
     if (!fib.coro) {
       fib.coro = &add_coro(scp, fib.target);
       fib.coro->fiber = &fib;
       fib.result.reset();
     }
 
-    call(scp, fib.target);
+    call(scp, fib.target, now);
     return !fib.coro;
   }
 }

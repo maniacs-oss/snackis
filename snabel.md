@@ -295,6 +295,10 @@ I64!
 > 'foo' &nop for $ \- join
 'f-o-o'
 Str!
+
+> [1 2 3] {7 *} map list
+[7 14 27]
+List<I64>!
 ```
 
 ### Functions

@@ -324,9 +324,6 @@ namespace snabel {
     run(exe, "7 iter 7 iter =");
     CHECK(!get<bool>(pop(exe.main)), _);
 
-    run(exe, "7 iter 7 iter ==");
-    CHECK(get<bool>(pop(exe.main)), _);
-
     run(exe, "7 list");
     CHECK(get<ListRef>(pop(exe.main))->size() == 7, _);
 

@@ -105,10 +105,8 @@ namespace snabel {
     thd.exec.threads.erase(thd.id);
   }
 
-  bool run(Thread &thd, bool scope) {
-    if (scope) { begin_scope(thd, true); }
-    
-    while (thd.pc < thd.ops.size()) {
+  bool run(Thread &thd, int64_t break_pc) {
+    while (thd.pc < thd.ops.size() && thd.pc != break_pc) {
       auto &op(thd.ops[thd.pc]);
       auto prev_pc(thd.pc);
 
@@ -122,5 +120,10 @@ namespace snabel {
     }
 
     return true;
+  }
+
+  bool run(Thread &thd) {
+    begin_scope(thd, true);
+    return run(thd, -1);
   }
 }

@@ -120,10 +120,12 @@ namespace snabel {
     }
   }
 
-  void call(Scope &scp, const Label &lbl) {
+  void call(Scope &scp, const Label &lbl, bool now) {
     CHECK(scp.return_pc == -1, _);
     scp.return_pc = scp.thread.pc+1;
     jump(scp, lbl);
+
+    if (now) { run(scp.thread, scp.return_pc); }
   }
 
   bool yield(Scope &scp, int64_t depth) {

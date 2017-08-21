@@ -5,6 +5,7 @@
 #include "snabel/error.hpp"
 #include "snabel/exec.hpp"
 #include "snabel/iter.hpp"
+#include "snabel/iters.hpp"
 #include "snabel/list.hpp"
 #include "snabel/range.hpp"
 #include "snabel/str.hpp"
@@ -145,7 +146,7 @@ namespace snabel {
     bool first(true);
     
     while (true) {
-      auto v(it->next());
+      auto v(it->next(scp));
       if (!v) { break; }
       if (!first) { out << sep.type->fmt(sep); }
       out << v->type->fmt(*v);
@@ -161,12 +162,23 @@ namespace snabel {
     auto out(std::make_shared<List>());
     
     while (true) {
-      auto v(it->next());
+      auto v(it->next(scp));
       if (!v) { break; }
       out->push_back(*v);
     }
     
     push(scp.thread, get_list_type(scp.exec, *it->type.args.at(0)), out); 
+  }
+
+  static void iterable_map_imp(Scope &scp, const Args &args) {
+    auto &exe(scp.exec);
+    auto &in(args.at(0)), &tgt(args.at(1));
+    auto it((*in.type->iter)(in));
+    auto &elt(*it->type.args.at(0));
+    
+    push(scp.thread,
+	 get_iter_type(exe, elt),
+	 Iter::Ref(new MapIter(exe, it, elt, tgt)));
   }
 
   static void iterable_zip_imp(Scope &scp, const Args &args) {
@@ -391,7 +403,7 @@ namespace snabel {
     };
 
     fiber_type.call.emplace([](auto &scp, auto &v) {
-	call(*get<FiberRef>(v), scp);
+	call(*get<FiberRef>(v), scp, true);
 	return true;
       });
 
@@ -453,7 +465,7 @@ namespace snabel {
     };
 
     lambda_type.call.emplace([](auto &scp, auto &v) {
-	call(scp, *get<Label *>(v));
+	call(scp, *get<Label *>(v), true);
 	return true;
       });
 
@@ -591,6 +603,13 @@ namespace snabel {
 						       *args.at(1).type->args.at(0)));
 		 })},			
 	     iterable_zip_imp);
+
+    add_func(*this, "map",
+	     {ArgType(iterable_type), ArgType(callable_type)},
+	     {ArgType([this](auto &args) {
+		   return &get_iter_type(*this, *args.at(0).type->args.at(0));
+		 })},			
+	     iterable_map_imp);
 
     add_func(*this, "list",
 	     {ArgType(meta_type)},
@@ -875,20 +894,6 @@ namespace snabel {
       return get<Iter::Ref>(x) == get<Iter::Ref>(y);
     };
 
-    t.equal = [&exe](auto &x, auto &y) {
-      auto xi(get<Iter::Ref>(x)), yi(get<Iter::Ref>(y));
-      opt<Box> xv, yv;
-      
-      while (true) {
-	xv = xi->next();
-	yv = yi->next();
-	if (!xv || !yv) { break; }
-	if (xv->type != yv->type || !xv->type->equal(*xv, *yv)) { return false; }
-      }
-
-      return !xv && !yv;
-    };
-    
     t.iter = [&exe](auto &in) { return get<Iter::Ref>(in); };
     return t;
   }

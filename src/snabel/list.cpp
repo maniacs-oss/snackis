@@ -6,7 +6,7 @@ namespace snabel {
     Iter(exe, get_iter_type(exe, elt)), elt(elt), in(in), it(in->begin()), fn(fn)
   { }
   
-  opt<Box> ListIter::next(){
+  opt<Box> ListIter::next(Scope &scp) {
     if (it == in->end()) { return nullopt; }
     auto res(*it);
     it++;
