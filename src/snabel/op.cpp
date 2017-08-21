@@ -629,7 +629,9 @@ namespace snabel {
       if (cor.fiber) { new_scp.push_result = false; }
       std::copy(cor.stacks.begin(), cor.stacks.end(),
 		std::back_inserter(thd.stacks));
-      for (auto &v: cor.env) { put_env(scp, v.first, v.second); }
+      std::copy(cor.recalls.begin(), cor.recalls.end(),
+		std::back_inserter(new_scp.recalls));
+      for (auto &v: cor.env) { put_env(new_scp, v.first, v.second); }
     }
 
     return true;

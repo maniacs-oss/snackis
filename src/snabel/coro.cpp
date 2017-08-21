@@ -14,16 +14,17 @@ namespace snabel {
   }
   
   void refresh(Coro &cor, Scope &scp) {
-    refresh(dynamic_cast<Frame &>(cor), scp);    
-    refresh_env(cor, scp);
-  }
-
-  void refresh_env(Coro &cor, Scope &scp) {
+    refresh(dynamic_cast<Frame &>(cor), scp);
+    cor.recalls.clear();
+    std::copy(scp.recalls.begin(), scp.recalls.end(),
+	      std::back_inserter(cor.recalls));
     auto &thd(cor.thread);
     cor.env.clear();
     
     for (auto &k: scp.env_keys) {
       cor.env.insert(std::make_pair(k, thd.env.at(k)));
     }
+
   }
+
 }

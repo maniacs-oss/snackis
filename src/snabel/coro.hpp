@@ -7,6 +7,7 @@
 namespace snabel {
   struct Coro: Frame {
     Env env;
+    std::deque<Frame> recalls;
     Fiber* fiber;
     
     Coro(Scope &scope);
@@ -14,7 +15,6 @@ namespace snabel {
   };
 
   void refresh(Coro &cor, Scope &scp);
-  void refresh_env(Coro &cor, Scope &scp);
 }
 
 #endif
