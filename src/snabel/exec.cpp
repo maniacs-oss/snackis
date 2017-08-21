@@ -514,15 +514,15 @@ namespace snabel {
 	     {ArgType(any_type), ArgType(0)}, {ArgType(bool_type)},
 	     equal_imp);
    
-    add_func(*this, "zero?",
+    add_func(*this, "z?",
 	     {ArgType(i64_type)}, {ArgType(bool_type)},
 	     zero_i64_imp);
    
-    add_func(*this, "inc",
+    add_func(*this, "++",
 	     {ArgType(i64_type)}, {ArgType(i64_type)},
 	     inc_i64_imp);
 
-    add_func(*this, "dec",
+    add_func(*this, "--",
 	     {ArgType(i64_type)}, {ArgType(i64_type)},
 	     dec_i64_imp);
 
