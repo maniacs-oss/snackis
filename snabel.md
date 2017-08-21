@@ -216,6 +216,27 @@ List<Pair<Str I64>>!
 List<List<Any>>!
 ```
 
+#### Optionals
+Optional values are supported through the ```Opt<T>```-type. The empty value is named ```#n/a``` and values may be wrapped using ```or```.
+
+```
+> 42 opt
+42
+Opt<I64>!
+
+> #n/a 42 or
+42
+I64!
+
+> #n/a 42 opt or
+42
+Opt<I64>!
+
+> 7 opt 42 opt or
+7
+Opt<I64>!
+```
+
 ### Labels
 The ```label:```-macro will create a label with the specified name at that point, while simply naming a label in scope will result in jumping there. Prefixing the name of a label in scope with ```&``` pushes it on the stack for later use. Labels require termination using ```;``` to separate them from surrounding code.
 
@@ -307,27 +328,6 @@ add_func(exe, "+",
          {ArgType(exe.i64_type), ArgType(exe.i64_type)},
 	 {ArgType(exe.i64_type)},
 	 add_i64);
-```
-
-### Optionals
-Optional values are supported through the ```Opt<T>```-type. The empty value is named ```#n/a``` and values may be wrapped using ```or```.
-
-```
-> 42 opt
-42
-Opt<I64>!
-
-> #n/a 42 or
-42
-I64!
-
-> #n/a 42 opt or
-42
-Opt<I64>!
-
-> 7 opt 42 opt or
-7
-Opt<I64>!
 ```
 
 ### Fibers
