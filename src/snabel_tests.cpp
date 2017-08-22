@@ -169,11 +169,12 @@ namespace snabel {
   static void stack_tests() {
     TRY(try_test);    
     Exec exe;
-    run(exe, "42 |");
+
+    run(exe, "42 _");
     CHECK(!peek(exe.main), _);
 
-    compile(exe, "1 2 3 _ _");
-    CHECK(exe.main.ops.size() == 1, _);
+    run(exe, "7 35 |");
+    CHECK(!peek(exe.main), _);
   }
 
   static void group_tests() {
@@ -451,6 +452,14 @@ namespace snabel {
     run(exe, "7 opt 42 opt or");
     CHECK(get<int64_t>(pop(exe.main)) == 7, _);
   }
+
+  static void io_tests() {
+    TRY(try_test);    
+    Exec exe;
+
+    run(exe, "0 'tests' rfile read {len +} for");
+    CHECK(get<int64_t>(pop(exe.main)) > 1000000, _);
+  }
   
   static void fiber_tests() {
     TRY(try_test);    
@@ -504,13 +513,14 @@ namespace snabel {
     for_tests();
     rat_tests();
     opt_tests();
+    io_tests();
     fiber_tests();
     thread_tests();
   }
 
   void all_tests() {
     TRY(try_snabel);
-    const int iters(100), warmups(10);
+    const int iters(10), warmups(10);
     for(int i(0); i < warmups; ++i) { loop(); }
     auto started(std::chrono::high_resolution_clock::now());    
 

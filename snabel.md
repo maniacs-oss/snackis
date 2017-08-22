@@ -344,15 +344,15 @@ Snabel provides non-blocking IO in the form of iterators. The provided target is
 ```
 > 'snackis' rfile
 File(11)
-File!
 
-> 'snackis' rfile slurp
+> 'snackis' rfile read
 Iter<Bin>
-Iter<Bin>!
 
-> 0 'snackis' rfile slurp {len +} for
+> 0 'snackis' rfile read {len +} for
 2313864
-I64!
+
+> 'out' wfile 'in' rfile read {write {_} for} for
+
 ```
 
 ### Fibers

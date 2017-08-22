@@ -20,11 +20,13 @@ namespace snabel {
   ReadIter::ReadIter(Exec &exe, const Box &in):
     Iter(exe, get_iter_type(exe, exe.bin_type)),
     in(in),
-    out(exe.bin_type, std::make_shared<Bin>(READ_BUF_SIZE))
+    out(exe.bin_type, std::make_shared<Bin>())
   { }
   
   opt<Box> ReadIter::next(Scope &scp){
-    if (!(*in.type->read)(in, *get<BinRef>(out))) { return nullopt; }
+    auto &bin(*get<BinRef>(out));
+    bin.resize(READ_BUF_SIZE);
+    if (!(*in.type->read)(in, bin)) { return nullopt; }
     return out;
   }
 }

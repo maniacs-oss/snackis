@@ -8,12 +8,8 @@ namespace snabel {
     name(n), raw(this)
   {
     dump = [this](auto &v) { return fmt(v); };
-
-    fmt = [this](auto &v) {
-      ERROR(Snabel, snackis::fmt("Failed formatting value for type: %0", name));
-      return "n/a";
-    };
-    
+    fmt = [n](auto &v) { return n; };
+    eq = [](auto &x, auto &y) { return false; };
     equal = [this](auto &x, auto &y) { return eq(x, y); };
   }
 

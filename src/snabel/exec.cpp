@@ -291,11 +291,11 @@ namespace snabel {
   
   static void rfile_imp(Scope &scp, const Args &args) {
     push(scp.thread,
-	 scp.exec.file_type,
+	 scp.exec.rfile_type,
 	 std::make_shared<File>(get<Path>(args.at(0)), O_RDONLY));
   }
 
-  static void slurp_file_imp(Scope &scp, const Args &args) {
+  static void read_file_imp(Scope &scp, const Args &args) {
     Exec &exe(scp.exec);
     
     push(scp.thread,
@@ -347,6 +347,8 @@ namespace snabel {
     opt_type(add_type(*this, "Opt")),
     pair_type(add_type(*this, "Pair")),
     path_type(add_type(*this, "Path")),
+    readable_type(add_type(*this, "Readable")),
+    rfile_type(add_type(*this, "RFile")),
     rat_type(add_type(*this, "Rat")),
     str_type(add_type(*this, "Str")),
     thread_type(add_type(*this, "Thread")),
@@ -388,8 +390,8 @@ namespace snabel {
 
     callable_type.supers.push_back(&any_type);
     callable_type.args.push_back(&any_type);
-    callable_type.fmt = [](auto &v) { return "Callable"; };
-    callable_type.eq = [](auto &x, auto &y) { return false; };
+
+    readable_type.supers.push_back(&any_type);
 
     iter_type.supers.push_back(&any_type);
     iter_type.args.push_back(&any_type);
@@ -499,6 +501,7 @@ namespace snabel {
 	return true;
       });
 
+    file_type.supers.push_back(&any_type);
     file_type.fmt = [](auto &v) {
       auto &f(*get<FileRef>(v));
       return fmt("File(%0)", f.fd);
@@ -507,21 +510,24 @@ namespace snabel {
     file_type.eq = [](auto &x, auto &y) {
       return get<FileRef>(x) == get<FileRef>(y);
     };
-    file_type.read = [](auto &in, auto &out) {
+
+    rfile_type.supers.push_back(&file_type);
+    rfile_type.supers.push_back(&readable_type);
+    rfile_type.fmt = [](auto &v) { return fmt("RFile(%0)", get<FileRef>(v)->fd); };
+    rfile_type.eq = file_type.eq;
+    rfile_type.read = [](auto &in, auto &out) {
       auto &f(*get<FileRef>(in));
       int res(read(f.fd, &out[0], out.size()));
       if (!res) { return false; }
 
       if (res == -1) {
-	if (errno == EAGAIN) {
-	  std::cout << "Prevented blocking" << std::endl;
-	  return true;
-	}
+	if (errno == EAGAIN) { return true; }
       }
-      
+
+      out.resize(res);
       return true;
     };
-
+    
     func_type.supers.push_back(&any_type);
     func_type.supers.push_back(&callable_type);
     func_type.fmt = [](auto &v) { return fmt("Func(%0)", get<Func *>(v)->name); };
@@ -793,12 +799,12 @@ namespace snabel {
 	     bin_len_imp);
 
     add_func(*this, "rfile",
-	     {ArgType(path_type)}, {ArgType(file_type)},
+	     {ArgType(path_type)}, {ArgType(rfile_type)},
 	     rfile_imp);
 
-    add_func(*this, "slurp",
-	     {ArgType(file_type)}, {ArgType(get_iter_type(*this, bin_type))},
-	     slurp_file_imp);
+    add_func(*this, "read",
+	     {ArgType(readable_type)}, {ArgType(get_iter_type(*this, bin_type))},
+	     read_file_imp);
 
     add_func(*this, "fiber",
 	     {ArgType(lambda_type)}, {ArgType(fiber_type)},
