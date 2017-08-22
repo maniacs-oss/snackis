@@ -100,7 +100,7 @@ namespace snabel {
       return false;
     }
 
-    if(get<bool>(*cnd)) { return (*tgt->type->call)(scp, *tgt); }
+    if(get<bool>(*cnd)) { return (*tgt->type->call)(scp, *tgt, false); }
     return true;
   }
   
@@ -113,7 +113,7 @@ namespace snabel {
   }
 
   bool Call::run(Scope &scp) {
-    if (target) { return (*target->type->call)(scp, *target); }
+    if (target) { return (*target->type->call)(scp, *target, false); }
     auto tgt(try_pop(scp.thread));
     
     if (!tgt) {
@@ -126,7 +126,7 @@ namespace snabel {
       return false;
     }
     
-    bool ok((*tgt->type->call)(scp, *tgt));
+    bool ok((*tgt->type->call)(scp, *tgt, false));
     return ok;
   }
 
@@ -236,7 +236,7 @@ namespace snabel {
     }
 
     if (isa(*fnd, exe.callable_type)) {
-      return (*fnd->type->call)(scp, *fnd);
+      return (*fnd->type->call)(scp, *fnd, false);
     }
     
     push(scp.thread, *fnd);
@@ -396,7 +396,7 @@ namespace snabel {
     
     if (nxt) {      
       push(thd, *nxt);
-      (*tgt->type->call)(scp, *tgt);
+      (*tgt->type->call)(scp, *tgt, false);
     } else {
       rem_env(scp, key);
       scp.thread.pc += 2;

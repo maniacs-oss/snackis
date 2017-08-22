@@ -16,7 +16,7 @@ namespace snabel {
       auto x(in->next(scp));
       if (!x) { return nullopt; }
       push(thd, *x);
-      (*target.type->call)(scp, target);
+      (*target.type->call)(scp, target, true);
       auto out(peek(thd));
       
       if (!out) {
@@ -45,7 +45,7 @@ namespace snabel {
     auto x(in->next(scp));
     if (!x) { return nullopt; }
     push(thd, *x);
-    (*target.type->call)(scp, target);
+    (*target.type->call)(scp, target, true);
     auto out(peek(thd));
     
     if (!out) {

@@ -427,8 +427,8 @@ namespace snabel {
       return get<FiberRef>(x) == get<FiberRef>(y);
     };
 
-    fiber_type.call.emplace([](auto &scp, auto &v) {
-	call(*get<FiberRef>(v), scp, true);
+    fiber_type.call.emplace([](auto &scp, auto &v, bool now) {
+	call(*get<FiberRef>(v), scp, now);
 	return true;
       });
 
@@ -437,7 +437,7 @@ namespace snabel {
     func_type.fmt = [](auto &v) { return fmt("func(%0)", get<Func *>(v)->name); };
     func_type.eq = [](auto &x, auto &y) { return get<Func *>(x) == get<Func *>(y); };
     
-    func_type.call.emplace([](auto &scp, auto &v) {
+    func_type.call.emplace([](auto &scp, auto &v, bool now) {
 	auto &thd(scp.thread);
 	auto &fn(*get<Func *>(v));
 	auto m(match(fn, thd));
@@ -472,10 +472,11 @@ namespace snabel {
       return get<Label *>(x) == get<Label *>(y);
     };
 
-    label_type.call.emplace([](auto &scp, auto &v) {
+    label_type.call.emplace([](auto &scp, auto &v, bool now) {
 	auto &thd(scp.thread);
 	auto break_pc(thd.pc);
 	jump(scp, *get<Label *>(v));
+	if (!now) { return true; }
 	return run(thd, break_pc);
       });
 
@@ -491,8 +492,8 @@ namespace snabel {
       return get<Label *>(x) == get<Label *>(y);
     };
 
-    lambda_type.call.emplace([](auto &scp, auto &v) {
-	call(scp, *get<Label *>(v), true);
+    lambda_type.call.emplace([](auto &scp, auto &v, bool now) {
+	call(scp, *get<Label *>(v), now);
 	return true;
       });
 

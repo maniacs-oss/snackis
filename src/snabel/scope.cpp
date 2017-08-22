@@ -201,7 +201,7 @@ namespace snabel {
     std::copy(thd.ops.begin(), thd.ops.end(), std::back_inserter(t->ops));
     t->pc = t->ops.size();
     
-    if ((*init.type->call)(curr_scope(*t), init)) {
+    if ((*init.type->call)(curr_scope(*t), init, false)) {
       start(*t);
     } else {
       ERROR(Snabel, "Failed initializing thread");
