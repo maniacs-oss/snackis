@@ -26,6 +26,11 @@ namespace snabel {
 	auto &v(lst[i]);
 	buf << v.type->dump(v);
       };
+    } else {
+      buf <<
+	lst.front().type->dump(lst.front()) <<
+	"..." <<
+	lst.back().type->dump(lst.back());
     }
     
     buf << ']';
@@ -70,9 +75,5 @@ namespace snabel {
 
 namespace snackis {
   template <>
-  str fmt_arg(const snabel::Box &arg) {
-    return fmt("%0 %1!",
-	       arg.type->dump(arg),
-	       arg.type->name);
-  }
+  str fmt_arg(const snabel::Box &arg) { return arg.type->dump(arg); }
 }

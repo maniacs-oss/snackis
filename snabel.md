@@ -338,6 +338,23 @@ add_func(exe, "+",
 	 add_i64);
 ```
 
+### IO
+Snabel provides non-blocking IO in the form of iterators. The provided target is called with each chunk of data read or number of bytes written pushed on the stack.
+
+```
+> 'snackis' rfile
+File(11)
+File!
+
+> 'snackis' rfile slurp
+Iter<Bin>
+Iter<Bin>!
+
+> 0 'snackis' rfile slurp {len +} for
+2313864
+I64!
+```
+
 ### Fibers
 Any lambda may be treated as a fiber using ```fiber```. Fibers allow interleaving multiple cooperative computations in the same thread and optionally collecting their results. Adding an initial yield allows catching the stack and/or environment by calling the fiber. Fibers provide reference semantics, the same fiber may shared between threads as long as it's only run from one thread at a time.
 

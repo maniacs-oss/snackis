@@ -1,9 +1,13 @@
 #include <iostream>
 
+#include <fcntl.h>
+#include <unistd.h>
+
 #include "snabel/box.hpp"
 #include "snabel/compiler.hpp"
 #include "snabel/error.hpp"
 #include "snabel/exec.hpp"
+#include "snabel/io.hpp"
 #include "snabel/iter.hpp"
 #include "snabel/iters.hpp"
 #include "snabel/list.hpp"
@@ -281,6 +285,24 @@ namespace snabel {
     push(scp.thread, p.second);
   }
 
+  static void bin_len_imp(Scope &scp, const Args &args) {
+    push(scp.thread, scp.exec.i64_type, (int64_t)get<BinRef>(args.at(0))->size());
+  } 
+  
+  static void rfile_imp(Scope &scp, const Args &args) {
+    push(scp.thread,
+	 scp.exec.file_type,
+	 std::make_shared<File>(get<Path>(args.at(0)), O_RDONLY));
+  }
+
+  static void slurp_file_imp(Scope &scp, const Args &args) {
+    Exec &exe(scp.exec);
+    
+    push(scp.thread,
+	 get_iter_type(exe, exe.bin_type),
+	 Iter::Ref(new ReadIter(exe, args.at(0))));
+  }
+
   static void fiber_imp(Scope &scp, const Args &args) {
     push(scp.thread, scp.exec.fiber_type,
 	 std::make_shared<Fiber>(*get<Label *>(args.at(0))));
@@ -308,10 +330,13 @@ namespace snabel {
     main_scope(main.scopes.at(0)),
     meta_type("Type<Any>"),
     any_type(add_type(*this, "Any")),
+    bin_type(add_type(*this, "Bin")),
     bool_type(add_type(*this, "Bool")),
+    byte_type(add_type(*this, "Byte")),
     callable_type(add_type(*this, "Callable")),
     char_type(add_type(*this, "Char")),
     fiber_type(add_type(*this, "Fiber")),    
+    file_type(add_type(*this, "File")),    
     func_type(add_type(*this, "Func")),
     i64_type(add_type(*this, "I64")),
     iter_type(add_type(*this, "Iter")),
@@ -321,13 +346,14 @@ namespace snabel {
     list_type(add_type(*this, "List")),
     opt_type(add_type(*this, "Opt")),
     pair_type(add_type(*this, "Pair")),
+    path_type(add_type(*this, "Path")),
     rat_type(add_type(*this, "Rat")),
     str_type(add_type(*this, "Str")),
     thread_type(add_type(*this, "Thread")),
     void_type(add_type(*this, "Void")),
     next_gensym(1)
   {    
-    any_type.fmt = [](auto &v) { return "n/a"; };
+    any_type.fmt = [](auto &v) { return "Any"; };
     any_type.eq = [](auto &x, auto &y) { return false; };
 
     meta_type.supers.push_back(&any_type);
@@ -335,7 +361,7 @@ namespace snabel {
     meta_type.fmt = [](auto &v) { return get<Type *>(v)->name; };
     meta_type.eq = [](auto &x, auto &y) { return get<Type *>(x) == get<Type *>(y); };
 
-    void_type.fmt = [](auto &v) { return "n/a"; };
+    void_type.fmt = [](auto &v) { return "Void"; };
     void_type.eq = [](auto &x, auto &y) { return true; };  
 
     opt_type.supers.push_back(&any_type);
@@ -362,24 +388,47 @@ namespace snabel {
 
     callable_type.supers.push_back(&any_type);
     callable_type.args.push_back(&any_type);
-    callable_type.fmt = [](auto &v) { return "n/a"; };
+    callable_type.fmt = [](auto &v) { return "Callable"; };
     callable_type.eq = [](auto &x, auto &y) { return false; };
 
     iter_type.supers.push_back(&any_type);
     iter_type.args.push_back(&any_type);
-    iter_type.fmt = [](auto &v) { return "n/a"; };
-    iter_type.eq = [](auto &x, auto &y) { return false; };
+    iter_type.fmt = [](auto &v) { return fmt("Iter<%0>", v.type->args.at(0)->name); };
+    iter_type.eq = [](auto &x, auto &y) {
+      return get<Iter::Ref>(x) == get<Iter::Ref>(y);
+    };
+    iter_type.iter = [](auto &in) { return get<Iter::Ref>(in); };
 
     iterable_type.supers.push_back(&any_type);
     iterable_type.args.push_back(&any_type);
-    iterable_type.fmt = [](auto &v) { return "n/a"; };
+    iterable_type.fmt = [](auto &v) {
+      return fmt("Iterable<%0>", v.type->args.at(0)->name);
+    };
     iterable_type.eq = [](auto &x, auto &y) { return false; };
 
     list_type.supers.push_back(&any_type);
     list_type.args.push_back(&any_type);
     list_type.dump = [](auto &v) { return dump(*get<ListRef>(v)); };
     list_type.fmt = [](auto &v) { return list_fmt(*get<ListRef>(v)); };
-    list_type.eq = [](auto &x, auto &y) { return false; };
+    list_type.eq = [](auto &x, auto &y) {
+      return get<ListRef>(x) == get<ListRef>(y);
+    };
+    list_type.iter = [this](auto &in) {
+      return Iter::Ref(new ListIter(*this, *in.type->args.at(0), get<ListRef>(in)));
+    };
+
+    list_type.equal = [](auto &x, auto &y) {
+      auto &xs(*get<ListRef>(x)), &ys(*get<ListRef>(y));
+      if (xs.size() != ys.size()) { return false; }
+      auto xi(xs.begin()), yi(ys.begin());
+
+      for (; xi != xs.end() && yi != ys.end(); xi++, yi++) {
+	if (xi->type != yi->type || !xi->type->equal(*xi, *yi)) { return false; }
+      }
+
+      return true;
+    };
+
 
     pair_type.supers.push_back(&any_type);
     pair_type.args.push_back(&any_type);
@@ -392,6 +441,25 @@ namespace snabel {
     pair_type.equal = [](auto &x, auto &y) { 
       return *get<PairRef>(x) == *get<PairRef>(y); 
     };
+
+    path_type.supers.push_back(&any_type);
+    path_type.fmt = [](auto &v) { return get<Path>(v).string(); };
+    path_type.eq = [](auto &x, auto &y) { return get<Path>(x) == get<Path>(y); };
+
+    bin_type.supers.push_back(&any_type);
+    bin_type.supers.push_back(&get_iterable_type(*this, byte_type));
+    bin_type.fmt = [](auto &v) { return fmt("Bin(%0)", get<BinRef>(v)->size()); };
+    bin_type.eq = [](auto &x, auto &y) { return get<BinRef>(x) == get<BinRef>(y); };
+    bin_type.equal = [](auto &x, auto &y) {
+      return *get<BinRef>(x) == *get<BinRef>(y);
+    };
+    bin_type.iter = [this](auto &in) {
+      return Iter::Ref(new BinIter(*this, get<BinRef>(in)));
+    };
+
+    byte_type.supers.push_back(&any_type);
+    byte_type.fmt = [](auto &v) { return fmt_arg(get<Byte>(v)); };
+    byte_type.eq = [](auto &x, auto &y) { return get<Byte>(x) == get<Byte>(y); };
 
     bool_type.supers.push_back(&any_type);
     bool_type.fmt = [](auto &v) { return get<bool>(v) ? ":t" : ":f"; };
@@ -416,13 +484,12 @@ namespace snabel {
       return fmt("\\%0", str(1, c));
     };
 
-    char_type.fmt = [](auto &v) { return str(1, get<char>(v)); };
-    
+    char_type.fmt = [](auto &v) { return str(1, get<char>(v)); };    
     char_type.eq = [](auto &x, auto &y) { return get<char>(x) == get<char>(y); };
     
     fiber_type.supers.push_back(&any_type);
     fiber_type.supers.push_back(&callable_type);
-    fiber_type.fmt = [](auto &v) { return fmt("fiber(%0)", get<FiberRef>(v)->id); };
+    fiber_type.fmt = [](auto &v) { return fmt("Fiber(%0)", get<FiberRef>(v)->id); };
     fiber_type.eq = [](auto &x, auto &y) {
       return get<FiberRef>(x) == get<FiberRef>(y);
     };
@@ -432,9 +499,32 @@ namespace snabel {
 	return true;
       });
 
+    file_type.fmt = [](auto &v) {
+      auto &f(*get<FileRef>(v));
+      return fmt("File(%0)", f.fd);
+    };
+    
+    file_type.eq = [](auto &x, auto &y) {
+      return get<FileRef>(x) == get<FileRef>(y);
+    };
+    file_type.read = [](auto &in, auto &out) {
+      auto &f(*get<FileRef>(in));
+      int res(read(f.fd, &out[0], out.size()));
+      if (!res) { return false; }
+
+      if (res == -1) {
+	if (errno == EAGAIN) {
+	  std::cout << "Prevented blocking" << std::endl;
+	  return true;
+	}
+      }
+      
+      return true;
+    };
+
     func_type.supers.push_back(&any_type);
     func_type.supers.push_back(&callable_type);
-    func_type.fmt = [](auto &v) { return fmt("func(%0)", get<Func *>(v)->name); };
+    func_type.fmt = [](auto &v) { return fmt("Func(%0)", get<Func *>(v)->name); };
     func_type.eq = [](auto &x, auto &y) { return get<Func *>(x) == get<Func *>(y); };
     
     func_type.call.emplace([](auto &scp, auto &v, bool now) {
@@ -485,7 +575,7 @@ namespace snabel {
 
     lambda_type.fmt = [](auto &v) {
       auto &l(*get<Label *>(v));
-      return fmt("lambda(%0:%1)", l.tag, l.pc);
+      return fmt("Lambda(%0:%1)", l.tag, l.pc);
     };
     
     lambda_type.eq = [](auto &x, auto &y) {
@@ -503,7 +593,8 @@ namespace snabel {
     str_type.eq = [](auto &x, auto &y) { return get<str>(x) == get<str>(y); };
 
     str_type.iter = [this](auto &in) {
-      return Iter::Ref(new StrIter(*this, get<str>(in))); };
+      return Iter::Ref(new StrIter(*this, get<str>(in)));
+    };
 
     rat_type.supers.push_back(&any_type);
     rat_type.fmt = [](auto &v) { return fmt_arg(get<Rat>(v)); };
@@ -514,6 +605,12 @@ namespace snabel {
     thread_type.eq = [](auto &x, auto &y) {
       return get<Thread *>(x) == get<Thread *>(y);
     };
+
+    add_conv(*this, str_type, path_type, [this](auto &v) {	
+	v.type = &path_type;
+	v.val = Path(get<str>(v));
+	return true;
+      });
 
     add_conv(*this, i64_type, rat_type, [this](auto &v) {	
 	v.type = &rat_type;
@@ -690,7 +787,19 @@ namespace snabel {
     add_func(*this, "unzip",
 	     {ArgType(pair_type)}, {ArgType(0, 0), ArgType(0, 1)},
 	     unzip_imp);
-	     
+
+    add_func(*this, "len",
+	     {ArgType(bin_type)}, {ArgType(i64_type)},
+	     bin_len_imp);
+
+    add_func(*this, "rfile",
+	     {ArgType(path_type)}, {ArgType(file_type)},
+	     rfile_imp);
+
+    add_func(*this, "slurp",
+	     {ArgType(file_type)}, {ArgType(get_iter_type(*this, bin_type))},
+	     slurp_file_imp);
+
     add_func(*this, "fiber",
 	     {ArgType(lambda_type)}, {ArgType(fiber_type)},
 	     fiber_imp);
@@ -929,13 +1038,9 @@ namespace snabel {
     t.supers.push_back(&get_iterable_type(exe, elt));    
     t.supers.push_back(&exe.iter_type);
     t.args.push_back(&elt);
-    t.fmt = [&elt](auto &v) { return "n/a"; };
-
-    t.eq = [&elt](auto &x, auto &y) {
-      return get<Iter::Ref>(x) == get<Iter::Ref>(y);
-    };
-
-    t.iter = [&exe](auto &in) { return get<Iter::Ref>(in); };
+    t.fmt = exe.iter_type.fmt;
+    t.eq = exe.iter_type.eq;
+    t.iter = exe.iter_type.iter;
     return t;
   }
 
@@ -948,8 +1053,8 @@ namespace snabel {
     t.supers.push_back(&exe.any_type);
     t.supers.push_back(&exe.iterable_type);
     t.args.push_back(&elt);
-    t.fmt = [&elt](auto &v) { return "n/a"; };
-    t.eq = [&elt](auto &x, auto &y) { return false; };
+    t.fmt = exe.iterable_type.fmt;
+    t.eq = exe.iterable_type.eq;
     return t;
   }
   
@@ -963,27 +1068,11 @@ namespace snabel {
     t.supers.push_back(&get_iterable_type(exe, elt));
     t.supers.push_back(&exe.list_type);
     t.args.push_back(&elt);
-    
-    t.dump = [](auto &v) { return dump(*get<ListRef>(v)); };
-    t.fmt = [](auto &v) { return list_fmt(*get<ListRef>(v)); };
-    t.eq = [](auto &x, auto &y) { return get<ListRef>(x) == get<ListRef>(y); };
-
-    t.equal = [](auto &x, auto &y) {
-      auto &xs(*get<ListRef>(x)), &ys(*get<ListRef>(y));
-      if (xs.size() != ys.size()) { return false; }
-      auto xi(xs.begin()), yi(ys.begin());
-
-      for (; xi != xs.end() && yi != ys.end(); xi++, yi++) {
-	if (xi->type != yi->type || !xi->type->equal(*xi, *yi)) { return false; }
-      }
-
-      return true;
-    };
-
-    t.iter = [&exe, &elt](auto &in) {
-      return Iter::Ref(new ListIter(exe, elt, get<ListRef>(in)));
-    };
-	     
+    t.dump = exe.list_type.dump;
+    t.fmt = exe.list_type.fmt;
+    t.eq = exe.list_type.eq;
+    t.equal = exe.list_type.equal;
+    t.iter = exe.list_type.iter;
     return t;
   }
 

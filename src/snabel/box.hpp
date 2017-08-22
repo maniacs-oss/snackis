@@ -4,9 +4,11 @@
 #include <deque>
 #include <variant>
 
+#include "snabel/bin.hpp"
 #include "snabel/iter.hpp"
 #include "snackis/core/error.hpp"
 #include "snackis/core/fmt.hpp"
+#include "snackis/core/path.hpp"
 #include "snackis/core/rat.hpp"
 
 namespace snabel {  
@@ -16,23 +18,25 @@ namespace snabel {
   struct Func;
   struct Exec;
   struct Fiber;
+  struct File;
   struct Label;
   struct Scope;
   struct Thread;
   struct Type;
 
-  using Pair = std::pair<Box, Box>;
-  using PairRef = std::shared_ptr<Pair>;
+  using FiberRef = std::shared_ptr<Fiber>;
+  using FileRef = std::shared_ptr<File>;
   using List = std::deque<Box>;
   using ListRef = std::shared_ptr<List>;
-  using FiberRef = std::shared_ptr<Fiber>;
+  using Pair = std::pair<Box, Box>;
+  using PairRef = std::shared_ptr<Pair>;
   
   struct Empty
   { };
   
-  using Val = std::variant<Empty, bool, char, int64_t, Rat, str,
-			   PairRef, ListRef, Iter::Ref,
-			   FiberRef, Func *, Label *, Thread *, Type *>;
+  using Val = std::variant<Empty, bool, Byte, char, int64_t, Path, Rat, str,
+			   BinRef, FiberRef, FileRef, Iter::Ref, ListRef, PairRef, 
+			   Func *, Label *, Thread *, Type *>;
   
   struct Box {
     Type *type;
