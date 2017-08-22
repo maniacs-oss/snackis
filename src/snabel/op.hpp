@@ -106,11 +106,11 @@ namespace snabel {
 
   struct For: OpImp {
     bool compiled;
-    Iter::Ref iter;
-    opt<Box> target;
+    str key;
     
     For();
     OpImp &get_imp(Op &op) const override;
+    bool prepare(Scope &scp) override;
     bool compile(const Op &op, Scope &scp, OpSeq & out) override;
     bool run(Scope &scp) override;
   };

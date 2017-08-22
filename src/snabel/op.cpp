@@ -336,6 +336,11 @@ namespace snabel {
     return std::get<For>(op.data);
   }
 
+  bool For::prepare(Scope &scp) {
+    key = fmt_arg(gensym(scp.exec));
+    return true;
+  }
+  
   bool For::compile(const Op &op, Scope &scp, OpSeq &out) {
     if (compiled) { return false; }
     compiled = true;
@@ -347,45 +352,53 @@ namespace snabel {
   }
 
   bool For::run(Scope &scp) {
+    auto &exe(scp.exec);
     auto &thd(scp.thread);
-    
-    if (!iter) {
-      auto tgt(try_pop(thd));
+    Iter::Ref it;
+    opt<Box> tgt;
+    auto fnd(find_env(scp, key));
+
+    if (fnd) {
+      auto &p(get<PairRef>(*fnd));
+      it = get<Iter::Ref>(p->first);
+      tgt.emplace(p->second);
+    } else {    
+      tgt = try_pop(thd);
 
       if (!tgt) {
 	ERROR(Snabel, "Missing for target");
 	return false;
       }
-
+    
       if (!tgt->type->call) {
 	ERROR(Snabel, fmt("Invalid for target: %0", *tgt));
 	return false;
       }
-
+    
       auto cnd(try_pop(thd));
-
+    
       if (!cnd) {
 	ERROR(Snabel, "Missing for condition");
 	return false;
       }
-
-      if (!cnd->type->iter) {
+        
+      if (!cnd->type->iter)     {
 	ERROR(Snabel, fmt("Invalid for condition: %0", *cnd));
 	return false;
       }
 
-      iter = (*cnd->type->iter)(*cnd);
-      target.emplace(*tgt);
+      it = (*cnd->type->iter)(*cnd);
+      put_env(scp, key, Box(exe.pair_type,
+			    std::make_shared<Pair>(Box(exe.iter_type, it), *tgt)));
     }
 
-    auto nxt(iter->next(scp));
+    auto nxt(it->next(scp));
     
-    if (nxt) {
+    if (nxt) {      
       push(thd, *nxt);
-      (*target->type->call)(scp, *target);
+      (*tgt->type->call)(scp, *tgt);
     } else {
-      iter.reset();
-      target.reset();
+      rem_env(scp, key);
       scp.thread.pc += 2;
     }
     
