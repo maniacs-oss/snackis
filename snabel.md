@@ -325,19 +325,23 @@ Iter<I64>
 > 'tmp' rwfile 'foo' bytes write 0 $1 &+ for
 3
 
-> proc: do-write {rwfile (
-    yield $1 write {_ yield} for
+> proc: do-write {(
+    yield rwfile
+    $1 write {_ yield} for
   )};  
 
   func: do-copy {
     let: buf 0 bytes;
     @buf $1 do-write _ _
+
     rfile read 0 $1 {
-      len $0 +? {@buf $2 append do-write} when _ +
+      len $0 +? {
+        @buf $2 append do-write
+      } when _ +
     } for
   };
 
-  'in' 'out' do-copy
+'in' 'out' do-copy
 2313864
 ```
 
