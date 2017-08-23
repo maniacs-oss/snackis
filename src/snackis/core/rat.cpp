@@ -23,19 +23,6 @@ namespace snackis {
     return x;
   }
 
-  /*
-  uint64_t gcd(uint64_t x, uint64_t y) {
-    while (x && y && x != y) {
-      if (x > y) {
-	x -= y;
-      } else { 
-        y -= x;
-      }
-    }
-
-    return x;
-    }*/
-
   bool operator ==(const Rat &x, const Rat &y) {
     return x.num == y.num && x.div == y.div && x.neg == y.neg;
   }
