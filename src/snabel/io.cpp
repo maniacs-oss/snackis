@@ -41,7 +41,13 @@ namespace snabel {
     auto &res(get<int64_t>(result));
     res = (*out.type->write)(out, &bin[0], bin.size());
     if (res == -1) { return nullopt; }
-    if (res) { bin.erase(bin.begin(), std::next(bin.begin(), res)); }
+    if (res) {
+      if (res == bin.size()) {
+	bin.clear();
+      } else {
+	bin.erase(bin.begin(), std::next(bin.begin(), res));
+      }
+    }
     return result;
   }
 }
