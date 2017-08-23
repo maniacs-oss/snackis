@@ -136,12 +136,42 @@ namespace snabel {
     push(scp.thread, scp.exec.rat_type, x/y);
   }
 
+  static void bin_len_imp(Scope &scp, const Args &args) {
+    push(scp.thread, scp.exec.i64_type, (int64_t)get<BinRef>(args.at(0))->size());
+  } 
+
+  static void bin_str_imp(Scope &scp, const Args &args) {
+    auto &in(*get<BinRef>(args.at(0)));
+    push(scp.thread, scp.exec.str_type, str(in.begin(), in.end()));
+  }
+
+  static void bin_ustr_imp(Scope &scp, const Args &args) {
+    auto &in(*get<BinRef>(args.at(0)));
+    push(scp.thread, scp.exec.ustr_type, uconv.from_bytes(str(in.begin(), in.end())));
+  }
+
+  static void bin_append_imp(Scope &scp, const Args &args) {
+    auto &out(args.at(0));
+    auto &tgt(*get<BinRef>(out)), &src(*get<BinRef>(args.at(1)));
+    std::copy(src.begin(), src.end(), std::back_inserter(tgt));
+    push(scp.thread, out);
+  }
+
   static void str_len_imp(Scope &scp, const Args &args) {
     push(scp.thread, scp.exec.i64_type, (int64_t)get<str>(args.at(0)).size());
   }
 
   static void str_bytes_imp(Scope &scp, const Args &args) {
     auto &in(get<str>(args.at(0)));
+    push(scp.thread, scp.exec.bin_type, std::make_shared<Bin>(in.begin(), in.end()));
+  }
+
+  static void str_ustr_imp(Scope &scp, const Args &args) {
+    push(scp.thread, scp.exec.ustr_type, uconv.from_bytes(get<str>(args.at(0))));
+  }
+
+  static void ustr_bytes_imp(Scope &scp, const Args &args) {
+    auto in(uconv.to_bytes(get<ustr>(args.at(0))));
     push(scp.thread, scp.exec.bin_type, std::make_shared<Bin>(in.begin(), in.end()));
   }
 
@@ -298,22 +328,6 @@ namespace snabel {
     push(scp.thread,
 	 scp.exec.bin_type,
 	 std::make_shared<Bin>(get<int64_t>(args.at(0))));
-  }
-
-  static void bin_len_imp(Scope &scp, const Args &args) {
-    push(scp.thread, scp.exec.i64_type, (int64_t)get<BinRef>(args.at(0))->size());
-  } 
-
-  static void bin_str_imp(Scope &scp, const Args &args) {
-    auto &in(*get<BinRef>(args.at(0)));
-    push(scp.thread, scp.exec.str_type, str(in.begin(), in.end()));
-  }
-
-  static void bin_append_imp(Scope &scp, const Args &args) {
-    auto &out(args.at(0));
-    auto &tgt(*get<BinRef>(out)), &src(*get<BinRef>(args.at(1)));
-    std::copy(src.begin(), src.end(), std::back_inserter(tgt));
-    push(scp.thread, out);
   }
 
   static void rfile_imp(Scope &scp, const Args &args) {
@@ -685,12 +699,16 @@ namespace snabel {
     };
 
     ustr_type.supers.push_back(&any_type);
+    str_type.supers.push_back(&get_iterable_type(*this, uchar_type));
     ustr_type.fmt = [](auto &v) {
-      auto &uv(get<ustr>(v));
-      return fmt("u'%0'", uconv.to_bytes(uv));
+      return fmt("u'%0'", uconv.to_bytes(get<ustr>(v)));
     };
     ustr_type.eq = [](auto &x, auto &y) { return get<ustr>(x) == get<ustr>(y); };
 
+    ustr_type.iter = [this](auto &in) {
+      return Iter::Ref(new UStrIter(*this, get<ustr>(in)));
+    };
+    
     rat_type.supers.push_back(&any_type);
     rat_type.fmt = [](auto &v) { return fmt_arg(get<Rat>(v)); };
     rat_type.eq = [](auto &x, auto &y) { return get<Rat>(x) == get<Rat>(y); };
@@ -706,6 +724,12 @@ namespace snabel {
 	v.val = Path(get<str>(v));
 	return true;
       });
+
+    /*    add_conv(*this, str_type, ustr_type, [this](auto &v) {	
+	v.type = &ustr_type;
+	v.val = uconv.from_bytes(get<str>(v));
+	return true;
+	});*/
 
     add_conv(*this, i64_type, rat_type, [this](auto &v) {	
 	v.type = &rat_type;
@@ -796,6 +820,26 @@ namespace snabel {
 	     {ArgType(rat_type), ArgType(rat_type)}, {ArgType(rat_type)},
 	     div_rat_imp);
 
+    add_func(*this, "bytes",
+	     {ArgType(i64_type)}, {ArgType(bin_type)},
+	     bytes_imp);
+
+    add_func(*this, "len",
+	     {ArgType(bin_type)}, {ArgType(i64_type)},
+	     bin_len_imp);
+
+    add_func(*this, "str",
+	     {ArgType(bin_type)}, {ArgType(str_type)},
+	     bin_str_imp);
+
+    add_func(*this, "ustr",
+	     {ArgType(bin_type)}, {ArgType(ustr_type)},
+	     bin_ustr_imp);
+
+    add_func(*this, "append",
+	     {ArgType(bin_type), ArgType(bin_type)}, {ArgType(bin_type)},
+	     bin_append_imp);
+
     add_func(*this, "len",
 	     {ArgType(str_type)}, {ArgType(i64_type)},
 	     str_len_imp);
@@ -804,6 +848,14 @@ namespace snabel {
 	     {ArgType(str_type)}, {ArgType(bin_type)},
 	     str_bytes_imp);
 
+    add_func(*this, "ustr",
+	     {ArgType(str_type)}, {ArgType(ustr_type)},
+	     str_ustr_imp);
+
+    add_func(*this, "bytes",
+	     {ArgType(ustr_type)}, {ArgType(bin_type)},
+	     ustr_bytes_imp);
+    
     add_func(*this, "iter",
 	     {ArgType(iterable_type)},
 	     {ArgType([this](auto &args) { 
@@ -890,23 +942,7 @@ namespace snabel {
     add_func(*this, "unzip",
 	     {ArgType(pair_type)}, {ArgType(0, 0), ArgType(0, 1)},
 	     unzip_imp);
-
-    add_func(*this, "bytes",
-	     {ArgType(i64_type)}, {ArgType(bin_type)},
-	     bytes_imp);
-
-    add_func(*this, "len",
-	     {ArgType(bin_type)}, {ArgType(i64_type)},
-	     bin_len_imp);
-
-    add_func(*this, "str",
-	     {ArgType(bin_type)}, {ArgType(str_type)},
-	     bin_str_imp);
-
-    add_func(*this, "append",
-	     {ArgType(bin_type), ArgType(bin_type)}, {ArgType(bin_type)},
-	     bin_append_imp);
-
+    
     add_func(*this, "rfile",
 	     {ArgType(path_type)}, {ArgType(rfile_type)},
 	     rfile_imp);

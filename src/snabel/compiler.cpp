@@ -7,12 +7,12 @@ namespace snabel {
   static void compile_tok(Exec &exe,
 			  TokSeq &in,
 			  OpSeq &out) {
-    Tok tok(in.front());
+    Tok tok(in.at(0));
     in.pop_front();
     
-    if (tok.text.front() == '&') {
+    if (tok.text.at(0) == '&') {
       out.emplace_back(Getenv(tok.text.substr(1)));
-    } else if (tok.text.front() == '@') {
+    } else if (tok.text.at(0) == '@') {
       out.emplace_back(Getenv(tok.text));      
     } else if (tok.text.at(0) == '$' &&
 	       tok.text.size() == 2 &&
@@ -24,10 +24,13 @@ namespace snabel {
       } else {
 	out.emplace_back(Dup());
       }
-    } else if (tok.text.front() == '\'') {
+    } else if (tok.text.at(0) == '\'') {
       out.emplace_back(Push(Box(exe.str_type,
 				tok.text.substr(1, tok.text.size()-2))));
-    } else if (tok.text.front() == '\\') {
+    } else if (tok.text.at(0) == 'u' && tok.text.at(1) == '\'') {
+      auto v(tok.text.substr(2, tok.text.size()-3));
+      out.emplace_back(Push(Box(exe.ustr_type, uconv.from_bytes(v))));
+    } else if (tok.text.at(0) == '\\') {
       if (tok.text.size() < 2) {
 	ERROR(Snabel, fmt("Invalid char literal on row %0, col %1: %2",
 			  tok.pos.row, tok.pos.col, tok.text));
@@ -41,15 +44,31 @@ namespace snabel {
 	c = '\n';
       } else if (tok.text == "\\t") {
 	c = '\t';
-      } else if (tok.text.size() > 2 && tok.text[1] == '\\') { 
-	c = tok.text[2];
       } else {
 	c = tok.text[1];
       }
       
       out.emplace_back(Push(Box(exe.char_type, c)));
-    }
-    else if (isupper(tok.text[0])) {
+    } else if (tok.text.at(0) == 'u' && tok.text.at(1) == '\\') {
+      if (tok.text.size() < 3) {
+	ERROR(Snabel, fmt("Invalid uchar literal on row %0, col %1: %2",
+			  tok.pos.row, tok.pos.col, tok.text));
+      }
+
+      uchar c(0);
+
+      if (tok.text == "u\\space") {
+	c = u' ';
+      } else if (tok.text == "u\\n") {
+	c = u'\n';
+      } else if (tok.text == "u\\t") {
+	c = u'\t';
+      } else {
+	c = uconv.from_bytes(str(1, tok.text[1])).at(0);
+      }
+      
+      out.emplace_back(Push(Box(exe.uchar_type, c)));
+    } else if (isupper(tok.text[0])) {
       auto fnd(find_type(exe, tok.text));
 
       if (fnd) {

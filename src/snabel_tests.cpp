@@ -45,7 +45,7 @@ namespace snabel {
     CHECK(ts[6].text == "bar", _);
   }
 
-  static void parse_string_tests() {
+  static void parse_str_tests() {
     auto ts(parse_expr("'foo ' 1 2"));
 
     CHECK(ts.size() == 3, _);
@@ -89,7 +89,7 @@ namespace snabel {
     
     parse_semicolon_tests();
     parse_braces_tests();
-    parse_string_tests();
+    parse_str_tests();
     parse_list_tests();
   }
 
@@ -289,7 +289,7 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 7, _);
   }
 
-  static void string_tests() {
+  static void str_tests() {
     TRY(try_test);    
     Exec exe;
     
@@ -309,6 +309,9 @@ namespace snabel {
 
     run(exe, "'foo' bytes 'bar' bytes append str");
     CHECK(get<str>(pop(exe.main)) == "foobar", _);
+
+    run(exe, "u'foo' bytes str");
+    CHECK(get<str>(pop(exe.main)) == "foo", _);
   }
 
   static void list_push_tests() {
@@ -525,7 +528,7 @@ namespace snabel {
     lambda_tests();
     coro_tests();
     when_tests();
-    string_tests();
+    str_tests();
     bin_tests();
     iter_tests();
     list_tests();
