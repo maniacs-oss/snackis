@@ -838,13 +838,7 @@ namespace snabel {
     if (scp.recalls.empty()) {
       auto &thd(scp.thread);
       auto &prev_scp(*std::next(thd.scopes.rbegin()));
-      auto cor(find_coro(prev_scp, *target));
 
-      if (cor && cor->proc) {
-	auto v(peek(thd));
-	if (v) { cor->proc->result.emplace(*v); }
-      }
-      
       if (!end_scope(thd)) { return false; }
       if (prev_scp.return_pc == -1) {
 	ERROR(Snabel, "Missing return pc");

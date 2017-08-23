@@ -287,17 +287,11 @@ add_func(exe, "+",
 ```
 
 ### Procs
-Procs allow interleaving multiple computations in the same thread and optionally collecting their results. Adding an initial yield allows catching the stack and/or environment. Procs provide reference semantics, the same proc may shared between threads as long as it's only run from one thread at a time.
+Procs allow interleaving multiple cooperative computations in the same thread. Adding an initial yield allows catching the stack and/or environment which is restored on each call. Procs provide reference semantics, the same proc may shared between threads as long as it's only run from one thread at a time.
 
 ```
 > proc: foo {(yield 35 push)};
   0 [7] foo foo &+ for
-42
-
-> proc: foo {(let: bar [] $1 push; @bar yield 35 push return)};
-  7 foo _ foo
-  0 &foo result [-1] or
-  &+ for
 42
 
 > let: acc Str list;

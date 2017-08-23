@@ -15,7 +15,6 @@ namespace snabel {
     if (!prc.coro) {
       prc.coro = &add_coro(scp, prc.target);
       prc.coro->proc = &prc;
-      prc.result.reset();
     }
 
     call(scp, prc.target, now);

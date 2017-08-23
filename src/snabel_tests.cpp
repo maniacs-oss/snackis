@@ -493,13 +493,6 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
     run(exe,
-	"proc: foo {(let: bar [] $1 push; @bar yield 35 push return)};"
-	"7 foo _ foo "
-	"0 &foo result [-1] or "
-	"&+ for");
-    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
-
-    run(exe,
 	"let: acc Str list; "
 	"proc: ping {(label: reping; @acc 'ping' push yield reping)}; "
 	"proc: pong {(label: repong; @acc 'pong' push yield repong)}; "

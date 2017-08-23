@@ -19,7 +19,6 @@ namespace snabel {
     Id id;
     Label &target;
     Coro *coro;
-    opt<Box> result;
     
     Proc(Label &tgt);
   };
