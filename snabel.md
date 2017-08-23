@@ -11,7 +11,7 @@ Like Yoda of Star Wars-fame, and yesterdays scientific calculators; as well as m
 9
 ```
 
-### Streams of Tokens
+### Stream of Tokens
 Another thing to be aware of is that Snabel views code as a stream, rather than a graph of tokens. As long as the final sequence makes sense, Snabel mostly doesn't care how it got there. Notable exceptions are contents of strings, type parameter list and lambdas, where Snabel needs to see the final sequence to compile the code.
 
 ```
@@ -325,17 +325,20 @@ Iter<I64>
 > 'tmp' rwfile 'foo' bytes write 0 $1 &+ for
 3
 
-> proc: do-write {(
-    yield rwfile $1 write {_ yield} for
+> proc: do-write {rwfile (
+    yield $1 write {_ yield} for
   )};  
 
   func: do-copy {
     let: buf 0 bytes;
-    @buf $1 do-write
-    rfile read {@buf $1 append _ do-write} for
+    @buf $1 do-write _ _
+    rfile read 0 $1 {
+      len $0 +? {@buf $2 append do-write} when _ +
+    } for
   };
 
   'in' 'out' do-copy
+2313864
 ```
 
 ### Threads

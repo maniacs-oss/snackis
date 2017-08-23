@@ -67,6 +67,11 @@ namespace snabel {
     push(scp.thread, scp.exec.bool_type, res);
   }
 
+  static void pos_i64_imp(Scope &scp, const Args &args) {
+    bool res(get<int64_t>(args.at(0)) > 0);
+    push(scp.thread, scp.exec.bool_type, res);
+  }
+
   static void inc_i64_imp(Scope &scp, const Args &args) {
     auto &a(args.at(0));
     push(scp.thread, *a.type, get<int64_t>(a)+1);
@@ -137,7 +142,9 @@ namespace snabel {
   }
 
   static void bin_len_imp(Scope &scp, const Args &args) {
-    push(scp.thread, scp.exec.i64_type, (int64_t)get<BinRef>(args.at(0))->size());
+    auto &in(args.at(0));
+    push(scp.thread, in);
+    push(scp.thread, scp.exec.i64_type, (int64_t)get<BinRef>(in)->size());
   } 
 
   static void bin_str_imp(Scope &scp, const Args &args) {
@@ -158,11 +165,15 @@ namespace snabel {
   }
 
   static void str_len_imp(Scope &scp, const Args &args) {
-    push(scp.thread, scp.exec.i64_type, (int64_t)get<str>(args.at(0)).size());
+    auto &in(args.at(0));
+    push(scp.thread, in);
+    push(scp.thread, scp.exec.i64_type, (int64_t)get<str>(in).size());
   }
 
   static void ustr_len_imp(Scope &scp, const Args &args) {
-    push(scp.thread, scp.exec.i64_type, (int64_t)get<ustr>(args.at(0)).size());
+    auto &in(args.at(0));
+    push(scp.thread, in);
+    push(scp.thread, scp.exec.i64_type, (int64_t)get<ustr>(in).size());
   }
 
   static void str_bytes_imp(Scope &scp, const Args &args) {
@@ -604,9 +615,10 @@ namespace snabel {
       if (res == -1) {
 	if (errno == EAGAIN) { return true; }
 	ERROR(Snabel, fmt("Failed reading from file: %0", errno));
+	return false;
       }
 
-      out.resize(res);
+      out.resize(res); 
       return true;
     };
 
@@ -784,7 +796,11 @@ namespace snabel {
     add_func(*this, "z?",
 	     {ArgType(i64_type)}, {ArgType(bool_type)},
 	     zero_i64_imp);
-   
+
+    add_func(*this, "+?",
+	     {ArgType(i64_type)}, {ArgType(bool_type)},
+	     pos_i64_imp);
+    
     add_func(*this, "++",
 	     {ArgType(i64_type)}, {ArgType(i64_type)},
 	     inc_i64_imp);
