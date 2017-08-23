@@ -22,6 +22,16 @@ namespace snabel {
     ReadIter(Exec &exe, const Box &in);
     opt<Box> next(Scope &scp) override;
   };
+
+  struct WriteIter: Iter {
+    BinRef in;
+    Box buf, out;
+    int64_t pos;
+    
+    WriteIter(Exec &exe, const BinRef &in, const Box &buf);
+    opt<Box> next(Scope &scp) override;
+  };
+
 }
 
 #endif

@@ -289,6 +289,25 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 7, _);
   }
 
+  static void string_tests() {
+    TRY(try_test);    
+    Exec exe;
+    
+    run(exe, "'foo' len");
+    CHECK(get<int64_t>(pop(exe.main)) == 3, _);
+  }
+
+  static void bin_tests() {
+    TRY(try_test);    
+    Exec exe;
+    
+    run(exe, "3 bytes len");
+    CHECK(get<int64_t>(pop(exe.main)) == 3, _);
+
+    run(exe, "'foo' bytes str");
+    CHECK(get<str>(pop(exe.main)) == "foo", _);
+  }
+
   static void list_push_tests() {
     TRY(try_test);    
     Exec exe;
@@ -507,6 +526,8 @@ namespace snabel {
     lambda_tests();
     coro_tests();
     when_tests();
+    string_tests();
+    bin_tests();
     iter_tests();
     list_tests();
     pair_tests();

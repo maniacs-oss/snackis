@@ -9,7 +9,6 @@ Like Yoda of Star Wars-fame, and yesterdays scientific calculators; as well as m
 ```
 > 7 42 + 10 %
 9
-I64!
 ```
 
 ### Streams of Tokens
@@ -18,7 +17,6 @@ Another thing to be aware of is that Snabel views code as a stream, rather than 
 ```
 > bar label: foo; 35 +) baz label: bar; (7 foo label: baz
 42
-I64!
 
 > bar label: foo; 35 +} baz label: bar; {7 foo label: baz
 SnabelError: Missing lambda
@@ -30,23 +28,18 @@ Values and results from function calls are pushed on the current stack in order 
 ```
 > 1 2 3 $
 [1 2 3]
-List<I64>!
 
 > 1 2 $0 $
 [1 2 2]
-List<I64>!
 
 > 42 7 _ $
 [42]
-I64!
 
 > 42 7 | $
 []
-List<Any>!
 
 > 42 35 $1 -
 -7
-I64!
 ```
 
 ### Expressions
@@ -55,15 +48,12 @@ Parentheses may be used to divide expressions into separate parts, each level co
 ```
 > (1 2 +) (2 2 *) +
 7
-I64!
 
 > 1 (2 3 $)
 [1 2 3]
-List<I64>!
 
 > 1 (|2 3 $) .
-1.[2 3]
-Pair<I64 List<I64>>!
+1 [2 3].
 ```
 
 ### Lambdas
@@ -71,25 +61,21 @@ Wrapping code in braces pushes a pointer on the stack. Lambdas may be exited ear
 
 ```
 > {1 2 +}
-n/a
-Lambda!
+Lambda(_enter1:0)
 
 > {1 2 +} call
 3
-I64!
 
 > {
     1 2 + return
     14 *
   } call
 3
-I64!
 
 > 42
   {-- $0 z? &return when recall 2 +}
   call
 82
-I64!
 ```
 
 ### Coroutines
@@ -99,17 +85,14 @@ Calling ```yield``` from within a lambda logs the current position, stack and en
 > func: foo {|(7 yield 28 +)}
   foo foo +
 42
-I64!
 
 > func: foo {|let: bar 35; 7 yield @bar +}
   foo foo
 42
-I64!
 
 > func: foo {|[7 35] &yield for &+}
   foo foo foo call
 42
-I64!
 ```
 
 ### Equality
@@ -118,11 +101,9 @@ Two kinds of equality are supported, shallow and deep. Each use a separate opera
 ```
 > [3 4 35] [3 4 35] =
 #f
-Bool!
 
 > [3 4 35] [3 4 35] ==
 #t
-Bool!
 ```
 
 ### Bindings
@@ -131,7 +112,6 @@ The ```let:```-macro may be used to introduce named bindings. Bound names are pr
 ```
 > let: fn {7 +}; 35 @fn call
 42
-I64!
 ```
 
 ### Types
@@ -139,16 +119,13 @@ Types are first class, optionally parameterized and inferred.
 
 ```
 > I64
-I64
-Type!
+I64!
 
 > 42 I64 is?
 #t
-Bool!
 
 > 42 type
-I64
-Type!
+I64!
 
 > 42 Str!
 Check failed, expected Str!
@@ -161,17 +138,14 @@ Snabel provides exact arithmetics using rational numbers. Integers are promoted 
 ```
 > 1 3 /
 1/3
-Rat!
 
 > 10 3 / trunc
 3
-I64!
 
 > 1 1 /
   10 {_ 3 /} for
   10 {_ 3 *} for
 1/1
-Rat!
 ```
 
 #### Lists
@@ -180,23 +154,18 @@ Lists are based on deques, which means fast inserts/removals in the front/back a
 ```
 > [1 2 3]
 [1 2 3]
-List<I64>!
 
 > Str list
 []
-List<Str>!
 
 > 1 2 3 $
 [1 2 3]
-List<I64>!
 
 > [35 7 + 'foo']
 [42 'foo']
-List<Any>!
 
 > [1 2] 3 push reverse pop _
 [3 2]
-List<I64>!
 ```
 
 #### Pairs
@@ -205,15 +174,12 @@ Pairs have first class support and all iterables support zipping/unzipping. Pair
 ```
 > 'foo' 42.
 'foo' 42.
-Pair<Str I64>!
 
 > ['foo' 'bar'] 7 list zip list
 ['foo' 0. 'bar' 1.]
-List<Pair<Str I64>>!
 
 > ['foo' 0. 'bar' 1.] unzip list $1 list $
 [[0 1] ['foo' 'bar']]
-List<List<Any>>!
 ```
 
 #### Optionals
@@ -221,20 +187,16 @@ Optional values are supported through the ```Opt<T>```-type. The empty value is 
 
 ```
 > 42 opt
-42
-Opt<I64>!
+Opt(42)
 
 > #n/a 42 or
 42
-I64!
 
 > #n/a 42 opt or
-42
-Opt<I64>!
+Opt(42)
 
 > 7 opt 42 opt or
-7
-Opt<I64>!
+Opt(7)
 ```
 
 ### Labels
@@ -243,11 +205,9 @@ The ```label:```-macro will create a label with the specified name at that point
 ```
 > 1 2 3 +
 5
-I64!
 
 > 1 2 skip 42 label: skip; +
 3
-I64!
 ```
 
 ### Conditions
@@ -256,15 +216,12 @@ I64!
 ```
 > 7 #f {35 +} when
 7
-I64!
 
 > 7 #t {35 +} when
 42
-I64!
 
 > 7 35 #t &+ when
 42
-I64!
 ```
 
 ### Iterators
@@ -273,19 +230,15 @@ Iteration is currently supported for numbers, which will return 0..N; lists, whi
 ```
 > 7 \, join
 '0,1,2,3,4,5,6'
-Str!
 
 > let: foo 'bar' iter; @foo list
 [\b \a \r]
-List<Char>!
 
 > [1 2 3] {7 *} map list
 [7 14 27]
-List<I64>!
 
 > 'abcabcabc' {\a =} filter str
 "aaa"
-Str!
 ```
 
 #### Loops
@@ -294,15 +247,12 @@ The ```for```-loop accepts an iterable and a call target, and will call the targ
 ```
 > 0 7 &+ for
 21
-I64!
 
 > 0 [1 2 3 4 5 6] &+ for
 21
-I64!
 
 > 'foo' &nop for $ \- join
 'f-o-o'
-Str!
 ```
 
 ### Functions
@@ -311,13 +261,11 @@ Each function name represents a set of implementations, and each implementation 
 ```
 > func: foo {35 +}; 7 foo
 42
-I64!
 
 > func: foo {35 +}
   let: bar &foo
   7 @bar call
 42
-I64!
 ```
 
 #### C++
@@ -351,8 +299,17 @@ Iter<Bin>
 > 0 'snackis' rfile read {len +} for
 2313864
 
-> 'out' wfile 'in' rfile read {write {_} for} for
+> let: buf 0 bytes;
 
+  func: writer {(
+    'out' wfile @buf write {_ yield} for
+  )} fiber;  
+
+  func: reader {(
+    'in' rfile read {@buf $1 append _ writer} for
+  )} fiber;
+
+  reader
 ```
 
 ### Fibers
@@ -362,14 +319,12 @@ Any lambda may be treated as a fiber using ```fiber```. Fibers allow interleavin
 > func: foo {(yield 35 push)} fiber;
   0 [7] foo foo &+ for
 42
-I64!
 
 > func: foo {(let: bar [] $1 push; @bar yield 35 push return)} fiber;
   7 foo _ foo
   0 &foo result [-1] or
   &+ for
 42
-I64!
 
 > let: acc Str list;
   func: ping {(label: reping; @acc 'ping' push yield reping)} fiber;
@@ -378,7 +333,6 @@ I64!
   3 {@fibs { call } for} for
   @acc
 ['ping' 'pong' 'ping' 'pong 'ping' 'pong']
-List<Str>!
 ```
 
 ### Threads
@@ -387,7 +341,6 @@ Starting a new thread copies the entire program, stack and environment to a sepa
 ```
 > 7 {35 +} thread join
 42
-I64!
 ```
 
 ### Macros

@@ -39,7 +39,29 @@ namespace snabel {
     auto &x(args.at(0)), &y(args.at(1));
     push(scp.thread, scp.exec.bool_type, x.type->equal(x, y));
   }
-  
+
+  static void opt_imp(Scope &scp, const Args &args) {
+    auto &in(args.at(0));
+    push(scp.thread, get_opt_type(scp.exec, *in.type), in.val);
+  }
+
+  static void opt_or_imp(Scope &scp, const Args &args) {
+    auto &in(args.at(0));
+    auto &alt(args.at(1));
+
+    if (empty(in)) {
+      push(scp.thread, alt);
+    } else {
+      push(scp.thread, *in.type->args.at(0), in.val);
+    }
+  }
+
+  static void opt_or_opt_imp(Scope &scp, const Args &args) {
+    auto &in(args.at(0));
+    auto &alt(args.at(1));
+    push(scp.thread, empty(in) ? alt : in);
+  }
+
   static void zero_i64_imp(Scope &scp, const Args &args) {
     bool res(get<int64_t>(args.at(0)) == 0);
     push(scp.thread, scp.exec.bool_type, res);
@@ -114,26 +136,13 @@ namespace snabel {
     push(scp.thread, scp.exec.rat_type, x/y);
   }
 
-  static void opt_imp(Scope &scp, const Args &args) {
-    auto &in(args.at(0));
-    push(scp.thread, get_opt_type(scp.exec, *in.type), in.val);
+  static void str_len_imp(Scope &scp, const Args &args) {
+    push(scp.thread, scp.exec.i64_type, (int64_t)get<str>(args.at(0)).size());
   }
 
-  static void opt_or_imp(Scope &scp, const Args &args) {
-    auto &in(args.at(0));
-    auto &alt(args.at(1));
-
-    if (empty(in)) {
-      push(scp.thread, alt);
-    } else {
-      push(scp.thread, *in.type->args.at(0), in.val);
-    }
-  }
-
-  static void opt_or_opt_imp(Scope &scp, const Args &args) {
-    auto &in(args.at(0));
-    auto &alt(args.at(1));
-    push(scp.thread, empty(in) ? alt : in);
+  static void str_bytes_imp(Scope &scp, const Args &args) {
+    auto &in(get<str>(args.at(0)));
+    push(scp.thread, scp.exec.bin_type, std::make_shared<Bin>(in.begin(), in.end()));
   }
 
   static void iter_imp(Scope &scp, const Args &args) {
@@ -284,15 +293,34 @@ namespace snabel {
     push(scp.thread, p.first);
     push(scp.thread, p.second);
   }
+  
+  static void bytes_imp(Scope &scp, const Args &args) {
+    push(scp.thread,
+	 scp.exec.bin_type,
+	 std::make_shared<Bin>(get<int64_t>(args.at(0))));
+  }
 
   static void bin_len_imp(Scope &scp, const Args &args) {
     push(scp.thread, scp.exec.i64_type, (int64_t)get<BinRef>(args.at(0))->size());
   } 
-  
+
+  static void bin_str_imp(Scope &scp, const Args &args) {
+    auto &in(*get<BinRef>(args.at(0)));
+    str in_str(in.begin(), in.end());
+    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> from_utf8;
+    push(scp.thread, scp.exec.str_type, from_utf8.from_bytes(utf8));
+  }
+
   static void rfile_imp(Scope &scp, const Args &args) {
     push(scp.thread,
 	 scp.exec.rfile_type,
 	 std::make_shared<File>(get<Path>(args.at(0)), O_RDONLY));
+  }
+
+  static void wfile_imp(Scope &scp, const Args &args) {
+    push(scp.thread,
+	 scp.exec.wfile_type,
+	 std::make_shared<File>(get<Path>(args.at(0)), O_WRONLY | O_CREAT));
   }
 
   static void read_file_imp(Scope &scp, const Args &args) {
@@ -301,6 +329,14 @@ namespace snabel {
     push(scp.thread,
 	 get_iter_type(exe, exe.bin_type),
 	 Iter::Ref(new ReadIter(exe, args.at(0))));
+  }
+
+  static void write_file_imp(Scope &scp, const Args &args) {
+    Exec &exe(scp.exec);
+    
+    push(scp.thread,
+	 get_iter_type(exe, exe.i64_type),
+	 Iter::Ref(new WriteIter(exe, get<BinRef>(args.at(1)), args.at(0))));
   }
 
   static void fiber_imp(Scope &scp, const Args &args) {
@@ -353,6 +389,8 @@ namespace snabel {
     str_type(add_type(*this, "Str")),
     thread_type(add_type(*this, "Thread")),
     void_type(add_type(*this, "Void")),
+    writeable_type(add_type(*this, "Writeable")),
+    wfile_type(add_type(*this, "WFile")),
     next_gensym(1)
   {    
     any_type.fmt = [](auto &v) { return "Any"; };
@@ -360,7 +398,7 @@ namespace snabel {
 
     meta_type.supers.push_back(&any_type);
     meta_type.args.push_back(&any_type);
-    meta_type.fmt = [](auto &v) { return get<Type *>(v)->name; };
+    meta_type.fmt = [](auto &v) { return fmt("%0!", get<Type *>(v)->name); };
     meta_type.eq = [](auto &x, auto &y) { return get<Type *>(x) == get<Type *>(y); };
 
     void_type.fmt = [](auto &v) { return "Void"; };
@@ -370,12 +408,12 @@ namespace snabel {
     opt_type.args.push_back(&any_type);
     opt_type.dump = [](auto &v) -> str {
       if (empty(v)) { return "#n/a"; }
-      return v.type->args.at(0)->dump(v);
+      return fmt("Opt(%0)", v.type->args.at(0)->dump(v));
     };
     opt_type.fmt = [](auto &v) -> str {
       if (empty(v)) { return "#n/a"; }
-      return v.type->args.at(0)->fmt(v);
-    };    
+      return fmt("Opt(%0)", v.type->args.at(0)->fmt(v));
+    };
     opt_type.eq = [](auto &x, auto &y) {
       if (empty(x) && !empty(y)) { return true; }
       if (!empty(x) || !empty(y)) { return false; }
@@ -390,8 +428,6 @@ namespace snabel {
 
     callable_type.supers.push_back(&any_type);
     callable_type.args.push_back(&any_type);
-
-    readable_type.supers.push_back(&any_type);
 
     iter_type.supers.push_back(&any_type);
     iter_type.args.push_back(&any_type);
@@ -431,7 +467,6 @@ namespace snabel {
       return true;
     };
 
-
     pair_type.supers.push_back(&any_type);
     pair_type.args.push_back(&any_type);
     pair_type.args.push_back(&any_type);
@@ -444,6 +479,9 @@ namespace snabel {
       return *get<PairRef>(x) == *get<PairRef>(y); 
     };
 
+    readable_type.supers.push_back(&any_type);
+    writeable_type.supers.push_back(&any_type);
+    
     path_type.supers.push_back(&any_type);
     path_type.fmt = [](auto &v) { return get<Path>(v).string(); };
     path_type.eq = [](auto &x, auto &y) { return get<Path>(x) == get<Path>(y); };
@@ -522,10 +560,27 @@ namespace snabel {
 
       if (res == -1) {
 	if (errno == EAGAIN) { return true; }
+	ERROR(Snabel, fmt("Failed reading from file: %0", errno));
       }
 
       out.resize(res);
       return true;
+    };
+
+    wfile_type.supers.push_back(&file_type);
+    wfile_type.supers.push_back(&writeable_type);
+    wfile_type.fmt = [](auto &v) { return fmt("WFile(%0)", get<FileRef>(v)->fd); };
+    wfile_type.eq = file_type.eq;
+    wfile_type.write = [](auto &out, auto data, auto len) {
+      auto &f(*get<FileRef>(out));
+      int res(write(f.fd, data, len));
+
+      if (res == -1) {
+	if (errno == EAGAIN) { return 0; }
+	ERROR(Snabel, fmt("Failed writing to file: %0", errno));
+      }
+      
+      return res;
     };
     
     func_type.supers.push_back(&any_type);
@@ -643,6 +698,23 @@ namespace snabel {
 	     {ArgType(any_type), ArgType(0)}, {ArgType(bool_type)},
 	     equal_imp);
    
+    add_func(*this, "opt",
+	     {ArgType(any_type)},
+	     {ArgType([this](auto &args) {
+		   return &get_opt_type(*this, *args.at(0).type);
+		 })},
+	     opt_imp);
+
+    add_func(*this, "or",
+	     {ArgType(opt_type),
+		 ArgType([](auto &args) { return args.at(0).type->args.at(0); })},
+	     {ArgType([](auto &args) { return args.at(0).type->args.at(0); })},
+	     opt_or_imp);
+
+    add_func(*this, "or",
+	     {ArgType(opt_type), ArgType(0)}, {ArgType(0)},
+	     opt_or_opt_imp);
+
     add_func(*this, "z?",
 	     {ArgType(i64_type)}, {ArgType(bool_type)},
 	     zero_i64_imp);
@@ -690,22 +762,13 @@ namespace snabel {
 	     {ArgType(rat_type), ArgType(rat_type)}, {ArgType(rat_type)},
 	     div_rat_imp);
 
-    add_func(*this, "opt",
-	     {ArgType(any_type)},
-	     {ArgType([this](auto &args) {
-		   return &get_opt_type(*this, *args.at(0).type);
-		 })},
-	     opt_imp);
+    add_func(*this, "len",
+	     {ArgType(str_type)}, {ArgType(i64_type)},
+	     str_len_imp);
 
-    add_func(*this, "or",
-	     {ArgType(opt_type),
-		 ArgType([](auto &args) { return args.at(0).type->args.at(0); })},
-	     {ArgType([](auto &args) { return args.at(0).type->args.at(0); })},
-	     opt_or_imp);
-
-    add_func(*this, "or",
-	     {ArgType(opt_type), ArgType(0)}, {ArgType(0)},
-	     opt_or_opt_imp);
+    add_func(*this, "bytes",
+	     {ArgType(str_type)}, {ArgType(bin_type)},
+	     str_bytes_imp);
 
     add_func(*this, "iter",
 	     {ArgType(iterable_type)},
@@ -794,17 +857,35 @@ namespace snabel {
 	     {ArgType(pair_type)}, {ArgType(0, 0), ArgType(0, 1)},
 	     unzip_imp);
 
+    add_func(*this, "bytes",
+	     {ArgType(i64_type)}, {ArgType(bin_type)},
+	     bytes_imp);
+
     add_func(*this, "len",
 	     {ArgType(bin_type)}, {ArgType(i64_type)},
 	     bin_len_imp);
+
+    add_func(*this, "str",
+	     {ArgType(bin_type)}, {ArgType(str_type)},
+	     bin_str_imp);
 
     add_func(*this, "rfile",
 	     {ArgType(path_type)}, {ArgType(rfile_type)},
 	     rfile_imp);
 
+    add_func(*this, "wfile",
+	     {ArgType(path_type)}, {ArgType(wfile_type)},
+	     wfile_imp);
+
     add_func(*this, "read",
-	     {ArgType(readable_type)}, {ArgType(get_iter_type(*this, bin_type))},
+	     {ArgType(readable_type)},
+	     {ArgType(get_iter_type(*this, bin_type))},
 	     read_file_imp);
+
+    add_func(*this, "write",
+	     {ArgType(writeable_type), ArgType(bin_type)},
+	     {ArgType(get_iter_type(*this, i64_type))},
+	     write_file_imp);
 
     add_func(*this, "fiber",
 	     {ArgType(lambda_type)}, {ArgType(fiber_type)},

@@ -29,4 +29,19 @@ namespace snabel {
     if (!(*in.type->read)(in, bin)) { return nullopt; }
     return out;
   }
+
+  WriteIter::WriteIter(Exec &exe, const BinRef &in, const Box &buf):
+    Iter(exe, get_iter_type(exe, exe.i64_type)),
+    in(in), buf(buf), out(exe.i64_type, (int64_t)0)
+  { }
+  
+  opt<Box> WriteIter::next(Scope &scp){
+    auto &bin(*in);
+    if (bin.empty()) { return nullopt; }
+    auto res((*out.type->write)(out, &bin[0], bin.size()));
+    if (res == -1) { return nullopt; }
+    bin.erase(bin.begin(), std::next(bin.begin(), res));
+    get<int64_t>(out) += res;
+    return out;
+  }
 }
