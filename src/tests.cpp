@@ -22,6 +22,7 @@
 using namespace snackis;
 using namespace snackis::db;
 
+/*
 static void str_tests() {
   CHECK(find_ci("foo", "bar"), _ == str::npos);
   CHECK(find_ci("foobar", "BAR"), _ == 3);
@@ -54,7 +55,7 @@ static void crypt_key_tests() {
 }
 
 static void chan_tests() {
-  /*  const int MAX(100);
+  const int MAX(100);
   Chan<int> c(MAX);
 
   CHECK(get(c, false), !_);
@@ -64,7 +65,7 @@ static void chan_tests() {
   CHECK(get(c, false), !_);
   CHECK(put(c, 42), _);
 
-  close(c);*/
+  close(c);
 }
 
 struct Foo {
@@ -180,7 +181,6 @@ static void read_write_tests() {
   CHECK(compare(tbl, rrec, rec), _ == 0);
 }
 
-/*
 static void email_tests() {
   TRACE("Running email_tests");
   Proc proc("testdb/", MAX_BUF);
@@ -199,7 +199,7 @@ int main() {
   TRY(try_tests);
   std::cout << "Snackis v" << version_str() << std::endl;
   
-  str_tests();
+  /*  str_tests();
   fmt_tests();
   crypt_secret_tests();
   crypt_key_tests();
@@ -208,7 +208,7 @@ int main() {
   table_insert_tests();
   table_slurp_tests();
   read_write_tests();
-  //email_tests();
+  email_tests();*/
   snabel::all_tests();
   return 0;
 }

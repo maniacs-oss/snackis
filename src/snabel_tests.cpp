@@ -93,6 +93,8 @@ namespace snabel {
     parse_list_tests();
   }
 
+  Exec exe;
+
   static void parens_tests() {
     TRY(try_test);    
     auto ts(parse_expr("foo (bar (35 7)) baz"));
@@ -108,14 +110,12 @@ namespace snabel {
     CHECK(ts[7].text == ")", _);
     CHECK(ts[8].text == "baz", _);
 
-    Exec exe;
     run(exe, "(1 1 +) (2 2 +) *");
     CHECK(get<int64_t>(pop(exe.main)) == 8, _);    
   }
 
   static void compile_tests() {
     TRY(try_test);
-    Exec exe;
     run(exe, "let: foo 35; let: bar @foo 7 +");
 
     Scope &scp(curr_scope(exe.main));
@@ -125,7 +125,6 @@ namespace snabel {
 
   static void func_tests() {
     TRY(try_test);
-    Exec exe;
     
     run(exe, "func: foo {35 +}; 7 foo");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
@@ -141,7 +140,6 @@ namespace snabel {
 
   static void type_tests() {
     TRY(try_test);    
-    Exec exe;
 
     run(exe, "42 I64 is?");
     CHECK(get<bool>(pop(exe.main)), _);
@@ -168,7 +166,6 @@ namespace snabel {
 
   static void stack_tests() {
     TRY(try_test);    
-    Exec exe;
 
     run(exe, "42 _");
     CHECK(!peek(exe.main), _);
@@ -179,7 +176,6 @@ namespace snabel {
 
   static void group_tests() {
     TRY(try_test);    
-    Exec exe;
     
     run(exe, "(42 let: foo 21; @foo)");
     Scope &scp1(curr_scope(exe.main));
@@ -190,7 +186,6 @@ namespace snabel {
 
   static void equality_tests() {
     TRY(try_test);    
-    Exec exe;
 
     run(exe, "[1 2 3] [1 2 3] =");
     CHECK(!get<bool>(pop(exe.main)), _);
@@ -201,14 +196,12 @@ namespace snabel {
 
   static void let_tests() {
     TRY(try_test);    
-    Exec exe;
     run(exe, "let: foo 35 7 +; @foo");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
   static void jump_tests() {
     TRY(try_test);    
-    Exec exe;
 
     run(exe, "3 4 exit 35 label: exit; +");
     CHECK(get<int64_t>(pop(exe.main)) == 7, _);
@@ -219,7 +212,7 @@ namespace snabel {
 
   static void lambda_tests() {
     TRY(try_test);    
-    Exec exe;
+
     run(exe, "{3 4 +} call 35 +");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
@@ -251,7 +244,6 @@ namespace snabel {
 
   static void coro_tests() {
     TRY(try_test);    
-    Exec exe;
     
     run(exe, "func: foo {|(7 yield 28 +)}; foo foo +");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
@@ -280,7 +272,6 @@ namespace snabel {
   
   static void when_tests() {
     TRY(try_test);    
-    Exec exe;
     
     run(exe, "7 #t {35 +} when");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
@@ -291,7 +282,6 @@ namespace snabel {
 
   static void str_tests() {
     TRY(try_test);    
-    Exec exe;
     
     run(exe, "'foo' len");
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
@@ -299,7 +289,6 @@ namespace snabel {
 
   static void bin_tests() {
     TRY(try_test);    
-    Exec exe;
     
     run(exe, "3 bytes len");
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
@@ -316,7 +305,7 @@ namespace snabel {
 
   static void list_push_tests() {
     TRY(try_test);    
-    Exec exe;
+
     run(exe, "[0] 1 push");
     auto lsb(pop(exe.main));
     auto ls(get<ListRef>(lsb));
@@ -325,9 +314,8 @@ namespace snabel {
 
   static void list_pop_tests() {
     TRY(try_test);    
-    Exec exe;
-    run(exe, "[7 35] pop");
-    
+
+    run(exe, "[7 35] pop");    
     CHECK(get<int64_t>(pop(exe.main)) == 35, _);
     auto lsb(pop(exe.main));
     auto ls(get<ListRef>(lsb));
@@ -337,7 +325,7 @@ namespace snabel {
 
   static void list_reverse_tests() {
     TRY(try_test);    
-    Exec exe;
+
     run(exe, "[0 1 2] reverse");
     auto lsb(pop(exe.main));
     auto ls(get<ListRef>(lsb));
@@ -350,7 +338,6 @@ namespace snabel {
 
   static void iter_tests() {
     TRY(try_test);    
-    Exec exe;
 
     run(exe, "7 \\, join");
     CHECK(get<str>(pop(exe.main)) == "0,1,2,3,4,5,6", _);
@@ -376,7 +363,7 @@ namespace snabel {
   
   static void list_tests() {
     TRY(try_test);    
-    Exec exe;
+
     run(exe, "[0 1 2]");
     auto lsb(pop(exe.main));
     CHECK(lsb.type == &get_list_type(exe, exe.i64_type), _);
@@ -403,7 +390,6 @@ namespace snabel {
 
   static void pair_tests() {
     TRY(try_test);    
-    Exec exe;
 
     run(exe, "42 'foo' .");
     auto p(get<PairRef>(pop(exe.main)));
@@ -417,7 +403,6 @@ namespace snabel {
 
   static void for_tests() {
     TRY(try_test);    
-    Exec exe;
 
     run(exe, "0 7 &+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 21, _);
@@ -431,7 +416,6 @@ namespace snabel {
 
   static void rat_tests() {
     TRY(try_test);    
-    Exec exe;
 
     run(exe, "1 2 / 2 3 / + -1 6 / +");
     CHECK(get<Rat>(pop(exe.main)) == Rat(1, 1), _);
@@ -466,7 +450,6 @@ namespace snabel {
 
   static void opt_tests() {
     TRY(try_test);    
-    Exec exe;
 
     run(exe, "42 opt");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
@@ -480,7 +463,6 @@ namespace snabel {
 
   static void io_tests() {
     TRY(try_test);    
-    Exec exe;
 
     run(exe, "0 'tests' rfile read {len +} for");
     CHECK(get<int64_t>(pop(exe.main)) > 1000000, _);
@@ -491,7 +473,6 @@ namespace snabel {
   
   static void proc_tests() {
     TRY(try_test);    
-    Exec exe;
     
     run(exe,
 	"proc: foo {(yield 35 push)};"
@@ -506,13 +487,14 @@ namespace snabel {
 	"3 {@ps { call } for} for");
     CHECK(get<ListRef>(get_env(exe.main_scope, "@acc"))->size() == 6, _);
   }
-  
+
+  /*
   static void thread_tests() {
     TRY(try_test);    
     Exec exe;
     run(exe, "7 {35 +} thread join");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
-  }
+    }*/
   
   static void loop() {
     parse_tests();
@@ -538,7 +520,7 @@ namespace snabel {
     opt_tests();
     io_tests();
     proc_tests();
-    thread_tests();
+    //thread_tests();
   }
 
   void all_tests() {

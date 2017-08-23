@@ -14,9 +14,18 @@ namespace snackis {
   }
 
   uint64_t gcd(uint64_t x, uint64_t y) {
+    while (x && y) {
+      auto z(y);
+      y = x % y;
+      x = z;
+    }
+
+    return x;
+  }
+
+  /*
+  uint64_t gcd(uint64_t x, uint64_t y) {
     while (x && y && x != y) {
-      //std::cout << "gcd " << x << " " << y << std::endl;
-      
       if (x > y) {
 	x -= y;
       } else { 
@@ -25,7 +34,7 @@ namespace snackis {
     }
 
     return x;
-  }
+    }*/
 
   bool operator ==(const Rat &x, const Rat &y) {
     return x.num == y.num && x.div == y.div && x.neg == y.neg;
