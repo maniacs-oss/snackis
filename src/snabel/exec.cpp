@@ -574,7 +574,7 @@ namespace snabel {
     byte_type.eq = [](auto &x, auto &y) { return get<Byte>(x) == get<Byte>(y); };
 
     bool_type.supers.push_back(&any_type);
-    bool_type.fmt = [](auto &v) { return get<bool>(v) ? ":t" : ":f"; };
+    bool_type.fmt = [](auto &v) { return get<bool>(v) ? "#t" : "#f"; };
     bool_type.eq = [](auto &x, auto &y) { return get<bool>(x) == get<bool>(y); };
     put_env(main_scope, "#t", Box(bool_type, true));
     put_env(main_scope, "#f", Box(bool_type, false));

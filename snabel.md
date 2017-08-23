@@ -121,11 +121,11 @@ Types are first class, optionally parameterized and inferred.
 > I64
 I64!
 
-> 42 I64 is?
-#t
-
 > 42 type
 I64!
+
+> [7 35] List<I64> is?
+#t
 
 > 42 Str!
 Check failed, expected Str!
