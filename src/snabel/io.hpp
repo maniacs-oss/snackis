@@ -9,6 +9,14 @@
 namespace snabel {
   const size_t READ_BUF_SIZE(65536);
   
+  struct IOBuf {
+    Bin data;
+    int64_t pos;
+    IOBuf(int64_t size);
+  };
+
+  bool operator ==(const IOBuf &x, const IOBuf &y);
+
   struct File {
     Path path;
     int fd;

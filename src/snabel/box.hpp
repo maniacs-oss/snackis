@@ -19,12 +19,14 @@ namespace snabel {
   struct Exec;
   struct Proc;
   struct File;
+  struct IOBuf;
   struct Label;
   struct Scope;
   struct Thread;
   struct Type;
 
   using FileRef = std::shared_ptr<File>;
+  using IOBufRef = std::shared_ptr<IOBuf>;
   using List = std::deque<Box>;
   using ListRef = std::shared_ptr<List>;
   using Pair = std::pair<Box, Box>;
@@ -36,7 +38,8 @@ namespace snabel {
   
   using Val = std::variant<Empty, bool, Byte, char, int64_t, Path, Rat, str, uchar,
 			   ustr,
-			   BinRef, FileRef, Iter::Ref, ListRef, PairRef, ProcRef, 
+			   BinRef, FileRef, Iter::Ref, IOBufRef, ListRef, PairRef,
+			   ProcRef, 
 			   Func *, Label *, Thread *, Type *>;
   
   struct Box {

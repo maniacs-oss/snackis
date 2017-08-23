@@ -5,6 +5,20 @@
 #include "snabel/io.hpp"
 
 namespace snabel {
+  IOBuf::IOBuf(int64_t size):
+    pos(0)
+  {
+    data.reserve(size);
+  }
+
+  bool operator ==(const IOBuf &x, const IOBuf &y) {
+    for (int64_t i(0); i < x.pos && i < y.pos; i++) {
+      if (x.data[i] != y.data[i]) { return false; }
+    }
+
+    return true;
+  }
+
   File::File(const Path &path, int flags):
     path(path), fd(open(path.c_str(), flags | O_NONBLOCK, 0666))
   {
@@ -20,13 +34,13 @@ namespace snabel {
   ReadIter::ReadIter(Exec &exe, const Box &in):
     Iter(exe, get_iter_type(exe, exe.bin_type)),
     in(in),
-    out(exe.bin_type, std::make_shared<Bin>())
+    out(exe.iobuf_type, std::make_shared<IOBuf>(READ_BUF_SIZE))
   { }
   
   opt<Box> ReadIter::next(Scope &scp){
-    auto &bin(*get<BinRef>(out));
-    bin.resize(READ_BUF_SIZE);
-    if (!(*in.type->read)(in, bin)) { return nullopt; }
+    auto &buf(*get<IOBufRef>(out));
+    buf.pos = 0;
+    if (!(*in.type->read)(in, buf)) { return nullopt; }
     return out;
   }
 

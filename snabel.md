@@ -341,7 +341,7 @@ Iter<I64>
     } for
   };
 
-'in' 'out' do-copy
+  'in' 'out' do-copy
 2313864
 ```
 

@@ -85,11 +85,15 @@ namespace gui {
     TRY(try_run);
     snabel::rewind(v->exec);
 
-    if (snabel::run(v->exec.main)) {
+    auto started(pnow());
+    auto res(snabel::run(v->exec.main));
+    auto stopped(pnow());
+    
+    if (res) {
       auto res(peek(v->exec.main));
       if (res) {
-	log(v->ctx, "Script result:\n%0\n%1!",
-	    res->type->dump(*res), res->type->name);
+	log(v->ctx, "Script finished in %0 us:\n%1\n%2!",
+	    usecs(stopped-started), res->type->dump(*res), res->type->name);
       } else {
 	log(v->ctx, "Script result: n/a");
       }

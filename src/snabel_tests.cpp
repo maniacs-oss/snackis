@@ -7,6 +7,7 @@
 #include "snabel/parser.hpp"
 #include "snabel/type.hpp"
 #include "snackis/core/error.hpp"
+#include "snackis/core/time.hpp"
 
 namespace snabel {
   static void parse_lines_tests() {
@@ -296,8 +297,8 @@ namespace snabel {
     run(exe, "'foo' bytes str");
     CHECK(get<str>(pop(exe.main)) == "foo", _);
 
-    run(exe, "'foo' bytes 'bar' bytes append str");
-    CHECK(get<str>(pop(exe.main)) == "foobar", _);
+    //run(exe, "'foo' bytes 'bar' bytes append str");
+    //CHECK(get<str>(pop(exe.main)) == "foobar", _);
 
     run(exe, "u'foo' bytes str");
     CHECK(get<str>(pop(exe.main)) == "foo", _);
@@ -527,16 +528,13 @@ namespace snabel {
     TRY(try_snabel);
     const int iters(30), warmups(10);
     for(int i(0); i < warmups; ++i) { loop(); }
-    auto started(std::chrono::high_resolution_clock::now());    
+    auto started(pnow());    
 
     for(int i(0); i < iters; ++i) {
       loop();
       if (i < iters-1) { try_snabel.errors.clear(); }
     }
     
-    auto stopped = std::chrono::high_resolution_clock::now();
-    auto t =
-      std::chrono::duration_cast<std::chrono::microseconds>(stopped-started).count();
-    std::cout << "Snabel: " << t / iters << "us" << std::endl;
+    std::cout << "Snabel: " << usecs(pnow()-started) / iters << "us" << std::endl;
   }
 }

@@ -147,11 +147,19 @@ namespace snabel {
     push(scp.thread, scp.exec.ustr_type, uconv.from_bytes(str(in.begin(), in.end())));
   }
 
-  static void bin_append_imp(Scope &scp, const Args &args) {
+  static void bin_append_iobuf_imp(Scope &scp, const Args &args) {
     auto &out(args.at(0));
-    auto &tgt(*get<BinRef>(out)), &src(*get<BinRef>(args.at(1)));
-    std::copy(src.begin(), src.end(), std::back_inserter(tgt));
+    auto &tgt(*get<BinRef>(out));
+    auto &src(*get<IOBufRef>(args.at(1)));
+    std::copy(src.data.begin(), std::next(src.data.begin(), src.pos),
+	      std::back_inserter(tgt));
     push(scp.thread, out);
+  }
+
+  static void iobuf_len_imp(Scope &scp, const Args &args) {
+    auto &in(args.at(0));
+    push(scp.thread, in);
+    push(scp.thread, scp.exec.i64_type, (int64_t)get<IOBufRef>(in)->pos);
   }
 
   static void str_len_imp(Scope &scp, const Args &args) {
@@ -392,6 +400,7 @@ namespace snabel {
     file_type(add_type(*this, "File")),    
     func_type(add_type(*this, "Func")),
     i64_type(add_type(*this, "I64")),
+    iobuf_type(add_type(*this, "IOBuf")),
     iter_type(add_type(*this, "Iter")),
     iterable_type(add_type(*this, "Iterable")),
     label_type(add_type(*this, "Label")),
@@ -517,6 +526,18 @@ namespace snabel {
       return Iter::Ref(new BinIter(*this, get<BinRef>(in)));
     };
 
+    iobuf_type.supers.push_back(&any_type);
+    iobuf_type.fmt = [](auto &v) {
+      auto &b(*get<IOBufRef>(v));
+      return fmt("IOBuf(%0:%1)", b.pos, b.data.size());
+    };
+    iobuf_type.eq = [](auto &x, auto &y) {
+      return get<IOBufRef>(x) == get<IOBufRef>(y);
+    };
+    iobuf_type.equal = [](auto &x, auto &y) {
+      return *get<IOBufRef>(x) == *get<IOBufRef>(y);
+    };
+    
     byte_type.supers.push_back(&any_type);
     byte_type.fmt = [](auto &v) { return fmt_arg(get<Byte>(v)); };
     byte_type.eq = [](auto &x, auto &y) { return get<Byte>(x) == get<Byte>(y); };
@@ -599,7 +620,7 @@ namespace snabel {
     rfile_type.eq = file_type.eq;
     rfile_type.read = [](auto &in, auto &out) {
       auto &f(*get<FileRef>(in));
-      int res(read(f.fd, &out[0], out.size()));
+      auto res(read(f.fd, &out.data[out.pos], out.data.capacity()-out.pos));
       if (!res) { return false; }
 
       if (res == -1) {
@@ -608,7 +629,7 @@ namespace snabel {
 	return false;
       }
 
-      out.resize(res); 
+      out.pos += res;
       return true;
     };
 
@@ -834,6 +855,10 @@ namespace snabel {
 	     {ArgType(bin_type)}, {ArgType(i64_type)},
 	     bin_len_imp);
 
+    add_func(*this, "len",
+	     {ArgType(iobuf_type)}, {ArgType(i64_type)},
+	     iobuf_len_imp);
+
     add_func(*this, "str",
 	     {ArgType(bin_type)}, {ArgType(str_type)},
 	     bin_str_imp);
@@ -843,8 +868,8 @@ namespace snabel {
 	     bin_ustr_imp);
 
     add_func(*this, "append",
-	     {ArgType(bin_type), ArgType(bin_type)}, {ArgType(bin_type)},
-	     bin_append_imp);
+	     {ArgType(bin_type), ArgType(iobuf_type)}, {ArgType(bin_type)},
+	     bin_append_iobuf_imp);
 
     add_func(*this, "len",
 	     {ArgType(str_type)}, {ArgType(i64_type)},

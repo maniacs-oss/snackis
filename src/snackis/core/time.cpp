@@ -11,6 +11,8 @@ namespace snackis {
     return std::chrono::time_point_cast<std::chrono::milliseconds>(tim);
   }
 
+  PTime pnow() { return PClock::now(); }
+
   str fmt(const Time &tim, const str &spec) {
     if (tim == null_time || tim == max_time) { return ""; }
     Stream buf;
