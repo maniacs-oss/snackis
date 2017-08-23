@@ -327,15 +327,16 @@ Iter<I64>
 
 > let: buf 0 bytes;
 
-  proc: writer {(
-    'out' rwfile @buf write {_ yield} for
+  proc: do-write {(
+    yield rwfile @buf write {_ yield} for
   )};  
 
-  proc: reader {(
-    'in' rfile read {@buf $1 append _ writer} for
+  proc: do-copy {(
+    do-write
+    rfile read {@buf $1 append _ do-write} for
   )};
 
-  reader
+  'in' 'out' do-copy
 ```
 
 ### Threads
