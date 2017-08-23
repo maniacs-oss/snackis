@@ -73,7 +73,7 @@ Lambda(_enter1:0)
 3
 
 > 42
-  {-- $0 z? &return when recall 2 +}
+  {1 - $0 z? &return when recall 2 +}
   call
 82
 ```

@@ -72,16 +72,6 @@ namespace snabel {
     push(scp.thread, scp.exec.bool_type, res);
   }
 
-  static void inc_i64_imp(Scope &scp, const Args &args) {
-    auto &a(args.at(0));
-    push(scp.thread, *a.type, get<int64_t>(a)+1);
-  }
-
-  static void dec_i64_imp(Scope &scp, const Args &args) {
-    auto &a(args.at(0));
-    push(scp.thread, *a.type, get<int64_t>(a)-1);
-  }
-
   static void add_i64_imp(Scope &scp, const Args &args) {
     auto &x(get<int64_t>(args.at(0))), &y(get<int64_t>(args.at(1)));
     push(scp.thread, scp.exec.i64_type, x+y);
@@ -801,14 +791,6 @@ namespace snabel {
 	     {ArgType(i64_type)}, {ArgType(bool_type)},
 	     pos_i64_imp);
     
-    add_func(*this, "++",
-	     {ArgType(i64_type)}, {ArgType(i64_type)},
-	     inc_i64_imp);
-
-    add_func(*this, "--",
-	     {ArgType(i64_type)}, {ArgType(i64_type)},
-	     dec_i64_imp);
-
     add_func(*this, "+",
 	     {ArgType(i64_type), ArgType(i64_type)}, {ArgType(i64_type)},
 	     add_i64_imp);
