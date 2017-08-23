@@ -4,6 +4,7 @@
 #include "snackis/core/str.hpp"
 
 namespace snackis {
+  std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> uconv;
   const str whitespace(" \t\r\n");
   
   str trim(const str& in) {

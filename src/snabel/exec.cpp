@@ -1,5 +1,4 @@
 #include <iostream>
-
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -390,6 +389,8 @@ namespace snabel {
     rwfile_type(add_type(*this, "RWFile")),    
     str_type(add_type(*this, "Str")),
     thread_type(add_type(*this, "Thread")),
+    uchar_type(add_type(*this, "UChar")),
+    ustr_type(add_type(*this, "UStr")),
     void_type(add_type(*this, "Void")),
     writeable_type(add_type(*this, "Writeable")),
     next_gensym(1)
@@ -525,9 +526,33 @@ namespace snabel {
       return fmt("\\%0", str(1, c));
     };
 
-    char_type.fmt = [](auto &v) { return str(1, get<char>(v)); };    
+    char_type.fmt = [](auto &v) -> str { return str(1, get<char>(v)); };
+
     char_type.eq = [](auto &x, auto &y) { return get<char>(x) == get<char>(y); };
     
+    uchar_type.supers.push_back(&any_type);
+
+    uchar_type.dump = [](auto &v) -> str {
+      auto c(get<uchar>(v));
+      
+      switch (c) {
+      case u' ':
+	return "u\\space";
+      case u'\n':
+	return "u\\n";
+      case u'\t':
+	return "u\\t";
+      }
+
+      return fmt("u\\%0", uconv.to_bytes(ustr(1, c)));
+    };
+
+    uchar_type.fmt = [](auto &v) -> str {
+      return uconv.to_bytes(ustr(1, get<uchar>(v)));
+    };
+    
+    uchar_type.eq = [](auto &x, auto &y) { return get<uchar>(x) == get<uchar>(y); };
+
     proc_type.supers.push_back(&any_type);
     proc_type.supers.push_back(&callable_type);
     proc_type.fmt = [](auto &v) { return fmt("Proc(%0)", get<ProcRef>(v)->id); };
@@ -658,6 +683,13 @@ namespace snabel {
     str_type.iter = [this](auto &in) {
       return Iter::Ref(new StrIter(*this, get<str>(in)));
     };
+
+    ustr_type.supers.push_back(&any_type);
+    ustr_type.fmt = [](auto &v) {
+      auto &uv(get<ustr>(v));
+      return fmt("u'%0'", uconv.to_bytes(uv));
+    };
+    ustr_type.eq = [](auto &x, auto &y) { return get<ustr>(x) == get<ustr>(y); };
 
     rat_type.supers.push_back(&any_type);
     rat_type.fmt = [](auto &v) { return fmt_arg(get<Rat>(v)); };

@@ -34,7 +34,8 @@ namespace snabel {
   struct Empty
   { };
   
-  using Val = std::variant<Empty, bool, Byte, char, int64_t, Path, Rat, str,
+  using Val = std::variant<Empty, bool, Byte, char, int64_t, Path, Rat, str, uchar,
+			   ustr,
 			   BinRef, FileRef, Iter::Ref, ListRef, PairRef, ProcRef, 
 			   Func *, Label *, Thread *, Type *>;
   

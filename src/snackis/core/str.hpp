@@ -1,6 +1,7 @@
 #ifndef SNACKIS_STR_HPP
 #define SNACKIS_STR_HPP
 
+#include <codecvt>
 #include <set>
 #include <string>
 
@@ -10,7 +11,10 @@
 
 namespace snackis {
   using str = std::string;
+  using ustr = std::u16string;
+  using uchar = char16_t;
   extern const str whitespace;
+  extern std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> uconv;
 
   str trim(const str& in);
   str fill(const str &in, char ch, size_t len);
