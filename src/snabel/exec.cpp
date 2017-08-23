@@ -1325,12 +1325,14 @@ namespace snabel {
   }
 
   void add_conv(Exec &exe, Type &from, Type &to, Conv conv) {
+    from.conv = true;
     exe.convs.emplace(std::piecewise_construct,
 		      std::forward_as_tuple(&from, &to),
 		      std::forward_as_tuple(conv));
   }
   
   bool conv(Exec &exe, Box &val, Type &type) {
+    if (!val.type->conv) { return false; }
     auto fnd(exe.convs.find(std::make_pair(val.type, &type)));
     if (fnd == exe.convs.end()) { return false; }
     return fnd->second(val);

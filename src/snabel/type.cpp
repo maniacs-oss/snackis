@@ -5,7 +5,7 @@
 
 namespace snabel {
   Type::Type(const str &n):
-    name(n), raw(this)
+    name(n), raw(this), conv(false)
   {
     dump = [this](auto &v) { return fmt(v); };
     fmt = [n](auto &v) { return n; };

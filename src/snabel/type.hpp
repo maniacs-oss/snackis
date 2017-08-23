@@ -19,6 +19,7 @@ namespace snabel {
     const str name;
     Type *raw;
     Types supers, args;
+    bool conv;
     
     func<bool (const Box &, const Box &)> eq;
     func<bool (const Box &, const Box &)> equal;
