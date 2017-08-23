@@ -322,7 +322,7 @@ RWFile(12)
 > 'tmp' rwfile 'foo' bytes write
 Iter<I64>
 
-> 0 'tmp' rwfile 'foo' bytes write &+ for
+> 'tmp' rwfile 'foo' bytes write 0 $1 &+ for
 3
 
 > let: buf 0 bytes;

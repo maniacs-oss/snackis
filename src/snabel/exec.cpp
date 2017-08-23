@@ -310,6 +310,13 @@ namespace snabel {
     push(scp.thread, scp.exec.str_type, str(in.begin(), in.end()));
   }
 
+  static void bin_append_imp(Scope &scp, const Args &args) {
+    auto &out(args.at(0));
+    auto &tgt(*get<BinRef>(out)), &src(*get<BinRef>(args.at(1)));
+    std::copy(src.begin(), src.end(), std::back_inserter(tgt));
+    push(scp.thread, out);
+  }
+
   static void rfile_imp(Scope &scp, const Args &args) {
     push(scp.thread,
 	 scp.exec.rfile_type,
@@ -332,10 +339,11 @@ namespace snabel {
 
   static void write_imp(Scope &scp, const Args &args) {
     Exec &exe(scp.exec);
-    
+    auto &out(args.at(0));
+    push(scp.thread, out);
     push(scp.thread,
 	 get_iter_type(exe, exe.i64_type),
-	 Iter::Ref(new WriteIter(exe, get<BinRef>(args.at(1)), args.at(0))));
+	 Iter::Ref(new WriteIter(exe, get<BinRef>(args.at(1)), out)));
   }
 
   static void proc_imp(Scope &scp, const Args &args) {
@@ -862,6 +870,10 @@ namespace snabel {
     add_func(*this, "str",
 	     {ArgType(bin_type)}, {ArgType(str_type)},
 	     bin_str_imp);
+
+    add_func(*this, "append",
+	     {ArgType(bin_type), ArgType(bin_type)}, {ArgType(bin_type)},
+	     bin_append_imp);
 
     add_func(*this, "rfile",
 	     {ArgType(path_type)}, {ArgType(rfile_type)},

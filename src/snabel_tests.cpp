@@ -306,6 +306,9 @@ namespace snabel {
 
     run(exe, "'foo' bytes str");
     CHECK(get<str>(pop(exe.main)) == "foo", _);
+
+    run(exe, "'foo' bytes 'bar' bytes append str");
+    CHECK(get<str>(pop(exe.main)) == "foobar", _);
   }
 
   static void list_push_tests() {
@@ -479,7 +482,7 @@ namespace snabel {
     run(exe, "0 'tests' rfile read {len +} for");
     CHECK(get<int64_t>(pop(exe.main)) > 1000000, _);
 
-    run(exe, "0 'tmp' rwfile 'foo' bytes write &+ for");
+    run(exe, "'tmp' rwfile 'foo' bytes write 0 $1 &+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
   }
   
