@@ -23,7 +23,7 @@ SnabelError: Missing lambda
 ```
 
 ### The Stack
-Values and results from function calls are pushed on the current stack in order of appearance. Thanks to lexical scoping and named bindings, keeping the stack squeaky clean is less critical in Snabel. ```$``` collects all values on the stack in a list that is pushed instead. ```$1```-```$9``` swaps in values, starting from the end; while ```$0``` duplicates the last value. ```_``` drops the last value and ```|``` clears the entire stack.
+Values and results from function calls are pushed on the stack in order of appearance. Thanks to lexical scoping and named bindings, keeping the stack squeaky clean is less critical in Snabel. ```$``` collects all values on the stack in a list that is pushed instead. ```$1```-```$9``` swaps in values, starting from the end; while ```$0``` duplicates the last value. ```_``` drops the last value and ```|``` clears the entire stack.
 
 ```
 > 1 2 3 $
@@ -43,7 +43,7 @@ Values and results from function calls are pushed on the current stack in order 
 ```
 
 ### Expressions
-Parentheses may be used to divide expressions into separate parts, each level copies the current stack on entry and restores it with the result (if any) pushed on exit.
+Parentheses may be used to divide expressions into separate parts, each level copies the stack on entry and restores it with the result (if any) pushed on exit.
 
 ```
 > (1 2 +) (2 2 *) +
@@ -57,7 +57,7 @@ Parentheses may be used to divide expressions into separate parts, each level co
 ```
 
 ### Lambdas
-Wrapping code in braces pushes a pointer on the stack. Lambdas may be exited early by calling ```return```, the final result (if any) is pushed on exit. ```recall``` may be used to call the current lambda recursively. Use ```&return```/```&recall``` to get a call-target that performs the specified action when called.
+Wrapping code in braces pushes a pointer on the stack. Lambdas may be exited early by calling ```return```, the final result (if any) is pushed on exit. ```recall``` may be used to call the current lambda recursively. Use ```&return```/```&recall``` to get a target that performs the specified action when called.
 
 ```
 > {1 2 +}
@@ -79,7 +79,7 @@ Lambda(_enter1:0)
 ```
 
 ### Coroutines
-Calling ```yield``` from within a lambda logs the current position, stack and environment before returning; execution will continue from the yielding position with restored stack and environment on next call from the same scope. Use ```&yield``` to get a call-target that yields when called.
+Calling ```yield``` from within a lambda logs the current position, stack and environment before returning; execution will continue from the yielding position with restored stack and environment on next call from the same scope. Use ```&yield``` to get a target that yields when called.
 
 ```
 > func: foo {|(7 yield 28 +)}
