@@ -304,7 +304,7 @@ Procs allow interleaving multiple cooperative computations in the same thread. A
 ```
 
 ### IO
-Snabel provides non-blocking IO in the form of iterators. The provided target is called with each read chunk or written number of bytes pushed on the stack.
+Snabel provides non-blocking IO in the form of iterators. The provided target is called with each read chunk or written number of bytes pushed on the stack. Files come in two flavors, read-only and read-write.
 
 ```
 > 'snackis' rfile
@@ -325,16 +325,15 @@ Iter<I64>
 > 'tmp' rwfile 'foo' bytes write 0 $1 &+ for
 3
 
-> let: buf 0 bytes;
-
-  proc: do-write {(
-    yield rwfile @buf write {_ yield} for
+> proc: do-write {(
+    yield rwfile $1 write {_ yield} for
   )};  
 
-  proc: do-copy {(
-    do-write
+  func: do-copy {
+    let: buf 0 bytes;
+    @buf $1 do-write
     rfile read {@buf $1 append _ do-write} for
-  )};
+  };
 
   'in' 'out' do-copy
 ```
