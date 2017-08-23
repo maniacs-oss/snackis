@@ -107,16 +107,10 @@ namespace snabel {
   
   bool isa(Thread &thd, const Type &x, const Type &y) {
     if (&x == &y || (x.raw == y.raw && isa(thd, x.args, y.args))) { return true; }
-    bool ok(false);
-    
-    for (Type *xs: x.supers) {
-      if (isa(thd, *xs, y)) {
-	ok = true;
-	break;
-      }
-    }
 
-    return ok;
+    return std::find_if(x.supers.begin(), x.supers.end(), [&thd, &y](auto xs) {
+	return isa(thd, *xs, y);
+      }) != x.supers.end();
   }
 
   bool isa(Thread &thd, const Box &val, const Type &typ) {
