@@ -71,7 +71,7 @@ namespace snabel {
     return fn.imps.emplace_front(fn, args, results, imp);
   }
 
-  opt<Args> match(const FuncImp &imp, const Thread &thd, bool conv_args) {
+  opt<Args> match(const FuncImp &imp, Thread &thd, bool conv_args) {
     auto &exe(thd.exec);
     auto &s(curr_stack(thd));
     if (s.size() < imp.args.size()) { return nullopt; }
@@ -84,7 +84,7 @@ namespace snabel {
       auto &a(*i);
       auto t(get_type(imp, *j, as));
   
-      if (!t || (!isa(a, *t) && (!conv_args || !conv(exe, a, *t)))) {
+      if (!t || (!isa(thd, a, *t) && (!conv_args || !conv(exe, a, *t)))) {
 	return nullopt;
       }
       
@@ -95,7 +95,7 @@ namespace snabel {
     return as;
   }
   
-  opt<std::pair<FuncImp *, Args>> match(Func &fn, const Thread &thd, bool conv_args) {
+  opt<std::pair<FuncImp *, Args>> match(Func &fn, Thread &thd, bool conv_args) {
     for (auto &imp: fn.imps) {
       auto args(match(imp, thd, conv_args));
       if (args) { return std::make_pair(&imp, *args); }

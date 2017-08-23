@@ -150,7 +150,7 @@ namespace snabel {
       auto &p(get<Push>(prev.data));
       auto &v(p.vals.back());
       
-      if (isa(*v.type, scp.exec.meta_type)) {
+      if (isa(scp.thread, *v.type, scp.exec.meta_type)) {
 	type = get<Type *>(v);
 	p.vals.pop_back();
 	if (p.vals.empty()) { out.pop_back(); }
@@ -176,7 +176,7 @@ namespace snabel {
 	return false;
       }
       
-      if (!isa(*_t, exe.meta_type)) {
+      if (!isa(thd, *_t, exe.meta_type)) {
 	ERROR(Snabel, fmt("Invalid check type: %0", *_t));
 	return false;
       }
@@ -191,7 +191,7 @@ namespace snabel {
       return false;
     }
     
-    if (!isa(*v, *t)) {
+    if (!isa(thd, *v, *t)) {
       ERROR(Snabel, fmt("Check failed, expected %0!\n%1 %2!",
 			t->name, *v, v->type->name));
       return false;
@@ -230,6 +230,7 @@ namespace snabel {
 
   bool Deref::run(Scope &scp) {
     auto &exe(scp.exec);
+    auto &thd(scp.thread);
     auto fnd(find_env(scp, name));
     
     if (!fnd) {
@@ -237,11 +238,11 @@ namespace snabel {
       return false;
     }
 
-    if (isa(*fnd, exe.callable_type)) {
+    if (isa(thd, *fnd, exe.callable_type)) {
       return (*fnd->type->call)(scp, *fnd, false);
     }
     
-    push(scp.thread, *fnd);
+    push(thd, *fnd);
     return true;
   }
 
@@ -981,7 +982,8 @@ namespace snabel {
 
   bool Unparam::compile(const Op &op, Scope &scp, OpSeq &out) {
     auto &exe(scp.exec);
-
+    auto &thd(scp.thread);
+    
     if (done) {
       if (out.empty()) { return false; }
       auto &prev(out.back());
@@ -989,7 +991,7 @@ namespace snabel {
 	auto &p(get<Push>(prev.data));
 	auto &v(p.vals.back());
 	
-	if (isa(*v.type, exe.meta_type)) {
+	if (isa(thd, *v.type, exe.meta_type)) {
 	  auto &t(get_type(exe, *get<Type *>(v)->raw, types));
 	  v.type = &get_meta_type(exe, t);
 	  get<Type *>(v) = &t;
@@ -1015,7 +1017,7 @@ namespace snabel {
 	auto &p(get<Push>(i->data));
 
 	while (!p.vals.empty()) {
-	  if (!isa(p.vals.back(), exe.meta_type)) { break; }
+	  if (!isa(thd, p.vals.back(), exe.meta_type)) { break; }
 	  types.push_front(get<Type *>(p.vals.back()));
 	  p.vals.pop_back();
 	}
@@ -1054,7 +1056,7 @@ namespace snabel {
       ERROR(Snabel, "Missing param type");
     }
     
-    if (!isa(*t->type, exe.meta_type)) {
+    if (!isa(scp.thread, *t->type, exe.meta_type)) {
       ERROR(Snabel, fmt("Invalid param type: %0", *t));
       return false;
     }

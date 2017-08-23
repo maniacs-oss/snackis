@@ -95,6 +95,40 @@ namespace snabel {
     return true;
   }
 
+  bool isa(Thread &thd, const Types &x, const Types &y) {
+    auto i(x.begin()), j(y.begin());
+
+    for (; i != x.end() && j != y.end(); i++, j++) {
+      if (!isa(thd, **i, **j)) { return false; }
+    }
+    
+    return i == x.end() && j == y.end();
+  }
+  
+  bool isa(Thread &thd, const Type &x, const Type &y) {
+    auto fnd(thd.isa_cache.find(std::make_pair(&x, &y)));
+    if (fnd != thd.isa_cache.end()) { return fnd->second; }
+    if (&x == &y || (x.raw == y.raw && isa(thd, x.args, y.args))) { return true; }
+    bool ok(false);
+    
+    for (Type *xs: x.supers) {
+      if (isa(thd, *xs, y)) {
+	ok = true;
+	break;
+      }
+    }
+
+    thd.isa_cache.emplace(std::piecewise_construct,
+			  std::forward_as_tuple(&x, &y),
+			  std::forward_as_tuple(ok));
+
+    return ok;
+  }
+
+  bool isa(Thread &thd, const Box &val, const Type &typ) {
+    return isa(thd, *val.type, typ);
+  }
+  
   void start(Thread &thd) { thd.imp = std::thread(do_run, &thd); }
 
   void join(Thread &thd, Scope &scp) {

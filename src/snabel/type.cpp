@@ -20,30 +20,6 @@ namespace snabel {
     return x.name < y.name;
   }
 
-  bool isa(const Types &x, const Types &y) {
-    auto i(x.begin()), j(y.begin());
-
-    for (; i != x.end() && j != y.end(); i++, j++) {
-      if (!isa(**i, **j)) { return false; }
-    }
-    
-    return i == x.end() && j == y.end();
-  }
-  
-  bool isa(const Type &x, const Type &y) {
-    if (&x == &y || (x.raw == y.raw && isa(x.args, y.args))) { return true; }
-    
-    for (Type *xs: x.supers) {
-      if (isa(*xs, y)) { return true; }
-    }
-
-    return false;
-  }
-
-  bool isa(const Box &val, const Type &typ) {
-    return isa(*val.type, typ);
-  }
-
   Type *get_super(Type &x, Type &y) {
     if (&x == &y) { return &x; }
 

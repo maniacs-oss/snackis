@@ -525,7 +525,7 @@ namespace snabel {
 
   void all_tests() {
     TRY(try_snabel);
-    const int iters(10), warmups(10);
+    const int iters(30), warmups(10);
     for(int i(0); i < warmups; ++i) { loop(); }
     auto started(std::chrono::high_resolution_clock::now());    
 

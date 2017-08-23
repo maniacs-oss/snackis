@@ -36,9 +36,6 @@ namespace snabel {
   };
   
   bool operator <(const Type &x, const Type &y);
-  bool isa(const Types &x, const Types &y);
-  bool isa(const Type &x, const Type &y);
-  bool isa(const Box &val, const Type &typ);
   Type *get_super(Type &x, Type &y);
 }
 

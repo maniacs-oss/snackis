@@ -61,9 +61,9 @@ namespace snabel {
 		   const ArgTypes &args,
 		   const ArgTypes &results,
 		   FuncImp::Imp imp);
-  opt<Args> match(const FuncImp &imp, const Thread &thd, bool conv_args);
+  opt<Args> match(const FuncImp &imp, Thread &thd, bool conv_args);
   opt<std::pair<FuncImp *, Args>> match(Func &fn,
-					const Thread &thd,
+					Thread &thd,
 					bool conv_args=false);
 }
 

@@ -20,6 +20,7 @@ namespace snabel {
     
     std::deque<Scope> scopes;
     std::deque<Stack> stacks;
+    std::map<std::pair<const Type *, const Type *>, bool> isa_cache;
     Scope &main_scope;
     
     Thread(Exec &exe, Id id);
@@ -42,6 +43,10 @@ namespace snabel {
   
   Scope &begin_scope(Thread &thd, bool copy_stack=false);
   bool end_scope(Thread &thd);
+
+  bool isa(Thread &thd, const Types &x, const Types &y);
+  bool isa(Thread &thd, const Type &x, const Type &y);
+  bool isa(Thread &thd, const Box &val, const Type &typ);
 
   void start(Thread &thd);
   void join(Thread &thd, Scope &scp);
