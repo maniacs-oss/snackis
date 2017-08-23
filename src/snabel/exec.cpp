@@ -290,9 +290,8 @@ namespace snabel {
   static void list_reverse_imp(Scope &scp, const Args &args) {
     auto &in_arg(args.at(0));
     auto &in(*get<ListRef>(in_arg));
-    ListRef out(new List());
-    std::copy(in.rbegin(), in.rend(), std::back_inserter(*out));
-    push(scp.thread, *in_arg.type, out); 
+    std::reverse(in.begin(), in.end());
+    push(scp.thread, in_arg); 
   }
 
   static void list_unzip_imp(Scope &scp, const Args &args) {
