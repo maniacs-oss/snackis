@@ -1,5 +1,5 @@
-#ifndef SNABEL_FIBER_HPP
-#define SNABEL_FIBER_HPP
+#ifndef SNABEL_PROC_HPP
+#define SNABEL_PROC_HPP
 
 #include "snabel/box.hpp"
 #include "snabel/sym.hpp"
@@ -13,7 +13,7 @@ namespace snabel {
   struct Scope;
   struct Thread;
   
-  struct Fiber {
+  struct Proc {
     using Id = Sym;
 
     Id id;
@@ -21,11 +21,11 @@ namespace snabel {
     Coro *coro;
     opt<Box> result;
     
-    Fiber(Label &tgt);
+    Proc(Label &tgt);
   };
 
-  void init(Fiber &fib, Scope &scp);
-  bool call(Fiber &fib, Scope &scp, bool now=false);
+  void init(Proc &prc, Scope &scp);
+  bool call(Proc &prc, Scope &scp, bool now=false);
 }
 
 #endif

@@ -25,10 +25,9 @@ namespace snabel {
 
   struct WriteIter: Iter {
     BinRef in;
-    Box buf, out;
-    int64_t pos;
+    Box out, result;
     
-    WriteIter(Exec &exe, const BinRef &in, const Box &buf);
+    WriteIter(Exec &exe, const BinRef &in, const Box &out);
     opt<Box> next(Scope &scp) override;
   };
 

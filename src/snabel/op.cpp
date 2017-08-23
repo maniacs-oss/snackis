@@ -6,6 +6,7 @@
 #include "snabel/exec.hpp"
 #include "snabel/func.hpp"
 #include "snabel/op.hpp"
+#include "snabel/proc.hpp"
 #include "snackis/core/defer.hpp"
 
 namespace snabel {
@@ -641,7 +642,7 @@ namespace snabel {
     if (fnd != scp.coros.end()) {
       auto &cor(fnd->second);
       if (cor.pc != -1) { thd.pc = cor.pc; }
-      if (cor.fiber) { new_scp.push_result = false; }
+      if (cor.proc) { new_scp.push_result = false; }
       std::copy(cor.stacks.begin(), cor.stacks.end(),
 		std::back_inserter(thd.stacks));
       std::copy(cor.recalls.begin(), cor.recalls.end(),
@@ -839,9 +840,9 @@ namespace snabel {
       auto &prev_scp(*std::next(thd.scopes.rbegin()));
       auto cor(find_coro(prev_scp, *target));
 
-      if (cor && cor->fiber) {
+      if (cor && cor->proc) {
 	auto v(peek(thd));
-	if (v) { cor->fiber->result.emplace(*v); }
+	if (v) { cor->proc->result.emplace(*v); }
       }
       
       if (!end_scope(thd)) { return false; }

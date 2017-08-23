@@ -286,12 +286,35 @@ add_func(exe, "+",
 	 add_i64);
 ```
 
+### Procs
+Procs allow interleaving multiple computations in the same thread and optionally collecting their results. Adding an initial yield allows catching the stack and/or environment. Procs provide reference semantics, the same proc may shared between threads as long as it's only run from one thread at a time.
+
+```
+> proc: foo {(yield 35 push)};
+  0 [7] foo foo &+ for
+42
+
+> proc: foo {(let: bar [] $1 push; @bar yield 35 push return)};
+  7 foo _ foo
+  0 &foo result [-1] or
+  &+ for
+42
+
+> let: acc Str list;
+  proc: ping {(label: reping; @acc 'ping' push yield reping)};
+  proc: pong {(label: repong; @acc 'pong' push yield repong)};
+  let: ps [&ping &pong];
+  3 {@ps { call } for} for
+  @acc
+['ping' 'pong' 'ping' 'pong 'ping' 'pong']
+```
+
 ### IO
-Snabel provides non-blocking IO in the form of iterators. The provided target is called with each chunk of data read or number of bytes written pushed on the stack.
+Snabel provides non-blocking IO in the form of iterators. The provided target is called with each read chunk or written number of bytes pushed on the stack.
 
 ```
 > 'snackis' rfile
-File(11)
+RFile(11)
 
 > 'snackis' rfile read
 Iter<Bin>
@@ -299,40 +322,26 @@ Iter<Bin>
 > 0 'snackis' rfile read {len +} for
 2313864
 
+> 'tmp' rwfile
+RWFile(12)
+
+> 'tmp' rwfile 'foo' bytes write
+Iter<I64>
+
+> 0 'tmp' rwfile 'foo' bytes write &+ for
+3
+
 > let: buf 0 bytes;
 
-  func: writer {(
-    'out' wfile @buf write {_ yield} for
-  )} fiber;  
+  proc: writer {(
+    'out' rwfile @buf write {_ yield} for
+  )};  
 
-  func: reader {(
+  proc: reader {(
     'in' rfile read {@buf $1 append _ writer} for
-  )} fiber;
+  )};
 
   reader
-```
-
-### Fibers
-Any lambda may be treated as a fiber using ```fiber```. Fibers allow interleaving multiple cooperative computations in the same thread and optionally collecting their results. Adding an initial yield allows catching the stack and/or environment by calling the fiber. Fibers provide reference semantics, the same fiber may shared between threads as long as it's only run from one thread at a time.
-
-```
-> func: foo {(yield 35 push)} fiber;
-  0 [7] foo foo &+ for
-42
-
-> func: foo {(let: bar [] $1 push; @bar yield 35 push return)} fiber;
-  7 foo _ foo
-  0 &foo result [-1] or
-  &+ for
-42
-
-> let: acc Str list;
-  func: ping {(label: reping; @acc 'ping' push yield reping)} fiber;
-  func: pong {(label: repong; @acc 'pong' push yield repong)} fiber;
-  let: fibs [&ping &pong];
-  3 {@fibs { call } for} for
-  @acc
-['ping' 'pong' 'ping' 'pong 'ping' 'pong']
 ```
 
 ### Threads

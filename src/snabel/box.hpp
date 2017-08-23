@@ -17,25 +17,25 @@ namespace snabel {
   struct Box;
   struct Func;
   struct Exec;
-  struct Fiber;
+  struct Proc;
   struct File;
   struct Label;
   struct Scope;
   struct Thread;
   struct Type;
 
-  using FiberRef = std::shared_ptr<Fiber>;
   using FileRef = std::shared_ptr<File>;
   using List = std::deque<Box>;
   using ListRef = std::shared_ptr<List>;
   using Pair = std::pair<Box, Box>;
   using PairRef = std::shared_ptr<Pair>;
+  using ProcRef = std::shared_ptr<Proc>;
   
   struct Empty
   { };
   
   using Val = std::variant<Empty, bool, Byte, char, int64_t, Path, Rat, str,
-			   BinRef, FiberRef, FileRef, Iter::Ref, ListRef, PairRef, 
+			   BinRef, FileRef, Iter::Ref, ListRef, PairRef, ProcRef, 
 			   Func *, Label *, Thread *, Type *>;
   
   struct Box {

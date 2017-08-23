@@ -11,6 +11,7 @@
 #include "snabel/iter.hpp"
 #include "snabel/iters.hpp"
 #include "snabel/list.hpp"
+#include "snabel/proc.hpp"
 #include "snabel/range.hpp"
 #include "snabel/str.hpp"
 #include "snabel/type.hpp"
@@ -306,9 +307,7 @@ namespace snabel {
 
   static void bin_str_imp(Scope &scp, const Args &args) {
     auto &in(*get<BinRef>(args.at(0)));
-    str in_str(in.begin(), in.end());
-    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> from_utf8;
-    push(scp.thread, scp.exec.str_type, from_utf8.from_bytes(utf8));
+    push(scp.thread, scp.exec.str_type, str(in.begin(), in.end()));
   }
 
   static void rfile_imp(Scope &scp, const Args &args) {
@@ -317,13 +316,13 @@ namespace snabel {
 	 std::make_shared<File>(get<Path>(args.at(0)), O_RDONLY));
   }
 
-  static void wfile_imp(Scope &scp, const Args &args) {
+  static void rwfile_imp(Scope &scp, const Args &args) {
     push(scp.thread,
-	 scp.exec.wfile_type,
-	 std::make_shared<File>(get<Path>(args.at(0)), O_WRONLY | O_CREAT));
+	 scp.exec.rwfile_type,
+	 std::make_shared<File>(get<Path>(args.at(0)), O_RDWR | O_CREAT | O_TRUNC));
   }
 
-  static void read_file_imp(Scope &scp, const Args &args) {
+  static void read_imp(Scope &scp, const Args &args) {
     Exec &exe(scp.exec);
     
     push(scp.thread,
@@ -331,7 +330,7 @@ namespace snabel {
 	 Iter::Ref(new ReadIter(exe, args.at(0))));
   }
 
-  static void write_file_imp(Scope &scp, const Args &args) {
+  static void write_imp(Scope &scp, const Args &args) {
     Exec &exe(scp.exec);
     
     push(scp.thread,
@@ -339,14 +338,14 @@ namespace snabel {
 	 Iter::Ref(new WriteIter(exe, get<BinRef>(args.at(1)), args.at(0))));
   }
 
-  static void fiber_imp(Scope &scp, const Args &args) {
-    push(scp.thread, scp.exec.fiber_type,
-	 std::make_shared<Fiber>(*get<Label *>(args.at(0))));
+  static void proc_imp(Scope &scp, const Args &args) {
+    push(scp.thread, scp.exec.proc_type,
+	 std::make_shared<Proc>(*get<Label *>(args.at(0))));
   }
   
-  static void fiber_result_imp(Scope &scp, const Args &args) {
+  static void proc_result_imp(Scope &scp, const Args &args) {
     auto &thd(scp.thread);
-    auto &f(*get<FiberRef>(args.at(0)));
+    auto &f(*get<ProcRef>(args.at(0)));
     push(thd, make_opt(scp.exec, f.result));
   }
 
@@ -371,7 +370,6 @@ namespace snabel {
     byte_type(add_type(*this, "Byte")),
     callable_type(add_type(*this, "Callable")),
     char_type(add_type(*this, "Char")),
-    fiber_type(add_type(*this, "Fiber")),    
     file_type(add_type(*this, "File")),    
     func_type(add_type(*this, "Func")),
     i64_type(add_type(*this, "I64")),
@@ -383,14 +381,15 @@ namespace snabel {
     opt_type(add_type(*this, "Opt")),
     pair_type(add_type(*this, "Pair")),
     path_type(add_type(*this, "Path")),
+    proc_type(add_type(*this, "Proc")),    
     readable_type(add_type(*this, "Readable")),
     rfile_type(add_type(*this, "RFile")),
     rat_type(add_type(*this, "Rat")),
+    rwfile_type(add_type(*this, "RWFile")),    
     str_type(add_type(*this, "Str")),
     thread_type(add_type(*this, "Thread")),
     void_type(add_type(*this, "Void")),
     writeable_type(add_type(*this, "Writeable")),
-    wfile_type(add_type(*this, "WFile")),
     next_gensym(1)
   {    
     any_type.fmt = [](auto &v) { return "Any"; };
@@ -527,15 +526,15 @@ namespace snabel {
     char_type.fmt = [](auto &v) { return str(1, get<char>(v)); };    
     char_type.eq = [](auto &x, auto &y) { return get<char>(x) == get<char>(y); };
     
-    fiber_type.supers.push_back(&any_type);
-    fiber_type.supers.push_back(&callable_type);
-    fiber_type.fmt = [](auto &v) { return fmt("Fiber(%0)", get<FiberRef>(v)->id); };
-    fiber_type.eq = [](auto &x, auto &y) {
-      return get<FiberRef>(x) == get<FiberRef>(y);
+    proc_type.supers.push_back(&any_type);
+    proc_type.supers.push_back(&callable_type);
+    proc_type.fmt = [](auto &v) { return fmt("Proc(%0)", get<ProcRef>(v)->id); };
+    proc_type.eq = [](auto &x, auto &y) {
+      return get<ProcRef>(x) == get<ProcRef>(y);
     };
 
-    fiber_type.call.emplace([](auto &scp, auto &v, bool now) {
-	call(*get<FiberRef>(v), scp, now);
+    proc_type.call.emplace([](auto &scp, auto &v, bool now) {
+	call(*get<ProcRef>(v), scp, now);
 	return true;
       });
 
@@ -567,11 +566,12 @@ namespace snabel {
       return true;
     };
 
-    wfile_type.supers.push_back(&file_type);
-    wfile_type.supers.push_back(&writeable_type);
-    wfile_type.fmt = [](auto &v) { return fmt("WFile(%0)", get<FileRef>(v)->fd); };
-    wfile_type.eq = file_type.eq;
-    wfile_type.write = [](auto &out, auto data, auto len) {
+    rwfile_type.supers.push_back(&file_type);
+    rwfile_type.supers.push_back(&writeable_type);
+    rwfile_type.fmt = [](auto &v) { return fmt("RWFile(%0)", get<FileRef>(v)->fd); };
+    rwfile_type.eq = file_type.eq;
+    rwfile_type.read = rfile_type.read;
+    rwfile_type.write = [](auto &out, auto data, auto len) {
       auto &f(*get<FileRef>(out));
       int res(write(f.fd, data, len));
 
@@ -873,27 +873,27 @@ namespace snabel {
 	     {ArgType(path_type)}, {ArgType(rfile_type)},
 	     rfile_imp);
 
-    add_func(*this, "wfile",
-	     {ArgType(path_type)}, {ArgType(wfile_type)},
-	     wfile_imp);
+    add_func(*this, "rwfile",
+	     {ArgType(path_type)}, {ArgType(rwfile_type)},
+	     rwfile_imp);
 
     add_func(*this, "read",
 	     {ArgType(readable_type)},
 	     {ArgType(get_iter_type(*this, bin_type))},
-	     read_file_imp);
+	     read_imp);
 
     add_func(*this, "write",
 	     {ArgType(writeable_type), ArgType(bin_type)},
 	     {ArgType(get_iter_type(*this, i64_type))},
-	     write_file_imp);
+	     write_imp);
 
-    add_func(*this, "fiber",
-	     {ArgType(lambda_type)}, {ArgType(fiber_type)},
-	     fiber_imp);
+    add_func(*this, "proc",
+	     {ArgType(lambda_type)}, {ArgType(proc_type)},
+	     proc_imp);
 
     add_func(*this, "result",
-	     {ArgType(fiber_type)}, {ArgType(opt_type)},
-	     fiber_result_imp);
+	     {ArgType(proc_type)}, {ArgType(opt_type)},
+	     proc_result_imp);
 
     add_func(*this, "thread",
 	     {ArgType(callable_type)}, {ArgType(thread_type)},
@@ -957,6 +957,24 @@ namespace snabel {
 	}
       });
 
+    add_macro(*this, "proc:", [this](auto pos, auto &in, auto &out) {
+	if (in.size() < 2) {
+	  ERROR(Snabel, fmt("Malformed proc on row %0, col %1",
+			    pos.row, pos.col));
+	} else {
+	  out.emplace_back(Backup());
+	  const str n(in.at(0).text);
+	  auto start(std::next(in.begin()));
+	  auto end(find_end(start, in.end()));
+	  compile(*this, TokSeq(start, end), out);
+	  if (end != in.end()) { end++; }
+	  in.erase(in.begin(), end);
+	  out.emplace_back(Restore());
+	  out.emplace_back(Deref("proc"));
+	  out.emplace_back(Putenv(n));
+	}
+      });
+    
     add_macro(*this, "label:", [this](auto pos, auto &in, auto &out) {
 	if (in.empty()) {
 	  ERROR(Snabel, fmt("Malformed label on row %0, col %1",

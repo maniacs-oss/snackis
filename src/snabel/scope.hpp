@@ -20,7 +20,7 @@ namespace snabel {
   struct Scope {
     Thread &thread;
     Exec &exec;
-    opt<Fiber *> fiber;
+    opt<Proc *> proc;
 
     Label *target;
     int64_t stack_depth, return_pc;

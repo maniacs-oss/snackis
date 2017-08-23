@@ -478,19 +478,22 @@ namespace snabel {
 
     run(exe, "0 'tests' rfile read {len +} for");
     CHECK(get<int64_t>(pop(exe.main)) > 1000000, _);
+
+    run(exe, "0 'tmp' rwfile 'foo' bytes write &+ for");
+    CHECK(get<int64_t>(pop(exe.main)) == 3, _);
   }
   
-  static void fiber_tests() {
+  static void proc_tests() {
     TRY(try_test);    
     Exec exe;
     
     run(exe,
-	"func: foo {(yield 35 push)} fiber;"
+	"proc: foo {(yield 35 push)};"
 	"0 [7] foo foo iter &+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
     run(exe,
-	"func: foo {(let: bar [] $1 push; @bar yield 35 push return)} fiber;"
+	"proc: foo {(let: bar [] $1 push; @bar yield 35 push return)};"
 	"7 foo _ foo "
 	"0 &foo result [-1] or "
 	"&+ for");
@@ -498,10 +501,10 @@ namespace snabel {
 
     run(exe,
 	"let: acc Str list; "
-	"func: ping {(label: reping; @acc 'ping' push yield reping)} fiber; "
-	"func: pong {(label: repong; @acc 'pong' push yield repong)} fiber; "
-	"let: fibs [&ping &pong]; "
-	"3 {@fibs { call } for} for");
+	"proc: ping {(label: reping; @acc 'ping' push yield reping)}; "
+	"proc: pong {(label: repong; @acc 'pong' push yield repong)}; "
+	"let: ps [&ping &pong]; "
+	"3 {@ps { call } for} for");
     CHECK(get<ListRef>(get_env(exe.main_scope, "@acc"))->size() == 6, _);
   }
   
@@ -535,7 +538,7 @@ namespace snabel {
     rat_tests();
     opt_tests();
     io_tests();
-    fiber_tests();
+    proc_tests();
     thread_tests();
   }
 

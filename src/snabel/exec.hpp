@@ -31,10 +31,10 @@ namespace snabel {
     Scope &main_scope;
     Type meta_type;
     Type &any_type, &bin_type, &bool_type, &byte_type, &callable_type, &char_type,
-      &fiber_type, &file_type, &func_type, &i64_type, &iter_type, &iterable_type,
+      &file_type, &func_type, &i64_type, &iter_type, &iterable_type,
       &label_type, &lambda_type, &list_type, &opt_type, &pair_type, &path_type,
-      &readable_type, &rfile_type, &rat_type, &str_type, &thread_type, &void_type,
-      &writeable_type, &wfile_type;
+      &proc_type, &readable_type, &rfile_type, &rat_type, &rwfile_type, &str_type,
+      &thread_type, &void_type, &writeable_type;
     std::atomic<Sym> next_gensym;
     
     Exec();

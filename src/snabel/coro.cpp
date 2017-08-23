@@ -1,16 +1,17 @@
 #include <iostream>
 #include "snabel/coro.hpp"
 #include "snabel/op.hpp"
+#include "snabel/proc.hpp"
 #include "snabel/scope.hpp"
 #include "snabel/thread.hpp"
 
 namespace snabel {
   Coro::Coro(Scope &scope):
-    Frame(scope), fiber(nullptr)
+    Frame(scope), proc(nullptr)
   { }
 
   Coro::~Coro() {
-    if (fiber) { fiber->coro = nullptr; }
+    if (proc) { proc->coro = nullptr; }
   }
   
   void refresh(Coro &cor, Scope &scp) {

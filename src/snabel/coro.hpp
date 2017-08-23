@@ -5,10 +5,12 @@
 #include "snabel/frame.hpp"
 
 namespace snabel {
+  struct Proc;
+  
   struct Coro: Frame {
     Env env;
     std::deque<Frame> recalls;
-    Fiber* fiber;
+    Proc* proc;
     
     Coro(Scope &scope);
     virtual ~Coro();

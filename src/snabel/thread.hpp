@@ -4,7 +4,6 @@
 #include <map>
 #include <thread>
 
-#include "snabel/fiber.hpp"
 #include "snabel/op.hpp"
 #include "snabel/scope.hpp"
 
