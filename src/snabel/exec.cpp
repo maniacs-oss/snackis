@@ -161,18 +161,22 @@ namespace snabel {
     push(scp.thread, scp.exec.i64_type, (int64_t)get<str>(args.at(0)).size());
   }
 
+  static void ustr_len_imp(Scope &scp, const Args &args) {
+    push(scp.thread, scp.exec.i64_type, (int64_t)get<ustr>(args.at(0)).size());
+  }
+
   static void str_bytes_imp(Scope &scp, const Args &args) {
     auto &in(get<str>(args.at(0)));
     push(scp.thread, scp.exec.bin_type, std::make_shared<Bin>(in.begin(), in.end()));
   }
 
-  static void str_ustr_imp(Scope &scp, const Args &args) {
-    push(scp.thread, scp.exec.ustr_type, uconv.from_bytes(get<str>(args.at(0))));
-  }
-
   static void ustr_bytes_imp(Scope &scp, const Args &args) {
     auto in(uconv.to_bytes(get<ustr>(args.at(0))));
     push(scp.thread, scp.exec.bin_type, std::make_shared<Bin>(in.begin(), in.end()));
+  }
+
+  static void str_ustr_imp(Scope &scp, const Args &args) {
+    push(scp.thread, scp.exec.ustr_type, uconv.from_bytes(get<str>(args.at(0))));
   }
 
   static void iter_imp(Scope &scp, const Args &args) {
@@ -195,7 +199,7 @@ namespace snabel {
     push(scp.thread, scp.exec.str_type, out); 
   }
 
-  static void iterable_join_imp(Scope &scp, const Args &args) {    
+  static void iterable_join_str_imp(Scope &scp, const Args &args) {    
     auto &in(args.at(0));
     auto it((*in.type->iter)(in));
     auto &sep(args.at(1));
@@ -719,22 +723,27 @@ namespace snabel {
       return get<Thread *>(x) == get<Thread *>(y);
     };
 
+    add_conv(*this, str_type, ustr_type, [this](auto &v) {	
+	v.type = &ustr_type;
+	v.val = uconv.from_bytes(get<str>(v));
+	return true;
+      });
+
     add_conv(*this, str_type, path_type, [this](auto &v) {	
 	v.type = &path_type;
 	v.val = Path(get<str>(v));
 	return true;
       });
 
-    /*    add_conv(*this, str_type, ustr_type, [this](auto &v) {	
-	v.type = &ustr_type;
-	v.val = uconv.from_bytes(get<str>(v));
-	return true;
-	});*/
-
     add_conv(*this, i64_type, rat_type, [this](auto &v) {	
 	v.type = &rat_type;
 	auto n(get<int64_t>(v));
 	v.val = Rat(abs(n), 1, n < 0);
+	return true;
+      });
+
+    add_conv(*this, rwfile_type, rfile_type, [this](auto &v) {	
+	v.type = &rfile_type;
 	return true;
       });
     
@@ -844,18 +853,22 @@ namespace snabel {
 	     {ArgType(str_type)}, {ArgType(i64_type)},
 	     str_len_imp);
 
+    add_func(*this, "len",
+	     {ArgType(ustr_type)}, {ArgType(i64_type)},
+	     ustr_len_imp);
+
     add_func(*this, "bytes",
 	     {ArgType(str_type)}, {ArgType(bin_type)},
 	     str_bytes_imp);
+
+    add_func(*this, "bytes",
+	     {ArgType(ustr_type)}, {ArgType(bin_type)},
+	     ustr_bytes_imp);
 
     add_func(*this, "ustr",
 	     {ArgType(str_type)}, {ArgType(ustr_type)},
 	     str_ustr_imp);
 
-    add_func(*this, "bytes",
-	     {ArgType(ustr_type)}, {ArgType(bin_type)},
-	     ustr_bytes_imp);
-    
     add_func(*this, "iter",
 	     {ArgType(iterable_type)},
 	     {ArgType([this](auto &args) { 
@@ -870,7 +883,7 @@ namespace snabel {
 
     add_func(*this, "join",
 	     {ArgType(iterable_type), ArgType(any_type)}, {ArgType(str_type)},
-	     iterable_join_imp);
+	     iterable_join_str_imp);
 
     add_func(*this, "list",
 	     {ArgType(iterable_type)},

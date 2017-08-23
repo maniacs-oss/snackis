@@ -5,6 +5,7 @@
 #include <set>
 #include <string>
 
+#include "snackis/core/char.hpp"
 #include "snackis/core/data.hpp"
 #include "snackis/core/opt.hpp"
 #include "snackis/core/stream.hpp"
@@ -12,9 +13,8 @@
 namespace snackis {
   using str = std::string;
   using ustr = std::u16string;
-  using uchar = char16_t;
   extern const str whitespace;
-  extern std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> uconv;
+  extern std::wstring_convert<std::codecvt_utf8_utf16<uchar>, uchar> uconv;
 
   str trim(const str& in);
   str fill(const str &in, char ch, size_t len);
