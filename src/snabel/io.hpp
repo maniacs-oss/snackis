@@ -7,15 +7,21 @@
 #include "snabel/iter.hpp"
 
 namespace snabel {
-  const size_t READ_BUF_SIZE(65536);
+  const size_t READ_BUF_SIZE(25000);
   
   struct IOBuf {
     Bin data;
-    int64_t pos;
+    int64_t rpos;
+    
     IOBuf(int64_t size);
+    IOBuf(const Bin &in);
   };
 
-  bool operator ==(const IOBuf &x, const IOBuf &y);
+  struct IOQueue {
+    std::deque<IOBuf> bufs;
+    int64_t wpos;
+    IOQueue();
+  };
 
   struct File {
     Path path;
@@ -32,13 +38,15 @@ namespace snabel {
   };
 
   struct WriteIter: Iter {
-    BinRef in;
+    IOQueueRef in;
     Box out, result;
     
-    WriteIter(Exec &exe, const BinRef &in, const Box &out);
+    WriteIter(Exec &exe, const IOQueueRef &in, const Box &out);
     opt<Box> next(Scope &scp) override;
   };
 
+  bool operator ==(const IOBuf &x, const IOBuf &y);
+  bool operator ==(const IOQueue &x, const IOQueue &y);
 }
 
 #endif

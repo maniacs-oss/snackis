@@ -468,7 +468,7 @@ namespace snabel {
     run(exe, "0 'tests' rfile read {len $1 _ +} for");
     CHECK(get<int64_t>(pop(exe.main)) > 1000000, _);
 
-    run(exe, "'tmp' rwfile 'foo' bytes write 0 $1 &+ for");
+    run(exe, "'tmp' rwfile io-queue 'foo' bytes push write 0 $1 &+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
   }
   

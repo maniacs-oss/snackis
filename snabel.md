@@ -322,21 +322,23 @@ RWFile(12)
 > 'tmp' rwfile 'foo' bytes write
 Iter<I64>
 
-> 'tmp' rwfile 'foo' bytes write 0 $1 &+ for
+> 'tmp' rwfile
+  io-queue 'foo' bytes push
+  write 0 $1 &+ for
 3
 
 > proc: do-write {(
-    yield rwfile
-    $1 write {_ yield} for
+    rwfile $1 write yield
+    {_ yield} for
   )};  
 
   func: do-copy {
-    let: buf 0 bytes;
-    @buf $1 do-write _ _
+    let: acc io-queue;
+    @acc $1 do-write _ _
 
     rfile read 0 $1 {
       len $0 +? {
-        @buf $2 append do-write
+        @acc $2 push do-write
       } when _ +
     } for
   };

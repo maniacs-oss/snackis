@@ -147,19 +147,37 @@ namespace snabel {
     push(scp.thread, scp.exec.ustr_type, uconv.from_bytes(str(in.begin(), in.end())));
   }
 
-  static void bin_append_iobuf_imp(Scope &scp, const Args &args) {
+  static void bin_append_io_buf_imp(Scope &scp, const Args &args) {
     auto &out(args.at(0));
     auto &tgt(*get<BinRef>(out));
     auto &src(*get<IOBufRef>(args.at(1)));
-    std::copy(src.data.begin(), std::next(src.data.begin(), src.pos),
+    std::copy(src.data.begin(), std::next(src.data.begin(), src.rpos),
 	      std::back_inserter(tgt));
     push(scp.thread, out);
   }
 
-  static void iobuf_len_imp(Scope &scp, const Args &args) {
+  static void io_buf_len_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
     push(scp.thread, in);
-    push(scp.thread, scp.exec.i64_type, (int64_t)get<IOBufRef>(in)->pos);
+    push(scp.thread, scp.exec.i64_type, (int64_t)get<IOBufRef>(in)->rpos);
+  }
+
+  static void io_queue_imp(Scope &scp, const Args &args) {
+    push(scp.thread, scp.exec.io_queue_type, std::make_shared<IOQueue>());
+  }
+
+  static void io_queue_push_buf_imp(Scope &scp, const Args &args) {
+    auto &q(args.at(0));
+    auto &b(args.at(1));
+    get<IOQueueRef>(q)->bufs.push_back(*get<IOBufRef>(b));
+    push(scp.thread, q);
+  }
+
+  static void io_queue_push_bin_imp(Scope &scp, const Args &args) {
+    auto &q(args.at(0));
+    auto &b(args.at(1));
+    get<IOQueueRef>(q)->bufs.emplace_back(*get<BinRef>(b));
+    push(scp.thread, q);
   }
 
   static void str_len_imp(Scope &scp, const Args &args) {
@@ -368,7 +386,7 @@ namespace snabel {
     push(scp.thread, out);
     push(scp.thread,
 	 get_iter_type(exe, exe.i64_type),
-	 Iter::Ref(new WriteIter(exe, get<BinRef>(args.at(1)), out)));
+	 Iter::Ref(new WriteIter(exe, get<IOQueueRef>(args.at(1)), out)));
   }
 
   static void proc_imp(Scope &scp, const Args &args) {
@@ -400,7 +418,8 @@ namespace snabel {
     file_type(add_type(*this, "File")),    
     func_type(add_type(*this, "Func")),
     i64_type(add_type(*this, "I64")),
-    iobuf_type(add_type(*this, "IOBuf")),
+    io_buf_type(add_type(*this, "IOBuf")),
+    io_queue_type(add_type(*this, "IOQueue")),
     iter_type(add_type(*this, "Iter")),
     iterable_type(add_type(*this, "Iterable")),
     label_type(add_type(*this, "Label")),
@@ -526,16 +545,28 @@ namespace snabel {
       return Iter::Ref(new BinIter(*this, get<BinRef>(in)));
     };
 
-    iobuf_type.supers.push_back(&any_type);
-    iobuf_type.fmt = [](auto &v) {
+    io_buf_type.supers.push_back(&any_type);
+    io_buf_type.fmt = [](auto &v) {
       auto &b(*get<IOBufRef>(v));
-      return fmt("IOBuf(%0:%1)", b.pos, b.data.size());
+      return fmt("IOBuf(%0:%1)", b.rpos, b.data.size());
     };
-    iobuf_type.eq = [](auto &x, auto &y) {
+    io_buf_type.eq = [](auto &x, auto &y) {
       return get<IOBufRef>(x) == get<IOBufRef>(y);
     };
-    iobuf_type.equal = [](auto &x, auto &y) {
+    io_buf_type.equal = [](auto &x, auto &y) {
       return *get<IOBufRef>(x) == *get<IOBufRef>(y);
+    };
+
+    io_queue_type.supers.push_back(&any_type);
+    io_queue_type.fmt = [](auto &v) {
+      auto &q(*get<IOQueueRef>(v));
+      return fmt("IOQueue(%0)", q.bufs.size());
+    };
+    io_queue_type.eq = [](auto &x, auto &y) {
+      return get<IOQueueRef>(x) == get<IOQueueRef>(y);
+    };
+    io_queue_type.equal = [](auto &x, auto &y) {
+      return *get<IOQueueRef>(x) == *get<IOQueueRef>(y);
     };
     
     byte_type.supers.push_back(&any_type);
@@ -620,7 +651,7 @@ namespace snabel {
     rfile_type.eq = file_type.eq;
     rfile_type.read = [](auto &in, auto &out) {
       auto &f(*get<FileRef>(in));
-      auto res(read(f.fd, &out.data[out.pos], out.data.capacity()-out.pos));
+      auto res(read(f.fd, &out.data[out.rpos], out.data.size()-out.rpos));
       if (!res) { return false; }
 
       if (res == -1) {
@@ -629,7 +660,7 @@ namespace snabel {
 	return false;
       }
 
-      out.pos += res;
+      out.rpos += res;
       return true;
     };
 
@@ -644,7 +675,7 @@ namespace snabel {
 
       if (res == -1) {
 	if (errno == EAGAIN) { return 0; }
-	ERROR(Snabel, fmt("Failed writing to file: %0", errno));
+	ERROR(Snabel, fmt("Failed writing to file %0: %1", f.fd, errno));
       }
       
       return res;
@@ -856,8 +887,22 @@ namespace snabel {
 	     bin_len_imp);
 
     add_func(*this, "len",
-	     {ArgType(iobuf_type)}, {ArgType(i64_type)},
-	     iobuf_len_imp);
+	     {ArgType(io_buf_type)}, {ArgType(i64_type)},
+	     io_buf_len_imp);
+
+    add_func(*this, "io-queue",
+	     {}, {ArgType(io_queue_type)},
+	     io_queue_imp);
+
+    add_func(*this, "push",
+	     {ArgType(io_queue_type), ArgType(io_buf_type)},
+	     {ArgType(io_queue_type)},
+	     io_queue_push_buf_imp);
+
+    add_func(*this, "push",
+	     {ArgType(io_queue_type), ArgType(bin_type)},
+	     {ArgType(io_queue_type)},
+	     io_queue_push_bin_imp);
 
     add_func(*this, "str",
 	     {ArgType(bin_type)}, {ArgType(str_type)},
@@ -868,8 +913,8 @@ namespace snabel {
 	     bin_ustr_imp);
 
     add_func(*this, "append",
-	     {ArgType(bin_type), ArgType(iobuf_type)}, {ArgType(bin_type)},
-	     bin_append_iobuf_imp);
+	     {ArgType(bin_type), ArgType(io_buf_type)}, {ArgType(bin_type)},
+	     bin_append_io_buf_imp);
 
     add_func(*this, "len",
 	     {ArgType(str_type)}, {ArgType(i64_type)},
@@ -992,7 +1037,7 @@ namespace snabel {
 	     read_imp);
 
     add_func(*this, "write",
-	     {ArgType(writeable_type), ArgType(bin_type)},
+	     {ArgType(writeable_type), ArgType(io_queue_type)},
 	     {ArgType(get_iter_type(*this, i64_type))},
 	     write_imp);
 
