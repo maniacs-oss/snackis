@@ -333,12 +333,12 @@ Iter<I64>
   )};  
 
   func: do-copy {
-    let: acc io-queue;
-    @acc $1 do-write _ _
+    let: q io-queue;
+    @q $1 do-write _ _
 
     rfile read 0 $1 {
       len $0 +? {
-        @acc $2 push do-write
+        @q $2 push do-write
       } when _ +
     } for
   };
