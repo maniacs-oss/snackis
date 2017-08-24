@@ -330,20 +330,30 @@ Iter<I64>
   write 0 $1 &+ for
 3
 
+> let: q io-queue;
+  'in' rfile read {@q $1 push _} for
+  0 'out' rwfile @q write $1 _ &+ for
+2313864
+
 > proc: do-write {(
     rwfile $1 write yield
     {_ yield} for
   )};  
 
   func: do-copy {
+    "Init queue and writer"
     let: q io-queue;
     @q $1 do-write _ _
 
     rfile read 0 $1 {
+      "Push to queue and run writer if incoming data"
       len $0 +? {
-        @q $2 push do-write
+	@q $2 push do-write
       } when _ +
     } for
+    
+    "Run writer until done if data left in queue"
+    @q len +? {&do-write run} when _
   };
 
   'in' 'out' do-copy

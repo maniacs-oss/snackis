@@ -18,6 +18,6 @@ namespace snabel {
     }
 
     call(scp, prc.target, now);
-    return !prc.coro;
+    return prc.coro ? true : false;
   }
 }

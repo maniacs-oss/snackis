@@ -497,6 +497,17 @@ namespace snabel {
 	"let: ps [&ping &pong]; "
 	"3 {@ps { call } for} for");
     CHECK(get<ListRef>(get_env(exe.main_scope, "@acc"))->size() == 6, _);
+  
+    run(exe,
+	"let: acc I64 list; "
+
+	"proc: foo {( "
+	"  7 {@acc $1 push _ yield1} for "
+	")}; "
+
+	"&foo run "
+	"0 @acc &+ for");
+    CHECK(get<int64_t>(pop(exe.main)) == 21, _);
   }
 
   /*

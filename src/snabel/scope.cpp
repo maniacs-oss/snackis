@@ -20,8 +20,7 @@ namespace snabel {
     target(nullptr),
     stack_depth(thread.stacks.size()),
     return_pc(-1),
-    push_result(true),
-    coros(src.coros)
+    push_result(true)
   {}
   
   Scope::~Scope() {
@@ -126,8 +125,9 @@ namespace snabel {
     jump(scp, lbl);
 
     if (now) {
+      auto ret_pc(scp.return_pc);
       run(scp.thread, scp.return_pc);
-      scp.thread.pc--;
+      if (scp.thread.pc == ret_pc) { scp.thread.pc--; }
     }
   }
 

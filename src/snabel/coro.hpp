@@ -13,7 +13,9 @@ namespace snabel {
     Proc* proc;
     
     Coro(Scope &scope);
+    Coro(const Coro &) = delete;
     virtual ~Coro();
+    const Coro &operator =(const Coro &) = delete;
   };
 
   void refresh(Coro &cor, Scope &scp);

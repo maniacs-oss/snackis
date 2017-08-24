@@ -407,7 +407,12 @@ namespace snabel {
     push(scp.thread, scp.exec.proc_type,
 	 std::make_shared<Proc>(*get<Label *>(args.at(0))));
   }
-  
+
+  static void proc_run_imp(Scope &scp, const Args &args) {
+    auto &p(*get<ProcRef>(args.at(0)));
+    while (call(p, scp, true));
+  }
+
   static void thread_imp(Scope &scp, const Args &args) {
     auto &t(start_thread(scp, args.at(0)));
     push(scp.thread, scp.exec.thread_type, &t);
@@ -1095,6 +1100,10 @@ namespace snabel {
     add_func(*this, "proc",
 	     {ArgType(lambda_type)}, {ArgType(proc_type)},
 	     proc_imp);
+
+    add_func(*this, "run",
+	     {ArgType(proc_type)}, {},
+	     proc_run_imp);
 
     add_func(*this, "thread",
 	     {ArgType(callable_type)}, {ArgType(thread_type)},
