@@ -10,7 +10,9 @@ namespace snabel {
     Tok tok(in.at(0));
     in.pop_front();
     
-    if (tok.text.at(0) == '&') {
+    if (tok.text.at(0) == '"') {
+      // Skip comment
+    } else if (tok.text.at(0) == '&') {
       out.emplace_back(Getenv(tok.text.substr(1)));
     } else if (tok.text.at(0) == '@') {
       out.emplace_back(Getenv(tok.text));      

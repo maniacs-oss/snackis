@@ -169,24 +169,30 @@ namespace snabel {
   static void io_buf_len_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
     push(scp.thread, in);
-    push(scp.thread, scp.exec.i64_type, (int64_t)get<IOBufRef>(in)->rpos);
+    push(scp.thread, scp.exec.i64_type, get<IOBufRef>(in)->rpos);
   }
 
   static void io_queue_imp(Scope &scp, const Args &args) {
     push(scp.thread, scp.exec.io_queue_type, std::make_shared<IOQueue>());
   }
 
+  static void io_queue_len_imp(Scope &scp, const Args &args) {
+    auto &in(args.at(0));
+    push(scp.thread, in);
+    push(scp.thread, scp.exec.i64_type, get<IOQueueRef>(in)->len);
+  }
+
   static void io_queue_push_buf_imp(Scope &scp, const Args &args) {
     auto &q(args.at(0));
     auto &b(args.at(1));
-    get<IOQueueRef>(q)->bufs.push_back(*get<IOBufRef>(b));
+    push(*get<IOQueueRef>(q), *get<IOBufRef>(b));
     push(scp.thread, q);
   }
 
   static void io_queue_push_bin_imp(Scope &scp, const Args &args) {
     auto &q(args.at(0));
     auto &b(args.at(1));
-    get<IOQueueRef>(q)->bufs.emplace_back(*get<BinRef>(b));
+    push(*get<IOQueueRef>(q), *get<BinRef>(b));
     push(scp.thread, q);
   }
 
@@ -945,6 +951,10 @@ namespace snabel {
     add_func(*this, "io-queue",
 	     {}, {ArgType(io_queue_type)},
 	     io_queue_imp);
+
+    add_func(*this, "len",
+	     {ArgType(io_queue_type)}, {ArgType(i64_type)},
+	     io_queue_len_imp);
 
     add_func(*this, "push",
 	     {ArgType(io_queue_type), ArgType(io_buf_type)},

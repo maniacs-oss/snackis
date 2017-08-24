@@ -638,17 +638,16 @@ namespace snabel {
     auto &thd(scp.thread);
     Scope &new_scp(begin_scope(thd, true));
     new_scp.target = enter_label;
-    auto fnd(scp.coros.find(enter_label));
+    auto cor(find_coro(scp, *enter_label));
 
-    if (fnd != scp.coros.end()) {
-      auto &cor(fnd->second);
-      if (cor.pc != -1) { thd.pc = cor.pc; }
-      if (cor.proc) { new_scp.push_result = false; }
-      std::copy(cor.stacks.begin(), cor.stacks.end(),
+    if (cor) {
+      if (cor->pc != -1) { thd.pc = cor->pc; }
+      if (cor->proc) { new_scp.push_result = false; }
+      std::copy(cor->stacks.begin(), cor->stacks.end(),
 		std::back_inserter(thd.stacks));
-      std::copy(cor.recalls.begin(), cor.recalls.end(),
+      std::copy(cor->recalls.begin(), cor->recalls.end(),
 		std::back_inserter(new_scp.recalls));
-      for (auto &v: cor.env) { put_env(new_scp, v.first, v.second); }
+      for (auto &v: cor->env) { put_env(new_scp, v.first, v.second); }
     }
 
     return true;

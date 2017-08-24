@@ -18,6 +18,8 @@ namespace snabel {
     const Coro &operator =(const Coro &) = delete;
   };
 
+  using CoroRef = std::shared_ptr<Coro>;
+  
   void refresh(Coro &cor, Scope &scp);
 }
 

@@ -20,7 +20,8 @@ namespace snabel {
     target(nullptr),
     stack_depth(thread.stacks.size()),
     return_pc(-1),
-    push_result(true)
+    push_result(true),
+    coros(src.coros)
   {}
   
   Scope::~Scope() {
@@ -92,15 +93,16 @@ namespace snabel {
   }
 
   Coro &add_coro(Scope &scp, Label &tgt) {
-    return scp.coros.emplace(std::piecewise_construct,
-			     std::forward_as_tuple(&tgt),
-			     std::forward_as_tuple(scp)).first->second;
+    return *scp.coros.emplace(std::piecewise_construct,
+			      std::forward_as_tuple(&tgt),
+			      std::forward_as_tuple(std::make_shared<Coro>(scp)))
+      .first->second;
   }
 
   Coro *find_coro(Scope &scp, Label &tgt) {
     auto fnd(scp.coros.find(&tgt));
     if (fnd == scp.coros.end()) { return nullptr; }
-    return &fnd->second;
+    return &*fnd->second;
   }
 
   void jump(Scope &scp, const Label &lbl) {

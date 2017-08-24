@@ -26,7 +26,7 @@ namespace snabel {
     bool push_result;
 
     std::deque<Frame> recalls;
-    std::map<Label *, Coro> coros;
+    std::map<Label *, CoroRef> coros;
     std::set<str> env_keys;
     
     Scope(Thread &thread);

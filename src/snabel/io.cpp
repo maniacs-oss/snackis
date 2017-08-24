@@ -15,7 +15,7 @@ namespace snabel {
   { }
 
   IOQueue::IOQueue():
-    wpos(0)
+    len(0), wpos(0)
   { }
   
   File::File(const Path &path, int flags):
@@ -56,7 +56,8 @@ namespace snabel {
     res = (*out.type->write)(out, &b.data[in->wpos], b.rpos-in->wpos);
     if (res == -1) { return nullopt; }
     in->wpos += res;
-      
+    in->len -= res;
+    
     if (in->wpos == b.rpos) {
       q.pop_front();
       in->wpos = 0;
@@ -81,4 +82,18 @@ namespace snabel {
 
     return true;
   }
+
+  bool push(IOQueue &q, const IOBuf &buf){
+    if (!buf.rpos) { return false; }
+    q.bufs.push_back(buf);
+    q.len += buf.rpos;
+    return true;
+  }
+  
+  bool push(IOQueue &q, const Bin &bin) {
+    if (bin.empty()) { return false; }
+    q.bufs.emplace_back(bin);
+    q.len += bin.size();
+    return true;
+  }				       					 
 }

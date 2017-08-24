@@ -63,21 +63,23 @@ namespace snabel {
     for (size_t j(0); j < in.size(); j++) {
       char c(in[j]);
 
-      while (quoted && c != '\'') {
+      while (quoted && c != '\'' && c != '"') {
 	j++;
 	c = in[j];
       }
 
-      if (c == '\'' && (j == 0 || in[j-1] != '\\')) { quoted = !quoted; }
+      if ((c == '\'' || c == '"') &&
+	  (j == 0 || in[j-1] != '\\')) { quoted = !quoted; }
+      
       const size_t cp(j);
 
       if ((split.find(c) != split.end() ||
-	   c == '\'' || c == '\n' || c == ' ') &&
+	   c == '\'' || c == '"' || c == '\n' || c == ' ') &&
 	  !quoted && j > i) {
 	if (split.find(in[i]) != split.end()) { i++; }
-	const str s(trim(in.substr(i, (c == '\'') ? j-i+1 : j-i)));
+	const str s(trim(in.substr(i, (c == '\'' || c == '"') ? j-i+1 : j-i)));
 	if (!s.empty()) { out.emplace_back(s, Pos(lnr, i)); }
-	i = (c == '\'') ? j+1 : j;
+	i = (c == '\'' || c == '"') ? j+1 : j;
       }
 
       if (split.find(c) != split.end()) {

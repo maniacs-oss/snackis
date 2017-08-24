@@ -19,7 +19,7 @@ namespace snabel {
 
   struct IOQueue {
     std::deque<IOBuf> bufs;
-    int64_t wpos;
+    int64_t len, wpos;
     IOQueue();
   };
 
@@ -47,6 +47,8 @@ namespace snabel {
 
   bool operator ==(const IOBuf &x, const IOBuf &y);
   bool operator ==(const IOQueue &x, const IOQueue &y);
+  bool push(IOQueue &q, const IOBuf &buf);
+  bool push(IOQueue &q, const Bin &bin);
 }
 
 #endif
