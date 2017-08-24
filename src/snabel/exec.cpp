@@ -1260,7 +1260,7 @@ namespace snabel {
       });
 
     add_macro(*this, "when", [this](auto pos, auto &in, auto &out) {
-	out.emplace_back(Branch());
+	out.emplace_back(When());
       });
 
     add_macro(*this, "yield", [this](auto pos, auto &in, auto &out) {

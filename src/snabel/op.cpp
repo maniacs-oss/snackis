@@ -52,59 +52,7 @@ namespace snabel {
     backup_stack(scp.thread, copy);
     return true;
   }
-  
-  Branch::Branch(opt<Box> target):
-    OpImp(OP_BRANCH, "branch"), target(target)
-  { }
-
-  OpImp &Branch::get_imp(Op &op) const {
-    return std::get<Branch>(op.data);
-  }
-
-  bool Branch::prepare(Scope &scp) {
-    if (target && !target->type->call) {
-      ERROR(Snabel, fmt("Invalid branch target: %0", *target));
-      return false;
-    }
-
-    return true;
-  }
-  
-  bool Branch::run(Scope &scp) {
-    auto &exe(scp.exec);
-    auto &thd(scp.thread);
-    auto tgt(target);
-
-    if (!tgt) {
-      tgt = try_pop(thd);
-      
-      if (!tgt) {
-	ERROR(Snabel, "Missing branch target");
-	return false;
-      }
-      
-      if (!tgt->type->call) {
-	ERROR(Snabel, fmt("Invalid branch target: %0", *tgt));
-	return false;
-      }
-    }
-
-    auto cnd(try_pop(thd));
-
-    if (!cnd) {
-      ERROR(Snabel, "Missing branch condition");
-      return false;
-    }
-
-    if (cnd->type != &exe.bool_type) {
-      ERROR(Snabel, fmt("Invalid branch condition: %0", *cnd));
-      return false;
-    }
-
-    if(get<bool>(*cnd)) { return (*tgt->type->call)(scp, *tgt, false); }
-    return true;
-  }
-  
+    
   Call::Call(opt<Box> target):
     OpImp(OP_CALL, "call"), target(target)
   { }
@@ -1063,6 +1011,58 @@ namespace snabel {
     auto &pt(get_type(exe, *get<Type *>(*t)->raw, types));
     t->type = &get_meta_type(exe, pt);
     get<Type *>(*t) = &pt;
+    return true;
+  }
+
+  When::When(opt<Box> target):
+    OpImp(OP_WHEN, "when"), target(target)
+  { }
+
+  OpImp &When::get_imp(Op &op) const {
+    return std::get<When>(op.data);
+  }
+
+  bool When::prepare(Scope &scp) {
+    if (target && !target->type->call) {
+      ERROR(Snabel, fmt("Invalid when target: %0", *target));
+      return false;
+    }
+
+    return true;
+  }
+  
+  bool When::run(Scope &scp) {
+    auto &exe(scp.exec);
+    auto &thd(scp.thread);
+    auto tgt(target);
+
+    if (!tgt) {
+      tgt = try_pop(thd);
+      
+      if (!tgt) {
+	ERROR(Snabel, "Missing when target");
+	return false;
+      }
+      
+      if (!tgt->type->call) {
+	ERROR(Snabel, fmt("Invalid when target: %0", *tgt));
+	return false;
+      }
+    }
+
+    auto cnd(try_pop(thd));
+
+    if (!cnd) {
+      ERROR(Snabel, "Missing when condition");
+      return false;
+    }
+
+    if (cnd->type != &exe.bool_type) {
+      ERROR(Snabel, fmt("Invalid when condition: %0", *cnd));
+      return false;
+    }
+
+    if(get<bool>(*cnd)) { return (*tgt->type->call)(scp, *tgt, false); }
     return true;
   }
 

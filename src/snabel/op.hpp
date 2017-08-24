@@ -19,11 +19,11 @@ namespace snabel {
   struct Scope;
   struct Op;
 
-  enum OpCode { OP_BACKUP, OP_BRANCH, OP_CALL, OP_CHECK, OP_DEREF, OP_DROP, OP_DUP,
+  enum OpCode { OP_BACKUP, OP_CALL, OP_CHECK, OP_DEREF, OP_DROP, OP_DUP,
 		OP_FOR, OP_FUNCALL, OP_GETENV, OP_JUMP, OP_LAMBDA,
 		OP_PARAM, OP_PUSH, OP_PUTENV, OP_RECALL, OP_RESET, OP_RESTORE,
 		OP_RETURN, OP_STASH, OP_SWAP, OP_TARGET, OP_UNLAMBDA,
-		OP_UNPARAM, OP_WHILE, OP_YIELD };
+		OP_UNPARAM, OP_WHEN, OP_WHILE, OP_YIELD };
 
   using OpSeq = std::deque<Op>;
 
@@ -47,15 +47,6 @@ namespace snabel {
     Backup(bool copy=false);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
-    bool run(Scope &scp) override;
-  };
-
-  struct Branch: OpImp {
-    opt<Box> target;
-    
-    Branch(opt<Box> target=nullopt);
-    OpImp &get_imp(Op &op) const override;
-    bool prepare(Scope &scp) override;
     bool run(Scope &scp) override;
   };
 
@@ -265,6 +256,15 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
   
+  struct When: OpImp {
+    opt<Box> target;
+    
+    When(opt<Box> target=nullopt);
+    OpImp &get_imp(Op &op) const override;
+    bool prepare(Scope &scp) override;
+    bool run(Scope &scp) override;
+  };
+
   struct While: OpImp {
     str key;
     bool compiled;
@@ -285,10 +285,10 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
 
-  using OpData = std::variant<Backup, Branch, Call, Check, Deref, Drop, Dup, For,
+  using OpData = std::variant<Backup, Call, Check, Deref, Drop, Dup, For,
 			      Funcall, Getenv, Jump, Lambda, Param, Push,
 			      Putenv, Recall, Reset, Restore, Return, Stash, Swap,
-			      Target, Unlambda, Unparam, While, Yield>;
+			      Target, Unlambda, Unparam, When, While, Yield>;
 
   struct Op {
     OpData data;

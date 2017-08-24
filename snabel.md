@@ -341,7 +341,7 @@ Iter<I64>
   )};  
 
   func: do-copy {
-    "Init queue and writer"
+    "Init queue and writer proc"
     let: q io-queue;
     @q $1 do-write _ _
 
