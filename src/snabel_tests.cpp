@@ -409,7 +409,7 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);    
   }
 
-  static void for_tests() {
+  static void loop_tests() {
     TRY(try_test);    
 
     run(exe, "0 7 &+ for");
@@ -420,6 +420,9 @@ namespace snabel {
 
     run(exe, "'foo' &nop for $ \\- join");
     CHECK(get<str>(pop(exe.main)) == "f-o-o", _);
+
+    run(exe, "0 {$0 42 lt?} {1 +} while");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
   static void rat_tests() {
@@ -524,7 +527,7 @@ namespace snabel {
     iter_tests();
     list_tests();
     pair_tests();
-    for_tests();
+    loop_tests();
     rat_tests();
     opt_tests();
     io_tests();

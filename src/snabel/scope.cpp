@@ -125,7 +125,10 @@ namespace snabel {
     scp.return_pc = scp.thread.pc+1;
     jump(scp, lbl);
 
-    if (now) { run(scp.thread, scp.return_pc); }
+    if (now) {
+      run(scp.thread, scp.return_pc);
+      scp.thread.pc--;
+    }
   }
 
   bool yield(Scope &scp, int64_t depth) {

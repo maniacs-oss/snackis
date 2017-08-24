@@ -94,7 +94,7 @@ namespace gui {
     if (res) {
       auto res(peek(v->exec.main));
       if (res) {
-	log(v->ctx, "Script finished in %0us:\n%1\n%2!",
+	log(v->ctx, "Finished running in %0us:\n%1\n%2!",
 	    usecs(stopped-started), res->type->dump(*res), res->type->name);
       } else {
 	log(v->ctx, "Script result: n/a");

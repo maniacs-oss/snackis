@@ -1067,6 +1067,92 @@ namespace snabel {
     return true;
   }
 
+  While::While():
+    OpImp(OP_WHILE, "while"), compiled(false)
+  { }
+
+  OpImp &While::get_imp(Op &op) const {
+    return std::get<While>(op.data);
+  }
+
+  bool While::prepare(Scope &scp) {
+    key = fmt_arg(uid(scp.exec));
+    return true;
+  }
+
+  bool While::compile(const Op &op, Scope &scp, OpSeq &out) {
+    if (compiled) { return false; }
+    compiled = true;
+    auto &lbl(add_label(scp.exec, fmt("_while%0", uid(scp.exec))));
+    out.emplace_back(Target(lbl));
+    out.push_back(op);
+    out.emplace_back(Jump(lbl));
+    return true;
+  }
+
+  bool While::run(Scope &scp) {
+    auto &exe(scp.exec);
+    auto &thd(scp.thread);
+
+    opt<Box> tgt, cnd;
+    auto fnd(find_env(scp, key));
+
+    if (fnd) {
+      auto &p(get<PairRef>(*fnd));
+      tgt.emplace(p->first);
+      cnd.emplace(p->second);
+    } else {
+      tgt = try_pop(thd);
+    
+      if (!tgt) {
+	ERROR(Snabel, "Missing while target");
+	return false;
+      }
+      
+      if (!tgt->type->call) {
+	ERROR(Snabel, fmt("Invalid while target: %0", *tgt));
+	return false;
+      }
+    
+      cnd = try_pop(thd);
+      
+      if (!cnd) {
+	ERROR(Snabel, "Missing while condition");
+	return false;
+      }
+      
+      if (!cnd->type->call)     {
+	ERROR(Snabel, fmt("Invalid while condition: %0", *cnd));
+	return false;
+      }
+
+      put_env(scp, key, Box(exe.pair_type,
+			    std::make_shared<Pair>(*tgt, *cnd)));
+    }
+    
+    (*cnd->type->call)(scp, *cnd, true);
+    auto ok(try_pop(thd));
+
+    if (ok) {
+      if (ok->type != &exe.bool_type) {
+	ERROR(Snabel, fmt("Invalid while condition: %0", *ok));
+	return false;
+      }
+      
+      if (get<bool>(*ok)) {
+	(*tgt->type->call)(scp, *tgt, false);
+	return true;
+      }
+    } else {
+      ERROR(Snabel, "Missing while condition");
+      return false;
+    }
+
+    rem_env(scp, key);
+    scp.thread.pc += 2;
+    return true;
+  }
+
   Yield::Yield(int64_t depth):
     OpImp(OP_YIELD, "yield"), depth(depth)
   { }

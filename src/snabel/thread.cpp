@@ -131,7 +131,7 @@ namespace snabel {
     while (thd.pc < thd.ops.size() && thd.pc != break_pc) {
       auto &op(thd.ops[thd.pc]);
       auto prev_pc(thd.pc);
-
+      
       if (!run(op, curr_scope(thd))) {
 	ERROR(Snabel, fmt("Error on line %0: %1 %2",
 			  thd.pc, op.imp.name, op.imp.info()));

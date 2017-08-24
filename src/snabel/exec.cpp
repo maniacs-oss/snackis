@@ -40,6 +40,16 @@ namespace snabel {
     push(scp.thread, scp.exec.bool_type, x.type->equal(x, y));
   }
 
+  static void lt_imp(Scope &scp, const Args &args) {
+    auto &x(args.at(0)), &y(args.at(1));
+    push(scp.thread, scp.exec.bool_type, x.type->lt(x, y));
+  }
+
+  static void gt_imp(Scope &scp, const Args &args) {
+    auto &x(args.at(0)), &y(args.at(1));
+    push(scp.thread, scp.exec.bool_type, x.type->gt(x, y));
+  }
+
   static void opt_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
     push(scp.thread, get_opt_type(scp.exec, *in.type), in.val);
@@ -430,6 +440,7 @@ namespace snabel {
     lambda_type(add_type(*this, "Lambda")),
     list_type(add_type(*this, "List")),
     opt_type(add_type(*this, "Opt")),
+    ordered_type(add_type(*this, "Ordered")),
     pair_type(add_type(*this, "Pair")),
     path_type(add_type(*this, "Path")),
     proc_type(add_type(*this, "Proc")),    
@@ -456,6 +467,8 @@ namespace snabel {
 
     void_type.fmt = [](auto &v) { return "Void"; };
     void_type.eq = [](auto &x, auto &y) { return true; };  
+
+    ordered_type.supers.push_back(&any_type);
 
     opt_type.supers.push_back(&any_type);
     opt_type.args.push_back(&any_type);
@@ -531,6 +544,9 @@ namespace snabel {
     pair_type.equal = [](auto &x, auto &y) { 
       return *get<PairRef>(x) == *get<PairRef>(y); 
     };
+    pair_type.lt = [](auto &x, auto &y) { 
+      return *get<PairRef>(x) < *get<PairRef>(y); 
+    };
 
     readable_type.supers.push_back(&any_type);
     writeable_type.supers.push_back(&any_type);
@@ -575,8 +591,10 @@ namespace snabel {
     };
     
     byte_type.supers.push_back(&any_type);
+    byte_type.supers.push_back(&ordered_type);
     byte_type.fmt = [](auto &v) { return fmt_arg(get<Byte>(v)); };
     byte_type.eq = [](auto &x, auto &y) { return get<Byte>(x) == get<Byte>(y); };
+    byte_type.lt = [](auto &x, auto &y) { return get<Byte>(x) < get<Byte>(y); };
 
     bool_type.supers.push_back(&any_type);
     bool_type.fmt = [](auto &v) { return get<bool>(v) ? "#t" : "#f"; };
@@ -585,6 +603,7 @@ namespace snabel {
     put_env(main_scope, "#f", Box(bool_type, false));
 
     char_type.supers.push_back(&any_type);
+    char_type.supers.push_back(&ordered_type);
 
     char_type.dump = [](auto &v) -> str {
       auto c(get<char>(v));
@@ -602,11 +621,12 @@ namespace snabel {
     };
 
     char_type.fmt = [](auto &v) -> str { return str(1, get<char>(v)); };
-
     char_type.eq = [](auto &x, auto &y) { return get<char>(x) == get<char>(y); };
+    char_type.lt = [](auto &x, auto &y) { return get<char>(x) < get<char>(y); };
     
     uchar_type.supers.push_back(&any_type);
-
+    uchar_type.supers.push_back(&ordered_type);
+    
     uchar_type.dump = [](auto &v) -> str {
       auto c(get<uchar>(v));
       
@@ -627,6 +647,7 @@ namespace snabel {
     };
     
     uchar_type.eq = [](auto &x, auto &y) { return get<uchar>(x) == get<uchar>(y); };
+    uchar_type.lt = [](auto &x, auto &y) { return get<uchar>(x) < get<uchar>(y); };
 
     proc_type.supers.push_back(&any_type);
     proc_type.supers.push_back(&callable_type);
@@ -707,10 +728,11 @@ namespace snabel {
       });
 
     i64_type.supers.push_back(&any_type);
+    i64_type.supers.push_back(&ordered_type);
     i64_type.supers.push_back(&get_iterable_type(*this, i64_type));
     i64_type.fmt = [](auto &v) { return fmt_arg(get<int64_t>(v)); };
     i64_type.eq = [](auto &x, auto &y) { return get<int64_t>(x) == get<int64_t>(y); };
-
+    i64_type.lt = [](auto &x, auto &y) { return get<int64_t>(x) < get<int64_t>(y); };
     i64_type.iter = [this](auto &in) {
       return Iter::Ref(new RangeIter(*this, Range(0, get<int64_t>(in))));
     };
@@ -752,32 +774,40 @@ namespace snabel {
       });
 
     str_type.supers.push_back(&any_type);
+    str_type.supers.push_back(&ordered_type);
     str_type.supers.push_back(&get_iterable_type(*this, char_type));
     str_type.fmt = [](auto &v) { return fmt("'%0'", get<str>(v)); };
     str_type.eq = [](auto &x, auto &y) { return get<str>(x) == get<str>(y); };
+    str_type.lt = [](auto &x, auto &y) { return get<str>(x) < get<str>(y); };
 
     str_type.iter = [this](auto &in) {
       return Iter::Ref(new StrIter(*this, get<str>(in)));
     };
 
     ustr_type.supers.push_back(&any_type);
-    str_type.supers.push_back(&get_iterable_type(*this, uchar_type));
+    ustr_type.supers.push_back(&ordered_type);
+    ustr_type.supers.push_back(&get_iterable_type(*this, uchar_type));
     ustr_type.fmt = [](auto &v) {
       return fmt("u'%0'", uconv.to_bytes(get<ustr>(v)));
     };
     ustr_type.eq = [](auto &x, auto &y) { return get<ustr>(x) == get<ustr>(y); };
+    ustr_type.lt = [](auto &x, auto &y) { return get<ustr>(x) < get<ustr>(y); };
 
     ustr_type.iter = [this](auto &in) {
       return Iter::Ref(new UStrIter(*this, get<ustr>(in)));
     };
     
     rat_type.supers.push_back(&any_type);
+    rat_type.supers.push_back(&ordered_type);
     rat_type.fmt = [](auto &v) { return fmt_arg(get<Rat>(v)); };
     rat_type.eq = [](auto &x, auto &y) { return get<Rat>(x) == get<Rat>(y); };
+    rat_type.lt = [](auto &x, auto &y) { return get<Rat>(x) < get<Rat>(y); };
 
     uid_type.supers.push_back(&any_type);
+    uid_type.supers.push_back(&ordered_type);
     uid_type.fmt = [](auto &v) { return fmt("Uid(%0)", get<Uid>(v)); };
     uid_type.eq = [](auto &x, auto &y) { return get<Uid>(x) == get<Uid>(y); };
+    uid_type.lt = [](auto &x, auto &y) { return get<Uid>(x) < get<Uid>(y); };
 
     thread_type.supers.push_back(&any_type);
     thread_type.fmt = [](auto &v) { return fmt("thread_%0", get<Thread *>(v)->id); };
@@ -827,6 +857,14 @@ namespace snabel {
 	     {ArgType(any_type), ArgType(0)}, {ArgType(bool_type)},
 	     equal_imp);
    
+    add_func(*this, "lt?",
+	     {ArgType(ordered_type), ArgType(0)}, {ArgType(bool_type)},
+	     lt_imp);
+
+    add_func(*this, "gt?",
+	     {ArgType(ordered_type), ArgType(0)}, {ArgType(bool_type)},
+	     gt_imp);
+
     add_func(*this, "opt",
 	     {ArgType(any_type)},
 	     {ArgType([this](auto &args) {
@@ -847,7 +885,7 @@ namespace snabel {
     add_func(*this, "z?",
 	     {ArgType(i64_type)}, {ArgType(bool_type)},
 	     zero_i64_imp);
-
+    
     add_func(*this, "+?",
 	     {ArgType(i64_type)}, {ArgType(bool_type)},
 	     pos_i64_imp);
@@ -1186,10 +1224,6 @@ namespace snabel {
 	out.emplace_back(Drop(1));
       });
 
-    add_macro(*this, "for", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(For());
-      });
-
     add_macro(*this, "recall", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Recall());
       });
@@ -1220,6 +1254,14 @@ namespace snabel {
 
     add_macro(*this, "yield2", [this](auto pos, auto &in, auto &out) {
 	out.emplace_back(Yield(3));
+      });
+
+    add_macro(*this, "for", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(For());
+      });
+
+    add_macro(*this, "while", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(While());
       });
   }
 
@@ -1344,7 +1386,8 @@ namespace snabel {
     return t;
   }
 
-  Type &get_pair_type(Exec &exe, Type &lt, Type &rt) {    
+  Type &get_pair_type(Exec &exe, Type &lt, Type &rt) {
+    auto &thd(exe.main);
     str n(fmt("Pair<%0 %1>", lt.name, rt.name));
     auto fnd(find_type(exe, n));
     if (fnd) { return *fnd; }
@@ -1352,14 +1395,20 @@ namespace snabel {
     auto &t(add_type(exe, n));
     t.raw = &exe.pair_type;
     t.supers.push_back(&exe.any_type);
+
+    if (isa(thd, lt, exe.ordered_type) && isa(thd, rt, exe.ordered_type)) {
+      t.supers.push_back(&exe.ordered_type);
+    }
+
     t.supers.push_back(&exe.pair_type);
     t.args.push_back(&lt);
     t.args.push_back(&rt);
 
-    t.dump = [](auto &v) { return dump(*get<PairRef>(v)); };
-    t.fmt = [](auto &v) { return pair_fmt(*get<PairRef>(v)); };
-    t.eq = [](auto &x, auto &y) { return get<PairRef>(x) == get<PairRef>(y); };
-    t.equal = [](auto &x, auto &y) { return *get<PairRef>(x) == *get<PairRef>(y); };
+    t.dump = exe.pair_type.dump;
+    t.fmt = exe.pair_type.fmt;
+    t.eq = exe.pair_type.eq;
+    t.equal = exe.pair_type.equal;
+    t.lt = exe.pair_type.lt;
     return t;
   }
   

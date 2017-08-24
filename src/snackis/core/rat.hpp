@@ -16,6 +16,8 @@ namespace snackis {
   uint64_t gcd(uint64_t x, uint64_t y);
   
   bool operator ==(const Rat &x, const Rat &y);
+  bool operator <(const Rat &x, const Rat &y);
+
   Rat operator +(const Rat &x, const Rat &y);
   Rat operator -(const Rat &x, const Rat &y);
   Rat operator *(const Rat &x, const Rat &y);

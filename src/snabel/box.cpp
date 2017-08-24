@@ -16,6 +16,10 @@ namespace snabel {
     return x.type != y.type || !x.type->eq(x, y);
   }
 
+  bool operator <(const Box &x, const Box &y) {
+    return x.type == y.type && x.type->lt(x, y);
+  }
+
   str dump(const List &lst) {
     OutStream buf;
     buf << '[';

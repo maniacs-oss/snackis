@@ -242,7 +242,7 @@ Iteration is currently supported for numbers, which will return 0..N; lists, whi
 ```
 
 #### Loops
-The ```for```-loop accepts an iterable and a call target, and will call the target with the last value pushed on the stack as long as the iterator returns values.
+The ```for```-loop accepts an iterable and a target, and calls the target with the last value pushed on the stack as long as the iterator returns values; and the ```while```-loop accepts a condition and a target, and calls the target as long as the condition pushes ```#t```.
 
 ```
 > 0 7 &+ for
@@ -253,6 +253,9 @@ The ```for```-loop accepts an iterable and a call target, and will call the targ
 
 > 'foo' &nop for $ \- join
 'f-o-o'
+
+> 0 {$0 42 lt?} {1 +} while
+42
 ```
 
 ### Functions

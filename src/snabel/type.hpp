@@ -23,6 +23,8 @@ namespace snabel {
     
     func<bool (const Box &, const Box &)> eq;
     func<bool (const Box &, const Box &)> equal;
+    func<bool (const Box &, const Box &)> lt;
+    func<bool (const Box &, const Box &)> gt;
     func<str (const Box &)> dump;
     func<str (const Box &)> fmt;
     opt<func<bool (Scope &, const Box &, bool)>> call;

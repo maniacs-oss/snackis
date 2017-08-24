@@ -27,6 +27,10 @@ namespace snackis {
     return x.num == y.num && x.div == y.div && x.neg == y.neg;
   }
 
+  bool operator <(const Rat &x, const Rat &y) {
+    return x.num*y.div < y.num*x.div; 
+  }
+
   Rat operator +(const Rat &x, const Rat &y) {
     auto d(x.div * y.div);
     auto xn(x.num * y.div), yn(y.num * x.div);

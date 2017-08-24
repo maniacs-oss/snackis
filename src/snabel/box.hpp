@@ -57,6 +57,8 @@ namespace snabel {
   
   bool operator ==(const Box &x, const Box &y);
   bool operator !=(const Box &x, const Box &y);
+  bool operator <(const Box &x, const Box &y);  
+
   str dump(const List &lst);
   str list_fmt(const List &lst);
   str dump(const Pair &pr);

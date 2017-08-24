@@ -5,7 +5,7 @@
 #include "snabel/iter.hpp"
 
 namespace snabel {
-  using Byte = unsigned char;
+  using Byte = uint8_t;
   using Bin = std::vector<Byte>;
   using BinRef = std::shared_ptr<Bin>;
 
