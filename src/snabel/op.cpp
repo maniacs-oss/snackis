@@ -340,14 +340,14 @@ namespace snabel {
   }
 
   bool For::prepare(Scope &scp) {
-    key = fmt_arg(gensym(scp.exec));
+    key = fmt_arg(uid(scp.exec));
     return true;
   }
   
   bool For::compile(const Op &op, Scope &scp, OpSeq &out) {
     if (compiled) { return false; }
     compiled = true;
-    auto &lbl(add_label(scp.exec, fmt("_for%0", gensym(scp.exec))));
+    auto &lbl(add_label(scp.exec, fmt("_for%0", uid(scp.exec))));
     out.emplace_back(Target(lbl));
     out.push_back(op);
     out.emplace_back(Jump(lbl));
@@ -598,7 +598,7 @@ namespace snabel {
 
   bool Lambda::prepare(Scope &scp) {
     auto &exe(scp.exec);
-    tag = gensym(exe);
+    tag = uid(exe);
     enter_label = &add_label(exe, fmt("_enter%0", tag));
     skip_label = &add_label(exe, fmt("_skip%0", tag));    
     return true;

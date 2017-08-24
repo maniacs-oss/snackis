@@ -180,7 +180,7 @@ namespace snabel {
     Thread &thd(scp.thread);
     Exec &exe(scp.exec);
     
-    Thread::Id id(gensym(exe));
+    Thread::Id id(uid(exe));
 
     Thread *t(nullptr);
 

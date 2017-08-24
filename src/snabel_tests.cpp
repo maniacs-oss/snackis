@@ -304,6 +304,13 @@ namespace snabel {
     CHECK(get<str>(pop(exe.main)) == "foo", _);
   }
 
+  static void uid_tests() {
+    TRY(try_test);    
+    
+    run(exe, "uid uid ==");
+    CHECK(!get<bool>(pop(exe.main)), _);
+  }
+
   static void list_push_tests() {
     TRY(try_test);    
 
@@ -513,6 +520,7 @@ namespace snabel {
     when_tests();
     str_tests();
     bin_tests();
+    uid_tests();
     iter_tests();
     list_tests();
     pair_tests();

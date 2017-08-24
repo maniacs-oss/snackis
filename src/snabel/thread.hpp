@@ -9,7 +9,7 @@
 
 namespace snabel {
   struct Thread {
-    using Id = Sym;
+    using Id = Uid;
   
     Exec &exec;
     const Id id;

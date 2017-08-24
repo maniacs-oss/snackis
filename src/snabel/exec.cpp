@@ -360,6 +360,10 @@ namespace snabel {
 	 std::make_shared<Bin>(get<int64_t>(args.at(0))));
   }
 
+  static void uid_imp(Scope &scp, const Args &args) {
+    push(scp.thread, scp.exec.uid_type, uid(scp.exec)); 
+  }
+  
   static void rfile_imp(Scope &scp, const Args &args) {
     push(scp.thread,
 	 scp.exec.rfile_type,
@@ -436,10 +440,11 @@ namespace snabel {
     str_type(add_type(*this, "Str")),
     thread_type(add_type(*this, "Thread")),
     uchar_type(add_type(*this, "UChar")),
+    uid_type(add_type(*this, "Uid")),
     ustr_type(add_type(*this, "UStr")),
     void_type(add_type(*this, "Void")),
     writeable_type(add_type(*this, "Writeable")),
-    next_gensym(1)
+    next_uid(1)
   {    
     any_type.fmt = [](auto &v) { return "Any"; };
     any_type.eq = [](auto &x, auto &y) { return false; };
@@ -769,7 +774,11 @@ namespace snabel {
     rat_type.supers.push_back(&any_type);
     rat_type.fmt = [](auto &v) { return fmt_arg(get<Rat>(v)); };
     rat_type.eq = [](auto &x, auto &y) { return get<Rat>(x) == get<Rat>(y); };
-    
+
+    uid_type.supers.push_back(&any_type);
+    uid_type.fmt = [](auto &v) { return fmt("Uid(%0)", get<Uid>(v)); };
+    uid_type.eq = [](auto &x, auto &y) { return get<Uid>(x) == get<Uid>(y); };
+
     thread_type.supers.push_back(&any_type);
     thread_type.fmt = [](auto &v) { return fmt("thread_%0", get<Thread *>(v)->id); };
     thread_type.eq = [](auto &x, auto &y) {
@@ -935,6 +944,10 @@ namespace snabel {
     add_func(*this, "ustr",
 	     {ArgType(str_type)}, {ArgType(ustr_type)},
 	     str_ustr_imp);
+
+    add_func(*this, "uid",
+	     {}, {ArgType(uid_type)},
+	     uid_imp);
 
     add_func(*this, "iter",
 	     {ArgType(iterable_type)},
@@ -1406,8 +1419,8 @@ namespace snabel {
     return fnd->second(val);
   }
 
-  Sym gensym(Exec &exe) {
-    return exe.next_gensym.fetch_add(1);
+  Uid uid(Exec &exe) {
+    return exe.next_uid.fetch_add(1);
   }
 
   Box make_opt(Exec &exe, opt<Box> in) {

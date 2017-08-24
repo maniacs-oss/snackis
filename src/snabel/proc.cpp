@@ -8,7 +8,7 @@
 
 namespace snabel {
   Proc::Proc(Label &tgt):
-    id(gensym(tgt.exec)), target(tgt), coro(nullptr)
+    id(uid(tgt.exec)), target(tgt), coro(nullptr)
   { }
 
   bool call(Proc &prc, Scope &scp, bool now) {

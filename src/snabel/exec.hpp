@@ -7,9 +7,9 @@
 
 #include "snabel/label.hpp"
 #include "snabel/macro.hpp"
-#include "snabel/sym.hpp"
 #include "snabel/thread.hpp"
 #include "snabel/type.hpp"
+#include "snabel/uid.hpp"
 #include "snackis/core/uid.hpp"
 
 namespace snabel {
@@ -35,8 +35,9 @@ namespace snabel {
       &iter_type,
       &iterable_type, &label_type, &lambda_type, &list_type, &opt_type, &pair_type,
       &path_type, &proc_type, &readable_type, &rfile_type, &rat_type, &rwfile_type,
-      &str_type, &thread_type, &uchar_type, &ustr_type, &void_type, &writeable_type;
-    std::atomic<Sym> next_gensym;
+      &str_type, &thread_type, &uchar_type, &uid_type, &ustr_type, &void_type,
+      &writeable_type;
+    std::atomic<Uid> next_uid;
     
     Exec();
     Exec(const Exec &) = delete;
@@ -68,7 +69,7 @@ namespace snabel {
   void add_conv(Exec &exe, Type &from, Type &to, Conv conv);
   bool conv(Exec &exe, Box &val, Type &type);
 
-  Sym gensym(Exec &exe);
+  Uid uid(Exec &exe);
   Box make_opt(Exec &exe, opt<Box> in);
 
   void rewind(Exec &exe);  

@@ -6,7 +6,6 @@
 
 #include "snabel/box.hpp"
 #include "snabel/label.hpp"
-#include "snabel/sym.hpp"
 #include "snabel/type.hpp"
 #include "snackis/core/func.hpp"
 #include "snackis/core/str.hpp"
@@ -150,7 +149,7 @@ namespace snabel {
   };
 
   struct Lambda: OpImp {
-    Sym tag;
+    Uid tag;
     Label *enter_label, *recall_label, *yield_label, *exit_label, *skip_label;
     bool recalls, returns, yields, compiled;
     

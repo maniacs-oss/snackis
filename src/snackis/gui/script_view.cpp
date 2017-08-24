@@ -56,7 +56,9 @@ namespace gui {
   static void on_compile(gpointer *_, ScriptView *v) {
     TRY(try_compile);
     auto code(get_str(GTK_TEXT_VIEW(v->code_fld)));
-    snabel::compile(v->exec, code);    
+    auto started(pnow());
+    snabel::compile(v->exec, code);
+    auto stopped(pnow());
     gtk_list_store_clear(v->bcode_store);
 
     for (auto &op: v->exec.main.ops) {
@@ -70,7 +72,7 @@ namespace gui {
 			 -1);
     }
 
-    log(v->ctx, "Finished compiling");
+    log(v->ctx, "Finished compiling in %0us", usecs(stopped-started));
     
     if (try_compile.errors.empty()) {
       gtk_widget_grab_focus(v->bcode_lst);
@@ -92,7 +94,7 @@ namespace gui {
     if (res) {
       auto res(peek(v->exec.main));
       if (res) {
-	log(v->ctx, "Script finished in %0 us:\n%1\n%2!",
+	log(v->ctx, "Script finished in %0us:\n%1\n%2!",
 	    usecs(stopped-started), res->type->dump(*res), res->type->name);
       } else {
 	log(v->ctx, "Script result: n/a");

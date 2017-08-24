@@ -2,7 +2,6 @@
 #define SNABEL_LABEL_HPP
 
 #include <cstdint>
-#include "snabel/sym.hpp"
 #include "snackis/core/str.hpp"
 
 namespace snabel {

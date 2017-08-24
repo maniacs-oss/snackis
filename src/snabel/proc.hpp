@@ -2,7 +2,7 @@
 #define SNABEL_PROC_HPP
 
 #include "snabel/box.hpp"
-#include "snabel/sym.hpp"
+#include "snabel/uid.hpp"
 #include "snackis/core/opt.hpp"
 
 namespace snabel {
@@ -14,7 +14,7 @@ namespace snabel {
   struct Thread;
   
   struct Proc {
-    using Id = Sym;
+    using Id = Uid;
 
     Id id;
     Label &target;

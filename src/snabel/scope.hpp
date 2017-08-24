@@ -8,7 +8,6 @@
 #include "snabel/coro.hpp"
 #include "snabel/env.hpp"
 #include "snabel/func.hpp"
-#include "snabel/sym.hpp"
 #include "snabel/type.hpp"
 #include "snackis/core/str.hpp"
 

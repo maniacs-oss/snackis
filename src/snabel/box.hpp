@@ -6,6 +6,7 @@
 
 #include "snabel/bin.hpp"
 #include "snabel/iter.hpp"
+#include "snabel/uid.hpp"
 #include "snackis/core/error.hpp"
 #include "snackis/core/fmt.hpp"
 #include "snackis/core/path.hpp"
@@ -39,7 +40,7 @@ namespace snabel {
   { };
   
   using Val = std::variant<Empty, bool, Byte, char, int64_t, Path, Rat, str, uchar,
-			   ustr,
+			   Uid, ustr,
 			   BinRef, FileRef, Iter::Ref, IOBufRef, IOQueueRef, ListRef,
 			   PairRef, ProcRef, 
 			   Func *, Label *, Thread *, Type *>;
