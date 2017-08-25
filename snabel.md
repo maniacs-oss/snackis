@@ -7,8 +7,8 @@
 Like Yoda of Star Wars-fame, and yesterdays scientific calculators; as well as most printers in active use; yet unlike currently trending languages; Snabel expects arguments before operations.
 
 ```
-> 7 42 + 10 %
-9
+> 7 35 +
+42
 ```
 
 ### Stream of Tokens
