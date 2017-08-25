@@ -46,9 +46,10 @@ namespace snabel {
   Coro *find_coro(Scope &scp, Label &tgt);
   void jump(Scope &scp, const Label &lbl);
   void call(Scope &scp, const Label &lbl, bool now=false);
-  bool yield(Scope &scp, int64_t depth);
+  bool _return(Scope &scp, int64_t depth);
   bool recall(Scope &scp, int64_t depth);
   void recall_return(Scope &scp);
+  bool yield(Scope &scp, int64_t depth);
 
   Thread &start_thread(Scope &scp, const Box &init);
 }

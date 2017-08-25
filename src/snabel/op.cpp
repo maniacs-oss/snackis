@@ -705,8 +705,8 @@ namespace snabel {
     return true;
   }
 
-  Return::Return(bool scoped):
-    OpImp(OP_RETURN, "return"), scoped(scoped), target(nullptr)
+  Return::Return(bool scoped, int64_t dep):
+    OpImp(OP_RETURN, "return"), scoped(scoped), target(nullptr), depth(dep)
   { }
 
   OpImp &Return::get_imp(Op &op) const {
@@ -733,24 +733,7 @@ namespace snabel {
   }
 
   bool Return::run(Scope &scp) {
-    if (scp.recalls.empty()) {
-      auto &thd(scp.thread);
-      auto &prev_scp(*std::next(thd.scopes.rbegin()));
-
-      if (!end_scope(thd)) { return false; }
-      if (prev_scp.return_pc == -1) {
-	ERROR(Snabel, "Missing return pc");
-	return false;
-      }
-
-      thd.pc = prev_scp.return_pc;
-      prev_scp.return_pc = -1;
-      prev_scp.coros.erase(target);
-    } else {
-      recall_return(scp);
-    }
-    
-    return true;
+    return _return(scp, depth);
   }
   
   Stash::Stash():
@@ -858,7 +841,7 @@ namespace snabel {
     
     compiled = true;
     if (exit_label) { out.emplace_back(Target(*exit_label)); }
-    out.emplace_back(Return(true));
+    out.emplace_back(Return(true, 1));
     out.push_back(op);
     out.emplace_back(Target(*skip_label));
     out.emplace_back(Push(Box(scp.exec.lambda_type, enter_label)));

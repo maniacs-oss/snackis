@@ -174,6 +174,39 @@ namespace snabel {
     return true;
   }
 
+  bool _return(Scope &scp, int64_t depth) {
+    auto &thd(scp.thread);
+    
+    while (thd.scopes.size() > 1 && depth) {
+      auto &s(thd.scopes.back());
+      depth--;
+
+      if (!depth) {
+	if (s.recalls.empty()) {
+	  auto &ps(*std::next(thd.scopes.rbegin()));	  
+	  
+	  if (ps.return_pc == -1) {
+	    ERROR(Snabel, "Missing return pc");
+	    return false;
+	  }
+	  
+	  end_scope(thd);
+	  thd.pc = ps.return_pc;
+	  ps.return_pc = -1;
+	  ps.coros.erase(s.target);
+	} else {
+	  recall_return(s);
+	}
+
+	break;
+      }
+      
+      end_scope(thd);
+    }
+
+    return true;
+  }
+
   bool recall(Scope &scp, int64_t depth) {
     auto &thd(scp.thread);
     

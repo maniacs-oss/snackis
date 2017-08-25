@@ -212,8 +212,9 @@ namespace snabel {
   struct Return: OpImp {
     bool scoped;
     Label *target;
-
-    Return(bool scoped);
+    int64_t depth;
+    
+    Return(bool scoped, int64_t dep);
     OpImp &get_imp(Op &op) const override;
     bool refresh(Scope &scp) override;
     bool run(Scope &scp) override;
