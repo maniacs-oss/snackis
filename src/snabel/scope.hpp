@@ -22,11 +22,11 @@ namespace snabel {
     opt<Proc *> proc;
 
     Label *target;
+    CoroRef coro;
     int64_t stack_depth, return_pc, recall_pc, break_pc;
     bool push_result;
 
     std::deque<Frame> recalls;
-    std::map<Label *, CoroRef> coros;
     std::set<str> env_keys;
     
     Scope(Thread &thread);
@@ -42,8 +42,6 @@ namespace snabel {
   bool rem_env(Scope &scp, const str &key);
   void rollback_env(Scope &scp);
   void reset_stack(Scope &scp);
-  Coro &add_coro(Scope &scp, Label &tgt);
-  Coro *find_coro(Scope &scp, Label &tgt);
   void jump(Scope &scp, const Label &lbl);
   void call(Scope &scp, const Label &lbl, bool now=false);
   bool _return(Scope &scp, int64_t depth);

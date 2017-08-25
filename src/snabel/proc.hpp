@@ -17,14 +17,13 @@ namespace snabel {
     using Id = Uid;
 
     Id id;
-    Label &target;
-    Coro *coro;
+    CoroRef coro;
     
-    Proc(Label &tgt);
+    Proc(const CoroRef &cor);
   };
 
   void init(Proc &prc, Scope &scp);
-  bool call(Proc &prc, Scope &scp, bool now=false);
+  bool call(const ProcRef &prc, Scope &scp, bool now=false);
 }
 
 #endif

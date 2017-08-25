@@ -17,6 +17,7 @@ namespace snabel {
   using namespace snackis;
 
   struct Box;
+  struct Coro;
   struct Func;
   struct Exec;
   struct Proc;
@@ -28,6 +29,7 @@ namespace snabel {
   struct Thread;
   struct Type;
 
+  using CoroRef = std::shared_ptr<Coro>;
   using FileRef = std::shared_ptr<File>;
   using IOBufRef = std::shared_ptr<IOBuf>;
   using IOQueueRef = std::shared_ptr<IOQueue>;
@@ -42,8 +44,8 @@ namespace snabel {
   
   using Val = std::variant<Empty, bool, Byte, char, int64_t, Path, Rat, str, uchar,
 			   Uid, ustr,
-			   BinRef, FileRef, Iter::Ref, IOBufRef, IOQueueRef, ListRef,
-			   PairRef, ProcRef, RandomRef, 
+			   BinRef, CoroRef, FileRef, Iter::Ref, IOBufRef, IOQueueRef,
+			   ListRef, PairRef, ProcRef, RandomRef, 
 			   Func *, Label *, Thread *, Type *>;
   
   struct Box {

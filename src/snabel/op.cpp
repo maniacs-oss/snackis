@@ -177,10 +177,10 @@ namespace snabel {
 
     if (fnd->type == &exe.func_type) {
       out.emplace_back(Funcall(*get<Func *>(*fnd)));
-    } else if (fnd->type == &exe.lambda_type) {
-      out.emplace_back(Call(*fnd));
     } else if (fnd->type == &exe.label_type) {
       out.emplace_back(Jump(*get<Label *>(*fnd)));
+    } else if (fnd->type->call) {
+      out.emplace_back(Call(*fnd));
     } else {
       out.emplace_back(Push(*fnd));
     }
@@ -530,10 +530,10 @@ namespace snabel {
     Scope &new_scp(begin_scope(thd, true));
     new_scp.target = enter_label;
     new_scp.recall_pc = thd.pc+1;
-    auto cor(find_coro(scp, *enter_label));
 
-    if (cor) {
-      if (cor->pc != -1) { thd.pc = cor->pc; }
+    if (scp.coro) {
+      auto &cor(scp.coro);
+      thd.pc = cor->pc;
       if (cor->proc) { new_scp.push_result = false; }
       std::copy(cor->stacks.begin(), cor->stacks.end(),
 		std::back_inserter(thd.stacks));

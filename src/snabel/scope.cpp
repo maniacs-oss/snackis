@@ -9,6 +9,7 @@ namespace snabel {
     thread(thd),
     exec(thread.exec),
     target(nullptr),
+    coro(nullptr),
     stack_depth(thread.stacks.size()),
     return_pc(-1),
     recall_pc(-1),
@@ -20,12 +21,12 @@ namespace snabel {
     thread(src.thread),
     exec(src.exec),
     target(nullptr),
+    coro(nullptr),
     stack_depth(thread.stacks.size()),
     return_pc(-1),
     recall_pc(-1),
     break_pc(-1),
-    push_result(true),
-    coros(src.coros)
+    push_result(true)
   {}
   
   Scope::~Scope() {
@@ -101,19 +102,6 @@ namespace snabel {
     reset_stack(scp.thread, scp.stack_depth, scp.push_result);
   }
 
-  Coro &add_coro(Scope &scp, Label &tgt) {
-    return *scp.coros.emplace(std::piecewise_construct,
-			      std::forward_as_tuple(&tgt),
-			      std::forward_as_tuple(std::make_shared<Coro>(scp)))
-      .first->second;
-  }
-
-  Coro *find_coro(Scope &scp, Label &tgt) {
-    auto fnd(scp.coros.find(&tgt));
-    if (fnd == scp.coros.end()) { return nullptr; }
-    return &*fnd->second;
-  }
-
   void jump(Scope &scp, const Label &lbl) {
     if (lbl.return_depth) {
       _return(scp, lbl.return_depth);
@@ -147,7 +135,9 @@ namespace snabel {
     while (depth && thd.scopes.size() > 1) {
       depth--;
       auto &prev_scp(*std::next(thd.scopes.rbegin()));
-
+      CoroRef cor;
+      bool new_cor(false);
+      
       if (!depth) {
 	auto &curr_scp(thd.scopes.back());
 	
@@ -156,10 +146,17 @@ namespace snabel {
 	  return false;
 	}
 	
-	auto fnd(find_coro(prev_scp, *curr_scp.target));
-	auto &cor(fnd ? *fnd : add_coro(prev_scp, *curr_scp.target));
-	refresh(cor, curr_scp);
-	if (dec_pc) { cor.pc--; }
+	cor = prev_scp.coro;
+	
+	if (cor) {
+	  cor->proc.reset();
+	} else {
+	  cor = std::make_shared<Coro>(curr_scp);
+	  new_cor = true;
+	}
+
+	refresh(*cor, curr_scp);
+	if (dec_pc) { cor->pc--; }
 	
 	if (prev_scp.return_pc == -1) {
 	  ERROR(Snabel, "Missing return pc");
@@ -170,7 +167,9 @@ namespace snabel {
       dec_pc = true;
       thd.pc = prev_scp.return_pc;
       prev_scp.return_pc = -1;
+      prev_scp.coro.reset();
       if (!end_scope(thd)) { return false; }
+      if (new_cor) { push(thd, thd.exec.coro_type, cor); }
     }
     
     return true;
@@ -195,7 +194,8 @@ namespace snabel {
 	  end_scope(thd);
 	  thd.pc = ps.return_pc;
 	  ps.return_pc = -1;
-	  ps.coros.erase(s.target);
+	  if (ps.coro) { reset(*ps.coro); }
+	  ps.coro.reset();
 	} else {
 	  recall_return(s);
 	}
@@ -223,7 +223,7 @@ namespace snabel {
 	}
 	
 	auto &thd(s.thread);
-	auto &frm(s.recalls.emplace_back(s));
+	auto &frm(s.recalls.emplace_back());
 	refresh(frm, s);
 	reset_stack(thd, s.stack_depth, true);
 	thd.pc = s.recall_pc;

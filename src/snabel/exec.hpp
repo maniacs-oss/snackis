@@ -33,8 +33,8 @@ namespace snabel {
     Scope &main_scope;
     Type meta_type;
     Type &any_type, &bin_type, &bool_type, &byte_type, &callable_type,
-      &char_type, &file_type, &func_type, &i64_type, &io_buf_type, &io_queue_type,
-      &iter_type,
+      &char_type, &coro_type, &file_type, &func_type, &i64_type, &io_buf_type,
+      &io_queue_type, &iter_type,
       &iterable_type, &label_type, &lambda_type, &list_type, &opt_type,
       &ordered_type, &pair_type,
       &path_type, &proc_type, &readable_type, &rfile_type, &random_type, &rat_type,

@@ -10,17 +10,18 @@ namespace snabel {
   struct Coro: Frame {
     Env env;
     std::deque<Frame> recalls;
-    Proc* proc;
+    Label &target;
+    int64_t start_pc;
+    ProcRef proc;
     
-    Coro(Scope &scope);
+    Coro(Scope &scp);
     Coro(const Coro &) = delete;
-    virtual ~Coro();
     const Coro &operator =(const Coro &) = delete;
   };
-
-  using CoroRef = std::shared_ptr<Coro>;
   
   void refresh(Coro &cor, Scope &scp);
+  void reset(Coro &cor);
+  bool call(const CoroRef &cor, Scope &scp, bool now);
 }
 
 #endif

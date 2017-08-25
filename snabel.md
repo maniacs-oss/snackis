@@ -82,15 +82,15 @@ Lambda(_enter1:0)
 Calling ```yield``` from within a lambda logs the current position, stack and environment before returning; execution will continue from the yielding position with restored stack and environment on next call from the same scope. Use ```&yield``` to get a target that yields when called.
 
 ```
-> func: foo {|(7 yield 28 +)}
+> func: foo {|yield (7 yield 28 +)} call;
   foo foo +
 42
 
-> func: foo {|let: bar 35; 7 yield @bar +}
+> func: foo {|yield (let: bar 35; 7 yield @bar +)} call;
   foo foo
 42
 
-> func: foo {|[7 35] &yield for &+}
+> func: foo {|yield ([7 35] &yield for &+)} call;
   foo foo foo call
 42
 ```
@@ -296,13 +296,13 @@ add_func(exe, "+",
 Procs allow interleaving multiple cooperative computations in the same thread. Adding an initial yield allows catching the stack and/or environment which is restored on each call. Procs provide reference semantics, the same proc may shared between threads as long as it's only run from one thread at a time.
 
 ```
-> proc: foo {(yield 35 push)};
-  0 [7] foo foo &+ for
+> proc: foo {|yield 35 push};
+  0 [7] foo &+ for
 42
 
 > let: acc Str list;
-  proc: ping {(label: reping; @acc 'ping' push yield reping)};
-  proc: pong {(label: repong; @acc 'pong' push yield repong)};
+  proc: ping {|yield (3 {@acc 'ping' push yield1} for)};
+  proc: pong {|yield (3 {@acc 'pong' push yield1} for)};
   let: ps [&ping &pong];
   3 {@ps { call } for} for
   @acc
@@ -344,25 +344,25 @@ Iter<I64>
   0 'out' rwfile @q write $1 _ &+ for
 2313864
 
-> proc: do-write {(
+> func: do-write {(
     rwfile $1 write yield
-    {_ yield} for
+    {_ yield1} for
   )};  
 
   func: do-copy {
     "Init queue and writer proc"
     let: q io-queue;
-    @q $1 do-write _ _
+    func: w @q $1 do-write proc;
 
-    rfile read 0 $1 {
+    _ rfile read 0 $1 {
       "Push to queue and run writer if incoming data"
       len $ +? {
-	@q $2 push do-write
+	@q $2 push w
       } when _ +
     } for
     
     "Run writer until done if data left in queue"
-    @q len +? {&do-write run} when _
+    @q len +? {&w run} when _
   };
 
   'in' 'out' do-copy

@@ -443,11 +443,11 @@ namespace snabel {
 
   static void proc_imp(Scope &scp, const Args &args) {
     push(scp.thread, scp.exec.proc_type,
-	 std::make_shared<Proc>(*get<Label *>(args.at(0))));
+	 std::make_shared<Proc>(get<CoroRef>(args.at(0))));
   }
 
   static void proc_run_imp(Scope &scp, const Args &args) {
-    auto &p(*get<ProcRef>(args.at(0)));
+    auto p(get<ProcRef>(args.at(0)));
     while (call(p, scp, true));
   }
 
@@ -472,6 +472,7 @@ namespace snabel {
     byte_type(add_type(*this, "Byte")),
     callable_type(add_type(*this, "Callable")),
     char_type(add_type(*this, "Char")),
+    coro_type(add_type(*this, "Coro")),
     file_type(add_type(*this, "File")),    
     func_type(add_type(*this, "Func")),
     i64_type(add_type(*this, "I64")),
@@ -725,7 +726,7 @@ namespace snabel {
     };
 
     proc_type.call.emplace([](auto &scp, auto &v, bool now) {
-	call(*get<ProcRef>(v), scp, now);
+	call(get<ProcRef>(v), scp, now);
 	return true;
       });
 
@@ -841,6 +842,23 @@ namespace snabel {
 	return true;
       });
 
+    coro_type.supers.push_back(&any_type);
+    coro_type.supers.push_back(&callable_type);
+
+    coro_type.fmt = [](auto &v) {
+      auto &c(*get<CoroRef>(v));
+      return fmt("Coro(%0:%1)", c.target.tag, c.target.pc);
+    };
+    
+    coro_type.eq = [](auto &x, auto &y) {
+      return get<CoroRef>(x) == get<CoroRef>(y);
+    };
+
+    coro_type.call.emplace([](auto &scp, auto &v, bool now) {
+	call(get<CoroRef>(v), scp, now);
+	return true;
+      });
+    
     str_type.supers.push_back(&any_type);
     str_type.supers.push_back(&ordered_type);
     str_type.supers.push_back(&get_iterable_type(*this, char_type));
@@ -1208,7 +1226,7 @@ namespace snabel {
 	     random_pop_imp);
 
     add_func(*this, "proc",
-	     {ArgType(lambda_type)}, {ArgType(proc_type)},
+	     {ArgType(coro_type)}, {ArgType(proc_type)},
 	     proc_imp);
 
     add_func(*this, "run",
@@ -1277,7 +1295,7 @@ namespace snabel {
 	  ERROR(Snabel, fmt("Malformed func on row %0, col %1",
 			    pos.row, pos.col));
 	} else {
-	  out.emplace_back(Backup());
+	  out.emplace_back(Backup(true));
 	  const str n(in.at(0).text);
 	  auto start(std::next(in.begin()));
 	  auto end(find_end(start, in.end()));
@@ -1294,13 +1312,14 @@ namespace snabel {
 	  ERROR(Snabel, fmt("Malformed proc on row %0, col %1",
 			    pos.row, pos.col));
 	} else {
-	  out.emplace_back(Backup());
+	  out.emplace_back(Backup(true));
 	  const str n(in.at(0).text);
 	  auto start(std::next(in.begin()));
 	  auto end(find_end(start, in.end()));
 	  compile(*this, TokSeq(start, end), out);
 	  if (end != in.end()) { end++; }
 	  in.erase(in.begin(), end);
+	  out.emplace_back(Call());
 	  out.emplace_back(Restore());
 	  out.emplace_back(Deref("proc"));
 	  out.emplace_back(Putenv(n));
@@ -1613,7 +1632,6 @@ namespace snabel {
     auto &thd(exe.main);
     while (thd.scopes.size() > 1) { thd.scopes.pop_back(); }
     while (thd.stacks.size() > 1) { thd.stacks.pop_back(); }
-    thd.main_scope.coros.clear();
     thd.main_scope.recalls.clear();
     thd.main_scope.return_pc = -1;
     thd.stacks.front().clear();

@@ -246,25 +246,27 @@ namespace snabel {
   static void coro_tests() {
     TRY(try_test);    
     
-    run(exe, "func: foo {|(7 yield 28 +)}; foo foo +");
+    run(exe,
+	"func: foo {|yield (7 yield 28 +)} call; "
+	"foo foo +");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
     run(exe,
-	"func: foo {|let: bar 35; 7 yield @bar +}; "
-	"foo foo");
+	"func: foo {|yield (let: bar 28; 7 yield @bar +)} call; "
+	"foo foo +");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
     run(exe,
-	"func: foo {|[7 35] &yield for &+}; "
+	"func: foo {|yield ([7 35] &yield for &+)} call; "
 	"foo foo foo call");
 	CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
     run(exe,
 	"let: acc I64 list; "
 
-	"func: foo {( "
+	"func: foo {|yield ( "
 	"  7 {@acc $1 push yield1} for "
-	")}; "
+	")} call; "
 
 	"7 &foo for "
 	"0 @acc &+ for");
@@ -498,14 +500,14 @@ namespace snabel {
     TRY(try_test);    
     
     run(exe,
-	"proc: foo {(yield 35 push)};"
+	"proc: foo {|yield (yield 35 push)};"
 	"0 [7] foo foo iter &+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
     run(exe,
 	"let: acc Str list; "
-	"proc: ping {(label: reping; @acc 'ping' push yield reping)}; "
-	"proc: pong {(label: repong; @acc 'pong' push yield repong)}; "
+	"proc: ping {|yield (3 {@acc 'ping' push yield1} for)}; "
+	"proc: pong {|yield (3 {@acc 'pong' push yield1} for)}; "
 	"let: ps [&ping &pong]; "
 	"3 {@ps { call } for} for");
     CHECK(get<ListRef>(get_env(exe.main_scope, "@acc"))->size() == 6, _);
@@ -513,7 +515,7 @@ namespace snabel {
     run(exe,
 	"let: acc I64 list; "
 
-	"proc: foo {( "
+	"proc: foo {|yield ( "
 	"  7 {@acc $1 push _ yield1} for "
 	")}; "
 

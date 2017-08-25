@@ -7,17 +7,12 @@
 #include "snabel/thread.hpp"
 
 namespace snabel {
-  Proc::Proc(Label &tgt):
-    id(uid(tgt.exec)), target(tgt), coro(nullptr)
+  Proc::Proc(const CoroRef &cor):
+    id(uid(cor->target.exec)), coro(cor)
   { }
 
-  bool call(Proc &prc, Scope &scp, bool now) {
-    if (!prc.coro) {
-      prc.coro = &add_coro(scp, prc.target);
-      prc.coro->proc = &prc;
-    }
-
-    call(scp, prc.target, now);
-    return prc.coro ? true : false;
+  bool call(const ProcRef &prc, Scope &scp, bool now) {
+    prc->coro->proc = prc;
+    return call(prc->coro, scp, now);
   }
 }

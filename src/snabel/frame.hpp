@@ -8,16 +8,15 @@ namespace snabel {
   struct Thread;
   
   struct Frame {
-    Scope &scope;
-    Thread &thread;
     int64_t pc;
     std::deque<Stack> stacks;
 
-    Frame(Scope &scope);
+    Frame();
     virtual ~Frame();
   };
 
-  void refresh(Frame &cor, Scope &scp);
+  void refresh(Frame &frm, Scope &scp);
+  void reset(Frame &frm);
 }
 
 #endif

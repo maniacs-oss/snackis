@@ -6,26 +6,34 @@
 #include "snabel/thread.hpp"
 
 namespace snabel {
-  Coro::Coro(Scope &scope):
-    Frame(scope), proc(nullptr)
+  Coro::Coro(Scope &scp):
+    target(*scp.target), start_pc(scp.thread.pc+1), proc(nullptr)
   { }
 
-  Coro::~Coro() {
-    if (proc) { proc->coro = nullptr; }
-  }
-  
   void refresh(Coro &cor, Scope &scp) {
     refresh(dynamic_cast<Frame &>(cor), scp);
     cor.recalls.clear();
     std::copy(scp.recalls.begin(), scp.recalls.end(),
 	      std::back_inserter(cor.recalls));
-    auto &thd(cor.thread);
+    auto &thd(scp.thread);
     cor.env.clear();
     
     for (auto &k: scp.env_keys) {
       cor.env.insert(std::make_pair(k, thd.env.at(k)));
     }
-
   }
 
+  void reset(Coro &cor) {
+    reset(dynamic_cast<Frame &>(cor));
+    cor.recalls.clear();
+    cor.env.clear();
+    cor.pc = cor.start_pc;
+    cor.proc.reset();
+  }
+  
+  bool call(const CoroRef &cor, Scope &scp, bool now) {
+    scp.coro = cor;
+    call(scp, cor->target, now);
+    return cor->pc > cor->start_pc;    
+  }
 }
