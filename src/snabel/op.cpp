@@ -742,10 +742,8 @@ namespace snabel {
       return false;
     }
 
-    auto i(s.size()-pos-1);
-    auto v(s.at(i));
-    s.erase(std::next(s.begin(), i));
-    s.push_back(v);
+    auto i(std::next(s.begin(), s.size()-pos-1));
+    std::rotate(i, std::next(i), s.end());
     return true;
   }
 
