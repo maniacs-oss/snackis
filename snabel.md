@@ -370,7 +370,7 @@ Iter<I64>
 ```
 
 ### Random Numbers
-Random numbers are supported through ranged generators that may be treated as unlimited iterators.
+Random numbers are supported through ranged generators that may be treated as infinite iterators.
 
 ```
 > 100 random pop $1 pop $1 _ $list

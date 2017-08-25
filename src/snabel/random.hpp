@@ -4,7 +4,6 @@
 #include <memory>
 #include <random>
 
-#include "snabel/box.hpp"
 #include "snabel/iter.hpp"
 
 namespace snabel {
