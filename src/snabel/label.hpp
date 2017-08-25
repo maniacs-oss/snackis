@@ -12,8 +12,8 @@ namespace snabel {
   struct Label {
     Exec &exec;
     str tag;
-    bool permanent, recall_target;
-    int64_t pc, yield_depth, break_depth;
+    bool permanent;
+    int64_t pc, recall_depth, yield_depth, break_depth;
     
     Label(Exec &exe, const str &tag, bool pmt);
   };

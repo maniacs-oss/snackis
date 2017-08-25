@@ -499,6 +499,12 @@ namespace snabel {
     ustr_type(add_type(*this, "UStr")),
     void_type(add_type(*this, "Void")),
     writeable_type(add_type(*this, "Writeable")),
+    recall_target {
+    &add_label(*this, "_recall", true), &add_label(*this, "_recall1", true),
+      &add_label(*this, "_recall2", true), &add_label(*this, "_recall3", true),
+      &add_label(*this, "_recall4", true), &add_label(*this, "_recall5", true),
+      &add_label(*this, "_recall6", true), &add_label(*this, "_recall7", true),
+      &add_label(*this, "_recall8", true), &add_label(*this, "_recall9", true)},
     yield_target {
     &add_label(*this, "_yield", true), &add_label(*this, "_yield1", true),
       &add_label(*this, "_yield2", true), &add_label(*this, "_yield3", true),
@@ -889,6 +895,7 @@ namespace snabel {
     };
 
     for (int i(0); i < MAX_TARGET; i++) {
+      recall_target[i]->recall_depth = i+1;
       yield_target[i]->yield_depth = i+1;
       break_target[i]->break_depth = i+1;
     }
@@ -1337,6 +1344,18 @@ namespace snabel {
 	out.emplace_back(Stash());
       });
 
+    add_macro(*this, "recall", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(Recall(1));
+      });
+
+    add_macro(*this, "return", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(Return(false));
+      });
+
+    add_macro(*this, "yield", [this](auto pos, auto &in, auto &out) {
+	out.emplace_back(Yield(1));
+      });
+
     add_macro(*this, "break", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Break(1));
       });
@@ -1345,20 +1364,8 @@ namespace snabel {
 	out.emplace_back(Call());
       });
 
-    add_macro(*this, "recall", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(Recall());
-      });
-
-    add_macro(*this, "return", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(Return(false));
-      });
-
     add_macro(*this, "when", [this](auto pos, auto &in, auto &out) {
 	out.emplace_back(When());
-      });
-
-    add_macro(*this, "yield", [this](auto pos, auto &in, auto &out) {
-	out.emplace_back(Yield(1));
       });
 
     add_macro(*this, "for", [](auto pos, auto &in, auto &out) {

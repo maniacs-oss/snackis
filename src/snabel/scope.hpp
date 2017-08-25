@@ -22,7 +22,7 @@ namespace snabel {
     opt<Proc *> proc;
 
     Label *target;
-    int64_t stack_depth, return_pc, break_pc;
+    int64_t stack_depth, return_pc, recall_pc, break_pc;
     bool push_result;
 
     std::deque<Frame> recalls;
@@ -47,6 +47,7 @@ namespace snabel {
   void jump(Scope &scp, const Label &lbl);
   void call(Scope &scp, const Label &lbl, bool now=false);
   bool yield(Scope &scp, int64_t depth);
+  bool recall(Scope &scp, int64_t depth);
   void recall_return(Scope &scp);
 
   Thread &start_thread(Scope &scp, const Box &init);

@@ -11,6 +11,7 @@ namespace snabel {
     target(nullptr),
     stack_depth(thread.stacks.size()),
     return_pc(-1),
+    recall_pc(-1),
     break_pc(-1),
     push_result(true)
   { }
@@ -21,6 +22,7 @@ namespace snabel {
     target(nullptr),
     stack_depth(thread.stacks.size()),
     return_pc(-1),
+    recall_pc(-1),
     break_pc(-1),
     push_result(true),
     coros(src.coros)
@@ -113,20 +115,14 @@ namespace snabel {
   }
 
   void jump(Scope &scp, const Label &lbl) {
-    auto &thd(scp.thread);
-
-    if (lbl.yield_depth) {
-	yield(scp, lbl.yield_depth);      
+    if (lbl.recall_depth) {
+      recall(scp, lbl.recall_depth);
+    } else if (lbl.yield_depth) {
+      yield(scp, lbl.yield_depth);      
     } else if (lbl.break_depth) {
       _break(scp.thread, lbl.break_depth);
     } else {
-      if (lbl.recall_target) {
-	auto &frm(scp.recalls.emplace_back(scp));
-	refresh(frm, scp);
-	reset_stack(thd, scp.stack_depth, true);
-      }
-      
-      thd.pc = lbl.pc;
+      scp.thread.pc = lbl.pc;
     }
   }
 
@@ -175,6 +171,33 @@ namespace snabel {
       if (!end_scope(thd)) { return false; }
     }
     
+    return true;
+  }
+
+  bool recall(Scope &scp, int64_t depth) {
+    auto &thd(scp.thread);
+    
+    while (thd.scopes.size() > 1) {
+      auto &s(thd.scopes.back());
+      depth--;
+
+      if (!depth) {
+	if (s.recall_pc == -1) {
+	  ERROR(Snabel, "Missing recall pc");
+	  return false;
+	}
+	
+	auto &thd(s.thread);
+	auto &frm(s.recalls.emplace_back(s));
+	refresh(frm, s);
+	reset_stack(thd, s.stack_depth, true);
+	thd.pc = s.recall_pc;
+	break;
+      }
+
+      end_scope(thd);
+    }
+
     return true;
   }
 

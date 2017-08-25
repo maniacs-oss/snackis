@@ -436,19 +436,6 @@ namespace snabel {
 	val.emplace(exe.label_type, l->exit_label);
 	return false;
       }
-    } else if (id == "recall") {
-      if (exe.lambdas.empty()) {
-	ERROR(Snabel, "Missing recall lambda");
-	return false;
-      }
-
-      auto l(exe.lambdas.back());
-      l->recalls = true;
-
-      if (l->recall_label) {
-	val.emplace(exe.label_type, l->recall_label);
-	return false;
-      }      
     } else {
       return false;
     }
@@ -536,10 +523,9 @@ namespace snabel {
   Lambda::Lambda():
     OpImp(OP_LAMBDA, "lambda"),
     enter_label(nullptr),
-    recall_label(nullptr),
     exit_label(nullptr),
     skip_label(nullptr),
-    recalls(false), returns(false),
+    returns(false),
     compiled(false)
   { }
 
@@ -558,15 +544,7 @@ namespace snabel {
   bool Lambda::refresh(Scope &scp) {
     auto &exe(scp.exec);
     exe.lambdas.push_back(this);
-    bool changed(false);
-    
-    if (recalls && !recall_label) {
-      recall_label = &add_label(exe, fmt("_recall%0", tag));
-      recall_label->recall_target = true;
-      changed = true;
-    }
-
-    return changed;
+    return false;
   }
 
   bool Lambda::compile(const Op &op, Scope &scp, OpSeq &out) {
@@ -575,7 +553,6 @@ namespace snabel {
     out.emplace_back(Jump(*skip_label));
     out.emplace_back(Target(*enter_label));
     out.push_back(op);
-    if (recall_label) { out.emplace_back(Target(*recall_label)); }
     return true;
   }
 
@@ -583,6 +560,7 @@ namespace snabel {
     auto &thd(scp.thread);
     Scope &new_scp(begin_scope(thd, true));
     new_scp.target = enter_label;
+    new_scp.recall_pc = thd.pc+1;
     auto cor(find_coro(scp, *enter_label));
 
     if (cor) {
@@ -677,41 +655,16 @@ namespace snabel {
     return true;
   }
 
-  Recall::Recall():
-    OpImp(OP_RECALL, "recall"), label(nullptr)
+  Recall::Recall(int64_t dep):
+    OpImp(OP_RECALL, "recall"), label(nullptr), depth(dep)
   { }
 
   OpImp &Recall::get_imp(Op &op) const {
     return std::get<Recall>(op.data);
   }
   
-  bool Recall::refresh(Scope &scp) {
-    auto &exe(scp.exec);
-
-    if (exe.lambdas.empty()) {
-      ERROR(Snabel, "Missing lambda");
-      return false;
-    }
-    
-    auto l(exe.lambdas.back());
-    
-    if (l->recalls) {
-      label = l->recall_label;
-      return false;
-    }
-
-    l->recalls = true;
-    return true;
-  }
-
-  bool Recall::compile(const Op &op, Scope &scp, OpSeq &out) {
-    if (!label) {
-      ERROR(Snabel, "Missing recall label");
-      return false;
-    }
-
-    out.emplace_back(Jump(*label));
-    return true;
+  bool Recall::run(Scope &scp) {
+    return recall(scp, depth);
   }
   
   Reset::Reset():
@@ -888,7 +841,7 @@ namespace snabel {
     auto &l(*exe.lambdas.back());
     bool changed(false);
     
-    if (!l.exit_label && (l.returns || l.recalls)) {
+    if (!l.exit_label && l.returns) {
       exit_label = &add_label(exe, fmt("_exit%0", l.tag));
       l.exit_label = exit_label;
       changed = true;

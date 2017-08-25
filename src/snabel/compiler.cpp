@@ -24,6 +24,18 @@ namespace snabel {
 	       isdigit(tok.text.at(6))) {
       auto i(tok.text.at(6) - '0');
       out.emplace_back(Push(Box(exe.label_type, exe.yield_target[i])));
+    }  else if (tok.text.substr(0, 6) == "recall" &&
+	       tok.text.size() == 7 &&
+	       isdigit(tok.text.at(6))) {
+      auto i(tok.text.at(6) - '0');
+      out.emplace_back(Recall(i+1));
+    } else if (tok.text == "&recall") {
+      out.emplace_back(Push(Box(exe.label_type, exe.recall_target[0])));
+    } else if (tok.text.substr(0, 7) == "&recall" &&
+	       tok.text.size() == 8 &&
+	       isdigit(tok.text.at(7))) {
+      auto i(tok.text.at(7) - '0');
+      out.emplace_back(Push(Box(exe.label_type, exe.recall_target[i])));
     } else if (tok.text.substr(0, 5) == "break" &&
 	       tok.text.size() == 6 &&
 	       isdigit(tok.text.at(5))) {
