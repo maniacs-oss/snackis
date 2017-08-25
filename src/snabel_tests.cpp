@@ -233,13 +233,13 @@ namespace snabel {
     run(exe, "{#t {42} when} call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run(exe, "#t {$0 &return when #f} call");
+    run(exe, "#t {$ &return when #f} call");
     CHECK(get<bool>(pop(exe.main)), _);
 
-    run(exe, "42 {1 - $0 z? &return when recall 2 +} call");
+    run(exe, "42 {1 - $ z? &return when recall 2 +} call");
     CHECK(get<int64_t>(pop(exe.main)) == 82, _);
 
-    run(exe, "42 {1 - $0 z? &return when (2 (|recall) +)} call");
+    run(exe, "42 {1 - $ z? &return when (2 (|recall) +)} call");
     CHECK(get<int64_t>(pop(exe.main)) == 82, _);
   }
 
@@ -415,10 +415,10 @@ namespace snabel {
     run(exe, "0 7 &+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 21, _);
 
-    run(exe, "0 7 {$0 5 = {_ break} when +} for");
+    run(exe, "0 7 {$ 5 = {_ break} when +} for");
     CHECK(get<int64_t>(pop(exe.main)) == 10, _);
 
-    run(exe, "0 7 {$0 5 = &break when +} for _");
+    run(exe, "0 7 {$ 5 = &break when +} for _");
     CHECK(get<int64_t>(pop(exe.main)) == 10, _);
     
     run(exe, "0 [1 2 3 4 5 6] &+ for");
@@ -427,7 +427,7 @@ namespace snabel {
     run(exe, "'foo' &nop for $list \\- join");
     CHECK(get<str>(pop(exe.main)) == "f-o-o", _);
 
-    run(exe, "0 {$0 42 lt?} {1 +} while");
+    run(exe, "0 {$ 42 lt?} {1 +} while");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 

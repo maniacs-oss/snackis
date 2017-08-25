@@ -29,7 +29,7 @@ Values and results from function calls are pushed on the stack in order of appea
 > 1 2 3 $list
 [1 2 3]
 
-> 1 2 $0 $list
+> 1 2 $ $list
 [1 2 2]
 
 > 42 7 _ $list
@@ -73,7 +73,7 @@ Lambda(_enter1:0)
 3
 
 > 42
-  {1 - $0 z? &return when recall 2 +}
+  {1 - $ z? &return when recall 2 +}
   call
 82
 ```
@@ -248,7 +248,7 @@ The ```for```-loop accepts an iterable and a target, and calls the target with t
 > 0 7 &+ for
 21
 
-> 0 7 {$0 5 = {_ break} when +} for
+> 0 7 {$ 5 = {_ break} when +} for
 10
 
 > 0 [1 2 3 4 5 6] &+ for
@@ -257,7 +257,7 @@ The ```for```-loop accepts an iterable and a target, and calls the target with t
 > 'foo' &nop for $list \- join
 'f-o-o'
 
-> 0 {$0 42 lt?} {1 +} while
+> 0 {$ 42 lt?} {1 +} while
 42
 ```
 
@@ -356,7 +356,7 @@ Iter<I64>
 
     rfile read 0 $1 {
       "Push to queue and run writer if incoming data"
-      len $0 +? {
+      len $ +? {
 	@q $2 push do-write
       } when _ +
     } for
