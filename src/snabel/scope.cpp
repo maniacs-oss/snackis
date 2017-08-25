@@ -21,7 +21,7 @@ namespace snabel {
     target(nullptr),
     stack_depth(thread.stacks.size()),
     return_pc(-1),
-    break_pc(src.break_pc),
+    break_pc(-1),
     push_result(true),
     coros(src.coros)
   {}
@@ -113,14 +113,13 @@ namespace snabel {
   }
 
   void jump(Scope &scp, const Label &lbl) {
-    auto &exe(scp.exec);
     auto &thd(scp.thread);
 
     if (lbl.yield_depth) {
 	yield(scp, lbl.yield_depth);      
-    } else if (&lbl == &exe.break_target) {
-      _break(scp.thread);
-    } else {      
+    } else if (lbl.break_depth) {
+      _break(scp.thread, lbl.break_depth);
+    } else {
       if (lbl.recall_target) {
 	auto &frm(scp.recalls.emplace_back(scp));
 	refresh(frm, scp);

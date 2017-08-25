@@ -53,8 +53,8 @@ namespace snabel {
     return true;
   }
 
-  Break::Break():
-    OpImp(OP_BREAK, "break")
+  Break::Break(int64_t dep):
+    OpImp(OP_BREAK, "break"), depth(dep)
   { }
 
   OpImp &Break::get_imp(Op &op) const {
@@ -62,7 +62,7 @@ namespace snabel {
   }
 
   bool Break::run(Scope &scp) {
-    return _break(scp.thread);
+    return _break(scp.thread, depth);
   }
   
   Call::Call(opt<Box> target):

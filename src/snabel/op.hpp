@@ -51,7 +51,9 @@ namespace snabel {
   };
 
   struct Break: OpImp {
-    Break();
+    int64_t depth;
+    
+    Break(int64_t dep);
     OpImp &get_imp(Op &op) const override;
     bool run(Scope &scp) override;
   };

@@ -11,7 +11,7 @@ namespace snabel {
     in.pop_front();
     
     if (tok.text.at(0) == '"') {
-      // Skip comment
+      // Skip comments
     } else if (tok.text.substr(0, 5) == "yield" &&
 	       tok.text.size() == 6 &&
 	       isdigit(tok.text.at(5))) {
@@ -24,8 +24,18 @@ namespace snabel {
 	       isdigit(tok.text.at(6))) {
       auto i(tok.text.at(6) - '0');
       out.emplace_back(Push(Box(exe.label_type, exe.yield_target[i])));
+    } else if (tok.text.substr(0, 5) == "break" &&
+	       tok.text.size() == 6 &&
+	       isdigit(tok.text.at(5))) {
+      auto i(tok.text.at(5) - '0');
+      out.emplace_back(Break(i+1));
     } else if (tok.text == "&break") {
-      out.emplace_back(Push(Box(exe.label_type, &exe.break_target)));
+      out.emplace_back(Push(Box(exe.label_type, exe.break_target[0])));
+    } else if (tok.text.substr(0, 6) == "&break" &&
+	       tok.text.size() == 7 &&
+	       isdigit(tok.text.at(6))) {
+      auto i(tok.text.at(6) - '0');
+      out.emplace_back(Push(Box(exe.label_type, exe.break_target[i])));
     } else if (tok.text.at(0) == '&') {
       out.emplace_back(Getenv(tok.text.substr(1)));
     } else if (tok.text.at(0) == '@') {

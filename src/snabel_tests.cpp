@@ -420,7 +420,13 @@ namespace snabel {
 
     run(exe, "0 7 {$ 5 = &break when +} for _");
     CHECK(get<int64_t>(pop(exe.main)) == 10, _);
-    
+
+    run(exe, "0 7 {$ 1 {_ 5 = {break} when} for +} for");
+    CHECK(get<int64_t>(pop(exe.main)) == 21, _);
+
+    run(exe, "0 7 {$ 1 {_ 5 = {_ break1} when +} for} for");
+    CHECK(get<int64_t>(pop(exe.main)) == 10, _);
+
     run(exe, "0 [1 2 3 4 5 6] &+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 21, _);
 

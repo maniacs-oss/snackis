@@ -505,7 +505,12 @@ namespace snabel {
       &add_label(*this, "_yield4", true), &add_label(*this, "_yield5", true),
       &add_label(*this, "_yield6", true), &add_label(*this, "_yield7", true),
       &add_label(*this, "_yield8", true), &add_label(*this, "_yield9", true)},
-    break_target(add_label(*this, "_break", true)),
+    break_target {
+      &add_label(*this, "_break", true), &add_label(*this, "_break1", true),
+	&add_label(*this, "_break2", true), &add_label(*this, "_break3", true),
+	&add_label(*this, "_break4", true), &add_label(*this, "_break5", true),
+	&add_label(*this, "_break6", true), &add_label(*this, "_break7", true),
+	&add_label(*this, "_break8", true), &add_label(*this, "_break9", true)},
     next_uid(1)
   {    
     any_type.fmt = [](auto &v) { return "Any"; };
@@ -883,8 +888,9 @@ namespace snabel {
       return get<Thread *>(x) == get<Thread *>(y);
     };
 
-    for (int i(0); i < MAX_YIELD_TARGET; i++) {
+    for (int i(0); i < MAX_TARGET; i++) {
       yield_target[i]->yield_depth = i+1;
+      break_target[i]->break_depth = i+1;
     }
 
     add_conv(*this, str_type, ustr_type, [this](auto &v) {	
@@ -1332,7 +1338,7 @@ namespace snabel {
       });
 
     add_macro(*this, "break", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(Break());
+	out.emplace_back(Break(1));
       });
 
     add_macro(*this, "call", [](auto pos, auto &in, auto &out) {

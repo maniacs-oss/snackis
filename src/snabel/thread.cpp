@@ -136,20 +136,21 @@ namespace snabel {
     thd.exec.threads.erase(thd.id);
   }
 
-  bool _break(Thread &thd) {
+  bool _break(Thread &thd, int64_t depth) {
     while (thd.scopes.size() > 1) {
       auto &s(thd.scopes.back());
       
       if (s.break_pc > -1) {
 	thd.pc = s.break_pc;
 	s.break_pc = -1;
-	return true;
+	depth--;
+	if (!depth) { return true; }
       }
 
       end_scope(thd);
     }
 
-    ERROR(Snabel, "Missing break target");
+    ERROR(Snabel, "Missing break pc");
     return false;
   }
 

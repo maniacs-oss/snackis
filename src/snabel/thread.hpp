@@ -52,7 +52,7 @@ namespace snabel {
 
   void start(Thread &thd);
   void join(Thread &thd, Scope &scp);
-  bool _break(Thread &thd);
+  bool _break(Thread &thd, int64_t depth);
   bool run(Thread &thd, int64_t break_pc); 
   bool run(Thread &thd); 
 }
