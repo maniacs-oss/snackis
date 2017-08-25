@@ -268,7 +268,7 @@ namespace snabel {
       return false;
     }
 
-    s.erase(std::next(s.begin(), s.size()-count), s.end()); 
+    s.erase(std::next(s.begin(), s.size()-count), s.end());
     return true;
   }
 
