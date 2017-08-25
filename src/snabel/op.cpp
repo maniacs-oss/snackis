@@ -495,7 +495,6 @@ namespace snabel {
     OpImp(OP_LAMBDA, "lambda"),
     enter_label(nullptr),
     skip_label(nullptr),
-    returns(false),
     compiled(false)
   { }
 
@@ -675,8 +674,8 @@ namespace snabel {
     return true;
   }
 
-  Return::Return(bool scoped, int64_t dep):
-    OpImp(OP_RETURN, "return"), scoped(scoped), target(nullptr), depth(dep)
+  Return::Return(int64_t dep):
+    OpImp(OP_RETURN, "return"), target(nullptr), depth(dep)
   { }
 
   OpImp &Return::get_imp(Op &op) const {
@@ -692,12 +691,6 @@ namespace snabel {
     }
     
     auto l(exe.lambdas.back());
-
-    if (!scoped && !l->returns) {
-      l->returns = true;
-      return true;
-    }
-
     target = l->enter_label;
     return false;
   }
@@ -802,15 +795,14 @@ namespace snabel {
     if (compiled) { return false; }  
     
     compiled = true;
-    out.emplace_back(Return(true, 1));
     out.push_back(op);
     out.emplace_back(Target(*skip_label));
     out.emplace_back(Push(Box(scp.exec.lambda_type, enter_label)));
     return true;
   }
 
-  bool Unlambda::finalize(const Op &op, Scope &scp, OpSeq &out) {
-    return true;
+  bool Unlambda::run(Scope &scp) {
+    return _return(scp, 1);
   }
   
   Unparam::Unparam():

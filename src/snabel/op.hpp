@@ -148,7 +148,7 @@ namespace snabel {
   struct Lambda: OpImp {
     Uid tag;
     Label *enter_label, *skip_label;
-    bool returns, compiled;
+    bool compiled;
     
     Lambda();
     OpImp &get_imp(Op &op) const override;
@@ -208,11 +208,10 @@ namespace snabel {
   };
 
   struct Return: OpImp {
-    bool scoped;
     Label *target;
     int64_t depth;
     
-    Return(bool scoped, int64_t dep);
+    Return(int64_t dep);
     OpImp &get_imp(Op &op) const override;
     bool refresh(Scope &scp) override;
     bool run(Scope &scp) override;
@@ -250,7 +249,7 @@ namespace snabel {
     OpImp &get_imp(Op &op) const override;
     bool refresh(Scope &scp) override;
     bool compile(const Op &op, Scope &scp, OpSeq & out) override;
-    bool finalize(const Op &op, Scope &scp, OpSeq & out) override;
+    bool run(Scope &scp) override;
   };
 
   struct Unparam: OpImp {

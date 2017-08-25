@@ -16,7 +16,7 @@ namespace snabel {
 	       tok.text.size() == 7 &&
 	       isdigit(tok.text.at(6))) {
       auto i(tok.text.at(6) - '0');
-      out.emplace_back(Return(false, i+1));
+      out.emplace_back(Return(i+1));
     } else if (tok.text == "&return") {
       out.emplace_back(Push(Box(exe.label_type, exe.return_target[0])));
     } else if (tok.text.substr(0, 7) == "&return" &&
