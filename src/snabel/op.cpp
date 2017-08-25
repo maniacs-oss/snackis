@@ -494,7 +494,6 @@ namespace snabel {
   Lambda::Lambda():
     OpImp(OP_LAMBDA, "lambda"),
     enter_label(nullptr),
-    exit_label(nullptr),
     skip_label(nullptr),
     returns(false),
     compiled(false)
@@ -776,7 +775,7 @@ namespace snabel {
 
   Unlambda::Unlambda():
     OpImp(OP_UNLAMBDA, "unlambda"),
-    enter_label(nullptr), exit_label(nullptr), skip_label(nullptr),
+    enter_label(nullptr), skip_label(nullptr),
     compiled(false)
   { }
 
@@ -793,25 +792,16 @@ namespace snabel {
     }
 
     auto &l(*exe.lambdas.back());
-    bool changed(false);
-    
-    if (!l.exit_label && l.returns) {
-      exit_label = &add_label(exe, fmt("_exit%0", l.tag));
-      l.exit_label = exit_label;
-      changed = true;
-    }
-
     enter_label = l.enter_label;
     skip_label = l.skip_label;
     exe.lambdas.pop_back();
-    return changed;
+    return false;
   }
   
   bool Unlambda::compile(const Op &op, Scope &scp, OpSeq &out) {
     if (compiled) { return false; }  
     
     compiled = true;
-    if (exit_label) { out.emplace_back(Target(*exit_label)); }
     out.emplace_back(Return(true, 1));
     out.push_back(op);
     out.emplace_back(Target(*skip_label));

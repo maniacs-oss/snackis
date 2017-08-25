@@ -147,7 +147,7 @@ namespace snabel {
 
   struct Lambda: OpImp {
     Uid tag;
-    Label *enter_label, *exit_label, *skip_label;
+    Label *enter_label, *skip_label;
     bool returns, compiled;
     
     Lambda();
@@ -243,7 +243,7 @@ namespace snabel {
   };
 
   struct Unlambda: OpImp {
-    Label *enter_label, *exit_label, *skip_label;
+    Label *enter_label, *skip_label;
     bool compiled;
 
     Unlambda();
