@@ -267,8 +267,8 @@ namespace snabel {
       ERROR(Snabel, fmt("Not enough values on stack (%0):\n%1", count, s));
       return false;
     }
-    
-    for (size_t i(0); i < count; i++) { pop(scp.thread); }
+
+    s.erase(std::next(s.begin(), s.size()-count), s.end()); 
     return true;
   }
 
