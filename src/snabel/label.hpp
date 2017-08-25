@@ -12,8 +12,8 @@ namespace snabel {
   struct Label {
     Exec &exec;
     str tag;
-    bool recall;
-    int64_t pc, yield_depth;
+    bool recall_target;
+    int64_t pc;
     
     Label(Exec &exe, const str &tag);
   };

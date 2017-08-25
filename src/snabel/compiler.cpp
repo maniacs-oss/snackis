@@ -12,6 +12,12 @@ namespace snabel {
     
     if (tok.text.at(0) == '"') {
       // Skip comment
+    } else if (tok.text == "&yield") {
+      out.emplace_back(Push(Box(exe.label_type, &exe.yield_target)));
+    } else if (tok.text == "&yield1") {
+      out.emplace_back(Push(Box(exe.label_type, &exe.yield1_target)));
+    } else if (tok.text == "&yield2") {
+      out.emplace_back(Push(Box(exe.label_type, &exe.yield2_target)));
     } else if (tok.text.at(0) == '&') {
       out.emplace_back(Getenv(tok.text.substr(1)));
     } else if (tok.text.at(0) == '@') {

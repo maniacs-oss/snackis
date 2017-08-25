@@ -113,12 +113,18 @@ namespace snabel {
   }
 
   void jump(Scope &scp, const Label &lbl) {
-    auto &thd(scp.thread);
+    auto &exe(scp.exec);
     
-    if (lbl.yield_depth) {
-      yield(scp, lbl.yield_depth);
+    if (&lbl == &exe.yield_target) {
+      yield(scp, 1);
+    } else if (&lbl == &exe.yield1_target) {
+      yield(scp, 2);
+    } else if (&lbl == &exe.yield2_target) {
+      yield(scp, 3);
     } else {      
-      if (lbl.recall) {
+      auto &thd(scp.thread);
+
+      if (lbl.recall_target) {
 	auto &frm(scp.recalls.emplace_back(scp));
 	refresh(frm, scp);
 	reset_stack(thd, scp.stack_depth, true);

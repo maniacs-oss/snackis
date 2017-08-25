@@ -70,7 +70,7 @@ namespace snabel {
       if (s.break_target) {
 	auto &tgt(*s.break_target);
 	s.break_target = nullptr;
-	jump(scp, tgt);
+	jump(s, tgt);
 	return true;
       }
 
@@ -467,19 +467,6 @@ namespace snabel {
 	val.emplace(exe.label_type, l->recall_label);
 	return false;
       }      
-    } else if (id == "yield") {
-      if (exe.lambdas.empty()) {
-	ERROR(Snabel, "Missing yield lambda");
-	return false;
-      }
-
-      auto l(exe.lambdas.back());
-      l->yields = true;
-
-      if (l->yield_label) {
-	val.emplace(exe.label_type, l->yield_label);
-	return false;
-      }
     } else {
       return false;
     }
@@ -567,10 +554,9 @@ namespace snabel {
     OpImp(OP_LAMBDA, "lambda"),
     enter_label(nullptr),
     recall_label(nullptr),
-    yield_label(nullptr),
     exit_label(nullptr),
     skip_label(nullptr),
-    recalls(false), returns(false), yields(false),
+    recalls(false), returns(false),
     compiled(false)
   { }
 
@@ -593,13 +579,7 @@ namespace snabel {
     
     if (recalls && !recall_label) {
       recall_label = &add_label(exe, fmt("_recall%0", tag));
-      recall_label->recall = true;
-      changed = true;
-    }
-
-    if (yields && !yield_label) {
-      yield_label = &add_label(exe, fmt("_yield%0", tag));
-      yield_label->yield_depth = 1;
+      recall_label->recall_target = true;
       changed = true;
     }
 

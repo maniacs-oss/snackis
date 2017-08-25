@@ -499,6 +499,9 @@ namespace snabel {
     ustr_type(add_type(*this, "UStr")),
     void_type(add_type(*this, "Void")),
     writeable_type(add_type(*this, "Writeable")),
+    yield_target(add_label(*this, "_yield")),
+    yield1_target(add_label(*this, "_yield1")),
+    yield2_target(add_label(*this, "_yield2")),
     next_uid(1)
   {    
     any_type.fmt = [](auto &v) { return "Any"; };
@@ -1533,11 +1536,16 @@ namespace snabel {
   }
 
   void clear_labels(Exec &exe) {
-    for (auto &l: exe.labels) {
-      rem_env(exe.main_scope, l.first);
+    for (auto i(exe.labels.begin()); i != exe.labels.end();) {
+      auto &l(i->second);
+      if (&l == &exe.yield_target || &l == &exe.yield1_target ||
+	  &l == &exe.yield2_target) {
+	i++;
+      } else {
+	rem_env(exe.main_scope, l.tag);
+	i = exe.labels.erase(i);
+      }
     }
-    
-    exe.labels.clear();
   }
 
   Label *find_label(Exec &exe, const str &tag) {
