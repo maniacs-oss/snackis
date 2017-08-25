@@ -96,6 +96,14 @@ namespace snabel {
     return true;
   }
 
+  int64_t find_break_pc(Thread &thd) {
+    for (auto i(thd.scopes.rbegin()); i != thd.scopes.rend(); i++) {
+      if (i->break_pc) { return i->break_pc; }
+    }
+
+    return -1;
+  }
+
   bool isa(Thread &thd, const Types &x, const Types &y) {
     auto i(x.begin()), j(y.begin());
 
@@ -126,6 +134,23 @@ namespace snabel {
     if (!s.empty()) { push(scp.thread, s); }
     Exec::Lock lock(scp.exec.mutex);
     thd.exec.threads.erase(thd.id);
+  }
+
+  bool _break(Thread &thd) {
+    while (thd.scopes.size() > 1) {
+      auto &s(thd.scopes.back());
+      
+      if (s.break_pc > -1) {
+	thd.pc = s.break_pc;
+	s.break_pc = -1;
+	return true;
+      }
+
+      end_scope(thd);
+    }
+
+    ERROR(Snabel, "Missing break target");
+    return false;
   }
 
   bool run(Thread &thd, int64_t break_pc) {

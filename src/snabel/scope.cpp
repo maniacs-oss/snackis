@@ -9,9 +9,9 @@ namespace snabel {
     thread(thd),
     exec(thread.exec),
     target(nullptr),
-    break_target(nullptr),
     stack_depth(thread.stacks.size()),
     return_pc(-1),
+    break_pc(-1),
     push_result(true)
   { }
 
@@ -19,9 +19,9 @@ namespace snabel {
     thread(src.thread),
     exec(src.exec),
     target(nullptr),
-    break_target(src.break_target),
     stack_depth(thread.stacks.size()),
     return_pc(-1),
+    break_pc(src.break_pc),
     push_result(true),
     coros(src.coros)
   {}
@@ -114,16 +114,17 @@ namespace snabel {
 
   void jump(Scope &scp, const Label &lbl) {
     auto &exe(scp.exec);
-    
+    auto &thd(scp.thread);
+
     if (&lbl == &exe.yield_target) {
       yield(scp, 1);
     } else if (&lbl == &exe.yield1_target) {
       yield(scp, 2);
     } else if (&lbl == &exe.yield2_target) {
       yield(scp, 3);
+    } else if (&lbl == &exe.break_target) {
+      _break(scp.thread);
     } else {      
-      auto &thd(scp.thread);
-
       if (lbl.recall_target) {
 	auto &frm(scp.recalls.emplace_back(scp));
 	refresh(frm, scp);

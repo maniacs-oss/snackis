@@ -21,8 +21,8 @@ namespace snabel {
     Exec &exec;
     opt<Proc *> proc;
 
-    Label *target, *break_target;
-    int64_t stack_depth, return_pc;
+    Label *target;
+    int64_t stack_depth, return_pc, break_pc;
     bool push_result;
 
     std::deque<Frame> recalls;

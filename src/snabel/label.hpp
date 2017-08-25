@@ -8,7 +8,7 @@ namespace snabel {
   using namespace snackis;
 
   struct Exec;
-  
+
   struct Label {
     Exec &exec;
     str tag;

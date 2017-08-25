@@ -38,7 +38,7 @@ namespace snabel {
       &path_type, &proc_type, &readable_type, &rfile_type, &random_type, &rat_type,
       &rwfile_type, &str_type, &thread_type, &uchar_type, &uid_type, &ustr_type,
       &void_type, &writeable_type;
-    Label &yield_target, &yield1_target, &yield2_target;
+    Label &yield_target, &yield1_target, &yield2_target, &break_target;
     std::atomic<Uid> next_uid;
     
     Exec();

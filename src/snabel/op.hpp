@@ -102,7 +102,6 @@ namespace snabel {
 
   struct For: OpImp {
     str key;
-    Label *exit_label;
     bool compiled;
     
     For();
@@ -274,7 +273,6 @@ namespace snabel {
 
   struct While: OpImp {
     str key;
-    Label *exit_label;
     bool compiled;
     
     While();

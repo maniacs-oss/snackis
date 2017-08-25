@@ -62,23 +62,7 @@ namespace snabel {
   }
 
   bool Break::run(Scope &scp) {
-    auto &thd(scp.thread);
-
-    while (thd.scopes.size() > 1) {
-      auto &s(thd.scopes.back());
-      
-      if (s.break_target) {
-	auto &tgt(*s.break_target);
-	s.break_target = nullptr;
-	jump(s, tgt);
-	return true;
-      }
-
-      end_scope(thd);
-    }
-
-    ERROR(Snabel, "Missing break target");
-    return false;
+    return _break(scp.thread);
   }
   
   Call::Call(opt<Box> target):
@@ -329,8 +313,6 @@ namespace snabel {
     out.emplace_back(Target(lbl));
     out.push_back(op);
     out.emplace_back(Jump(lbl));
-    exit_label = &add_label(exe, fmt("_exit%0", uid(exe)));
-    out.emplace_back(Target(*exit_label));
     return true;
   }
 
@@ -379,12 +361,12 @@ namespace snabel {
     
     if (nxt) {      
       push(thd, *nxt);
-      scp.break_target = exit_label;
+      scp.break_pc = thd.pc+2;
       (*tgt->type->call)(scp, *tgt, false);
     } else {
       rem_env(scp, key);
-      scp.break_target = nullptr;
-      scp.thread.pc += 2;
+      scp.break_pc = -1;
+      thd.pc += 2;
     }
     
     return true;
@@ -467,6 +449,9 @@ namespace snabel {
 	val.emplace(exe.label_type, l->recall_label);
 	return false;
       }      
+    } else if (id == "break") {
+      val.emplace(exe.label_type, &exe.break_target);
+      return true;
     } else {
       return false;
     }
@@ -481,6 +466,7 @@ namespace snabel {
     }
 
     if (id.empty()) { return false; }
+    
     auto fnd(find_env(scp, id));
     if (!fnd) { return false; }
     out.emplace_back(Push(*fnd));
@@ -1102,8 +1088,6 @@ namespace snabel {
     out.emplace_back(Target(lbl));
     out.push_back(op);
     out.emplace_back(Jump(lbl));
-    exit_label = &add_label(exe, fmt("_exit%0", uid(exe)));
-    out.emplace_back(Target(*exit_label));
     return true;
   }
 
@@ -1157,7 +1141,7 @@ namespace snabel {
       }
       
       if (get<bool>(*ok)) {
-	scp.break_target = exit_label;
+	scp.break_pc = scp.thread.pc+2;
 	(*tgt->type->call)(scp, *tgt, false);
 	return true;
       }
@@ -1167,7 +1151,7 @@ namespace snabel {
     }
 
     rem_env(scp, key);
-    scp.break_target = nullptr;
+    scp.break_pc = -1;
     scp.thread.pc += 2;
     return true;
   }

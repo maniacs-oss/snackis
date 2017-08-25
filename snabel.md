@@ -242,11 +242,14 @@ Iteration is currently supported for numbers, which will return 0..N; lists, whi
 ```
 
 #### Loops
-The ```for```-loop accepts an iterable and a target, and calls the target with the last value pushed on the stack as long as the iterator returns values; and the ```while```-loop accepts a condition and a target, and calls the target as long as the condition pushes ```#t```.
+The ```for```-loop accepts an iterable and a target, and calls the target with the last value pushed on the stack as long as the iterator returns values; and the ```while```-loop accepts a condition and a target, and calls the target as long as the condition pushes ```#t```. ```break``` may be used to exit loops early, use ```&break``` to get a target that breaks when called.
 
 ```
 > 0 7 &+ for
 21
+
+> 0 7 {$0 5 = {_ break} when +} for
+10
 
 > 0 [1 2 3 4 5 6] &+ for
 21

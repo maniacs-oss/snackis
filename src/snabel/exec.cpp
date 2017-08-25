@@ -502,6 +502,7 @@ namespace snabel {
     yield_target(add_label(*this, "_yield")),
     yield1_target(add_label(*this, "_yield1")),
     yield2_target(add_label(*this, "_yield2")),
+    break_target(add_label(*this, "_break")),
     next_uid(1)
   {    
     any_type.fmt = [](auto &v) { return "Any"; };
@@ -1539,7 +1540,7 @@ namespace snabel {
     for (auto i(exe.labels.begin()); i != exe.labels.end();) {
       auto &l(i->second);
       if (&l == &exe.yield_target || &l == &exe.yield1_target ||
-	  &l == &exe.yield2_target) {
+	  &l == &exe.yield2_target || &l == &exe.break_target) {
 	i++;
       } else {
 	rem_env(exe.main_scope, l.tag);
