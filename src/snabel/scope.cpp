@@ -116,12 +116,8 @@ namespace snabel {
     auto &exe(scp.exec);
     auto &thd(scp.thread);
 
-    if (&lbl == &exe.yield_target) {
-      yield(scp, 1);
-    } else if (&lbl == &exe.yield1_target) {
-      yield(scp, 2);
-    } else if (&lbl == &exe.yield2_target) {
-      yield(scp, 3);
+    if (lbl.yield_depth) {
+	yield(scp, lbl.yield_depth);      
     } else if (&lbl == &exe.break_target) {
       _break(scp.thread);
     } else {      

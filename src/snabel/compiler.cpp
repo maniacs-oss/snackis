@@ -12,21 +12,26 @@ namespace snabel {
     
     if (tok.text.at(0) == '"') {
       // Skip comment
+    } else if (tok.text.substr(0, 5) == "yield" &&
+	       tok.text.size() == 6 &&
+	       isdigit(tok.text.at(5))) {
+      auto i(tok.text.at(5) - '0');
+      out.emplace_back(Yield(i+1));
     } else if (tok.text == "&yield") {
-      out.emplace_back(Push(Box(exe.label_type, &exe.yield_target)));
-    } else if (tok.text == "&yield1") {
-      out.emplace_back(Push(Box(exe.label_type, &exe.yield1_target)));
-    } else if (tok.text == "&yield2") {
-      out.emplace_back(Push(Box(exe.label_type, &exe.yield2_target)));
-    } else if (tok.text.at(0) == '&') {
+      out.emplace_back(Push(Box(exe.label_type, exe.yield_target[0])));
+    } else if (tok.text.substr(0, 6) == "&yield" &&
+	       tok.text.size() == 7 &&
+	       isdigit(tok.text.at(6))) {
+      auto i(tok.text.at(6) - '0');
+      out.emplace_back(Push(Box(exe.label_type, exe.yield_target[i])));
+    }  else if (tok.text.at(0) == '&') {
       out.emplace_back(Getenv(tok.text.substr(1)));
     } else if (tok.text.at(0) == '@') {
-      out.emplace_back(Getenv(tok.text));      
+      out.emplace_back(Getenv(tok.text));
     } else if (tok.text.at(0) == '$' &&
 	       tok.text.size() == 2 &&
 	       isdigit(tok.text.at(1))) {
       auto i(tok.text.at(1) - '0');
-      
       if (i) {
 	out.emplace_back(Swap(i));
       } else {

@@ -23,19 +23,19 @@ SnabelError: Missing lambda
 ```
 
 ### The Stack
-Values and results from function calls are pushed on the stack in order of appearance. Thanks to lexical scoping and named bindings, keeping the stack squeaky clean is less critical in Snabel. ```$``` collects all values on the stack in a list that is pushed instead. ```$1```-```$9``` swaps in values, starting from the end; while ```$0``` duplicates the last value. ```_``` drops the last value and ```|``` clears the entire stack.
+Values and results from function calls are pushed on the stack in order of appearance. Thanks to lexical scoping and named bindings, keeping the stack squeaky clean is less critical in Snabel. ```$list``` collects all values on the stack in a list that is pushed instead. ```$1```-```$9``` swaps in values, starting from the end; while ```$``` duplicates the last value. ```_``` drops the last value and ```|``` clears the entire stack.
 
 ```
-> 1 2 3 $
+> 1 2 3 $list
 [1 2 3]
 
-> 1 2 $0 $
+> 1 2 $0 $list
 [1 2 2]
 
-> 42 7 _ $
+> 42 7 _ $list
 [42]
 
-> 42 7 | $
+> 42 7 | $list
 []
 
 > 42 35 $1 -
@@ -49,10 +49,10 @@ Parentheses may be used to divide expressions into separate parts, each level co
 > (1 2 +) (2 2 *) +
 7
 
-> 1 (2 3 $)
+> 1 (2 3 $list)
 [1 2 3]
 
-> 1 (|2 3 $) .
+> 1 (|2 3 $list) .
 1 [2 3].
 ```
 
@@ -158,7 +158,7 @@ Lists are based on deques, which means fast inserts/removals in the front/back a
 > Str list
 []
 
-> 1 2 3 $
+> 1 2 3 $list
 [1 2 3]
 
 > [35 7 + 'foo']
@@ -178,7 +178,7 @@ Pairs have first class support and all iterables support zipping/unzipping. Pair
 > ['foo' 'bar'] 7 list zip list
 ['foo' 0. 'bar' 1.]
 
-> ['foo' 0. 'bar' 1.] unzip list $1 list $
+> ['foo' 0. 'bar' 1.] unzip list $1 list $list
 [[0 1] ['foo' 'bar']]
 ```
 
@@ -254,7 +254,7 @@ The ```for```-loop accepts an iterable and a target, and calls the target with t
 > 0 [1 2 3 4 5 6] &+ for
 21
 
-> 'foo' &nop for $ \- join
+> 'foo' &nop for $list \- join
 'f-o-o'
 
 > 0 {$0 42 lt?} {1 +} while
@@ -373,7 +373,7 @@ Iter<I64>
 Random numbers are supported through ranged generators that may be treated as unlimited iterators.
 
 ```
-> 100 random pop $1 pop $1 _ $
+> 100 random pop $1 pop $1 _ $list
 [61 23]
 
 > 100 random 3 nlist

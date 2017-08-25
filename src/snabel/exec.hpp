@@ -14,6 +14,8 @@
 
 namespace snabel {
   struct Op;
+
+  const int MAX_YIELD_TARGET(10);
   
   struct Exec {
     using Lock = std::unique_lock<std::mutex>;
@@ -38,7 +40,8 @@ namespace snabel {
       &path_type, &proc_type, &readable_type, &rfile_type, &random_type, &rat_type,
       &rwfile_type, &str_type, &thread_type, &uchar_type, &uid_type, &ustr_type,
       &void_type, &writeable_type;
-    Label &yield_target, &yield1_target, &yield2_target, &break_target;
+    Label *yield_target[MAX_YIELD_TARGET];
+    Label &break_target;
     std::atomic<Uid> next_uid;
     
     Exec();
@@ -64,7 +67,7 @@ namespace snabel {
 		    const ArgTypes &results,
 		    FuncImp::Imp imp);
 
-  Label &add_label(Exec &exe, const str &tag);
+  Label &add_label(Exec &exe, const str &tag, bool pmt=false);
   Label *find_label(Exec &exe, const str &tag);
   void clear_labels(Exec &exe);
     

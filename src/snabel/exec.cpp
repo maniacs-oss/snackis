@@ -499,10 +499,13 @@ namespace snabel {
     ustr_type(add_type(*this, "UStr")),
     void_type(add_type(*this, "Void")),
     writeable_type(add_type(*this, "Writeable")),
-    yield_target(add_label(*this, "_yield")),
-    yield1_target(add_label(*this, "_yield1")),
-    yield2_target(add_label(*this, "_yield2")),
-    break_target(add_label(*this, "_break")),
+    yield_target {
+    &add_label(*this, "_yield", true), &add_label(*this, "_yield1", true),
+      &add_label(*this, "_yield2", true), &add_label(*this, "_yield3", true),
+      &add_label(*this, "_yield4", true), &add_label(*this, "_yield5", true),
+      &add_label(*this, "_yield6", true), &add_label(*this, "_yield7", true),
+      &add_label(*this, "_yield8", true), &add_label(*this, "_yield9", true)},
+    break_target(add_label(*this, "_break", true)),
     next_uid(1)
   {    
     any_type.fmt = [](auto &v) { return "Any"; };
@@ -880,6 +883,10 @@ namespace snabel {
       return get<Thread *>(x) == get<Thread *>(y);
     };
 
+    for (int i(0); i < MAX_YIELD_TARGET; i++) {
+      yield_target[i]->yield_depth = i+1;
+    }
+
     add_conv(*this, str_type, ustr_type, [this](auto &v) {	
 	v.type = &ustr_type;
 	v.val = uconv.from_bytes(get<str>(v));
@@ -1233,6 +1240,18 @@ namespace snabel {
 	out.emplace_back(Unparam());
       });
 
+    add_macro(*this, "$", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(Dup());
+      });
+
+    add_macro(*this, "_", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(Drop(1));
+      });
+
+    add_macro(*this, "|", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(Reset());
+      });
+    
     add_macro(*this, "func:", [this](auto pos, auto &in, auto &out) {
 	if (in.size() < 2) {
 	  ERROR(Snabel, fmt("Malformed func on row %0, col %1",
@@ -1308,6 +1327,10 @@ namespace snabel {
 	}
       });
 
+    add_macro(*this, "$list", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(Stash());
+      });
+
     add_macro(*this, "break", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Break());
       });
@@ -1316,24 +1339,12 @@ namespace snabel {
 	out.emplace_back(Call());
       });
 
-    add_macro(*this, "_", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(Drop(1));
-      });
-
     add_macro(*this, "recall", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Recall());
       });
 
-    add_macro(*this, "|", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(Reset());
-      });
-
     add_macro(*this, "return", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Return(false));
-      });
-
-    add_macro(*this, "$", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(Stash());
       });
 
     add_macro(*this, "when", [this](auto pos, auto &in, auto &out) {
@@ -1342,14 +1353,6 @@ namespace snabel {
 
     add_macro(*this, "yield", [this](auto pos, auto &in, auto &out) {
 	out.emplace_back(Yield(1));
-      });
-
-    add_macro(*this, "yield1", [this](auto pos, auto &in, auto &out) {
-	out.emplace_back(Yield(2));
-      });
-
-    add_macro(*this, "yield2", [this](auto pos, auto &in, auto &out) {
-	out.emplace_back(Yield(3));
       });
 
     add_macro(*this, "for", [](auto pos, auto &in, auto &out) {
@@ -1526,11 +1529,11 @@ namespace snabel {
     return add_imp(fnd->second, args, results, imp);
   }
 
-  Label &add_label(Exec &exe, const str &tag) {
+  Label &add_label(Exec &exe, const str &tag, bool pmt) {
     auto &l(exe.labels
       .emplace(std::piecewise_construct,
 	       std::forward_as_tuple(tag),
-	       std::forward_as_tuple(exe, tag))
+	       std::forward_as_tuple(exe, tag, pmt))
 	    .first->second);
     put_env(exe.main_scope, tag, Box(exe.label_type, &l));
     return l;
@@ -1539,8 +1542,7 @@ namespace snabel {
   void clear_labels(Exec &exe) {
     for (auto i(exe.labels.begin()); i != exe.labels.end();) {
       auto &l(i->second);
-      if (&l == &exe.yield_target || &l == &exe.yield1_target ||
-	  &l == &exe.yield2_target || &l == &exe.break_target) {
+      if (l.permanent) {
 	i++;
       } else {
 	rem_env(exe.main_scope, l.tag);

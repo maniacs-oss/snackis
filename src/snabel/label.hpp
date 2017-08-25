@@ -12,10 +12,10 @@ namespace snabel {
   struct Label {
     Exec &exec;
     str tag;
-    bool recall_target;
-    int64_t pc;
+    bool permanent, recall_target;
+    int64_t pc, yield_depth;
     
-    Label(Exec &exe, const str &tag);
+    Label(Exec &exe, const str &tag, bool pmt);
   };
 }
 
