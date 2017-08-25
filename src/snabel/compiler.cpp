@@ -24,7 +24,9 @@ namespace snabel {
 	       isdigit(tok.text.at(6))) {
       auto i(tok.text.at(6) - '0');
       out.emplace_back(Push(Box(exe.label_type, exe.yield_target[i])));
-    }  else if (tok.text.at(0) == '&') {
+    } else if (tok.text == "&break") {
+      out.emplace_back(Push(Box(exe.label_type, &exe.break_target)));
+    } else if (tok.text.at(0) == '&') {
       out.emplace_back(Getenv(tok.text.substr(1)));
     } else if (tok.text.at(0) == '@') {
       out.emplace_back(Getenv(tok.text));

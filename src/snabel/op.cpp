@@ -449,9 +449,6 @@ namespace snabel {
 	val.emplace(exe.label_type, l->recall_label);
 	return false;
       }      
-    } else if (id == "break") {
-      val.emplace(exe.label_type, &exe.break_target);
-      return true;
     } else {
       return false;
     }
