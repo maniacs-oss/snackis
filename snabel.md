@@ -7,6 +7,10 @@
 Like Yoda of Star Wars-fame, and yesterdays scientific calculators; as well as most printers in active use; yet unlike currently trending languages; Snabel expects arguments before operations.
 
 ```
+> 'Hello World!' say
+Hello World!
+n/a
+
 > 7 35 +
 42
 ```
@@ -79,9 +83,17 @@ Lambda(_enter1:0)
 ```
 
 ### Coroutines
-Calling ```yield``` from within a lambda logs the current position, stack and environment before returning; execution will continue from the yielding position with restored stack and environment on next call from the same scope. Use ```&yield``` to get a target that yields when called.
+Calling ```yield``` from within a lambda logs the current position, stack and environment before returning; execution will continue from the yielding position with restored stack and environment on next call from the same scope. A fresh coroutine context is returned when calling the lambda, the context may be used for further calls and will reset itself when the coroutine returns.
+
+Use ```&yield``` to get a target that yields when called.
 
 ```
+> {yield 42} call
+Coro(_enter1:1)
+
+> {yield 42} call call
+42
+
 > func: foo {|yield (7 yield 28 +)} call;
   foo foo +
 42
@@ -293,7 +305,7 @@ add_func(exe, "+",
 ```
 
 ### Procs
-Procs allow interleaving multiple cooperative computations in the same thread. Adding an initial yield allows catching the stack and/or environment which is restored on each call. Procs provide reference semantics, the same proc may shared between threads as long as it's only run from one thread at a time.
+Procs allow interleaving multiple cooperative computations in the same thread. The initial yield allows catching the stack and/or environment.
 
 ```
 > proc: foo {|yield 35 push};
@@ -310,7 +322,7 @@ Procs allow interleaving multiple cooperative computations in the same thread. A
 ```
 
 ### IO
-Snabel provides non-blocking IO in the form of iterators. The provided target is called with each read chunk or written number of bytes pushed on the stack. Files come in two flavors, read-only and read-write; both are read and written exclusively in binary format.
+Snabel provides non-blocking IO in the form of iterators. The provided target is called with each read chunk or written number of bytes pushed on the stack. Files come in two flavors, read-only and read-write.
 
 ```
 > ['foo' 'bar' 'baz'] &say for
@@ -381,7 +393,7 @@ Random numbers are supported through ranged generators that may be treated as in
 ```
 
 ### Threads
-Starting a new thread copies the entire program, stack and environment to a separate structure to minimize locking; sets the program counter after the last instruction, and calls the specified target. The target is only a starting point, threads are free to go wherever they want; a thread is finished once the program counter passes the last instruction. Anything remaining on the thread stack is pushed on the calling stack in ```join```
+Starting a new thread copies program, stack and environment to a separate structure to minimize locking; sets the program counter after the last instruction, and calls the specified target. The target is only a starting point, threads are free to go wherever they want; a thread is finished once the program counter passes the last instruction. Anything remaining on the thread stack is pushed on the calling stack in ```join```
 
 ```
 > 7 {35 +} thread join
