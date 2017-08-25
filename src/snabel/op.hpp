@@ -28,8 +28,9 @@ namespace snabel {
   using OpSeq = std::deque<Op>;
 
   struct OpImp {
-    const OpCode code;
-    const str name;
+    OpCode code;
+    str name;
+    int64_t pc;
     
     OpImp(OpCode code, const str &name);
     virtual OpImp &get_imp(Op &op) const = 0;
@@ -102,15 +103,20 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
 
-  struct For: OpImp {
-    str key;
+  struct For: OpImp {    
     bool compiled;
     
     For();
     OpImp &get_imp(Op &op) const override;
-    bool prepare(Scope &scp) override;
     bool compile(const Op &op, Scope &scp, OpSeq & out) override;
     bool run(Scope &scp) override;
+
+    struct State {
+      Iter::Ref iter;
+      Box target;
+
+      State(const Iter::Ref &itr, const Box &tgt);
+    };    
   };
 
   struct Funcall: OpImp {
@@ -271,15 +277,18 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
 
-  struct While: OpImp {
-    str key;
+  struct While: OpImp {    
     bool compiled;
     
     While();
     OpImp &get_imp(Op &op) const override;
-    bool prepare(Scope &scp) override;
     bool compile(const Op &op, Scope &scp, OpSeq & out) override;    
     bool run(Scope &scp) override;
+
+    struct State {
+      Box cond, target;
+      State(const Box &cnd, const Box &tgt);
+    };    
   };
 
   struct Yield: OpImp {
@@ -295,6 +304,8 @@ namespace snabel {
 			      Funcall, Getenv, Jump, Lambda, Param, Push,
 			      Putenv, Recall, Reset, Restore, Return, Stash, Swap,
 			      Target, Unlambda, Unparam, When, While, Yield>;
+
+  using OpState = std::variant<For::State, While::State>;
 
   struct Op {
     OpData data;

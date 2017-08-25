@@ -8,6 +8,7 @@
 #include "snabel/coro.hpp"
 #include "snabel/env.hpp"
 #include "snabel/func.hpp"
+#include "snabel/op.hpp"
 #include "snabel/type.hpp"
 #include "snackis/core/str.hpp"
 
@@ -26,6 +27,7 @@ namespace snabel {
     int64_t stack_depth, return_pc, recall_pc, break_pc;
     bool push_result;
 
+    std::map<int64_t, OpState> op_state;
     std::deque<Frame> recalls;
     std::set<str> env_keys;
     

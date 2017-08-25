@@ -11,7 +11,7 @@
 
 namespace snabel {
   OpImp::OpImp(OpCode code, const str &name):
-    code(code), name(name)
+    code(code), name(name), pc(-1)
   { }
   
   str OpImp::info() const {
@@ -299,12 +299,6 @@ namespace snabel {
     return std::get<For>(op.data);
   }
 
-  bool For::prepare(Scope &scp) {
-    auto &exe(scp.exec);
-    key = fmt_arg(uid(exe));
-    return true;
-  }
-  
   bool For::compile(const Op &op, Scope &scp, OpSeq &out) {
     if (compiled) { return false; }
     compiled = true;
@@ -317,17 +311,12 @@ namespace snabel {
   }
 
   bool For::run(Scope &scp) {
-    auto &exe(scp.exec);
     auto &thd(scp.thread);
     Iter::Ref it;
     opt<Box> tgt;
-    auto fnd(find_env(scp, key));
+    auto fnd(scp.op_state.find(pc));
 
-    if (fnd) {
-      auto &p(get<PairRef>(*fnd));
-      it = get<Iter::Ref>(p->first);
-      tgt.emplace(p->second);
-    } else {    
+    if (fnd == scp.op_state.end()) {    
       tgt = try_pop(thd);
 
       if (!tgt) {
@@ -353,8 +342,13 @@ namespace snabel {
       }
 
       it = (*cnd->type->iter)(*cnd);
-      put_env(scp, key, Box(exe.pair_type,
-			    std::make_shared<Pair>(Box(exe.iter_type, it), *tgt)));
+      scp.op_state.emplace(std::piecewise_construct,
+			   std::forward_as_tuple(pc),
+			   std::forward_as_tuple(State(it, *tgt)));
+    } else {
+      auto &s(get<State>(fnd->second));
+      it = s.iter;
+      tgt.emplace(s.target);
     }
 
     auto nxt(it->next(scp));
@@ -364,13 +358,17 @@ namespace snabel {
       scp.break_pc = thd.pc+2;
       (*tgt->type->call)(scp, *tgt, false);
     } else {
-      rem_env(scp, key);
+      scp.op_state.erase(pc);
       scp.break_pc = -1;
       thd.pc += 2;
     }
     
     return true;
   }
+
+  For::State::State(const Iter::Ref &itr, const Box &tgt):
+    iter(itr), target(tgt)
+  { }
 
   Funcall::Funcall(Func &fn):
     OpImp(OP_FUNCALL, "funcall"), fn(fn), imp(nullptr)
@@ -537,6 +535,8 @@ namespace snabel {
       if (cor->proc) { new_scp.push_result = false; }
       std::copy(cor->stacks.begin(), cor->stacks.end(),
 		std::back_inserter(thd.stacks));
+      std::copy(cor->op_state.begin(), cor->op_state.end(),
+		std::inserter(new_scp.op_state, new_scp.op_state.end()));
       std::copy(cor->recalls.begin(), cor->recalls.end(),
 		std::back_inserter(new_scp.recalls));
       for (auto &v: cor->env) { put_env(new_scp, v.first, v.second); }
@@ -960,12 +960,6 @@ namespace snabel {
     return std::get<While>(op.data);
   }
 
-  bool While::prepare(Scope &scp) {
-    auto &exe(scp.exec);
-    key = fmt_arg(uid(exe));
-    return true;
-  }
-
   bool While::compile(const Op &op, Scope &scp, OpSeq &out) {
     if (compiled) { return false; }
     compiled = true;
@@ -981,14 +975,10 @@ namespace snabel {
     auto &exe(scp.exec);
     auto &thd(scp.thread);
 
-    opt<Box> tgt, cnd;
-    auto fnd(find_env(scp, key));
+    opt<Box> cnd, tgt;
+    auto fnd(scp.op_state.find(pc));
 
-    if (fnd) {
-      auto &p(get<PairRef>(*fnd));
-      tgt.emplace(p->first);
-      cnd.emplace(p->second);
-    } else {
+    if (fnd == scp.op_state.end()) {
       tgt = try_pop(thd);
     
       if (!tgt) {
@@ -1013,8 +1003,13 @@ namespace snabel {
 	return false;
       }
 
-      put_env(scp, key, Box(exe.pair_type,
-			    std::make_shared<Pair>(*tgt, *cnd)));
+      scp.op_state.emplace(std::piecewise_construct,
+			   std::forward_as_tuple(pc),
+			   std::forward_as_tuple(State(*cnd, *tgt)));
+    } else {
+      auto &s(get<State>(fnd->second));
+      cnd.emplace(s.cond);
+      tgt.emplace(s.target);
     }
     
     (*cnd->type->call)(scp, *cnd, true);
@@ -1036,11 +1031,15 @@ namespace snabel {
       return false;
     }
 
-    rem_env(scp, key);
+    scp.op_state.erase(pc);
     scp.break_pc = -1;
     scp.thread.pc += 2;
     return true;
   }
+
+  While::State::State(const Box &cnd, const Box &tgt):
+    cond(cnd), target(tgt)
+  { }
 
   Yield::Yield(int64_t depth):
     OpImp(OP_YIELD, "yield"), depth(depth)
@@ -1077,6 +1076,7 @@ namespace snabel {
 
   bool finalize(Op &op, Scope &scp, OpSeq &out) {
     if (op.imp.finalize(op, scp, out)) { return true; }
+    op.imp.pc = scp.thread.pc;
     out.push_back(op);
     return false;
   }

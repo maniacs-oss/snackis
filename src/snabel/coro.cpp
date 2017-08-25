@@ -12,6 +12,9 @@ namespace snabel {
 
   void refresh(Coro &cor, Scope &scp) {
     refresh(dynamic_cast<Frame &>(cor), scp);
+    cor.op_state.clear();
+    std::copy(scp.op_state.begin(), scp.op_state.end(),
+	      std::inserter(cor.op_state, cor.op_state.end()));
     cor.recalls.clear();
     std::copy(scp.recalls.begin(), scp.recalls.end(),
 	      std::back_inserter(cor.recalls));
@@ -25,6 +28,7 @@ namespace snabel {
 
   void reset(Coro &cor) {
     reset(dynamic_cast<Frame &>(cor));
+    cor.op_state.clear();
     cor.recalls.clear();
     cor.env.clear();
     cor.pc = cor.start_pc;

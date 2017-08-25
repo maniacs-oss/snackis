@@ -3,13 +3,16 @@
 
 #include "snabel/env.hpp"
 #include "snabel/frame.hpp"
+#include "snabel/op.hpp"
 
 namespace snabel {
   struct Proc;
   
   struct Coro: Frame {
-    Env env;
+    std::map<int64_t, OpState> op_state;
     std::deque<Frame> recalls;
+    Env env;
+
     Label &target;
     int64_t start_pc;
     ProcRef proc;
