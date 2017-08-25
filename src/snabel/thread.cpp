@@ -13,6 +13,7 @@ namespace snabel {
     exec(exe),
     id(id),
     pc(0),
+    random(std::random_device()()),
     main_scope(scopes.emplace_back(*this))
   {
     stacks.emplace_back();
@@ -145,7 +146,7 @@ namespace snabel {
   }
 
   bool run(Thread &thd) {
-    begin_scope(thd, true);
+    begin_scope(thd);
     return run(thd, -1);
   }
 }

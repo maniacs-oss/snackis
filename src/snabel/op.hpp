@@ -19,7 +19,7 @@ namespace snabel {
   struct Scope;
   struct Op;
 
-  enum OpCode { OP_BACKUP, OP_CALL, OP_CHECK, OP_DEREF, OP_DROP, OP_DUP,
+  enum OpCode { OP_BACKUP, OP_BREAK, OP_CALL, OP_CHECK, OP_DEREF, OP_DROP, OP_DUP,
 		OP_FOR, OP_FUNCALL, OP_GETENV, OP_JUMP, OP_LAMBDA,
 		OP_PARAM, OP_PUSH, OP_PUTENV, OP_RECALL, OP_RESET, OP_RESTORE,
 		OP_RETURN, OP_STASH, OP_SWAP, OP_TARGET, OP_UNLAMBDA,
@@ -47,6 +47,12 @@ namespace snabel {
     Backup(bool copy=false);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
+    bool run(Scope &scp) override;
+  };
+
+  struct Break: OpImp {
+    Break();
+    OpImp &get_imp(Op &op) const override;
     bool run(Scope &scp) override;
   };
 
@@ -95,8 +101,9 @@ namespace snabel {
   };
 
   struct For: OpImp {
-    bool compiled;
     str key;
+    Label *exit_label;
+    bool compiled;
     
     For();
     OpImp &get_imp(Op &op) const override;
@@ -267,6 +274,7 @@ namespace snabel {
 
   struct While: OpImp {
     str key;
+    Label *exit_label;
     bool compiled;
     
     While();
@@ -285,7 +293,7 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
 
-  using OpData = std::variant<Backup, Call, Check, Deref, Drop, Dup, For,
+  using OpData = std::variant<Backup, Break, Call, Check, Deref, Drop, Dup, For,
 			      Funcall, Getenv, Jump, Lambda, Param, Push,
 			      Putenv, Recall, Reset, Restore, Return, Stash, Swap,
 			      Target, Unlambda, Unparam, When, While, Yield>;

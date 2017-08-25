@@ -52,7 +52,35 @@ namespace snabel {
     backup_stack(scp.thread, copy);
     return true;
   }
-    
+
+  Break::Break():
+    OpImp(OP_BREAK, "break")
+  { }
+
+  OpImp &Break::get_imp(Op &op) const {
+    return std::get<Break>(op.data);
+  }
+
+  bool Break::run(Scope &scp) {
+    auto &thd(scp.thread);
+
+    while (thd.scopes.size() > 1) {
+      auto &s(thd.scopes.back());
+      
+      if (s.break_target) {
+	auto &tgt(*s.break_target);
+	s.break_target = nullptr;
+	jump(scp, tgt);
+	return true;
+      }
+
+      end_scope(thd);
+    }
+
+    ERROR(Snabel, "Missing break target");
+    return false;
+  }
+  
   Call::Call(opt<Box> target):
     OpImp(OP_CALL, "call"), target(target)
   { }
@@ -288,17 +316,21 @@ namespace snabel {
   }
 
   bool For::prepare(Scope &scp) {
-    key = fmt_arg(uid(scp.exec));
+    auto &exe(scp.exec);
+    key = fmt_arg(uid(exe));
     return true;
   }
   
   bool For::compile(const Op &op, Scope &scp, OpSeq &out) {
     if (compiled) { return false; }
     compiled = true;
-    auto &lbl(add_label(scp.exec, fmt("_for%0", uid(scp.exec))));
+    auto &exe(scp.exec);
+    auto &lbl(add_label(exe, fmt("_for%0", uid(exe))));
     out.emplace_back(Target(lbl));
     out.push_back(op);
     out.emplace_back(Jump(lbl));
+    exit_label = &add_label(exe, fmt("_exit%0", uid(exe)));
+    out.emplace_back(Target(*exit_label));
     return true;
   }
 
@@ -347,9 +379,11 @@ namespace snabel {
     
     if (nxt) {      
       push(thd, *nxt);
+      scp.break_target = exit_label;
       (*tgt->type->call)(scp, *tgt, false);
     } else {
       rem_env(scp, key);
+      scp.break_target = nullptr;
       scp.thread.pc += 2;
     }
     
@@ -568,7 +602,7 @@ namespace snabel {
       yield_label->yield_depth = 1;
       changed = true;
     }
-    
+
     return changed;
   }
 
@@ -865,11 +899,11 @@ namespace snabel {
     return fmt("%0:%1", label.tag, label.pc);
   }
 
-  bool Target::finalize(const Op &op, Scope &scp, OpSeq &out) {
-    label.pc = scp.thread.pc;
+  bool Target::finalize(const Op &op, Scope &scp, OpSeq & out) {
+    label.pc = scp.thread.pc;    
     return true;
   }
-  
+
   Unlambda::Unlambda():
     OpImp(OP_UNLAMBDA, "unlambda"),
     enter_label(nullptr), exit_label(nullptr), skip_label(nullptr),
@@ -1075,17 +1109,21 @@ namespace snabel {
   }
 
   bool While::prepare(Scope &scp) {
-    key = fmt_arg(uid(scp.exec));
+    auto &exe(scp.exec);
+    key = fmt_arg(uid(exe));
     return true;
   }
 
   bool While::compile(const Op &op, Scope &scp, OpSeq &out) {
     if (compiled) { return false; }
     compiled = true;
-    auto &lbl(add_label(scp.exec, fmt("_while%0", uid(scp.exec))));
+    auto &exe(scp.exec);
+    auto &lbl(add_label(exe, fmt("_while%0", uid(exe))));
     out.emplace_back(Target(lbl));
     out.push_back(op);
     out.emplace_back(Jump(lbl));
+    exit_label = &add_label(exe, fmt("_exit%0", uid(exe)));
+    out.emplace_back(Target(*exit_label));
     return true;
   }
 
@@ -1139,6 +1177,7 @@ namespace snabel {
       }
       
       if (get<bool>(*ok)) {
+	scp.break_target = exit_label;
 	(*tgt->type->call)(scp, *tgt, false);
 	return true;
       }
@@ -1148,6 +1187,7 @@ namespace snabel {
     }
 
     rem_env(scp, key);
+    scp.break_target = nullptr;
     scp.thread.pc += 2;
     return true;
   }

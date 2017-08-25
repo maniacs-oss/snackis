@@ -6,6 +6,7 @@
 
 #include "snabel/bin.hpp"
 #include "snabel/iter.hpp"
+#include "snabel/random.hpp"
 #include "snabel/uid.hpp"
 #include "snackis/core/error.hpp"
 #include "snackis/core/fmt.hpp"
@@ -42,7 +43,7 @@ namespace snabel {
   using Val = std::variant<Empty, bool, Byte, char, int64_t, Path, Rat, str, uchar,
 			   Uid, ustr,
 			   BinRef, FileRef, Iter::Ref, IOBufRef, IOQueueRef, ListRef,
-			   PairRef, ProcRef, 
+			   PairRef, ProcRef, RandomRef, 
 			   Func *, Label *, Thread *, Type *>;
   
   struct Box {

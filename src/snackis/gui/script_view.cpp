@@ -179,6 +179,11 @@ namespace gui {
   {
     const UId me(whoamid(ctx));
 
+    snabel::add_func(exec, "say", {snabel::ArgType(exec.str_type)}, {},
+		     [this](auto &scp, auto &args) {
+		       log(ctx, get<str>(args.at(0)));
+		     });
+    
     g_signal_connect(new_script_btn, "clicked", G_CALLBACK(on_new_script), this);
     gtk_container_add(GTK_CONTAINER(menu), new_script_btn);
     gtk_widget_set_sensitive(find_posts_btn,

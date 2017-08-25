@@ -310,6 +310,12 @@ Procs allow interleaving multiple cooperative computations in the same thread. A
 Snabel provides non-blocking IO in the form of iterators. The provided target is called with each read chunk or written number of bytes pushed on the stack. Files come in two flavors, read-only and read-write; both are read and written exclusively in binary format.
 
 ```
+> ['foo' 'bar' 'baz'] &say for
+foo
+bar
+baz
+n/a
+
 > 'snackis' rfile
 RFile(11)
 

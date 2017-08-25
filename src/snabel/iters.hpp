@@ -3,6 +3,7 @@
 
 #include "snabel/box.hpp"
 #include "snabel/iter.hpp"
+#include "snabel/random.hpp"
 
 namespace snabel {
   using namespace snackis;
@@ -28,6 +29,14 @@ namespace snabel {
     opt<Box> next(Scope &scp) override;
   };
 
+  struct RandomIter: Iter {
+    RandomRef in;
+    Box out;
+    
+    RandomIter(Exec &exe, const RandomRef &in);
+    opt<Box> next(Scope &scp) override;
+  };
+  
   struct ZipIter: Iter {
     Iter::Ref xin, yin;
     

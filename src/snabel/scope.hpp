@@ -21,7 +21,7 @@ namespace snabel {
     Exec &exec;
     opt<Proc *> proc;
 
-    Label *target;
+    Label *target, *break_target;
     int64_t stack_depth, return_pc;
     bool push_result;
 
@@ -40,6 +40,7 @@ namespace snabel {
   Box get_env(Scope &scp, const str &key);
   void put_env(Scope &scp, const str &key, const Box &val);
   bool rem_env(Scope &scp, const str &key);
+  void rollback_env(Scope &scp);
   void reset_stack(Scope &scp);
   Coro &add_coro(Scope &scp, Label &tgt);
   Coro *find_coro(Scope &scp, Label &tgt);

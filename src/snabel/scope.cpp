@@ -9,6 +9,7 @@ namespace snabel {
     thread(thd),
     exec(thread.exec),
     target(nullptr),
+    break_target(nullptr),
     stack_depth(thread.stacks.size()),
     return_pc(-1),
     push_result(true)
@@ -18,6 +19,7 @@ namespace snabel {
     thread(src.thread),
     exec(src.exec),
     target(nullptr),
+    break_target(src.break_target),
     stack_depth(thread.stacks.size()),
     return_pc(-1),
     push_result(true),
@@ -26,9 +28,9 @@ namespace snabel {
   
   Scope::~Scope() {
     reset_stack(*this);
-    for (auto &k: env_keys) { thread.env.erase(k); }
+    rollback_env(*this);
   }
-
+  
   void restore_stack(Scope &scp, size_t len) {
     auto &thd(scp.thread);
     CHECK(!thd.stacks.empty(), _);
@@ -86,6 +88,11 @@ namespace snabel {
     
     scp.thread.env.erase(key);
     return true;
+  }
+
+  void rollback_env(Scope &scp) {
+    for (auto &k: scp.env_keys) { scp.thread.env.erase(k); }
+    scp.env_keys.clear();
   }
 
   void reset_stack(Scope &scp) {

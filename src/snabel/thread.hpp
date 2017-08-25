@@ -2,6 +2,7 @@
 #define SNABEL_THREAD_HPP
 
 #include <map>
+#include <random>
 #include <thread>
 
 #include "snabel/op.hpp"
@@ -17,6 +18,7 @@ namespace snabel {
     OpSeq ops;
     int64_t pc;
     Env env;
+    std::default_random_engine random;
     
     std::deque<Scope> scopes;
     std::deque<Stack> stacks;
@@ -42,7 +44,7 @@ namespace snabel {
   
   Scope &begin_scope(Thread &thd, bool copy_stack=false);
   bool end_scope(Thread &thd);
-
+  
   bool isa(Thread &thd, const Types &x, const Types &y);
   bool isa(Thread &thd, const Type &x, const Type &y);
   bool isa(Thread &thd, const Box &val, const Type &typ);

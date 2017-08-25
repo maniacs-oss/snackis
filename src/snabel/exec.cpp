@@ -109,6 +109,10 @@ namespace snabel {
     push(scp.thread, scp.exec.i64_type, x%y);
   }
 
+  static void i64_str_imp(Scope &scp, const Args &args) {
+    push(scp.thread, scp.exec.str_type, std::to_string(get<int64_t>(args.at(0))));
+  }
+
   static void trunc_imp(Scope &scp, const Args &args) {
     push(scp.thread, scp.exec.i64_type, trunc(get<Rat>(args.at(0))));
   }
@@ -408,6 +412,18 @@ namespace snabel {
 	 get_iter_type(exe, exe.i64_type),
 	 Iter::Ref(new WriteIter(exe, get<IOQueueRef>(args.at(1)), out)));
   }
+  
+  static void random_imp(Scope &scp, const Args &args) {
+    push(scp.thread,
+	 scp.exec.random_type,
+	 std::make_shared<Random>(0, get<int64_t>(args.at(0))));
+  }
+
+  static void random_pop_imp(Scope &scp, const Args &args) {
+    push(scp.thread,
+	 scp.exec.i64_type,
+	 (*get<RandomRef>(args.at(0)))(scp.thread.random));
+  }
 
   static void proc_imp(Scope &scp, const Args &args) {
     push(scp.thread, scp.exec.proc_type,
@@ -457,6 +473,7 @@ namespace snabel {
     proc_type(add_type(*this, "Proc")),    
     readable_type(add_type(*this, "Readable")),
     rfile_type(add_type(*this, "RFile")),
+    random_type(add_type(*this, "Random")),
     rat_type(add_type(*this, "Rat")),
     rwfile_type(add_type(*this, "RWFile")),    
     str_type(add_type(*this, "Str")),
@@ -820,6 +837,23 @@ namespace snabel {
     uid_type.eq = [](auto &x, auto &y) { return get<Uid>(x) == get<Uid>(y); };
     uid_type.lt = [](auto &x, auto &y) { return get<Uid>(x) < get<Uid>(y); };
 
+    random_type.supers.push_back(&any_type);
+    random_type.supers.push_back(&get_iterable_type(*this, i64_type));
+    
+    random_type.fmt = [](auto &v) {
+      auto &r(*get<RandomRef>(v));
+      return fmt("Random(%0:%1)", r.a(), r.b());
+    };
+    
+    random_type.eq = [](auto &x, auto &y) {
+      return get<RandomRef>(x) == get<RandomRef>(y);
+    };
+
+    random_type.iter = [this](auto &in) {
+      return Iter::Ref(new RandomIter(*this, get<RandomRef>(in)));
+    };
+
+
     thread_type.supers.push_back(&any_type);
     thread_type.fmt = [](auto &v) { return fmt("thread_%0", get<Thread *>(v)->id); };
     thread_type.eq = [](auto &x, auto &y) {
@@ -916,6 +950,10 @@ namespace snabel {
     add_func(*this, "%",
 	     {ArgType(i64_type), ArgType(i64_type)}, {ArgType(i64_type)},
 	     mod_i64_imp);
+
+    add_func(*this, "str",
+	     {ArgType(i64_type)}, {ArgType(str_type)},
+	     i64_str_imp);
 
     add_func(*this, "trunc",
 	     {ArgType(rat_type)}, {ArgType(i64_type)},
@@ -1107,6 +1145,14 @@ namespace snabel {
 	     {ArgType(get_iter_type(*this, i64_type))},
 	     write_imp);
 
+    add_func(*this, "random",
+	     {ArgType(i64_type)}, {ArgType(random_type)},
+	     random_imp);
+
+    add_func(*this, "pop",
+	     {ArgType(random_type)}, {ArgType(i64_type)},
+	     random_pop_imp);
+
     add_func(*this, "proc",
 	     {ArgType(lambda_type)}, {ArgType(proc_type)},
 	     proc_imp);
@@ -1233,6 +1279,10 @@ namespace snabel {
 	  out.emplace_back(Restore());
 	  out.emplace_back(Putenv(fmt("@%0", n)));
 	}
+      });
+
+    add_macro(*this, "break", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(Break());
       });
 
     add_macro(*this, "call", [](auto pos, auto &in, auto &out) {
@@ -1521,7 +1571,6 @@ namespace snabel {
     
     exe.main.ops.clear();
     clear_labels(exe);
-    rewind(exe);
     size_t lnr(0);
     TokSeq toks;
     

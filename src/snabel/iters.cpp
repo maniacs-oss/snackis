@@ -56,6 +56,16 @@ namespace snabel {
     return *out;
   }
 
+  RandomIter::RandomIter(Exec &exe, const RandomRef &in):
+    Iter(exe, get_iter_type(exe, exe.i64_type)),
+    in(in), out(exec.i64_type, (int64_t)0)
+  { }
+  
+  opt<Box> RandomIter::next(Scope &scp) {
+    get<int64_t>(out) = (*in)(scp.thread.random);
+    return out;		
+  }
+
   ZipIter::ZipIter(Exec &exe, const Iter::Ref &xin, const Iter::Ref &yin):
     Iter(exe, get_iter_type(exe, get_pair_type(exe,
 					       *xin->type.args.at(0),

@@ -253,9 +253,17 @@ namespace gui {
     }
   }
 
-  Reader::Reader(Ctx &ctx): ctx(ctx), entry(gtk_entry_new()) {
+  Reader::Reader(Ctx &ctx):
+    ctx(ctx), entry(gtk_entry_new())
+  {
     init_cmds(*this);
     init_completion(*this);
+
+    snabel::add_func(exec, "say", {snabel::ArgType(exec.str_type)}, {},
+		     [this](auto &scp, auto &args) {
+		       log(this->ctx, get<str>(args.at(0)));
+		     });
+
     add_style(entry, "reader");
     gtk_widget_set_margin_start(entry, 5);
     gtk_widget_set_margin_end(entry, 5);
