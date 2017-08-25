@@ -419,36 +419,7 @@ namespace snabel {
 
   str Getenv::info() const { return id; }
 
-  bool Getenv::refresh(Scope &scp) {
-    if (val) { return false; }
-    auto &exe(scp.exec);
-    
-    if (id == "return") {
-      if (exe.lambdas.empty()) {
-	ERROR(Snabel, "Missing return lambda");
-	return false;
-      }
-
-      auto l(exe.lambdas.back());
-      l->returns = true;
-
-      if (l->exit_label) {
-	val.emplace(exe.label_type, l->exit_label);
-	return false;
-      }
-    } else {
-      return false;
-    }
-
-    return true;
-  }
-  
   bool Getenv::compile(const Op &op, Scope &scp, OpSeq &out) {
-    if (val) {
-      out.emplace_back(Push(*val));
-      return true;
-    }
-
     if (id.empty()) { return false; }
     
     auto fnd(find_env(scp, id));

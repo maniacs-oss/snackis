@@ -13,7 +13,7 @@ namespace snabel {
     Exec &exec;
     str tag;
     bool permanent;
-    int64_t pc, recall_depth, yield_depth, break_depth;
+    int64_t pc, return_depth, recall_depth, yield_depth, break_depth;
     
     Label(Exec &exe, const str &tag, bool pmt);
   };

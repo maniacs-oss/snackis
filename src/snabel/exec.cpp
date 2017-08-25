@@ -499,6 +499,12 @@ namespace snabel {
     ustr_type(add_type(*this, "UStr")),
     void_type(add_type(*this, "Void")),
     writeable_type(add_type(*this, "Writeable")),
+    return_target {
+    &add_label(*this, "_return", true), &add_label(*this, "_return1", true),
+      &add_label(*this, "_return2", true), &add_label(*this, "_return3", true),
+      &add_label(*this, "_return4", true), &add_label(*this, "_return5", true),
+      &add_label(*this, "_return6", true), &add_label(*this, "_return7", true),
+      &add_label(*this, "_return8", true), &add_label(*this, "_return9", true)},
     recall_target {
     &add_label(*this, "_recall", true), &add_label(*this, "_recall1", true),
       &add_label(*this, "_recall2", true), &add_label(*this, "_recall3", true),
@@ -895,6 +901,7 @@ namespace snabel {
     };
 
     for (int i(0); i < MAX_TARGET; i++) {
+      return_target[i]->return_depth = i+1;
       recall_target[i]->recall_depth = i+1;
       yield_target[i]->yield_depth = i+1;
       break_target[i]->break_depth = i+1;

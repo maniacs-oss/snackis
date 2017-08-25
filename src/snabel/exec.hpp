@@ -40,9 +40,8 @@ namespace snabel {
       &path_type, &proc_type, &readable_type, &rfile_type, &random_type, &rat_type,
       &rwfile_type, &str_type, &thread_type, &uchar_type, &uid_type, &ustr_type,
       &void_type, &writeable_type;
-    Label *recall_target[MAX_TARGET];
-    Label *yield_target[MAX_TARGET];
-    Label *break_target[MAX_TARGET];
+    Label *return_target[MAX_TARGET], *recall_target[MAX_TARGET],
+      *yield_target[MAX_TARGET], *break_target[MAX_TARGET];
     std::atomic<Uid> next_uid;
     
     Exec();

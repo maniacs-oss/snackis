@@ -115,7 +115,9 @@ namespace snabel {
   }
 
   void jump(Scope &scp, const Label &lbl) {
-    if (lbl.recall_depth) {
+    if (lbl.return_depth) {
+      _return(scp, lbl.return_depth);
+    } else if (lbl.recall_depth) {
       recall(scp, lbl.recall_depth);
     } else if (lbl.yield_depth) {
       yield(scp, lbl.yield_depth);      
