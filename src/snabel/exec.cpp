@@ -278,6 +278,20 @@ namespace snabel {
     push(scp.thread, get_list_type(scp.exec, *it->type.args.at(0)), out); 
   }
 
+  static void iterable_nlist_imp(Scope &scp, const Args &args) {
+    auto &in(args.at(0));
+    auto it((*in.type->iter)(in));
+    auto out(std::make_shared<List>());
+    
+    for (int64_t i(0); i < get<int64_t>(args.at(1)); i++) {
+      auto v(it->next(scp));
+      if (!v) { break; }
+      out->push_back(*v);
+    }
+    
+    push(scp.thread, get_list_type(scp.exec, *it->type.args.at(0)), out); 
+  }
+  
   static void iterable_filter_imp(Scope &scp, const Args &args) {
     auto &exe(scp.exec);
     auto &in(args.at(0)), &tgt(args.at(1));
@@ -420,9 +434,11 @@ namespace snabel {
   }
 
   static void random_pop_imp(Scope &scp, const Args &args) {
+    auto &r(args.at(0));
+    push(scp.thread, r);
     push(scp.thread,
 	 scp.exec.i64_type,
-	 (*get<RandomRef>(args.at(0)))(scp.thread.random));
+	 (*get<RandomRef>(r))(scp.thread.random));
   }
 
   static void proc_imp(Scope &scp, const Args &args) {
@@ -1062,6 +1078,13 @@ namespace snabel {
 		   return &get_list_type(*this, *args.at(0).type->args.at(0));
 		 })},
 	     iterable_list_imp);
+
+    add_func(*this, "nlist",
+	     {ArgType(iterable_type), ArgType(i64_type)},
+	     {ArgType([this](auto &args) {
+		   return &get_list_type(*this, *args.at(0).type->args.at(0));
+		 })},
+	     iterable_nlist_imp);
 
     add_func(*this, "zip",
 	     {ArgType(iterable_type), ArgType(iterable_type)},

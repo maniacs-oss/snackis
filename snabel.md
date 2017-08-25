@@ -366,6 +366,17 @@ Iter<I64>
 2313864
 ```
 
+### Random Numbers
+Random numbers are supported through ranged generators that may be treated as unlimited iterators.
+
+```
+> 100 random pop $1 pop $1 _ $
+[61 23]
+
+> 100 random 3 nlist
+[18 29 63]
+```
+
 ### Threads
 Starting a new thread copies the entire program, stack and environment to a separate structure to minimize locking; sets the program counter after the last instruction, and calls the specified target. The target is only a starting point, threads are free to go wherever they want; a thread is finished once the program counter passes the last instruction. Anything remaining on the thread stack is pushed on the calling stack in ```join```
 
