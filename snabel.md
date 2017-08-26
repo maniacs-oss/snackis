@@ -83,9 +83,7 @@ Lambda(_enter1:0)
 ```
 
 ### Coroutines
-Calling ```yield``` from within a lambda logs the current position, stack and environment before returning; execution will continue from the yielding position with restored stack and environment on next call from the same scope. A fresh coroutine context is returned when calling the lambda, the context may be used for further calls and will reset itself when the coroutine returns.
-
-Use ```&yield``` to get a target that yields when called.
+Calling ```yield``` from within a lambda logs the current position, stack and environment before returning; execution will continue from the yielding position with restored stack and environment on next call from the same scope. A fresh coroutine context is returned when calling the lambda, the context may be used for further calls and will reset itself when the coroutine returns. Use ```&yield``` to get a target that yields when called.
 
 ```
 > {yield 42} call
