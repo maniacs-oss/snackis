@@ -161,12 +161,11 @@ namespace snabel {
     push(scp.thread, scp.exec.ustr_type, uconv.from_bytes(str(in.begin(), in.end())));
   }
 
-  static void bin_append_io_buf_imp(Scope &scp, const Args &args) {
+  static void bin_append_imp(Scope &scp, const Args &args) {
     auto &out(args.at(0));
     auto &tgt(*get<BinRef>(out));
-    auto &src(*get<IOBufRef>(args.at(1)));
-    std::copy(src.data.begin(), std::next(src.data.begin(), src.rpos),
-	      std::back_inserter(tgt));
+    auto &src(*get<BinRef>(args.at(1)));
+    std::copy(src.begin(), src.end(), std::back_inserter(tgt));
     push(scp.thread, out);
   }
 
@@ -272,14 +271,16 @@ namespace snabel {
     auto &in(args.at(0));
     auto it((*in.type->iter)(in));
     auto out(std::make_shared<List>());
+    Type *elt(nullptr);
     
     while (true) {
       auto v(it->next(scp));
       if (!v) { break; }
       out->push_back(*v);
+      elt = elt ? get_super(*elt, *v->type) : v->type;
     }
     
-    push(scp.thread, get_list_type(scp.exec, *it->type.args.at(0)), out); 
+    push(scp.thread, get_list_type(scp.exec, *elt), out); 
   }
 
   static void iterable_nlist_imp(Scope &scp, const Args &args) {
@@ -315,7 +316,7 @@ namespace snabel {
     
     push(scp.thread,
 	 get_iter_type(exe, elt),
-	 Iter::Ref(new MapIter(exe, it, elt, tgt)));
+	 Iter::Ref(new MapIter(exe, it, tgt)));
   }
 
   static void iterable_zip_imp(Scope &scp, const Args &args) {
@@ -429,6 +430,15 @@ namespace snabel {
     push(scp.thread,
 	 get_iter_type(exe, exe.i64_type),
 	 Iter::Ref(new WriteIter(exe, get<IOQueueRef>(args.at(1)), out)));
+  }
+
+  static void iterable_lines_imp(Scope &scp, const Args &args) {
+    auto &exe(scp.exec);
+    auto &in(args.at(0));
+    
+    push(scp.thread,
+	 get_iter_type(exe, get_opt_type(exe, exe.str_type)),
+	 Iter::Ref(new LineIter(exe, (*in.type->iter)(in))));
   }
   
   static void random_imp(Scope &scp, const Args &args) {
@@ -652,6 +662,8 @@ namespace snabel {
     };
 
     io_queue_type.supers.push_back(&any_type);
+    io_queue_type.supers.push_back(&get_iterable_type(*this, bin_type));
+    
     io_queue_type.fmt = [](auto &v) {
       auto &q(*get<IOQueueRef>(v));
       return fmt("IOQueue(%0)", q.bufs.size());
@@ -661,6 +673,9 @@ namespace snabel {
     };
     io_queue_type.equal = [](auto &x, auto &y) {
       return *get<IOQueueRef>(x) == *get<IOQueueRef>(y);
+    };
+    io_queue_type.iter = [this](auto &in) {
+      return Iter::Ref(new IOQueueIter(*this, get<IOQueueRef>(in)));
     };
     
     byte_type.supers.push_back(&any_type);
@@ -866,7 +881,8 @@ namespace snabel {
     str_type.supers.push_back(&any_type);
     str_type.supers.push_back(&ordered_type);
     str_type.supers.push_back(&get_iterable_type(*this, char_type));
-    str_type.fmt = [](auto &v) { return fmt("'%0'", get<str>(v)); };
+    str_type.fmt = [](auto &v) { return get<str>(v); };
+    str_type.dump = [](auto &v) { return fmt("'%0'", get<str>(v)); };
     str_type.eq = [](auto &x, auto &y) { return get<str>(x) == get<str>(y); };
     str_type.lt = [](auto &x, auto &y) { return get<str>(x) < get<str>(y); };
 
@@ -1082,8 +1098,9 @@ namespace snabel {
 	     bin_ustr_imp);
 
     add_func(*this, "append",
-	     {ArgType(bin_type), ArgType(io_buf_type)}, {ArgType(bin_type)},
-	     bin_append_io_buf_imp);
+	     {ArgType(bin_type), ArgType(bin_type)},
+	     {ArgType(bin_type)},
+	     bin_append_imp);
 
     add_func(*this, "len",
 	     {ArgType(str_type)}, {ArgType(i64_type)},
@@ -1162,11 +1179,9 @@ namespace snabel {
 
     add_func(*this, "map",
 	     {ArgType(iterable_type), ArgType(callable_type)},
-	     {ArgType([this](auto &args) {
-		   return &get_iter_type(*this, *args.at(0).type->args.at(0));
-		 })},			
+	     {ArgType(iter_type)},			
 	     iterable_map_imp);
-
+    
     add_func(*this, "list",
 	     {ArgType(meta_type)},
 	     {ArgType([this](auto &args) {
@@ -1224,6 +1239,11 @@ namespace snabel {
 	     {ArgType(writeable_type), ArgType(io_queue_type)},
 	     {ArgType(get_iter_type(*this, i64_type))},
 	     write_imp);
+
+    add_func(*this, "lines",
+	     {ArgType(get_iterable_type(*this, bin_type))},
+	     {ArgType(get_iter_type(*this, get_opt_type(*this, str_type)))},	
+	     iterable_lines_imp);
 
     add_func(*this, "random",
 	     {ArgType(i64_type)}, {ArgType(random_type)},

@@ -21,6 +21,15 @@ namespace snackis {
     return out;
   }
 
+  void replace(str &in, const str &from, const str &to) {
+    size_t i(0);
+    
+    while ((i = in.find(from, i)) != std::string::npos) {
+      in.replace(i, from.length(), to);
+      i += to.length();
+    }
+  }
+
   size_t find_ci(const str &stack, const str& needle) {
     auto found(std::search(stack.begin(), stack.end(),
 		       needle.begin(), needle.end(),

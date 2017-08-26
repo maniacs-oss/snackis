@@ -17,7 +17,8 @@ namespace snabel {
   };
 
   struct IOQueue {
-    std::deque<Bin> bufs;
+    using Bufs = std::deque<Bin>;
+    Bufs bufs;
     int64_t len, wpos;
     IOQueue();
   };

@@ -18,7 +18,8 @@ namespace snackis {
 
   str trim(const str& in);
   str fill(const str &in, char ch, size_t len);
-
+  void replace(str &in, const str &from, const str &to);
+  
   template <typename IterT, typename T>
   str join(IterT beg, IterT end, T sep) {
     OutStream out;

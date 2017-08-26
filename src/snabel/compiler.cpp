@@ -74,8 +74,11 @@ namespace snabel {
 	out.emplace_back(Dup());
       }
     } else if (tok.text.at(0) == '\'') {
-      out.emplace_back(Push(Box(exe.str_type,
-				tok.text.substr(1, tok.text.size()-2))));
+      auto s(tok.text.substr(1, tok.text.size()-2));
+      replace(s, "\\n", "\n");
+      replace(s, "\\r", "\r");
+      replace(s, "\\t", "\t");
+      out.emplace_back(Push(Box(exe.str_type, s)));
     } else if (tok.text.at(0) == 'u' && tok.text.at(1) == '\'') {
       auto v(tok.text.substr(2, tok.text.size()-3));
       out.emplace_back(Push(Box(exe.ustr_type, uconv.from_bytes(v))));

@@ -288,6 +288,15 @@ namespace snabel {
     
     run(exe, "'foo' len");
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
+
+    run(exe,
+	"io-queue "
+	"'foo\\r\\n\\r\\nb' bytes push "
+	"'ar' bytes push "
+	"'\\nbaz' bytes push "
+	"lines {'' or} map "
+	"\\, join");	
+    CHECK(get<str>(pop(exe.main)) == "foo,bar,baz", _);
   }
 
   static void bin_tests() {
@@ -299,8 +308,8 @@ namespace snabel {
     run(exe, "'foo' bytes str");
     CHECK(get<str>(pop(exe.main)) == "foo", _);
 
-    //run(exe, "'foo' bytes 'bar' bytes append str");
-    //CHECK(get<str>(pop(exe.main)) == "foobar", _);
+    run(exe, "'foo' bytes 'bar' bytes append str");
+    CHECK(get<str>(pop(exe.main)) == "foobar", _);
 
     run(exe, "u'foo' bytes str");
     CHECK(get<str>(pop(exe.main)) == "foo", _);

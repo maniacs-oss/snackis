@@ -1,3 +1,4 @@
+#include <iostream>
 #include "snabel/error.hpp"
 #include "snabel/exec.hpp"
 #include "snabel/iters.hpp"
@@ -35,8 +36,82 @@ namespace snabel {
     return nullopt;
   }
 
-  MapIter::MapIter(Exec &exe, const Iter::Ref &in, Type &elt, const Box &tgt):
-    Iter(exe, get_iter_type(exe, elt)),
+  IOQueueIter::IOQueueIter(Exec &exe, const IOQueueRef &in):
+    Iter(exe, get_iter_type(exe, exe.bin_type)),
+    in(in), i(in->bufs.begin())
+  { }
+  
+  opt<Box> IOQueueIter::next(Scope &scp) {
+    if (i == in->bufs.end()) { return nullopt; }
+    Box out(scp.exec.bin_type, std::make_shared<Bin>(*i));
+    i++;
+    return out;
+  }
+  
+  LineIter::LineIter(Exec &exe, const Iter::Ref &in):
+    Iter(exe, get_iter_type(exe, get_opt_type(exe, exe.str_type))),
+    in(in)
+  { }
+  
+  opt<Box> LineIter::next(Scope &scp) {
+    Box out(*type.args.at(0), empty_val);
+    
+    while (true) {
+      if (in && (!in_buf || in_pos == in_buf->end())) {
+	auto nxt(in->next(scp));
+
+	if (nxt) {
+	  in_buf = get<BinRef>(*nxt);
+	  in_pos = in_buf->begin();
+	} else {
+	  in.reset();
+	}
+      }
+      
+      if (!in_buf) {
+	if (!out_buf.tellp()) { return nullopt; }
+	out.val = out_buf.str();
+	out_buf.str("");
+	break;
+      }
+
+      auto fnd(in_pos);
+	
+      for (; fnd != in_buf->end(); fnd++) {
+	auto &c(*fnd);
+	if (c == '\r' || c == '\n') { break; }
+      }
+      
+      if (fnd == in_buf->end()) {
+	auto i(in_pos - in_buf->begin());
+	out_buf.write(reinterpret_cast<const char *>(&*in_pos),
+		      in_buf->size()-i);
+	in_buf.reset();
+      } else {
+	out_buf.write(reinterpret_cast<const char *>(&*in_pos), fnd-in_pos);
+	
+	if (out_buf.tellp()) {
+	  out.val = out_buf.str();
+	  out_buf.str("");
+	}
+
+	in_pos = fnd+1;
+	
+	while (in_pos != in_buf->end()) {
+	  auto &c(*in_pos);
+	  if (c != '\r' && c != '\n') { break; }
+	  in_pos++;
+	}
+
+	break;
+      }
+    }
+    
+    return out;
+  }
+  
+  MapIter::MapIter(Exec &exe, const Iter::Ref &in, const Box &tgt):
+    Iter(exe, get_iter_type(exe, exe.any_type)),
     in(in), target(tgt)
   { }
   
