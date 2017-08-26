@@ -119,7 +119,7 @@ u'foo'
 > u'ö' len
 1
 
-> io-queue
+> Bin list
   'foo\r\n\r\nb' bytes push
   'ar' bytes push
   '\nbaz' bytes push

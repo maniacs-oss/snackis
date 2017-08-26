@@ -290,7 +290,7 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
 
     run(exe,
-	"io-queue "
+	"Bin list "
 	"'foo\\r\\n\\r\\nb' bytes push "
 	"'ar' bytes push "
 	"'\\nbaz' bytes push "
