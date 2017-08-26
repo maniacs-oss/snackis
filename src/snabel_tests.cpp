@@ -498,8 +498,8 @@ namespace snabel {
   static void io_tests() {
     TRY(try_test);    
 
-    run(exe, "0 'tests' rfile read {len $1 _ +} for");
-    CHECK(get<int64_t>(pop(exe.main)) > 1000000, _);
+    run(exe, "0 '../dist/snackis' rfile read {len $1 _ +} for");
+    CHECK(get<int64_t>(pop(exe.main)) > 3000000, _);
 
     run(exe, "'tmp' rwfile io-queue 'foo' bytes push write 0 $1 &+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
@@ -571,7 +571,7 @@ namespace snabel {
 
   void all_tests() {
     TRY(try_snabel);
-    const int iters(30), warmups(10);
+    const int iters(100), warmups(10);
     for(int i(0); i < warmups; ++i) { loop(); }
     auto started(pnow());    
 

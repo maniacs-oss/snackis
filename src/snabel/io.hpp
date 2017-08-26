@@ -17,7 +17,7 @@ namespace snabel {
   };
 
   struct IOQueue {
-    using Bufs = std::deque<Bin>;
+    using Bufs = std::deque<BinRef>;
     Bufs bufs;
     int64_t len, wpos;
     IOQueue();
@@ -31,7 +31,7 @@ namespace snabel {
   };
   
   struct ReadIter: Iter {
-    Box in, out;
+    Box in;
     
     ReadIter(Exec &exe, const Box &in);
     opt<Box> next(Scope &scp) override;
@@ -47,8 +47,7 @@ namespace snabel {
 
   bool operator ==(const IOBuf &x, const IOBuf &y);
   bool operator ==(const IOQueue &x, const IOQueue &y);
-  bool push(IOQueue &q, const IOBuf &buf);
-  bool push(IOQueue &q, const Bin &bin);
+  bool push(IOQueue &q, const BinRef &bin);
 }
 
 #endif

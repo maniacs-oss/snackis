@@ -43,7 +43,7 @@ namespace snabel {
   
   opt<Box> IOQueueIter::next(Scope &scp) {
     if (i == in->bufs.end()) { return nullopt; }
-    Box out(scp.exec.bin_type, std::make_shared<Bin>(*i));
+    Box out(scp.exec.bin_type, *i);
     i++;
     return out;
   }

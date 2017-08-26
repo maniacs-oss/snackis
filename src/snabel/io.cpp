@@ -28,14 +28,12 @@ namespace snabel {
 
   ReadIter::ReadIter(Exec &exe, const Box &in):
     Iter(exe, get_iter_type(exe, exe.bin_type)),
-    in(in),
-    out(exe.io_buf_type, std::make_shared<IOBuf>(READ_BUF_SIZE))
+    in(in)
   { }
   
   opt<Box> ReadIter::next(Scope &scp){
-    auto &buf(*get<IOBufRef>(out));
-    buf.rpos = 0;
-    if (!(*in.type->read)(in, buf)) { return nullopt; }
+    Box out(scp.exec.bin_type, std::make_shared<Bin>(READ_BUF_SIZE));
+    if (!(*in.type->read)(in, *get<BinRef>(out))) { return nullopt; }
     return out;
   }
 
@@ -48,7 +46,7 @@ namespace snabel {
     auto &q(in->bufs);
     if (q.empty()) { return nullopt; }
     auto &res(get<int64_t>(result));
-    auto &b(q.front());
+    auto &b(*q.front());
     res = (*out.type->write)(out, &b[in->wpos], b.size()-in->wpos);
     if (res == -1) { return nullopt; }
     in->wpos += res;
@@ -79,17 +77,10 @@ namespace snabel {
     return true;
   }
 
-  bool push(IOQueue &q, const IOBuf &buf){
-    if (!buf.rpos) { return false; }
-    q.bufs.emplace_back(buf.data.begin(), std::next(buf.data.begin(), buf.rpos));
-    q.len += buf.rpos;
-    return true;
-  }
-  
-  bool push(IOQueue &q, const Bin &bin) {
-    if (bin.empty()) { return false; }
+  bool push(IOQueue &q, const BinRef &bin) {
+    if (bin->empty()) { return false; }
     q.bufs.push_back(bin);
-    q.len += bin.size();
+    q.len += bin->size();
     return true;
   }			       					 
 }
