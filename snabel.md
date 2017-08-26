@@ -60,51 +60,6 @@ Parentheses may be used to divide expressions into separate parts, each level co
 1 [2 3].
 ```
 
-### Lambdas
-Wrapping code in braces pushes a pointer on the stack. Lambdas may be exited early by calling ```return```, the final result (if any) is pushed on exit. ```recall``` may be used to call the current lambda recursively. Use ```&return```/```&recall``` to get a target that performs the specified action when called.
-
-```
-> {1 2 +}
-Lambda(_enter1:0)
-
-> {1 2 +} call
-3
-
-> {
-    1 2 + return
-    14 *
-  } call
-3
-
-> 42
-  {1 - $ z? &return when recall 2 +}
-  call
-82
-```
-
-### Coroutines
-Calling ```yield``` from within a lambda logs the current position, stack and environment before returning; execution will continue from the yielding position with restored stack and environment on next call from the same scope. A fresh coroutine context is returned when calling the lambda, the context may be used for further calls and will reset itself when the coroutine returns. Use ```&yield``` to get a target that yields when called.
-
-```
-> {yield 42} call
-Coro(_enter1:1)
-
-> {yield 42} call call
-42
-
-> func: foo {|yield (7 yield 28 +)} call;
-  foo foo +
-42
-
-> func: foo {|yield (let: bar 35; 7 yield @bar +)} call;
-  foo foo
-42
-
-> func: foo {|yield ([7 35] &yield for &+)} call;
-  foo foo foo call
-42
-```
-
 ### Equality
 Two kinds of equality are supported, shallow and deep. Each use a separate operator, ```=``` for shallow comparisons and ```==``` for deep.
 
@@ -140,6 +95,29 @@ I64!
 > 42 Str!
 Check failed, expected Str!
 42 I64!
+```
+
+#### Strings
+Snabel makes a difference between byte strings and unicode strings. Unicode strings are processed as UTF-8 when converting to/from bytes and stored internally as UTF-16. Byte strings are automatically promoted to unicode strings as needed.
+
+```
+> 'foo'
+'foo'
+
+> u'foo'
+u'foo'
+
+> 'foo' ustr
+u'foo'
+
+> u'foo' 'foo' =
+#t
+
+> 'ö' len
+2
+
+> u'ö' len
+1
 ```
 
 #### Rationals
@@ -207,6 +185,51 @@ Opt(42)
 
 > 7 opt 42 opt or
 Opt(7)
+```
+
+### Lambdas
+Wrapping code in braces pushes a pointer on the stack. Lambdas may be exited early by calling ```return```, the final result (if any) is pushed on exit. ```recall``` may be used to call the current lambda recursively. Use ```&return```/```&recall``` to get a target that performs the specified action when called.
+
+```
+> {1 2 +}
+Lambda(_enter1:0)
+
+> {1 2 +} call
+3
+
+> {
+    1 2 + return
+    14 *
+  } call
+3
+
+> 42
+  {1 - $ z? &return when recall 2 +}
+  call
+82
+```
+
+### Coroutines
+Calling ```yield``` from within a lambda logs the current position, stack and environment before returning; execution will continue from the yielding position with restored stack and environment on next call from the same scope. A fresh coroutine context is returned when calling the lambda, the context may be used for further calls and will reset itself when the coroutine returns. Use ```&yield``` to get a target that yields when called.
+
+```
+> {yield 42} call
+Coro(_enter1:1)
+
+> {yield 42} call call
+42
+
+> func: foo {|yield (7 yield 28 +)} call;
+  foo foo +
+42
+
+> func: foo {|yield (let: bar 35; 7 yield @bar +)} call;
+  foo foo
+42
+
+> func: foo {|yield ([7 35] &yield for &+)} call;
+  foo foo foo call
+42
 ```
 
 ### Labels

@@ -217,13 +217,17 @@ namespace snabel {
     push(scp.thread, scp.exec.bin_type, std::make_shared<Bin>(in.begin(), in.end()));
   }
 
+  static void str_ustr_imp(Scope &scp, const Args &args) {
+    push(scp.thread, scp.exec.ustr_type, uconv.from_bytes(get<str>(args.at(0))));
+  }
+
   static void ustr_bytes_imp(Scope &scp, const Args &args) {
     auto in(uconv.to_bytes(get<ustr>(args.at(0))));
     push(scp.thread, scp.exec.bin_type, std::make_shared<Bin>(in.begin(), in.end()));
   }
 
-  static void str_ustr_imp(Scope &scp, const Args &args) {
-    push(scp.thread, scp.exec.ustr_type, uconv.from_bytes(get<str>(args.at(0))));
+  static void ustr_str_imp(Scope &scp, const Args &args) {
+    push(scp.thread, scp.exec.ustr_type, uconv.to_bytes(get<ustr>(args.at(0))));
   }
 
   static void iter_imp(Scope &scp, const Args &args) {
@@ -1093,13 +1097,17 @@ namespace snabel {
 	     {ArgType(str_type)}, {ArgType(bin_type)},
 	     str_bytes_imp);
 
+    add_func(*this, "ustr",
+	     {ArgType(str_type)}, {ArgType(ustr_type)},
+	     str_ustr_imp);
+
     add_func(*this, "bytes",
 	     {ArgType(ustr_type)}, {ArgType(bin_type)},
 	     ustr_bytes_imp);
 
-    add_func(*this, "ustr",
-	     {ArgType(str_type)}, {ArgType(ustr_type)},
-	     str_ustr_imp);
+    add_func(*this, "str",
+	     {ArgType(ustr_type)}, {ArgType(str_type)},
+	     ustr_str_imp);
 
     add_func(*this, "uid",
 	     {}, {ArgType(uid_type)},
