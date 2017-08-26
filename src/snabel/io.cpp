@@ -10,10 +10,6 @@ namespace snabel {
     data(size), rpos(0)
   { }
 
-  IOBuf::IOBuf(const Bin &in):
-    data(in), rpos(in.size())
-  { }
-
   IOQueue::IOQueue():
     len(0), wpos(0)
   { }
@@ -53,12 +49,12 @@ namespace snabel {
     if (q.empty()) { return nullopt; }
     auto &res(get<int64_t>(result));
     auto &b(q.front());
-    res = (*out.type->write)(out, &b.data[in->wpos], b.rpos-in->wpos);
+    res = (*out.type->write)(out, &b[in->wpos], b.size()-in->wpos);
     if (res == -1) { return nullopt; }
     in->wpos += res;
     in->len -= res;
     
-    if (in->wpos == b.rpos) {
+    if (in->wpos == b.size()) {
       q.pop_front();
       in->wpos = 0;
     }
@@ -85,15 +81,15 @@ namespace snabel {
 
   bool push(IOQueue &q, const IOBuf &buf){
     if (!buf.rpos) { return false; }
-    q.bufs.push_back(buf);
+    q.bufs.emplace_back(buf.data.begin(), std::next(buf.data.begin(), buf.rpos));
     q.len += buf.rpos;
     return true;
   }
   
   bool push(IOQueue &q, const Bin &bin) {
     if (bin.empty()) { return false; }
-    q.bufs.emplace_back(bin);
+    q.bufs.push_back(bin);
     q.len += bin.size();
     return true;
-  }				       					 
+  }			       					 
 }

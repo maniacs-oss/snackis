@@ -14,11 +14,10 @@ namespace snabel {
     int64_t rpos;
     
     IOBuf(int64_t size);
-    IOBuf(const Bin &in);
   };
 
   struct IOQueue {
-    std::deque<IOBuf> bufs;
+    std::deque<Bin> bufs;
     int64_t len, wpos;
     IOQueue();
   };
