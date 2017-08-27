@@ -52,6 +52,16 @@ namespace snabel {
     push(scp.thread, scp.exec.bool_type, x.type->gt(x, y));
   }
 
+  static void when_imp(Scope &scp, const Args &args) {
+    auto &cnd(args.at(0)), &tgt(args.at(1));
+    if (get<bool>(cnd)) { (*tgt.type->call)(scp, tgt, false); }
+  }
+
+  static void unless_imp(Scope &scp, const Args &args) {
+    auto &cnd(args.at(0)), &tgt(args.at(1));
+    if (!get<bool>(cnd)) { (*tgt.type->call)(scp, tgt, false); }
+  }
+
   static void zero_i64_imp(Scope &scp, const Args &args) {
     bool res(get<int64_t>(args.at(0)) == 0);
     push(scp.thread, scp.exec.bool_type, res);
@@ -960,6 +970,14 @@ namespace snabel {
 	     {ArgType(ordered_type), ArgType(0)}, {ArgType(bool_type)},
 	     gt_imp);
 
+    add_func(*this, "when",
+	     {ArgType(bool_type), ArgType(callable_type)}, {},
+	     when_imp);
+
+    add_func(*this, "unless",
+	     {ArgType(bool_type), ArgType(callable_type)}, {},
+	     unless_imp);
+
     add_func(*this, "z?",
 	     {ArgType(i64_type)}, {ArgType(bool_type)},
 	     zero_i64_imp);
@@ -1378,10 +1396,6 @@ namespace snabel {
 
     add_macro(*this, "call", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Call());
-      });
-
-    add_macro(*this, "when", [this](auto pos, auto &in, auto &out) {
-	out.emplace_back(When());
       });
 
     add_macro(*this, "for", [](auto pos, auto &in, auto &out) {

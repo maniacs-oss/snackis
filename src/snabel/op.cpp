@@ -898,58 +898,6 @@ namespace snabel {
     return true;
   }
 
-  When::When(opt<Box> target):
-    OpImp(OP_WHEN, "when"), target(target)
-  { }
-
-  OpImp &When::get_imp(Op &op) const {
-    return std::get<When>(op.data);
-  }
-
-  bool When::prepare(Scope &scp) {
-    if (target && !target->type->call) {
-      ERROR(Snabel, fmt("Invalid when target: %0", *target));
-      return false;
-    }
-
-    return true;
-  }
-  
-  bool When::run(Scope &scp) {
-    auto &exe(scp.exec);
-    auto &thd(scp.thread);
-    auto tgt(target);
-
-    if (!tgt) {
-      tgt = try_pop(thd);
-      
-      if (!tgt) {
-	ERROR(Snabel, "Missing when target");
-	return false;
-      }
-      
-      if (!tgt->type->call) {
-	ERROR(Snabel, fmt("Invalid when target: %0", *tgt));
-	return false;
-      }
-    }
-
-    auto cnd(try_pop(thd));
-
-    if (!cnd) {
-      ERROR(Snabel, "Missing when condition");
-      return false;
-    }
-
-    if (cnd->type != &exe.bool_type) {
-      ERROR(Snabel, fmt("Invalid when condition: %0", *cnd));
-      return false;
-    }
-
-    if(get<bool>(*cnd)) { return (*tgt->type->call)(scp, *tgt, false); }
-    return true;
-  }
-
   While::While():
     OpImp(OP_WHILE, "while"), compiled(false)
   { }

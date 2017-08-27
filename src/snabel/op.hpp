@@ -23,7 +23,7 @@ namespace snabel {
 		OP_FOR, OP_FUNCALL, OP_GETENV, OP_JUMP, OP_LAMBDA,
 		OP_PARAM, OP_PUSH, OP_PUTENV, OP_RECALL, OP_RESET, OP_RESTORE,
 		OP_RETURN, OP_STASH, OP_SWAP, OP_TARGET, OP_UNLAMBDA,
-		OP_UNPARAM, OP_WHEN, OP_WHILE, OP_YIELD };
+		OP_UNPARAM, OP_WHILE, OP_YIELD };
 
   using OpSeq = std::deque<Op>;
 
@@ -268,15 +268,6 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
   
-  struct When: OpImp {
-    opt<Box> target;
-    
-    When(opt<Box> target=nullopt);
-    OpImp &get_imp(Op &op) const override;
-    bool prepare(Scope &scp) override;
-    bool run(Scope &scp) override;
-  };
-
   struct While: OpImp {    
     bool compiled;
     
@@ -303,7 +294,7 @@ namespace snabel {
   using OpData = std::variant<Backup, Break, Call, Check, Deref, Drop, Dup, For,
 			      Funcall, Getenv, Jump, Lambda, Param, Push,
 			      Putenv, Recall, Reset, Restore, Return, Stash, Swap,
-			      Target, Unlambda, Unparam, When, While, Yield>;
+			      Target, Unlambda, Unparam, While, Yield>;
 
   using OpState = std::variant<For::State, While::State>;
 

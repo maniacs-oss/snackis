@@ -273,7 +273,7 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 21, _);
   }
   
-  static void when_tests() {
+  static void cond_tests() {
     TRY(try_test);    
     
     run(exe, "7 #t {35 +} when");
@@ -281,6 +281,12 @@ namespace snabel {
 
     run(exe, "7 #f {35 +} when");
     CHECK(get<int64_t>(pop(exe.main)) == 7, _);
+
+    run(exe, "7 #t {35 +} unless");
+    CHECK(get<int64_t>(pop(exe.main)) == 7, _);
+
+    run(exe, "7 #f {35 +} unless");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
   static void str_tests() {
@@ -553,7 +559,7 @@ namespace snabel {
     jump_tests();
     lambda_tests();
     coro_tests();
-    when_tests();
+    cond_tests();
     str_tests();
     bin_tests();
     uid_tests();

@@ -174,12 +174,18 @@ Pairs have first class support and all iterables support zipping/unzipping. Pair
 [[0 1] ['foo' 'bar']]
 ```
 
-#### Optionals
-Optional values are supported through the ```Opt<T>```-type. The empty value is named ```#n/a``` and values may be unwrapped using ```or```.
+#### Optional Values
+Optional values are supported through the ```Opt<T>```-type. The empty value is called ```#n/a```.
 
 ```
 > 42 opt
 Opt(42)
+
+> 7 opt {35 +} when
+42
+
+> #n/a {42} unless
+42
 
 > #n/a 42 or
 42
@@ -264,16 +270,13 @@ The ```label:```-macro will create a label with the specified name at that point
 ```
 
 ### Conditions
-```when``` accepts a condition and a callable target, the target is called if the condition is true. Possible targets are functions, lambdas and labels.
+```when``` accepts a condition and a callable target, the target is called if the condition is true. ```unless``` is the opposite of ```when```. Possible targets are functions, lambdas and labels.
 
 ```
 > 7 #f {35 +} when
 7
 
-> 7 #t {35 +} when
-42
-
-> 7 35 #t &+ when
+> 7 #f {35 +} unless
 42
 ```
 
