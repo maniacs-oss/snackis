@@ -24,7 +24,6 @@ namespace snabel {
     FifoIter(Exec &exe, Type &elt, const ListRef &in);
     opt<Box> next(Scope &scp) override;
   };
-
 }
 
 #endif

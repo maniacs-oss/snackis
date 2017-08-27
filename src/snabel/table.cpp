@@ -23,7 +23,7 @@ namespace snabel {
 	 std::make_shared<Table>());    
   }
 
-  static void table_iter_imp(Scope &scp, const Args &args) {
+  static void iter_table_imp(Scope &scp, const Args &args) {
     auto &exe(scp.exec);
     auto &in(args.at(0));
     auto &elt(*in.type->args.at(0));
@@ -41,6 +41,24 @@ namespace snabel {
 	 out);
   }
 
+  static void len_imp(Scope &scp, const Args &args) {
+    auto &in(args.at(0));
+    push(scp.thread, in);
+    push(scp.thread, scp.exec.i64_type, (int64_t)get<TableRef>(in)->size());
+  } 
+
+  static void zero_imp(Scope &scp, const Args &args) {
+    auto &in(args.at(0));
+    push(scp.thread, in);
+    push(scp.thread, scp.exec.bool_type, get<TableRef>(in)->empty());
+  }
+
+  static void pos_imp(Scope &scp, const Args &args) {
+    auto &in(args.at(0));
+    push(scp.thread, in);
+    push(scp.thread, scp.exec.bool_type, !get<TableRef>(in)->empty());
+  }
+  
   static void get_imp(Scope &scp, const Args &args) {
     auto &exe(scp.exec);
     auto &thd(scp.thread);
@@ -54,6 +72,23 @@ namespace snabel {
       push(thd, get_opt_type(exe, *tbl_arg.type->args.at(1)), empty_val);
     } else {
       push(thd, get_opt_type(exe, *fnd->second.type), fnd->second.val);
+    }
+  }
+
+  static void put_imp(Scope &scp, const Args &args) {
+    auto &tbl_arg(args.at(0));
+    auto &tbl(*get<TableRef>(tbl_arg));
+    auto &key(args.at(1));
+    auto &val(args.at(2));
+    push(scp.thread, tbl_arg);
+    auto fnd(tbl.find(key));
+    
+    if (fnd == tbl.end()) {
+      tbl.emplace(std::piecewise_construct,
+		  std::forward_as_tuple(key),
+		  std::forward_as_tuple(val));
+    } else {
+      fnd->second = val;
     }
   }
 
@@ -81,6 +116,14 @@ namespace snabel {
 	ERROR(Snabel, "Missing table upsert value");
       }
     }
+  }
+
+  static void del_imp(Scope &scp, const Args &args) {
+    auto &tbl_arg(args.at(0));
+    auto &tbl(*get<TableRef>(tbl_arg));
+    auto &key(args.at(1));
+    tbl.erase(key);
+    push(scp.thread, tbl_arg);
   }
 
   void init_tables(Exec &exe) {
@@ -122,14 +165,38 @@ namespace snabel {
     add_func(exe, "table",
 	     {ArgType(get_iterable_type(exe, exe.pair_type))},
 	     {ArgType(exe.table_type)},
-	     table_iter_imp);
+	     iter_table_imp);
 
+    add_func(exe, "len",
+	     {ArgType(exe.table_type)},
+	     {exe.i64_type},
+	     len_imp);
+
+    add_func(exe, "z?",
+	     {ArgType(exe.table_type)}, {ArgType(exe.bool_type)},
+	     zero_imp);
+    
+    add_func(exe, "+?",
+	     {ArgType(exe.table_type)}, {ArgType(exe.bool_type)},
+	     pos_imp);
+    
     add_func(exe, "get",
 	     {ArgType(exe.table_type), ArgType(0, 0)},
-	     {ArgType([&exe](auto &args){
+	     {ArgType(0),
+		 ArgType([&exe](auto &args){
 		   return &get_opt_type(exe, *args.at(0).type->args.at(1));
 		 })},
 	     get_imp);
+
+    add_func(exe, "put",
+	     {ArgType(exe.table_type), ArgType(0, 0), ArgType(0, 1)},
+	     {ArgType(0)},
+	     put_imp);
+
+    add_func(exe, "del",
+	     {ArgType(exe.table_type), ArgType(0, 0)},
+	     {ArgType(0)},
+	     del_imp);
 
     add_func(exe, "upsert",
 	     {ArgType(exe.table_type), ArgType(0, 0), ArgType(0, 1),

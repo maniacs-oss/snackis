@@ -10,6 +10,7 @@
 #include "snabel/iter.hpp"
 #include "snabel/iters.hpp"
 #include "snabel/list.hpp"
+#include "snabel/opt.hpp"
 #include "snabel/proc.hpp"
 #include "snabel/range.hpp"
 #include "snabel/str.hpp"
@@ -49,28 +50,6 @@ namespace snabel {
   static void gt_imp(Scope &scp, const Args &args) {
     auto &x(args.at(0)), &y(args.at(1));
     push(scp.thread, scp.exec.bool_type, x.type->gt(x, y));
-  }
-
-  static void opt_imp(Scope &scp, const Args &args) {
-    auto &in(args.at(0));
-    push(scp.thread, get_opt_type(scp.exec, *in.type), in.val);
-  }
-
-  static void opt_or_imp(Scope &scp, const Args &args) {
-    auto &in(args.at(0));
-    auto &alt(args.at(1));
-
-    if (empty(in)) {
-      push(scp.thread, alt);
-    } else {
-      push(scp.thread, *in.type->args.at(0), in.val);
-    }
-  }
-
-  static void opt_or_opt_imp(Scope &scp, const Args &args) {
-    auto &in(args.at(0));
-    auto &alt(args.at(1));
-    push(scp.thread, empty(in) ? alt : in);
   }
 
   static void zero_i64_imp(Scope &scp, const Args &args) {
@@ -582,28 +561,6 @@ namespace snabel {
 
     ordered_type.supers.push_back(&any_type);
 
-    opt_type.supers.push_back(&any_type);
-    opt_type.args.push_back(&any_type);
-    opt_type.dump = [](auto &v) -> str {
-      if (empty(v)) { return "#n/a"; }
-      return fmt("Opt(%0)", v.type->args.at(0)->dump(v));
-    };
-    opt_type.fmt = [](auto &v) -> str {
-      if (empty(v)) { return "#n/a"; }
-      return fmt("Opt(%0)", v.type->args.at(0)->fmt(v));
-    };
-    opt_type.eq = [](auto &x, auto &y) {
-      if (empty(x) && !empty(y)) { return true; }
-      if (!empty(x) || !empty(y)) { return false; }
-      return x.type->eq(x, y);
-    };
-    opt_type.equal = [](auto &x, auto &y) {
-      if (empty(x) && !empty(y)) { return true; }
-      if (!empty(x) || !empty(y)) { return false; }
-      return x.type->equal(x, y);
-    };
-    put_env(main_scope, "#n/a", Box(opt_type, empty_val));
-
     callable_type.supers.push_back(&any_type);
     callable_type.args.push_back(&any_type);
 
@@ -949,6 +906,10 @@ namespace snabel {
       break_target[i]->break_depth = i+1;
     }
 
+
+    init_opts(*this);
+    init_tables(*this);
+    
     add_conv(*this, str_type, ustr_type, [this](auto &v) {	
 	v.type = &ustr_type;
 	v.val = uconv.from_bytes(get<str>(v));
@@ -998,23 +959,6 @@ namespace snabel {
     add_func(*this, "gt?",
 	     {ArgType(ordered_type), ArgType(0)}, {ArgType(bool_type)},
 	     gt_imp);
-
-    add_func(*this, "opt",
-	     {ArgType(any_type)},
-	     {ArgType([this](auto &args) {
-		   return &get_opt_type(*this, *args.at(0).type);
-		 })},
-	     opt_imp);
-
-    add_func(*this, "or",
-	     {ArgType(opt_type),
-		 ArgType([](auto &args) { return args.at(0).type->args.at(0); })},
-	     {ArgType([](auto &args) { return args.at(0).type->args.at(0); })},
-	     opt_or_imp);
-
-    add_func(*this, "or",
-	     {ArgType(opt_type), ArgType(0)}, {ArgType(0)},
-	     opt_or_opt_imp);
 
     add_func(*this, "z?",
 	     {ArgType(i64_type)}, {ArgType(bool_type)},
@@ -1447,8 +1391,6 @@ namespace snabel {
     add_macro(*this, "while", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(While());
       });
-
-    init_tables(*this);
   }
 
   Macro &add_macro(Exec &exe, const str &n, Macro::Imp imp) {
@@ -1508,22 +1450,6 @@ namespace snabel {
 
     ERROR(Snabel, fmt("Invalid type: %1", raw.name));
     return raw;
-  }
-
-  Type &get_opt_type(Exec &exe, Type &elt) {    
-    str n(fmt("Opt<%0>", elt.name));
-    auto fnd(find_type(exe, n));
-    if (fnd) { return *fnd; }
-    auto &t(add_type(exe, n));
-    t.raw = &exe.opt_type;
-    t.supers.push_back(&exe.any_type);
-    t.supers.push_back(&exe.opt_type);
-    t.args.push_back(&elt);
-    t.fmt = exe.opt_type.fmt;
-    t.dump = exe.opt_type.dump;
-    t.eq = exe.opt_type.eq;
-    t.equal = exe.opt_type.equal;
-    return t;
   }
 
   Type &get_iter_type(Exec &exe, Type &elt) {    

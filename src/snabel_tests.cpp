@@ -291,8 +291,7 @@ namespace snabel {
 
     run(exe,
 	"['foo\\r\\n\\r\\nbar\\r\\n\\r\\nbaz' bytes]"
-	"lines {'' or} map "
-	"\\, join");	
+	"lines drop-n/a \\, join");	
     CHECK(get<str>(pop(exe.main)) == "foo,bar,baz", _);
   }
 

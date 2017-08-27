@@ -120,8 +120,7 @@ u'foo'
 1
 
 > ['foo\r\n\r\nbar\r\n\r\nbaz' bytes]
-  lines {'' or} map
-  \, join
+  lines drop-n/a \, join
 'foo,bar,baz'
 ```
 
@@ -199,7 +198,7 @@ Tables map keys to values. They may be created from any pair iterable. Iterating
 Opt('bar')
 
 > let: acc Str I64 table;
-  ['foo,\nbar.baz;\nfoo!' bytes] words {'' or} map
+  ['foo,\nbar.baz;\nfoo!' bytes] words drop-n/a
   { @acc $1 1 &+1 upsert } for
 ['bar' 1. 'baz' 1. 'foo' 2.]
 ```
