@@ -425,9 +425,21 @@ namespace snabel {
     
     push(scp.thread,
 	 get_iter_type(exe, get_opt_type(exe, exe.str_type)),
-	 Iter::Ref(new LineIter(exe, (*in.type->iter)(in))));
+	 Iter::Ref(new SplitIter(exe, (*in.type->iter)(in), {'\r', '\n'})));
   }
-  
+
+  static void iterable_words_imp(Scope &scp, const Args &args) {
+    auto &exe(scp.exec);
+    auto &in(args.at(0));
+    
+    push(scp.thread,
+	 get_iter_type(exe, get_opt_type(exe, exe.str_type)),
+	 Iter::Ref(new SplitIter(exe, (*in.type->iter)(in),
+				 {'\r', '\n', '\t', ' ',
+				     ',', ':', ';', '.', '!', '?',
+				     '"', '\''})));
+  }
+
   static void random_imp(Scope &scp, const Args &args) {
     push(scp.thread,
 	 scp.exec.random_type,
@@ -1213,6 +1225,11 @@ namespace snabel {
 	     {ArgType(get_iterable_type(*this, bin_type))},
 	     {ArgType(get_iter_type(*this, get_opt_type(*this, str_type)))},	
 	     iterable_lines_imp);
+
+    add_func(*this, "words",
+	     {ArgType(get_iterable_type(*this, bin_type))},
+	     {ArgType(get_iter_type(*this, get_opt_type(*this, str_type)))},	
+	     iterable_words_imp);
 
     add_func(*this, "random",
 	     {ArgType(i64_type)}, {ArgType(random_type)},

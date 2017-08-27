@@ -1,6 +1,7 @@
 #ifndef SNABEL_ITERS_HPP
 #define SNABEL_ITERS_HPP
 
+#include <set>
 #include "snabel/box.hpp"
 #include "snabel/iter.hpp"
 #include "snabel/io.hpp"
@@ -30,13 +31,14 @@ namespace snabel {
     opt<Box> next(Scope &scp) override;
   };
 
-  struct LineIter: Iter {
+  struct SplitIter: Iter {
     Iter::Ref in;
+    std::set<char> chars;
     BinRef in_buf;
     Bin::iterator in_pos;
     OutStream out_buf;
     
-    LineIter(Exec &exe, const Iter::Ref &in);
+    SplitIter(Exec &exe, const Iter::Ref &in, const std::set<char> &cs);
     opt<Box> next(Scope &scp) override;
   };
 
