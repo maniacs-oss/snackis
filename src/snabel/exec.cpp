@@ -11,6 +11,7 @@
 #include "snabel/iters.hpp"
 #include "snabel/list.hpp"
 #include "snabel/opt.hpp"
+#include "snabel/pair.hpp"
 #include "snabel/proc.hpp"
 #include "snabel/range.hpp"
 #include "snabel/str.hpp"
@@ -270,32 +271,6 @@ namespace snabel {
 	 get_iter_type(exe, elt),
 	 IterRef(new MapIter(exe, it, tgt)));
   }
-
-  static void iterable_zip_imp(Scope &scp, const Args &args) {
-    auto &exe(scp.exec);
-    auto &x(args.at(0)), &y(args.at(1));
-    auto xi((*x.type->iter)(x)), yi((*y.type->iter)(y));
-
-    push(scp.thread,
-	 get_iter_type(exe, get_pair_type(exe,
-					  *xi->type.args.at(0),
-					  *yi->type.args.at(0))),
-	 IterRef(new ZipIter(exe, xi, yi)));
-  }
-  
-  static void zip_imp(Scope &scp, const Args &args) {
-    auto &l(args.at(0)), &r(args.at(1));
-    
-    push(scp.thread,
-	 get_pair_type(scp.exec, *l.type, *r.type),
-	 std::make_shared<Pair>(l, r));    
-  }
-
-  static void unzip_imp(Scope &scp, const Args &args) {
-    auto &p(*get<PairRef>(args.at(0)));   
-    push(scp.thread, p.first);
-    push(scp.thread, p.second);
-  }
   
   static void bytes_imp(Scope &scp, const Args &args) {
     push(scp.thread,
@@ -487,21 +462,6 @@ namespace snabel {
       return fmt("Iterable<%0>", v.type->args.at(0)->name);
     };
     iterable_type.eq = [](auto &x, auto &y) { return false; };
-
-    pair_type.supers.push_back(&any_type);
-    pair_type.args.push_back(&any_type);
-    pair_type.args.push_back(&any_type);
-    pair_type.dump = [](auto &v) { return dump(*get<PairRef>(v)); };
-    pair_type.fmt = [](auto &v) { return pair_fmt(*get<PairRef>(v)); };
-    pair_type.eq = [](auto &x, auto &y) { 
-      return get<PairRef>(x) == get<PairRef>(y); 
-    };
-    pair_type.equal = [](auto &x, auto &y) { 
-      return *get<PairRef>(x) == *get<PairRef>(y); 
-    };
-    pair_type.lt = [](auto &x, auto &y) { 
-      return *get<PairRef>(x) < *get<PairRef>(y); 
-    };
 
     readable_type.supers.push_back(&any_type);
     writeable_type.supers.push_back(&any_type);
@@ -778,7 +738,6 @@ namespace snabel {
       return IterRef(new RandomIter(*this, get<RandomRef>(in)));
     };
 
-
     thread_type.supers.push_back(&any_type);
     thread_type.fmt = [](auto &v) { return fmt("thread_%0", get<Thread *>(v)->id); };
     thread_type.eq = [](auto &x, auto &y) {
@@ -792,8 +751,8 @@ namespace snabel {
       break_target[i]->break_depth = i+1;
     }
 
-
     init_opts(*this);
+    init_pairs(*this);
     init_lists(*this);
     init_tables(*this);
     
@@ -983,16 +942,6 @@ namespace snabel {
 	     {ArgType(iterable_type), ArgType(any_type)}, {ArgType(str_type)},
 	     iterable_join_str_imp);
 
-    add_func(*this, "zip",
-	     {ArgType(iterable_type), ArgType(iterable_type)},
-	     {ArgType([this](auto &args) {
-		   return &get_iter_type(*this,
-					 get_pair_type(*this,
-						       *args.at(0).type->args.at(0),
-						       *args.at(1).type->args.at(0)));
-		 })},			
-	     iterable_zip_imp);
-
     add_func(*this, "filter",
 	     {ArgType(iterable_type), ArgType(callable_type)},
 	     {ArgType([this](auto &args) {
@@ -1004,18 +953,7 @@ namespace snabel {
 	     {ArgType(iterable_type), ArgType(callable_type)},
 	     {ArgType(iter_type)},			
 	     iterable_map_imp);
-    
-    add_func(*this, ".",
-	     {ArgType(any_type), ArgType(any_type)},
-	     {ArgType([this](auto &args) {
-		   return &get_pair_type(*this, *args.at(0).type, *args.at(1).type);
-		 })},			
-	     zip_imp);
-    
-    add_func(*this, "unzip",
-	     {ArgType(pair_type)}, {ArgType(0, 0), ArgType(0, 1)},
-	     unzip_imp);
-    
+        
     add_func(*this, "rfile",
 	     {ArgType(path_type)}, {ArgType(rfile_type)},
 	     rfile_imp);
@@ -1346,33 +1284,7 @@ namespace snabel {
     t.eq = exe.iterable_type.eq;
     return t;
   }
-    
-  Type &get_pair_type(Exec &exe, Type &lt, Type &rt) {
-    auto &thd(exe.main);
-    str n(fmt("Pair<%0 %1>", lt.name, rt.name));
-    auto fnd(find_type(exe, n));
-    if (fnd) { return *fnd; }
-    
-    auto &t(add_type(exe, n));
-    t.raw = &exe.pair_type;
-    t.supers.push_back(&exe.any_type);
-
-    if (isa(thd, lt, exe.ordered_type) && isa(thd, rt, exe.ordered_type)) {
-      t.supers.push_back(&exe.ordered_type);
-    }
-
-    t.supers.push_back(&exe.pair_type);
-    t.args.push_back(&lt);
-    t.args.push_back(&rt);
-
-    t.dump = exe.pair_type.dump;
-    t.fmt = exe.pair_type.fmt;
-    t.eq = exe.pair_type.eq;
-    t.equal = exe.pair_type.equal;
-    t.lt = exe.pair_type.lt;
-    return t;
-  }
-  
+      
   FuncImp &add_func(Exec &exe,
 		    const str n,
 		    const ArgTypes &args,

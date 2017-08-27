@@ -416,11 +416,17 @@ namespace snabel {
   static void pair_tests() {
     TRY(try_test);    
 
-    run(exe, "42 'foo' .");
+    run(exe, "42 'foo'.");
     auto p(get<PairRef>(pop(exe.main)));
     CHECK(get<int64_t>(p->first) == 42, _);    
     CHECK(get<str>(p->second) == "foo", _);    
 
+    run(exe, "'foo' 42. left");
+    CHECK(get<str>(p->first) == "foo", _);    
+    
+    run(exe, "'foo' 42. right");
+    CHECK(get<int64_t>(p->first) == "42, _);    
+    
     run(exe, "42 'foo'. unzip");
     CHECK(get<str>(pop(exe.main)) == "foo", _);    
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);    

@@ -170,6 +170,12 @@ Pairs have first class support and all iterables support zipping/unzipping. Pair
 > 'foo' 42.
 'foo' 42.
 
+> 'foo' 42. right
+42
+
+> 'foo' 42. unzip
+'foo' 42
+
 > ['foo' 'bar'] 7 list zip list
 ['foo' 0. 'bar' 1.]
 
