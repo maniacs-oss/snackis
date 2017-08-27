@@ -98,7 +98,7 @@ Check failed, expected Str!
 ```
 
 #### Strings
-Snabel makes a difference between byte strings and unicode strings. Unicode strings are processed as UTF-8 when converting to/from bytes and stored internally as UTF-16. Byte strings are automatically promoted to unicode strings as needed.
+Snabel makes a difference between byte strings and unicode strings. Unicode strings are processed as UTF-8 when converting to/from bytes and stored internally as UTF-16. Byte strings are automatically promoted to unicode as needed.
 
 ```
 > 'foo'
@@ -259,9 +259,6 @@ Coro(_enter1:1)
 The ```label:```-macro will create a label with the specified name at that point, while simply naming a label in scope will result in jumping there. Prefixing the name of a label in scope with ```&``` pushes it on the stack for later use. Labels require termination using ```;``` to separate them from surrounding code.
 
 ```
-> 1 2 3 +
-5
-
 > 1 2 skip 42 label: skip; +
 3
 ```
@@ -336,9 +333,9 @@ Adding functions from C++ is as easy as this:
 ```
 using namespace snabel;
 
-static void add_i64_imp(Scope &scp, const Args &args) {
+static void add_i64(Scope &scp, const Args &args) {
   auto &x(get<int64_t>(args.at(0))), &y(get<int64_t>(args.at(1)));
-  push(scp.coro, scp.exec.i64_type, x+y);
+  push(scp.thread, scp.exec.i64_type, x+y);
 }
 
 Exec exe;
