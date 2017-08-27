@@ -28,7 +28,7 @@ namespace snabel {
     func<str (const Box &)> dump;
     func<str (const Box &)> fmt;
     opt<func<bool (Scope &, const Box &, bool)>> call;
-    opt<func<Iter::Ref (const Box &)>> iter;
+    opt<func<IterRef (const Box &)>> iter;
     opt<func<bool (const Box &, Bin &)>> read;
     opt<func<int64_t (const Box &, const unsigned char *, int64_t)>> write;
     

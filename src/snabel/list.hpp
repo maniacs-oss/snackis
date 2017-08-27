@@ -17,6 +17,14 @@ namespace snabel {
     ListIter(Exec &exe, Type &elt, const ListRef &in, opt<Fn> fn=nullopt);
     opt<Box> next(Scope &scp) override;
   };
+
+  struct FifoIter: Iter {
+    ListRef in;
+    
+    FifoIter(Exec &exe, Type &elt, const ListRef &in);
+    opt<Box> next(Scope &scp) override;
+  };
+
 }
 
 #endif

@@ -145,6 +145,18 @@ namespace snabel {
     push(scp.thread, scp.exec.rat_type, x/y);
   }
 
+  static void bin_zero_imp(Scope &scp, const Args &args) {
+    auto &in(args.at(0));
+    push(scp.thread, in);
+    push(scp.thread, scp.exec.bool_type, get<BinRef>(in)->empty());
+  }
+
+  static void bin_pos_imp(Scope &scp, const Args &args) {
+    auto &in(args.at(0));
+    push(scp.thread, in);
+    push(scp.thread, scp.exec.bool_type, !get<BinRef>(in)->empty());
+  }
+
   static void bin_len_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
     push(scp.thread, in);
@@ -167,23 +179,6 @@ namespace snabel {
     auto &src(*get<BinRef>(args.at(1)));
     std::copy(src.begin(), src.end(), std::back_inserter(tgt));
     push(scp.thread, out);
-  }
-
-  static void io_queue_imp(Scope &scp, const Args &args) {
-    push(scp.thread, scp.exec.io_queue_type, std::make_shared<IOQueue>());
-  }
-
-  static void io_queue_len_imp(Scope &scp, const Args &args) {
-    auto &in(args.at(0));
-    push(scp.thread, in);
-    push(scp.thread, scp.exec.i64_type, get<IOQueueRef>(in)->len);
-  }
-
-  static void io_queue_push_bin_imp(Scope &scp, const Args &args) {
-    auto &q(args.at(0));
-    auto &b(args.at(1));
-    push(*get<IOQueueRef>(q), get<BinRef>(b));
-    push(scp.thread, q);
   }
 
   static void str_len_imp(Scope &scp, const Args &args) {
@@ -292,7 +287,7 @@ namespace snabel {
     
     push(scp.thread,
 	 get_iter_type(exe, elt),
-	 Iter::Ref(new FilterIter(exe, it, elt, tgt)));
+	 IterRef(new FilterIter(exe, it, elt, tgt)));
   }
 
   static void iterable_map_imp(Scope &scp, const Args &args) {
@@ -303,7 +298,7 @@ namespace snabel {
     
     push(scp.thread,
 	 get_iter_type(exe, elt),
-	 Iter::Ref(new MapIter(exe, it, tgt)));
+	 IterRef(new MapIter(exe, it, tgt)));
   }
 
   static void iterable_zip_imp(Scope &scp, const Args &args) {
@@ -315,7 +310,7 @@ namespace snabel {
 	 get_iter_type(exe, get_pair_type(exe,
 					  *xi->type.args.at(0),
 					  *yi->type.args.at(0))),
-	 Iter::Ref(new ZipIter(exe, xi, yi)));
+	 IterRef(new ZipIter(exe, xi, yi)));
   }
 
   static void list_imp(Scope &scp, const Args &args) {
@@ -325,6 +320,18 @@ namespace snabel {
 	 std::make_shared<List>());    
   }
 
+  static void list_zero_imp(Scope &scp, const Args &args) {
+    auto &in(args.at(0));
+    push(scp.thread, in);
+    push(scp.thread, scp.exec.bool_type, get<ListRef>(in)->empty());
+  }
+
+  static void list_pos_imp(Scope &scp, const Args &args) {
+    auto &in(args.at(0));
+    push(scp.thread, in);
+    push(scp.thread, scp.exec.bool_type, !get<ListRef>(in)->empty());
+  }
+  
   static void list_push_imp(Scope &scp, const Args &args) {
     auto &lst(args.at(0));
     auto &el(args.at(1));
@@ -354,18 +361,28 @@ namespace snabel {
     auto &yt(*in.type->args.at(0)->args.at(0));
     push(scp.thread,
 	 get_iter_type(exe, yt),
-	 Iter::Ref(new ListIter(exe, yt, get<ListRef>(in), [](auto &el) {
+	 IterRef(new ListIter(exe, yt, get<ListRef>(in), [](auto &el) {
 	       return get<PairRef>(el)->first;
 	     })));
 
     auto &xt(*in.type->args.at(0)->args.at(1));
     push(scp.thread,
 	 get_iter_type(exe, xt),
-	 Iter::Ref(new ListIter(exe, xt, get<ListRef>(in), [](auto &el) {
+	 IterRef(new ListIter(exe, xt, get<ListRef>(in), [](auto &el) {
 	       return get<PairRef>(el)->second;
 	     })));
   }
 
+  static void list_fifo_imp(Scope &scp, const Args &args) {
+    auto &exe(scp.exec);
+    auto &in(args.at(0));
+    auto &elt(*in.type->args.at(0));
+    
+    push(scp.thread,
+	 get_iter_type(exe, elt),
+	 IterRef(new FifoIter(exe, elt, get<ListRef>(in))));
+  }
+  
   static void zip_imp(Scope &scp, const Args &args) {
     auto &l(args.at(0)), &r(args.at(1));
     
@@ -407,16 +424,17 @@ namespace snabel {
     
     push(scp.thread,
 	 get_iter_type(exe, exe.bin_type),
-	 Iter::Ref(new ReadIter(exe, args.at(0))));
+	 IterRef(new ReadIter(exe, args.at(0))));
   }
 
   static void write_imp(Scope &scp, const Args &args) {
     Exec &exe(scp.exec);
-    auto &out(args.at(0));
+    auto &in(args.at(0));
+    auto &out(args.at(1));
     push(scp.thread, out);
     push(scp.thread,
 	 get_iter_type(exe, exe.i64_type),
-	 Iter::Ref(new WriteIter(exe, get<IOQueueRef>(args.at(1)), out)));
+	 IterRef(new WriteIter(exe, (*in.type->iter)(in), out)));
   }
 
   static void iterable_lines_imp(Scope &scp, const Args &args) {
@@ -425,7 +443,7 @@ namespace snabel {
     
     push(scp.thread,
 	 get_iter_type(exe, get_opt_type(exe, exe.str_type)),
-	 Iter::Ref(new SplitIter(exe, (*in.type->iter)(in), {'\r', '\n'})));
+	 IterRef(new SplitIter(exe, (*in.type->iter)(in), {'\r', '\n'})));
   }
 
   static void iterable_words_imp(Scope &scp, const Args &args) {
@@ -434,7 +452,7 @@ namespace snabel {
     
     push(scp.thread,
 	 get_iter_type(exe, get_opt_type(exe, exe.str_type)),
-	 Iter::Ref(new SplitIter(exe, (*in.type->iter)(in),
+	 IterRef(new SplitIter(exe, (*in.type->iter)(in),
 				 {'\r', '\n', '\t', ' ',
 				     ',', ':', ';', '.', '!', '?',
 				     '"', '\''})));
@@ -489,7 +507,6 @@ namespace snabel {
     file_type(add_type(*this, "File")),    
     func_type(add_type(*this, "Func")),
     i64_type(add_type(*this, "I64")),
-    io_queue_type(add_type(*this, "IOQueue")),
     iter_type(add_type(*this, "Iter")),
     iterable_type(add_type(*this, "Iterable")),
     label_type(add_type(*this, "Label")),
@@ -580,9 +597,9 @@ namespace snabel {
     iter_type.args.push_back(&any_type);
     iter_type.fmt = [](auto &v) { return fmt("Iter<%0>", v.type->args.at(0)->name); };
     iter_type.eq = [](auto &x, auto &y) {
-      return get<Iter::Ref>(x) == get<Iter::Ref>(y);
+      return get<IterRef>(x) == get<IterRef>(y);
     };
-    iter_type.iter = [](auto &in) { return get<Iter::Ref>(in); };
+    iter_type.iter = [](auto &in) { return get<IterRef>(in); };
 
     iterable_type.supers.push_back(&any_type);
     iterable_type.args.push_back(&any_type);
@@ -599,7 +616,7 @@ namespace snabel {
       return get<ListRef>(x) == get<ListRef>(y);
     };
     list_type.iter = [this](auto &in) {
-      return Iter::Ref(new ListIter(*this, *in.type->args.at(0), get<ListRef>(in)));
+      return IterRef(new ListIter(*this, *in.type->args.at(0), get<ListRef>(in)));
     };
 
     list_type.equal = [](auto &x, auto &y) {
@@ -644,26 +661,9 @@ namespace snabel {
       return *get<BinRef>(x) == *get<BinRef>(y);
     };
     bin_type.iter = [this](auto &in) {
-      return Iter::Ref(new BinIter(*this, get<BinRef>(in)));
+      return IterRef(new BinIter(*this, get<BinRef>(in)));
     };
 
-    io_queue_type.supers.push_back(&any_type);
-    io_queue_type.supers.push_back(&get_iterable_type(*this, bin_type));
-    
-    io_queue_type.fmt = [](auto &v) {
-      auto &q(*get<IOQueueRef>(v));
-      return fmt("IOQueue(%0)", q.bufs.size());
-    };
-    io_queue_type.eq = [](auto &x, auto &y) {
-      return get<IOQueueRef>(x) == get<IOQueueRef>(y);
-    };
-    io_queue_type.equal = [](auto &x, auto &y) {
-      return *get<IOQueueRef>(x) == *get<IOQueueRef>(y);
-    };
-    io_queue_type.iter = [this](auto &in) {
-      return Iter::Ref(new IOQueueIter(*this, get<IOQueueRef>(in)));
-    };
-    
     byte_type.supers.push_back(&any_type);
     byte_type.supers.push_back(&ordered_type);
     byte_type.fmt = [](auto &v) { return fmt_arg(get<Byte>(v)); };
@@ -812,7 +812,7 @@ namespace snabel {
     i64_type.eq = [](auto &x, auto &y) { return get<int64_t>(x) == get<int64_t>(y); };
     i64_type.lt = [](auto &x, auto &y) { return get<int64_t>(x) < get<int64_t>(y); };
     i64_type.iter = [this](auto &in) {
-      return Iter::Ref(new RangeIter(*this, Range(0, get<int64_t>(in))));
+      return IterRef(new RangeIter(*this, Range(0, get<int64_t>(in))));
     };
     
     label_type.supers.push_back(&any_type);
@@ -877,7 +877,7 @@ namespace snabel {
     str_type.lt = [](auto &x, auto &y) { return get<str>(x) < get<str>(y); };
 
     str_type.iter = [this](auto &in) {
-      return Iter::Ref(new StrIter(*this, get<str>(in)));
+      return IterRef(new StrIter(*this, get<str>(in)));
     };
 
     ustr_type.supers.push_back(&any_type);
@@ -890,7 +890,7 @@ namespace snabel {
     ustr_type.lt = [](auto &x, auto &y) { return get<ustr>(x) < get<ustr>(y); };
 
     ustr_type.iter = [this](auto &in) {
-      return Iter::Ref(new UStrIter(*this, get<ustr>(in)));
+      return IterRef(new UStrIter(*this, get<ustr>(in)));
     };
     
     rat_type.supers.push_back(&any_type);
@@ -918,7 +918,7 @@ namespace snabel {
     };
 
     random_type.iter = [this](auto &in) {
-      return Iter::Ref(new RandomIter(*this, get<RandomRef>(in)));
+      return IterRef(new RandomIter(*this, get<RandomRef>(in)));
     };
 
 
@@ -1049,6 +1049,14 @@ namespace snabel {
 	     {ArgType(rat_type), ArgType(rat_type)}, {ArgType(rat_type)},
 	     div_rat_imp);
 
+    add_func(*this, "z?",
+	     {ArgType(bin_type)}, {ArgType(bool_type)},
+	     bin_zero_imp);
+    
+    add_func(*this, "+?",
+	     {ArgType(bin_type)}, {ArgType(bool_type)},
+	     bin_pos_imp);
+    
     add_func(*this, "bytes",
 	     {ArgType(i64_type)}, {ArgType(bin_type)},
 	     bytes_imp);
@@ -1056,19 +1064,6 @@ namespace snabel {
     add_func(*this, "len",
 	     {ArgType(bin_type)}, {ArgType(i64_type)},
 	     bin_len_imp);
-
-    add_func(*this, "io-queue",
-	     {}, {ArgType(io_queue_type)},
-	     io_queue_imp);
-
-    add_func(*this, "len",
-	     {ArgType(io_queue_type)}, {ArgType(i64_type)},
-	     io_queue_len_imp);
-
-    add_func(*this, "push",
-	     {ArgType(io_queue_type), ArgType(bin_type)},
-	     {ArgType(io_queue_type)},
-	     io_queue_push_bin_imp);
 
     add_func(*this, "str",
 	     {ArgType(bin_type)}, {ArgType(str_type)},
@@ -1169,6 +1164,14 @@ namespace snabel {
 		   return &get_list_type(*this, *args.at(0).type);
 		 })},
 	     list_imp);
+
+    add_func(*this, "z?",
+	     {ArgType(list_type)}, {ArgType(bool_type)},
+	     list_zero_imp);
+    
+    add_func(*this, "+?",
+	     {ArgType(list_type)}, {ArgType(bool_type)},
+	     list_pos_imp);
     
     add_func(*this, "push",
 	     {ArgType(list_type), ArgType(0, 0)}, {ArgType(0)},
@@ -1191,6 +1194,13 @@ namespace snabel {
 					   *args.at(0).type->args.at(0)->args.at(1));
 		   })},			
 	     list_unzip_imp);
+
+    add_func(*this, "fifo",
+	     {ArgType(list_type)},
+	     {ArgType([this](auto &args) {
+		   return &get_iter_type(*this, *args.at(0).type->args.at(0));
+		 })},
+	     list_fifo_imp);
 
     add_func(*this, ".",
 	     {ArgType(any_type), ArgType(any_type)},
@@ -1217,7 +1227,7 @@ namespace snabel {
 	     read_imp);
 
     add_func(*this, "write",
-	     {ArgType(writeable_type), ArgType(io_queue_type)},
+	     {ArgType(get_iterable_type(*this, bin_type)), ArgType(writeable_type)},
 	     {ArgType(get_iter_type(*this, i64_type))},
 	     write_imp);
 

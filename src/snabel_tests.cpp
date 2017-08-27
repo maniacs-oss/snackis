@@ -292,8 +292,8 @@ namespace snabel {
     run(exe,
 	"Bin list "
 	"'foo\\r\\n\\r\\nb' bytes push "
-	"'ar' bytes push "
-	"'\\nbaz' bytes push "
+	"'ar\\r\\n' bytes push "
+	"'\\r\\nbaz' bytes push "
 	"lines {'' or} map "
 	"\\, join");	
     CHECK(get<str>(pop(exe.main)) == "foo,bar,baz", _);
@@ -501,7 +501,7 @@ namespace snabel {
     run(exe, "0 '../dist/snackis' rfile read {len $1 _ +} for");
     CHECK(get<int64_t>(pop(exe.main)) > 3000000, _);
 
-    run(exe, "'tmp' rwfile io-queue 'foo' bytes push write 0 $1 &+ for");
+    run(exe, "['foo' bytes] 'tmp' rwfile write 0 $1 &+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
   }
   

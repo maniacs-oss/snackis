@@ -44,7 +44,7 @@ namespace snabel {
   
   using Val = std::variant<Empty, bool, Byte, char, int64_t, Path, Rat, str, uchar,
 			   Uid, ustr,
-			   BinRef, CoroRef, FileRef, Iter::Ref, IOBufRef, IOQueueRef,
+			   BinRef, CoroRef, FileRef, IterRef, IOBufRef, IOQueueRef,
 			   ListRef, PairRef, ProcRef, RandomRef, 
 			   Func *, Label *, Thread *, Type *>;
   

@@ -112,10 +112,10 @@ namespace snabel {
     bool run(Scope &scp) override;
 
     struct State {
-      Iter::Ref iter;
+      IterRef iter;
       Box target;
 
-      State(const Iter::Ref &itr, const Box &tgt);
+      State(const IterRef &itr, const Box &tgt);
     };    
   };
 

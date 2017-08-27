@@ -10,10 +10,6 @@ namespace snabel {
     data(size), rpos(0)
   { }
 
-  IOQueue::IOQueue():
-    len(0), wpos(0)
-  { }
-  
   File::File(const Path &path, int flags):
     path(path), fd(open(path.c_str(), flags | O_NONBLOCK, 0666))
   {
@@ -37,24 +33,27 @@ namespace snabel {
     return out;
   }
 
-  WriteIter::WriteIter(Exec &exe, const IOQueueRef &in, const Box &out):
+  WriteIter::WriteIter(Exec &exe, const IterRef &in, const Box &out):
     Iter(exe, get_iter_type(exe, exe.i64_type)),
-    in(in), out(out), result(exe.i64_type, (int64_t)-1)
+    in(in), out(out), result(exe.i64_type, (int64_t)-1), wpos(0)
   { }
   
   opt<Box> WriteIter::next(Scope &scp){
-    auto &q(in->bufs);
-    if (q.empty()) { return nullopt; }
+    if (!in_buf) {
+      auto nxt(in->next(scp));
+      if (!nxt) { return nullopt; }
+      in_buf = get<BinRef>(*nxt);
+    }
+
+    auto &b(*in_buf);
     auto &res(get<int64_t>(result));
-    auto &b(*q.front());
-    res = (*out.type->write)(out, &b[in->wpos], b.size()-in->wpos);
+    res = (*out.type->write)(out, &b[wpos], b.size()-wpos);
     if (res == -1) { return nullopt; }
-    in->wpos += res;
-    in->len -= res;
+    wpos += res;
     
-    if (in->wpos == b.size()) {
-      q.pop_front();
-      in->wpos = 0;
+    if (wpos == b.size()) {
+      in_buf.reset();
+      wpos = 0;
     }
     
     return result;
@@ -67,20 +66,4 @@ namespace snabel {
 
     return true;
   }
-
-  bool operator ==(const IOQueue &x, const IOQueue &y) {
-    for (int64_t i(0); i < x.bufs.size() && i < y.bufs.size(); i++) {
-      if (x.bufs[i] == y.bufs[i]) { continue; }
-      return false;
-    }
-
-    return true;
-  }
-
-  bool push(IOQueue &q, const BinRef &bin) {
-    if (bin->empty()) { return false; }
-    q.bufs.push_back(bin);
-    q.len += bin->size();
-    return true;
-  }			       					 
 }

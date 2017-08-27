@@ -12,4 +12,15 @@ namespace snabel {
     it++;
     return fn ? (*fn)(res) : res;
   }
+
+  FifoIter::FifoIter(Exec &exe, Type &elt, const ListRef &in):
+    Iter(exe, get_iter_type(exe, elt)), in(in)
+  { }
+  
+  opt<Box> FifoIter::next(Scope &scp) {
+    if (in->empty()) { return nullopt; }
+    auto res(in->front());
+    in->pop_front();
+    return res;
+  }
 }

@@ -12,15 +12,15 @@ namespace snabel {
   struct Scope;
   struct Type;
   
-  struct Iter {
-    using Ref = std::shared_ptr<Iter>;
-    
+  struct Iter {    
     Exec &exec;
     Type &type;
     
     Iter(Exec &exec, Type &type);
     virtual opt<Box> next(Scope &scp) = 0;
-  };  
+  };
+
+  using IterRef = std::shared_ptr<Iter>;
 }
 
 #endif

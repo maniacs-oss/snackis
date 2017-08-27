@@ -5,7 +5,7 @@
 #include "snabel/type.hpp"
 
 namespace snabel {
-  FilterIter::FilterIter(Exec &exe, const Iter::Ref &in, Type &elt, const Box &tgt):
+  FilterIter::FilterIter(Exec &exe, const IterRef &in, Type &elt, const Box &tgt):
     Iter(exe, get_iter_type(exe, elt)),
     in(in), target(tgt)
   { }
@@ -36,20 +36,7 @@ namespace snabel {
     return nullopt;
   }
 
-  IOQueueIter::IOQueueIter(Exec &exe, const IOQueueRef &in):
-    Iter(exe, get_iter_type(exe, exe.bin_type)),
-    in(in), i(in->bufs.begin())
-  { }
-  
-  opt<Box> IOQueueIter::next(Scope &scp) {
-    if (i == in->bufs.end()) { return nullopt; }
-    Box out(scp.exec.bin_type, *i);
-    i++;
-    return out;
-  }
-  
-
-  SplitIter::SplitIter(Exec &exe, const Iter::Ref &in, const std::set<char> &cs):
+  SplitIter::SplitIter(Exec &exe, const IterRef &in, const std::set<char> &cs):
     Iter(exe, get_iter_type(exe, get_opt_type(exe, exe.str_type))),
     in(in), chars(cs)
   { }
@@ -114,7 +101,7 @@ namespace snabel {
     return out;
   }
   
-  MapIter::MapIter(Exec &exe, const Iter::Ref &in, const Box &tgt):
+  MapIter::MapIter(Exec &exe, const IterRef &in, const Box &tgt):
     Iter(exe, get_iter_type(exe, exe.any_type)),
     in(in), target(tgt)
   { }
@@ -145,7 +132,7 @@ namespace snabel {
     return out;		
   }
 
-  ZipIter::ZipIter(Exec &exe, const Iter::Ref &xin, const Iter::Ref &yin):
+  ZipIter::ZipIter(Exec &exe, const IterRef &xin, const IterRef &yin):
     Iter(exe, get_iter_type(exe, get_pair_type(exe,
 					       *xin->type.args.at(0),
 					       *yin->type.args.at(0)))),

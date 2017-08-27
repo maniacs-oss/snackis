@@ -312,7 +312,7 @@ namespace snabel {
 
   bool For::run(Scope &scp) {
     auto &thd(scp.thread);
-    Iter::Ref it;
+    IterRef it;
     opt<Box> tgt;
     auto fnd(scp.op_state.find(pc));
 
@@ -366,7 +366,7 @@ namespace snabel {
     return true;
   }
 
-  For::State::State(const Iter::Ref &itr, const Box &tgt):
+  For::State::State(const IterRef &itr, const Box &tgt):
     iter(itr), target(tgt)
   { }
 

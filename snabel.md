@@ -121,8 +121,8 @@ u'foo'
 
 > Bin list
   'foo\r\n\r\nb' bytes push
-  'ar' bytes push
-  '\nbaz' bytes push
+  'ar\r\n' bytes push
+  '\r\nbaz' bytes push
   lines {'' or} map
   \, join
 'foo,bar,baz'
@@ -372,38 +372,36 @@ Iter<Bin>
 > 'tmp' rwfile
 RWFile(12)
 
-> 'tmp' rwfile 'foo' bytes write
+> 'foo' bytes 'tmp' rwfile write
 Iter<I64>
 
-> 'tmp' rwfile
-  io-queue 'foo' bytes push
+> ['foo' bytes]
+  'tmp' rwfile
   write 0 $1 &+ for
 3
 
-> let: q io-queue;
+> let: q Bin list;
   'in' rfile read {@q $1 push _} for
-  0 'out' rwfile @q write $1 _ &+ for
+  0 @q 'out' rwfile write $1 _ &+ for
 2313864
 
 > func: do-write {(
-    rwfile $1 write yield
+    rwfile write yield
     {_ yield1} for
   )};  
 
   func: do-copy {
     "Init queue and writer proc"
-    let: q io-queue;
-    func: w @q $1 do-write proc;
+    let: q Bin list;
+    func: w @q fifo $1 do-write proc;
 
     _ rfile read 0 $1 {
       "Push to queue and run writer if incoming data"
-      len $ +? {
-	@q $2 push w
-      } when _ +
+      +? {$ @q $2 push _ len $1 _ + w} when
     } for
     
     "Run writer until done if data left in queue"
-    @q len +? {&w run} when _
+    @q +? {&w run} when _
   };
 
   'in' 'out' do-copy

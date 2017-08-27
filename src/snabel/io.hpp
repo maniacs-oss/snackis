@@ -16,13 +16,6 @@ namespace snabel {
     IOBuf(int64_t size);
   };
 
-  struct IOQueue {
-    using Bufs = std::deque<BinRef>;
-    Bufs bufs;
-    int64_t len, wpos;
-    IOQueue();
-  };
-
   struct File {
     Path path;
     int fd;
@@ -38,16 +31,16 @@ namespace snabel {
   };
 
   struct WriteIter: Iter {
-    IOQueueRef in;
+    IterRef in;
+    BinRef in_buf;
     Box out, result;
+    int64_t wpos;
     
-    WriteIter(Exec &exe, const IOQueueRef &in, const Box &out);
+    WriteIter(Exec &exe, const IterRef &in, const Box &out);
     opt<Box> next(Scope &scp) override;
   };
 
   bool operator ==(const IOBuf &x, const IOBuf &y);
-  bool operator ==(const IOQueue &x, const IOQueue &y);
-  bool push(IOQueue &q, const BinRef &bin);
 }
 
 #endif

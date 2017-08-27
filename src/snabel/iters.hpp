@@ -16,37 +16,29 @@ namespace snabel {
   struct Type;
   
   struct FilterIter: Iter {
-    Iter::Ref in;
+    IterRef in;
     Box target;
     
-    FilterIter(Exec &exe, const Iter::Ref &in, Type &elt, const Box &tgt);
-    opt<Box> next(Scope &scp) override;
-  };
-
-  struct IOQueueIter: Iter {
-    IOQueueRef in;
-    IOQueue::Bufs::iterator i;
-    
-    IOQueueIter(Exec &exe, const IOQueueRef &in);
+    FilterIter(Exec &exe, const IterRef &in, Type &elt, const Box &tgt);
     opt<Box> next(Scope &scp) override;
   };
 
   struct SplitIter: Iter {
-    Iter::Ref in;
+    IterRef in;
     std::set<char> chars;
     BinRef in_buf;
     Bin::iterator in_pos;
     OutStream out_buf;
     
-    SplitIter(Exec &exe, const Iter::Ref &in, const std::set<char> &cs);
+    SplitIter(Exec &exe, const IterRef &in, const std::set<char> &cs);
     opt<Box> next(Scope &scp) override;
   };
 
   struct MapIter: Iter {
-    Iter::Ref in;
+    IterRef in;
     Box target;
     
-    MapIter(Exec &exe, const Iter::Ref &in, const Box &tgt);
+    MapIter(Exec &exe, const IterRef &in, const Box &tgt);
     opt<Box> next(Scope &scp) override;
   };
 
@@ -59,9 +51,9 @@ namespace snabel {
   };
   
   struct ZipIter: Iter {
-    Iter::Ref xin, yin;
+    IterRef xin, yin;
     
-    ZipIter(Exec &exe, const Iter::Ref &xin, const Iter::Ref &yin);
+    ZipIter(Exec &exe, const IterRef &xin, const IterRef &yin);
     opt<Box> next(Scope &scp) override;
   };
 }
