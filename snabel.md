@@ -198,7 +198,8 @@ Tables map keys to values. They may be created from any pair iterable. Iterating
 Opt('bar')
 
 > let: acc Str I64 table;
-  ['foo,\nbar.baz;\nfoo!' bytes] words drop-n/a
+  ['foo,\nbar.baz;\nfoo!' bytes] words
+  drop-n/a
   { @acc $1 1 &+1 upsert } for
 ['bar' 1. 'baz' 1. 'foo' 2.]
 ```
