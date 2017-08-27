@@ -3,6 +3,7 @@
 
 #include "snabel/compiler.hpp"
 #include "snabel/exec.hpp"
+#include "snabel/list.hpp"
 #include "snabel/op.hpp"
 #include "snabel/parser.hpp"
 #include "snabel/type.hpp"
@@ -404,6 +405,9 @@ namespace snabel {
     run(exe, "['foo' 7. 'bar' 35.] unzip _ list");
     CHECK(get<str>(get<ListRef>(pop(exe.main))->back()) == "bar", _);
 
+    run(exe, "[2 3 1] &lt? sort pop");
+    CHECK(get<int64_t>(pop(exe.main)) == 3, _);
+      
     list_push_tests();
     list_pop_tests();
     list_reverse_tests();

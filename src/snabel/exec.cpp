@@ -248,36 +248,6 @@ namespace snabel {
     
     push(scp.thread, scp.exec.str_type, out.str()); 
   }
-
-  static void iterable_list_imp(Scope &scp, const Args &args) {
-    auto &in(args.at(0));
-    auto it((*in.type->iter)(in));
-    auto out(std::make_shared<List>());
-    Type *elt(nullptr);
-    
-    while (true) {
-      auto v(it->next(scp));
-      if (!v) { break; }
-      out->push_back(*v);
-      elt = elt ? get_super(scp.exec, *elt, *v->type) : v->type;
-    }
-    
-    push(scp.thread, get_list_type(scp.exec, *elt), out); 
-  }
-
-  static void iterable_nlist_imp(Scope &scp, const Args &args) {
-    auto &in(args.at(0));
-    auto it((*in.type->iter)(in));
-    auto out(std::make_shared<List>());
-    
-    for (int64_t i(0); i < get<int64_t>(args.at(1)); i++) {
-      auto v(it->next(scp));
-      if (!v) { break; }
-      out->push_back(*v);
-    }
-    
-    push(scp.thread, get_list_type(scp.exec, *it->type.args.at(0)), out); 
-  }
   
   static void iterable_filter_imp(Scope &scp, const Args &args) {
     auto &exe(scp.exec);
@@ -312,77 +282,6 @@ namespace snabel {
 					  *yi->type.args.at(0))),
 	 IterRef(new ZipIter(exe, xi, yi)));
   }
-
-  static void list_imp(Scope &scp, const Args &args) {
-    auto &elt(args.at(0));
-    push(scp.thread,
-	 get_list_type(scp.exec, *get<Type *>(elt)),
-	 std::make_shared<List>());    
-  }
-
-  static void list_zero_imp(Scope &scp, const Args &args) {
-    auto &in(args.at(0));
-    push(scp.thread, in);
-    push(scp.thread, scp.exec.bool_type, get<ListRef>(in)->empty());
-  }
-
-  static void list_pos_imp(Scope &scp, const Args &args) {
-    auto &in(args.at(0));
-    push(scp.thread, in);
-    push(scp.thread, scp.exec.bool_type, !get<ListRef>(in)->empty());
-  }
-  
-  static void list_push_imp(Scope &scp, const Args &args) {
-    auto &lst(args.at(0));
-    auto &el(args.at(1));
-    get<ListRef>(lst)->push_back(el);
-    push(scp.thread, lst);    
-  }
-
-  static void list_pop_imp(Scope &scp, const Args &args) {
-    auto &lst_arg(args.at(0));
-    auto &lst(*get<ListRef>(lst_arg));
-    push(scp.thread, lst_arg);
-    push(scp.thread, lst.back());
-    lst.pop_back();
-  }
-
-  static void list_reverse_imp(Scope &scp, const Args &args) {
-    auto &in_arg(args.at(0));
-    auto &in(*get<ListRef>(in_arg));
-    std::reverse(in.begin(), in.end());
-    push(scp.thread, in_arg); 
-  }
-
-  static void list_unzip_imp(Scope &scp, const Args &args) {
-    auto &exe(scp.exec);
-    auto &in(args.at(0));
-
-    auto &yt(*in.type->args.at(0)->args.at(0));
-    push(scp.thread,
-	 get_iter_type(exe, yt),
-	 IterRef(new ListIter(exe, yt, get<ListRef>(in), [](auto &el) {
-	       return get<PairRef>(el)->first;
-	     })));
-
-    auto &xt(*in.type->args.at(0)->args.at(1));
-    push(scp.thread,
-	 get_iter_type(exe, xt),
-	 IterRef(new ListIter(exe, xt, get<ListRef>(in), [](auto &el) {
-	       return get<PairRef>(el)->second;
-	     })));
-  }
-
-  static void list_fifo_imp(Scope &scp, const Args &args) {
-    auto &exe(scp.exec);
-    auto &in(args.at(0));
-    auto &elt(*in.type->args.at(0));
-    
-    push(scp.thread,
-	 get_iter_type(exe, elt),
-	 IterRef(new FifoIter(exe, elt, get<ListRef>(in))));
-  }
-
   
   static void zip_imp(Scope &scp, const Args &args) {
     auto &l(args.at(0)), &r(args.at(1));
@@ -588,29 +487,6 @@ namespace snabel {
       return fmt("Iterable<%0>", v.type->args.at(0)->name);
     };
     iterable_type.eq = [](auto &x, auto &y) { return false; };
-
-    list_type.supers.push_back(&any_type);
-    list_type.args.push_back(&any_type);
-    list_type.dump = [](auto &v) { return dump(*get<ListRef>(v)); };
-    list_type.fmt = [](auto &v) { return list_fmt(*get<ListRef>(v)); };
-    list_type.eq = [](auto &x, auto &y) {
-      return get<ListRef>(x) == get<ListRef>(y);
-    };
-    list_type.iter = [this](auto &in) {
-      return IterRef(new ListIter(*this, *in.type->args.at(0), get<ListRef>(in)));
-    };
-
-    list_type.equal = [](auto &x, auto &y) {
-      auto &xs(*get<ListRef>(x)), &ys(*get<ListRef>(y));
-      if (xs.size() != ys.size()) { return false; }
-      auto xi(xs.begin()), yi(ys.begin());
-
-      for (; xi != xs.end() && yi != ys.end(); xi++, yi++) {
-	if (xi->type != yi->type || !xi->type->equal(*xi, *yi)) { return false; }
-      }
-
-      return true;
-    };
 
     pair_type.supers.push_back(&any_type);
     pair_type.args.push_back(&any_type);
@@ -918,6 +794,7 @@ namespace snabel {
 
 
     init_opts(*this);
+    init_lists(*this);
     init_tables(*this);
     
     add_conv(*this, str_type, ustr_type, [this](auto &v) {	
@@ -1106,20 +983,6 @@ namespace snabel {
 	     {ArgType(iterable_type), ArgType(any_type)}, {ArgType(str_type)},
 	     iterable_join_str_imp);
 
-    add_func(*this, "list",
-	     {ArgType(iterable_type)},
-	     {ArgType([this](auto &args) {
-		   return &get_list_type(*this, *args.at(0).type->args.at(0));
-		 })},
-	     iterable_list_imp);
-
-    add_func(*this, "nlist",
-	     {ArgType(iterable_type), ArgType(i64_type)},
-	     {ArgType([this](auto &args) {
-		   return &get_list_type(*this, *args.at(0).type->args.at(0));
-		 })},
-	     iterable_nlist_imp);
-
     add_func(*this, "zip",
 	     {ArgType(iterable_type), ArgType(iterable_type)},
 	     {ArgType([this](auto &args) {
@@ -1142,50 +1005,6 @@ namespace snabel {
 	     {ArgType(iter_type)},			
 	     iterable_map_imp);
     
-    add_func(*this, "list",
-	     {ArgType(meta_type)},
-	     {ArgType([this](auto &args) {
-		   return &get_list_type(*this, *args.at(0).type);
-		 })},
-	     list_imp);
-
-    add_func(*this, "z?",
-	     {ArgType(list_type)}, {ArgType(bool_type)},
-	     list_zero_imp);
-    
-    add_func(*this, "+?",
-	     {ArgType(list_type)}, {ArgType(bool_type)},
-	     list_pos_imp);
-    
-    add_func(*this, "push",
-	     {ArgType(list_type), ArgType(0, 0)}, {ArgType(0)},
-	     list_push_imp);
-    add_func(*this, "pop",
-	     {ArgType(list_type)}, {ArgType(0), ArgType(0, 0)},
-	     list_pop_imp);
-    add_func(*this, "reverse",
-	     {ArgType(list_type)}, {ArgType(0)},
-	     list_reverse_imp);
-
-    add_func(*this, "unzip",
-	     {ArgType(get_list_type(*this, pair_type))},
-	     {ArgType([this](auto &args) {
-		   return &get_iter_type(*this,
-					 *args.at(0).type->args.at(0)->args.at(0));
-		 }),
-		 ArgType([this](auto &args) {
-		     return &get_iter_type(*this,
-					   *args.at(0).type->args.at(0)->args.at(1));
-		   })},			
-	     list_unzip_imp);
-
-    add_func(*this, "fifo",
-	     {ArgType(list_type)},
-	     {ArgType([this](auto &args) {
-		   return &get_iter_type(*this, *args.at(0).type->args.at(0));
-		 })},
-	     list_fifo_imp);
-
     add_func(*this, ".",
 	     {ArgType(any_type), ArgType(any_type)},
 	     {ArgType([this](auto &args) {
@@ -1527,25 +1346,7 @@ namespace snabel {
     t.eq = exe.iterable_type.eq;
     return t;
   }
-  
-  Type &get_list_type(Exec &exe, Type &elt) {    
-    str n(fmt("List<%0>", elt.name));
-    auto fnd(find_type(exe, n));
-    if (fnd) { return *fnd; }
-    auto &t(add_type(exe, n));
-    t.raw = &exe.list_type;
-    t.supers.push_back(&exe.any_type);
-    t.supers.push_back(&get_iterable_type(exe, elt));
-    t.supers.push_back(&exe.list_type);
-    t.args.push_back(&elt);
-    t.dump = exe.list_type.dump;
-    t.fmt = exe.list_type.fmt;
-    t.eq = exe.list_type.eq;
-    t.equal = exe.list_type.equal;
-    t.iter = exe.list_type.iter;
-    return t;
-  }
-  
+    
   Type &get_pair_type(Exec &exe, Type &lt, Type &rt) {
     auto &thd(exe.main);
     str n(fmt("Pair<%0 %1>", lt.name, rt.name));

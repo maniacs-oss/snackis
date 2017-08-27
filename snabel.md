@@ -158,6 +158,9 @@ Lists are based on deques, which means fast inserts/removals in the front/back a
 
 > [1 2] 3 push reverse pop _
 [3 2]
+
+> [2 3 1] &lt? sort
+[1 2 3]
 ```
 
 #### Pairs

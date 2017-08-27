@@ -60,7 +60,6 @@ namespace snabel {
   Type &get_opt_type(Exec &exe, Type &elt);
   Type &get_iter_type(Exec &exe, Type &elt);
   Type &get_iterable_type(Exec &exe, Type &elt);
-  Type &get_list_type(Exec &exe, Type &elt);
   Type &get_pair_type(Exec &exe, Type &lt, Type &rt);
 
   FuncImp &add_func(Exec &exe,

@@ -5,6 +5,7 @@
 #include "snabel/error.hpp"
 #include "snabel/exec.hpp"
 #include "snabel/func.hpp"
+#include "snabel/list.hpp"
 #include "snabel/op.hpp"
 #include "snabel/proc.hpp"
 #include "snackis/core/defer.hpp"
