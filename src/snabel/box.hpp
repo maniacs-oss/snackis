@@ -2,6 +2,7 @@
 #define SNABEL_BOX_HPP
 
 #include <deque>
+#include <map>
 #include <variant>
 
 #include "snabel/bin.hpp"
@@ -38,14 +39,16 @@ namespace snabel {
   using Pair = std::pair<Box, Box>;
   using PairRef = std::shared_ptr<Pair>;
   using ProcRef = std::shared_ptr<Proc>;
-  
+  using Table = std::map<Box, Box>;
+  using TableRef = std::shared_ptr<Table>;
+    
   struct Empty
   { };
   
   using Val = std::variant<Empty, bool, Byte, char, int64_t, Path, Rat, str, uchar,
 			   Uid, ustr,
 			   BinRef, CoroRef, FileRef, IterRef, IOBufRef, IOQueueRef,
-			   ListRef, PairRef, ProcRef, RandomRef, 
+			   ListRef, PairRef, ProcRef, RandomRef, TableRef,
 			   Func *, Label *, Thread *, Type *>;
   
   struct Box {
@@ -64,6 +67,8 @@ namespace snabel {
 
   str dump(const List &lst);
   str list_fmt(const List &lst);
+  str dump(const Table &tbl);
+  str table_fmt(const Table &tbl);
   str dump(const Pair &pr);
   str pair_fmt(const Pair &pr);
   bool empty(const Box &b);

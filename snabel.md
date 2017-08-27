@@ -119,10 +119,7 @@ u'foo'
 > u'ö' len
 1
 
-> Bin list
-  'foo\r\n\r\nb' bytes push
-  'ar\r\n' bytes push
-  '\r\nbaz' bytes push
+> ['foo\r\n\r\nbar\r\n\r\nbaz' bytes]
   lines {'' or} map
   \, join
 'foo,bar,baz'
@@ -193,6 +190,18 @@ Opt(42)
 
 > 7 opt 42 opt or
 Opt(7)
+```
+
+#### Tables
+Tables map keys to values. They may be created from any pair iterable. Iterating a table results in a pair iterator.
+```
+> [7 'foo'. 35 'bar'.] table 35 get
+Opt('bar')
+
+> let: acc Str I64 table;
+  ['foo,\nbar.baz;\nfoo!' bytes] words {'' or} map
+  { @acc $1 1 &+1 upsert } for
+['bar' 1. 'baz' 1. 'foo' 2.]
 ```
 
 ### Lambdas

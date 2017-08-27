@@ -13,6 +13,7 @@
 #include "snabel/proc.hpp"
 #include "snabel/range.hpp"
 #include "snabel/str.hpp"
+#include "snabel/table.hpp"
 #include "snabel/type.hpp"
 
 namespace snabel {
@@ -80,6 +81,16 @@ namespace snabel {
   static void pos_i64_imp(Scope &scp, const Args &args) {
     bool res(get<int64_t>(args.at(0)) > 0);
     push(scp.thread, scp.exec.bool_type, res);
+  }
+
+  static void inc_i64_imp(Scope &scp, const Args &args) {
+    auto &in(get<int64_t>(args.at(0)));
+    push(scp.thread, scp.exec.i64_type, in+1);
+  }
+
+  static void dec_i64_imp(Scope &scp, const Args &args) {
+    auto &in(get<int64_t>(args.at(0)));
+    push(scp.thread, scp.exec.i64_type, in-1);
   }
 
   static void add_i64_imp(Scope &scp, const Args &args) {
@@ -382,6 +393,7 @@ namespace snabel {
 	 get_iter_type(exe, elt),
 	 IterRef(new FifoIter(exe, elt, get<ListRef>(in))));
   }
+
   
   static void zip_imp(Scope &scp, const Args &args) {
     auto &l(args.at(0)), &r(args.at(1));
@@ -455,6 +467,7 @@ namespace snabel {
 	 IterRef(new SplitIter(exe, (*in.type->iter)(in),
 				 {'\r', '\n', '\t', ' ',
 				     ',', '/', '\\', '@', ':', ';', '.', '!', '?',
+				     '<', '>', '[', ']', '{', '}', 
 				     '"', '\''})));
   }
 
@@ -523,6 +536,7 @@ namespace snabel {
     rat_type(add_type(*this, "Rat")),
     rwfile_type(add_type(*this, "RWFile")),    
     str_type(add_type(*this, "Str")),
+    table_type(add_type(*this, "Table")),
     thread_type(add_type(*this, "Thread")),
     uchar_type(add_type(*this, "UChar")),
     uid_type(add_type(*this, "Uid")),
@@ -1009,7 +1023,15 @@ namespace snabel {
     add_func(*this, "+?",
 	     {ArgType(i64_type)}, {ArgType(bool_type)},
 	     pos_i64_imp);
-    
+
+    add_func(*this, "+1",
+	     {ArgType(i64_type)}, {ArgType(i64_type)},
+	     inc_i64_imp);
+
+    add_func(*this, "-1",
+	     {ArgType(i64_type)}, {ArgType(i64_type)},
+	     dec_i64_imp);
+
     add_func(*this, "+",
 	     {ArgType(i64_type), ArgType(i64_type)}, {ArgType(i64_type)},
 	     add_i64_imp);
@@ -1425,6 +1447,8 @@ namespace snabel {
     add_macro(*this, "while", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(While());
       });
+
+    init_tables(*this);
   }
 
   Macro &add_macro(Exec &exe, const str &n, Macro::Imp imp) {
@@ -1476,6 +1500,8 @@ namespace snabel {
       return get_iterable_type(exe, *args.at(0));
     } else if (&raw == &exe.list_type) {      
       return get_list_type(exe, *args.at(0));
+    } else if (&raw == &exe.table_type) {      
+      return get_table_type(exe, *args.at(0), *args.at(1));
     } else if (&raw == &exe.pair_type) {      
       return get_pair_type(exe, *args.at(0), *args.at(1));
     }
@@ -1547,7 +1573,7 @@ namespace snabel {
     t.iter = exe.list_type.iter;
     return t;
   }
-
+  
   Type &get_pair_type(Exec &exe, Type &lt, Type &rt) {
     auto &thd(exe.main);
     str n(fmt("Pair<%0 %1>", lt.name, rt.name));

@@ -24,17 +24,15 @@ namespace snabel {
     OutStream buf;
     buf << '[';
     
-    if (lst.size() < 100) {
-      for (size_t i(0); i < lst.size(); i++) {
-	if (i > 0) { buf << ' '; }
-	auto &v(lst[i]);
-	buf << v.type->dump(v);
-      };
-    } else {
-      buf <<
-	lst.front().type->dump(lst.front()) <<
-	"..." <<
-	lst.back().type->dump(lst.back());
+    for (size_t i(0); i < lst.size(); i++) {
+      if (i > 0) { buf << ' '; }
+      auto &v(lst[i]);
+      buf << v.type->dump(v);
+      
+      if (i == 100) {
+	buf << "..." << lst.size();
+	break;
+      }
     }
     
     buf << ']';
@@ -45,23 +43,59 @@ namespace snabel {
     OutStream buf;
     buf << '[';
     
-    if (lst.size() < 100) {
-      for (size_t i(0); i < lst.size(); i++) {
-	if (i > 0) { buf << ' '; }
-	auto &v(lst[i]);
-	buf << v.type->fmt(v);
-      };
-    } else {
-      buf <<
-	lst.front().type->fmt(lst.front()) <<
-	"..." <<
-	lst.back().type->fmt(lst.back());
+    for (size_t i(0); i < lst.size(); i++) {
+      if (i > 0) { buf << ' '; }
+      auto &v(lst[i]);
+      buf << v.type->fmt(v);
+      
+      if (i == 100) {
+	buf << "..." << lst.size();
+	break;
+      }
     }
     
     buf << ']';
     return buf.str();
   }
 
+  str dump(const Table &tbl) {
+    OutStream buf;
+    buf << '[';
+    size_t i(0);
+    
+    for (auto it(tbl.begin()); it != tbl.end(); it++, i++) {
+      if (i > 0) { buf << ' '; }
+      buf << dump(*it);
+      
+      if (i == 100) {
+	buf << "..." << tbl.size();
+	break;
+      }
+    }
+    
+    buf << ']';
+    return buf.str();
+  }
+
+  str table_fmt(const Table &tbl) {
+    OutStream buf;
+    buf << '[';
+    size_t i(0);
+    
+    for (auto it(tbl.begin()); it != tbl.end(); it++, i++) {
+      if (i > 0) { buf << ' '; }
+      buf << pair_fmt(*it);
+      
+      if (i == 100) {
+	buf << "..." << tbl.size();
+	break;
+      }
+    }
+    
+    buf << ']';
+    return buf.str();
+  }
+  
   str dump(const Pair &pr) {
     auto &l(pr.first), &r(pr.second);
     return fmt("%0 %1.", l.type->dump(l), r.type->dump(r));

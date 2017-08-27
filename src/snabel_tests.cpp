@@ -290,10 +290,7 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
 
     run(exe,
-	"Bin list "
-	"'foo\\r\\n\\r\\nb' bytes push "
-	"'ar\\r\\n' bytes push "
-	"'\\r\\nbaz' bytes push "
+	"['foo\\r\\n\\r\\nbar\\r\\n\\r\\nbaz' bytes]"
 	"lines {'' or} map "
 	"\\, join");	
     CHECK(get<str>(pop(exe.main)) == "foo,bar,baz", _);
