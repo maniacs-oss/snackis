@@ -120,7 +120,7 @@ u'foo'
 1
 
 > ['foo\r\n\r\nbar\r\n\r\nbaz' bytes]
-  lines drop-n/a \, join
+  lines unopt \, join
 'foo,bar,baz'
 ```
 
@@ -175,7 +175,7 @@ Pairs have first class support and all iterables support zipping/unzipping. Pair
 ```
 
 #### Optionals
-Optional values are supported through the ```Opt<T>```-type. The empty value is named ```#n/a``` and values may be wrapped using ```or```.
+Optional values are supported through the ```Opt<T>```-type. The empty value is named ```#n/a``` and values may be unwrapped using ```or```.
 
 ```
 > 42 opt
@@ -189,6 +189,12 @@ Opt(42)
 
 > 7 opt 42 opt or
 Opt(7)
+
+> [7 opt #n/a 35 opt]
+[Opt(7) #n/a Opt(35)]
+
+> [7 opt #n/a 35 opt] unopt list
+[7 35]
 ```
 
 #### Tables
@@ -199,7 +205,7 @@ Opt('bar')
 
 > let: acc Str I64 table;
   ['foo,\nbar.baz;\nfoo!' bytes] words
-  drop-n/a
+  unopt
   { @acc $1 1 &+1 upsert } for
 ['bar' 1. 'baz' 1. 'foo' 2.]
 ```

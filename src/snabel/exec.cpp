@@ -249,7 +249,7 @@ namespace snabel {
       auto v(it->next(scp));
       if (!v) { break; }
       out->push_back(*v);
-      elt = elt ? get_super(*elt, *v->type) : v->type;
+      elt = elt ? get_super(scp.exec, *elt, *v->type) : v->type;
     }
     
     push(scp.thread, get_list_type(scp.exec, *elt), out); 
@@ -1444,6 +1444,8 @@ namespace snabel {
       return get_list_type(exe, *args.at(0));
     } else if (&raw == &exe.table_type) {      
       return get_table_type(exe, *args.at(0), *args.at(1));
+    } else if (&raw == &exe.opt_type) {      
+      return get_opt_type(exe, *args.at(0));
     } else if (&raw == &exe.pair_type) {      
       return get_pair_type(exe, *args.at(0), *args.at(1));
     }
@@ -1452,6 +1454,36 @@ namespace snabel {
     return raw;
   }
 
+  Type *get_super(Exec &exe, Type &raw, const Types &x, const Types &y) {
+    if (x.size() != y.size()) { return &raw; }
+    Types args;
+    
+    for (auto i(x.begin()), j(y.begin()); i != x.end() && j != y.end(); i++, j++) {
+      auto s(get_super(exe, **i, **j));
+      args.push_back(s ? s : &exe.any_type);
+    }
+
+    return &get_type(exe, raw, args);
+  }
+
+  Type *get_super(Exec &exe, Type &x, Type &y) {
+    if (&x == &y) { return &x; }
+
+    if (x.raw && x.raw == y.raw) {
+      return get_super(exe, *x.raw, x.args, y.args);
+    }
+    
+    for (auto i(x.supers.rbegin()); i != x.supers.rend(); i++) {
+      for (auto j(y.supers.rbegin()); j != y.supers.rend(); j++) {
+	auto res(get_super(exe, **i, **j));
+	if (res) { return res; }
+      }
+    }
+
+    return nullptr;
+  }
+
+  
   Type &get_iter_type(Exec &exe, Type &elt) {    
     str n(fmt("Iter<%0>", elt.name));
     auto fnd(find_type(exe, n));

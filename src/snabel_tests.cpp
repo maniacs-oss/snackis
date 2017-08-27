@@ -291,7 +291,7 @@ namespace snabel {
 
     run(exe,
 	"['foo\\r\\n\\r\\nbar\\r\\n\\r\\nbaz' bytes]"
-	"lines drop-n/a \\, join");	
+	"lines unopt \\, join");	
     CHECK(get<str>(pop(exe.main)) == "foo,bar,baz", _);
   }
 
@@ -489,6 +489,9 @@ namespace snabel {
 
     run(exe, "7 opt 42 opt or");
     CHECK(get<int64_t>(pop(exe.main)) == 7, _);
+
+    run(exe, "0 [7 opt #n/a 35 opt] unopt &+ for");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
   static void io_tests() {

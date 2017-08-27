@@ -717,7 +717,7 @@ namespace snabel {
 
     if (!lst->empty()) {
       for (auto i(std::next(lst->begin())); i != lst->end() && elt; i++) {
-	elt = get_super(*elt, *i->type);
+	elt = get_super(exe, *elt, *i->type);
       }
     }
     

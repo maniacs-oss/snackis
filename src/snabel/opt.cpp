@@ -15,7 +15,7 @@ namespace snabel {
 	break; 
       }
 
-      if (!empty(*nxt)) { return Box(*type.args.at(0), nxt->val); }
+      if (!empty(*nxt)) { return Box(*nxt->type->args.at(0), nxt->val); }
     }
 
     return nullopt;
@@ -43,7 +43,7 @@ namespace snabel {
     push(scp.thread, empty(in) ? alt : in);
   }
 
-  static void filter_imp(Scope &scp, const Args &args) {
+  static void unopt_iterable_imp(Scope &scp, const Args &args) {
     auto &exe(scp.exec);
     auto &in(args.at(0));
     auto it((*in.type->iter)(in));
@@ -100,13 +100,13 @@ namespace snabel {
 	     {ArgType(exe.opt_type), ArgType(0)}, {ArgType(0)},
 	     or_opt_imp);
 
-    add_func(exe, "drop-n/a",
+    add_func(exe, "unopt",
 	     {ArgType(get_iterable_type(exe, exe.opt_type))},
 	     {ArgType([&exe](auto &args) {
 		   auto &elt(*args.at(0).type->args.at(0));
 		   return &get_iter_type(exe, *elt.args.at(0));
 		 })},
-	     filter_imp);
+	     unopt_iterable_imp);
   }
 
   Type &get_opt_type(Exec &exe, Type &elt) {    

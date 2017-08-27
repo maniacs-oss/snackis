@@ -39,7 +39,6 @@ namespace snabel {
   };
   
   bool operator <(const Type &x, const Type &y);
-  Type *get_super(Type &x, Type &y);
 }
 
 #endif

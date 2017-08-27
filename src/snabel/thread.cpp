@@ -105,6 +105,7 @@ namespace snabel {
   }
 
   bool isa(Thread &thd, const Types &x, const Types &y) {
+    if (x.size() != y.size()) { return false; }
     auto i(x.begin()), j(y.begin());
 
     for (; i != x.end() && j != y.end(); i++, j++) {

@@ -19,19 +19,6 @@ namespace snabel {
 
   bool operator <(const Type &x, const Type &y) {
     return x.name < y.name;
-  }
-
-  Type *get_super(Type &x, Type &y) {
-    if (&x == &y) { return &x; }
-
-    for (auto i(x.supers.rbegin()); i != x.supers.rend(); i++) {
-      for (auto j(y.supers.rbegin()); j != y.supers.rend(); j++) {
-	auto res(get_super(**i, **j));
-	if (res) { return res; }
-      }
-    }
-
-    return nullptr;
-  }
+  }  
 }
 
