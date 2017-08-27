@@ -382,7 +382,8 @@ Iter<I64>
 
 > let: q Bin list;
   'in' rfile read {@q $1 push _} for
-  0 @q 'out' rwfile write $1 _ &+ for
+  @q 'out' rwfile write $1 _ 
+  0 $1 &+ for
 2313864
 
 > func: do-write {(

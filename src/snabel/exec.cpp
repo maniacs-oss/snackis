@@ -454,7 +454,7 @@ namespace snabel {
 	 get_iter_type(exe, get_opt_type(exe, exe.str_type)),
 	 IterRef(new SplitIter(exe, (*in.type->iter)(in),
 				 {'\r', '\n', '\t', ' ',
-				     ',', ':', ';', '.', '!', '?',
+				     ',', '/', '\\', '@', ':', ';', '.', '!', '?',
 				     '"', '\''})));
   }
 
