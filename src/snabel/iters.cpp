@@ -1,6 +1,7 @@
 #include <iostream>
 #include "snabel/error.hpp"
 #include "snabel/exec.hpp"
+#include "snabel/pair.hpp"
 #include "snabel/iters.hpp"
 #include "snabel/type.hpp"
 

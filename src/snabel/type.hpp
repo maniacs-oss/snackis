@@ -14,7 +14,9 @@ namespace snabel {
 
   using Types = std::deque<Type *>;
   using Conv = func<bool (Box &)>;
-  
+
+  enum ReadResult {READ_OK, READ_AGAIN, READ_EOF, READ_ERROR};
+    
   struct Type {
     const str name;
     Type *raw;
@@ -29,7 +31,7 @@ namespace snabel {
     func<str (const Box &)> fmt;
     opt<func<bool (Scope &, const Box &, bool)>> call;
     opt<func<IterRef (const Box &)>> iter;
-    opt<func<bool (const Box &, Bin &)>> read;
+    opt<func<ReadResult (const Box &, Bin &)>> read;
     opt<func<int64_t (const Box &, const unsigned char *, int64_t)>> write;
     
     Type(const str &n);

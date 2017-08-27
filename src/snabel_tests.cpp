@@ -5,6 +5,7 @@
 #include "snabel/exec.hpp"
 #include "snabel/list.hpp"
 #include "snabel/op.hpp"
+#include "snabel/pair.hpp"
 #include "snabel/parser.hpp"
 #include "snabel/type.hpp"
 #include "snackis/core/error.hpp"
@@ -422,10 +423,10 @@ namespace snabel {
     CHECK(get<str>(p->second) == "foo", _);    
 
     run(exe, "'foo' 42. left");
-    CHECK(get<str>(p->first) == "foo", _);    
+    CHECK(get<str>(pop(exe.main)) == "foo", _);    
     
     run(exe, "'foo' 42. right");
-    CHECK(get<int64_t>(p->first) == "42, _);    
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);    
     
     run(exe, "42 'foo'. unzip");
     CHECK(get<str>(pop(exe.main)) == "foo", _);    
@@ -513,7 +514,7 @@ namespace snabel {
   static void io_tests() {
     TRY(try_test);    
 
-    run(exe, "0 '../dist/snackis' rfile read {len $1 _ +} for");
+    run(exe, "0 '../dist/snackis' rfile read {{len $1 _ +} when} for");
     CHECK(get<int64_t>(pop(exe.main)) > 3000000, _);
 
     run(exe, "['foo' bytes] 'tmp' rwfile write 0 $1 &+ for");

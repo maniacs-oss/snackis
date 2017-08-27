@@ -1,5 +1,6 @@
 #include "snabel/error.hpp"
 #include "snabel/exec.hpp"
+#include "snabel/pair.hpp"
 #include "snabel/table.hpp"
 
 namespace snabel {

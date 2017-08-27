@@ -25,8 +25,10 @@ namespace snabel {
   
   struct ReadIter: Iter {
     Box in;
+    opt<Box> out;
+    Type &elt;
     
-    ReadIter(Exec &exe, const Box &in);
+    ReadIter(Exec &exe, Type &elt, const Box &in);
     opt<Box> next(Scope &scp) override;
   };
 

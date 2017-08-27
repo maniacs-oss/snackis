@@ -22,15 +22,31 @@ namespace snabel {
     if (fd != -1) { close(fd); }
   }
 
-  ReadIter::ReadIter(Exec &exe, const Box &in):
-    Iter(exe, get_iter_type(exe, exe.bin_type)),
-    in(in)
+  ReadIter::ReadIter(Exec &exe, Type &elt, const Box &in):
+    Iter(exe, get_iter_type(exe, elt)),
+    in(in), elt(elt)
   { }
   
-  opt<Box> ReadIter::next(Scope &scp){
-    Box out(scp.exec.bin_type, std::make_shared<Bin>(READ_BUF_SIZE));
-    if (!(*in.type->read)(in, *get<BinRef>(out))) { return nullopt; }
-    return out;
+  opt<Box> ReadIter::next(Scope &scp) {
+    if (!out) { out.emplace(elt, std::make_shared<Bin>(READ_BUF_SIZE)); }
+    auto res((*in.type->read)(in, *get<BinRef>(*out)));
+    
+    switch (res) {
+    case READ_OK: {
+      auto res(out);
+      out.reset();
+      return res;
+    }
+    case READ_AGAIN:
+      return Box(elt, empty_val);  
+    case READ_EOF:
+    case READ_ERROR:
+      return nullopt;
+    default:
+      ERROR(Snabel, fmt("Invalid read result: %0", res));
+    }
+
+    return nullopt;
   }
 
   WriteIter::WriteIter(Exec &exe, const IterRef &in, const Box &out):

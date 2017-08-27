@@ -296,10 +296,11 @@ namespace snabel {
 
   static void read_imp(Scope &scp, const Args &args) {
     Exec &exe(scp.exec);
+    auto &elt(get_opt_type(exe, exe.bin_type));
     
     push(scp.thread,
-	 get_iter_type(exe, exe.bin_type),
-	 IterRef(new ReadIter(exe, args.at(0))));
+	 get_iter_type(exe, elt),
+	 IterRef(new ReadIter(exe, elt, args.at(0))));
   }
 
   static void write_imp(Scope &scp, const Args &args) {
@@ -569,20 +570,16 @@ namespace snabel {
     rfile_type.read = [](auto &in, auto &out) {
       auto &f(*get<FileRef>(in));
       auto res(read(f.fd, &out[0], out.size()));
-      if (!res) { return false; }
+      if (!res) { return READ_EOF; }
 
       if (res == -1) {
-	if (errno == EAGAIN) {
-	  out.clear();
-	  return true;
-	}
-	
+	if (errno == EAGAIN) { return READ_AGAIN; }
 	ERROR(Snabel, fmt("Failed reading from file: %0", errno));
-	return false;
+	return READ_ERROR;
       }
 
       out.resize(res);
-      return true;
+      return READ_OK;
     };
 
     rwfile_type.supers.push_back(&file_type);
@@ -964,7 +961,7 @@ namespace snabel {
 
     add_func(*this, "read",
 	     {ArgType(readable_type)},
-	     {ArgType(get_iter_type(*this, bin_type))},
+	     {ArgType(get_iter_type(*this, get_opt_type(*this, bin_type)))},
 	     read_imp);
 
     add_func(*this, "write",

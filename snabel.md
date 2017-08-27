@@ -390,7 +390,7 @@ RFile(11)
 > 'snackis' rfile read
 Iter<Bin>
 
-> 0 'snackis' rfile read {len +} for
+> 0 'snackis' rfile read {{len +} when} for
 2313864
 
 > 'tmp' rwfile
@@ -405,31 +405,22 @@ Iter<I64>
 3
 
 > let: q Bin list;
-  'in' rfile read {@q $1 push _} for
+  'in' rfile read {{@q $1 push _} when} for
   @q 'out' rwfile write $1 _ 
   0 $1 &+ for
 2313864
 
-> func: do-write {(
-    rwfile write yield
-    {_ yield1} for
-  )};  
+> let: q Bin list;
+  let: wq @q fifo;
+  let: w 'out' rwfile @wq $1 write;
 
-  func: do-copy {
-    "Init queue and writer proc"
-    let: q Bin list;
-    func: w @q fifo $1 do-write proc;
-
-    _ rfile read 0 $1 {
-      "Push to queue and run writer if incoming data"
-      +? {$ @q $2 push _ len $1 _ + w} when
-    } for
+  'in' rfile read 0 $1 {{
+    $ @q $1 push _
+    len $1 _ + 
+    @w {_ break} for
+  } when} for
     
-    "Run writer until done if data left in queue"
-    @q +? {&w run} when _
-  };
-
-  'in' 'out' do-copy
+  @q +? {@w {_} for} when _
 2313864
 ```
 
