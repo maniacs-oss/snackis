@@ -181,7 +181,7 @@ namespace gui {
   {
     const UId me(whoamid(ctx));
 
-    snabel::add_func(exec, "say", {snabel::ArgType(exec.str_type)}, {},
+    snabel::add_func(exec, "say", {snabel::ArgType(exec.str_type)},
 		     [this](auto &scp, auto &args) {
 		       log(ctx, get<str>(args.at(0)));
 		     });

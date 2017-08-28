@@ -260,7 +260,7 @@ Coro(_enter1:1)
 ```
 
 ### Conditions
-```when``` accepts a condition and a callable target, the target is called if the condition is true. ```unless``` is the opposite of ```when```. Possible targets are functions, lambdas and labels.
+```when``` accepts a condition and a callable target, the target is called if the condition is true. ```unless``` is the opposite of ```when```.
 
 ```
 > 7 #f {35 +} when
@@ -271,14 +271,11 @@ Coro(_enter1:1)
 ```
 
 ### Iterators
-Iteration is currently supported for numbers, which will return 0..N; lists, which will return successive items; and strings, which will return successive characters. And last, but not least; iterators themselves.
+Many things in snabel are iterable, numbers, strings and lists to name a few. Snabel encourages composing iterables into data pipelines for efficient processing.
 
 ```
 > 7 \, join
 '0,1,2,3,4,5,6'
-
-> let: foo 'bar' iter; @foo list
-[\b \a \r]
 
 > [1 2 3] {7 *} map list
 [7 14 27]

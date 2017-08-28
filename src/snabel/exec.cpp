@@ -1402,9 +1402,11 @@ namespace snabel {
   }
   
   bool run(Exec &exe, const str &in) {
-    rewind(exe);
     clear_labels(exe);
+    exe.next_uid.store(1);
     exe.main.ops.clear();
+    rewind(exe);
+    
     if (!compile(exe, in)) { return false; }
     return run(exe.main);
   }
