@@ -1070,25 +1070,6 @@ namespace snabel {
 	}
       });
 
-    add_macro(*this, "proc:", [this](auto pos, auto &in, auto &out) {
-	if (in.size() < 2) {
-	  ERROR(Snabel, fmt("Malformed proc on row %0, col %1",
-			    pos.row, pos.col));
-	} else {
-	  out.emplace_back(Backup(true));
-	  const str n(in.at(0).text);
-	  auto start(std::next(in.begin()));
-	  auto end(find_end(start, in.end()));
-	  compile(*this, TokSeq(start, end), out);
-	  if (end != in.end()) { end++; }
-	  in.erase(in.begin(), end);
-	  out.emplace_back(Call());
-	  out.emplace_back(Restore());
-	  out.emplace_back(Deref("proc"));
-	  out.emplace_back(Putenv(n));
-	}
-      });
-    
     add_macro(*this, "label:", [this](auto pos, auto &in, auto &out) {
 	if (in.empty()) {
 	  ERROR(Snabel, fmt("Malformed label on row %0, col %1",

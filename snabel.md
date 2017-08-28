@@ -358,14 +358,13 @@ add_func(exe, "+",
 ```
 
 ### Procs
-Procs allow interleaving multiple cooperative computations in the same thread. The initial yield allows catching the stack and/or environment.
+Procs allow interleaving multiple independent flows of control in the same thread. Each proc takes a coroutine as input; when called through the proc, the coroutine won't return any values.
 
 ```
 > let: acc Str list;
-  proc: ping {|yield (3 {@acc 'ping' push yield1} for)};
-  proc: pong {|yield (3 {@acc 'pong' push yield1} for)};
-  let: ps [&ping &pong];
-  3 {@ps { call } for} for
+  func: ping {|yield (3 {@acc 'ping' push yield1} for)} call proc;
+  func: pong {|yield (3 {@acc 'pong' push yield1} for)} call proc;
+  [&ping &pong] run {_} for
   @acc
 ['ping' 'pong' 'ping' 'pong 'ping' 'pong']
 ```

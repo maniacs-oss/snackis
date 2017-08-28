@@ -525,26 +525,25 @@ namespace snabel {
     TRY(try_test);    
     
     run(exe,
-	"proc: foo {|yield (yield 35 push)};"
+	"func: foo {|yield (yield 35 push)} call proc;"
 	"0 [7] foo foo iter &+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
     run(exe,
 	"let: acc Str list; "
-	"proc: ping {|yield (3 {@acc 'ping' push yield1} for)}; "
-	"proc: pong {|yield (3 {@acc 'pong' push yield1} for)}; "
-	"let: ps [&ping &pong]; "
-	"3 {@ps { call } for} for");
+	"func: ping {|yield (3 {@acc 'ping' push yield1} for)} call proc; "
+	"func: pong {|yield (3 {@acc 'pong' push yield1} for)} call proc; "
+	"[&ping &pong] run {_} for");
     CHECK(get<ListRef>(get_env(exe.main_scope, "@acc"))->size() == 6, _);
   
     run(exe,
 	"let: acc I64 list; "
 
-	"proc: foo {|yield ( "
+	"let: foo {|yield ( "
 	"  7 {@acc $1 push _ yield1} for "
-	")}; "
+	")} call proc; "
 
-	"&foo run "
+	"@foo run "
 	"0 @acc &+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 21, _);
   }
