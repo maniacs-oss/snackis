@@ -358,7 +358,7 @@ add_func(exe, "+",
 ```
 
 ### Procs
-Procs allow interleaving multiple independent flows of control in the same thread. Each proc takes a coroutine as input; when called through procs, coroutines don't copy arguments or return values.
+Procs allow interleaving multiple independent flows of control in the same thread. Each proc takes a coroutine as input; when called through a proc, coroutines don't copy arguments or return values.
 
 ```
 > let: acc Str list;
