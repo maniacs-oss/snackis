@@ -12,7 +12,10 @@ namespace snabel {
     
     if (tok.text.at(0) == '"') {
       // Skip comments
-    } else if (tok.text.substr(0, 6) == "return" &&
+    } else if (tok.text == "&_") {
+      out.emplace_back(Push(Box(exe.drop_type, n_a)));
+    }
+    else if (tok.text.substr(0, 6) == "return" &&
 	       tok.text.size() == 7 &&
 	       isdigit(tok.text.at(6))) {
       auto i(tok.text.at(6) - '0');

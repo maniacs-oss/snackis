@@ -364,7 +364,7 @@ Procs allow interleaving multiple independent flows of control in the same threa
 > let: acc Str list;
   func: ping {|yield (3 {@acc 'ping' push yield1} for)} call proc;
   func: pong {|yield (3 {@acc 'pong' push yield1} for)} call proc;
-  [&ping &pong] run {_} for
+  [&ping &pong] run &_ for
   @acc
 ['ping' 'pong' 'ping' 'pong 'ping' 'pong']
 ```
@@ -411,7 +411,7 @@ Iter<I64>
       @w {_ break} for
     } when yield1} for
 
-    @q +? {@w {_} for} when _
+    @q +? {@w &_ for} when _
   )};
 
   'in' 'out' copy-file proc run|

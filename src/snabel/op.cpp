@@ -355,6 +355,8 @@ namespace snabel {
     auto nxt(it->next(scp));
     
     if (nxt) {      
+      if (tgt->type == &scp.exec.drop_type) { return true; }
+
       push(thd, *nxt);
       scp.break_pc = thd.pc+2;
       (*tgt->type->call)(scp, *tgt, false);

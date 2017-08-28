@@ -38,7 +38,7 @@ namespace snabel {
       return res;
     }
     case READ_AGAIN:
-      return Box(elt, empty_val);  
+      return Box(elt, n_a);  
     case READ_EOF:
     case READ_ERROR:
       return nullopt;

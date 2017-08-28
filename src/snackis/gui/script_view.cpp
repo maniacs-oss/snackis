@@ -92,10 +92,12 @@ namespace gui {
     auto stopped(pnow());
     
     if (res) {
+      log(v->ctx, "Finished running in %0us", usecs(stopped-started));
+
       auto res(peek(v->exec.main));
       if (res) {
-	log(v->ctx, "Finished running in %0us:\n%1\n%2!",
-	    usecs(stopped-started), res->type->dump(*res), res->type->name);
+	log(v->ctx, "Script result:\n%0\n%1!",
+	    res->type->dump(*res), res->type->name);
       } else {
 	log(v->ctx, "Script result: n/a");
       }

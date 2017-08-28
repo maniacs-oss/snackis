@@ -381,6 +381,7 @@ namespace snabel {
     callable_type(add_type(*this, "Callable")),
     char_type(add_type(*this, "Char")),
     coro_type(add_type(*this, "Coro")),
+    drop_type(add_type(*this, "Drop")),
     file_type(add_type(*this, "File")),    
     func_type(add_type(*this, "Func")),
     i64_type(add_type(*this, "I64")),
@@ -443,6 +444,13 @@ namespace snabel {
 
     void_type.fmt = [](auto &v) { return "Void"; };
     void_type.eq = [](auto &x, auto &y) { return true; };  
+
+    drop_type.fmt = [](auto &v) { return "Drop"; };
+    drop_type.eq = [](auto &x, auto &y) { return true; };  
+
+    drop_type.call.emplace([](auto &scp, auto &v, bool now) {
+	return try_pop(scp.thread) ? true : false;
+      });
 
     ordered_type.supers.push_back(&any_type);
 
@@ -1331,7 +1339,7 @@ namespace snabel {
   Box make_opt(Exec &exe, opt<Box> in) {
     return in
       ? Box(get_opt_type(exe, *in->type), in->val)
-      : Box(exe.opt_type, empty_val);
+      : Box(exe.opt_type, n_a);
   }
 
   void rewind(Exec &exe) {

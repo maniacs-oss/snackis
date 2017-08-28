@@ -95,7 +95,7 @@ namespace snabel {
       return x.type->equal(x, y);
     };
 
-    put_env(exe.main_scope, "#n/a", Box(exe.opt_type, empty_val));
+    put_env(exe.main_scope, "#n/a", Box(exe.opt_type, n_a));
 
     add_func(exe, "opt",
 	     {ArgType(exe.any_type)},

@@ -42,10 +42,10 @@ namespace snabel {
   using Table = std::map<Box, Box>;
   using TableRef = std::shared_ptr<Table>;
     
-  struct Empty
+  struct NA
   { };
   
-  using Val = std::variant<Empty, bool, Byte, char, int64_t, Path, Rat, str, uchar,
+  using Val = std::variant<NA, bool, Byte, char, int64_t, Path, Rat, str, uchar,
 			   Uid, ustr,
 			   BinRef, CoroRef, FileRef, IterRef, IOBufRef, IOQueueRef,
 			   ListRef, PairRef, ProcRef, RandomRef, TableRef,
@@ -59,7 +59,7 @@ namespace snabel {
   };
 
   using Stack = std::deque<Box>;
-  extern Empty empty_val;
+  extern NA n_a;
   
   bool operator ==(const Box &x, const Box &y);
   bool operator !=(const Box &x, const Box &y);

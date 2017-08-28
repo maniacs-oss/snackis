@@ -38,7 +38,7 @@ namespace snabel {
   Box *peek(Thread &thd);
   opt<Box> try_pop(Thread &thd);
   Box pop(Thread &thd);
-
+  
   Stack &backup_stack(Thread &thd, bool copy=false);
   void reset_stack(Thread &thd, int64_t depth, bool push_result);
   
