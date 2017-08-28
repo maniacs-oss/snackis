@@ -15,17 +15,6 @@ n/a
 42
 ```
 
-### Stream of Tokens
-Another thing to be aware of is that Snabel views code as a stream, rather than a graph of tokens. As long as the final sequence makes sense, Snabel mostly doesn't care how it got there. Notable exceptions are contents of strings, type parameter list and lambdas, where Snabel needs to see the final sequence to compile the code.
-
-```
-> bar label: foo; 35 +) baz label: bar; (7 foo label: baz
-42
-
-> bar label: foo; 35 +} baz label: bar; {7 foo label: baz
-SnabelError: Missing lambda
-```
-
 ### The Stack
 Values and results from function calls are pushed on the stack in order of appearance. Thanks to lexical scoping and named bindings, keeping the stack squeaky clean is less critical in Snabel. ```$list``` collects all values on the stack in a list that is pushed instead. ```$1```-```$9``` swaps in values, starting from the end; while ```$``` duplicates the last value. ```_``` drops the last value and ```|``` clears the entire stack.
 
@@ -268,14 +257,6 @@ Coro(_enter1:1)
 > func: foo {|yield ([7 35] &yield for &+)} call;
   foo foo foo call
 42
-```
-
-### Labels
-The ```label:```-macro will create a label with the specified name at that point, while simply naming a label in scope will result in jumping there. Prefixing the name of a label in scope with ```&``` pushes it on the stack for later use. Labels require termination using ```;``` to separate them from surrounding code.
-
-```
-> 1 2 skip 42 label: skip; +
-3
 ```
 
 ### Conditions
