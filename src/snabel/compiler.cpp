@@ -12,6 +12,8 @@ namespace snabel {
     
     if (tok.text.at(0) == '"') {
       // Skip comments
+    } else if (tok.text.at(0) == '#') {
+      out.emplace_back(Getenv(tok.text));
     } else if (tok.text == "&_") {
       out.emplace_back(Push(Box(exe.drop_type, n_a)));
     }

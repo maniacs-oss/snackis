@@ -19,9 +19,6 @@
 #include "snabel/type.hpp"
 
 namespace snabel {
-  static void nop_imp(Scope &scp, const Args &args)
-  { }
-
   static void is_imp(Scope &scp, const Args &args) {
     auto &v(args.at(0));
     auto &t(args.at(1));
@@ -390,6 +387,7 @@ namespace snabel {
     label_type(add_type(*this, "Label")),
     lambda_type(add_type(*this, "Lambda")),
     list_type(add_type(*this, "List")),
+    nop_type(add_type(*this, "Nop")),
     opt_type(add_type(*this, "Opt")),
     ordered_type(add_type(*this, "Ordered")),
     pair_type(add_type(*this, "Pair")),
@@ -444,19 +442,26 @@ namespace snabel {
 
     void_type.fmt = [](auto &v) { return "Void"; };
     void_type.eq = [](auto &x, auto &y) { return true; };  
+    
+    ordered_type.supers.push_back(&any_type);
 
+    callable_type.supers.push_back(&any_type);
+    callable_type.args.push_back(&any_type);
+
+    nop_type.args.push_back(&callable_type);
+    nop_type.fmt = [](auto &v) { return "Nop"; };
+    nop_type.eq = [](auto &x, auto &y) { return true; };  
+    nop_type.call.emplace([](auto &scp, auto &v, bool now) { return true; });
+    put_env(main_scope, "#nop", Box(nop_type, n_a));    
+    
+    drop_type.args.push_back(&callable_type);
     drop_type.fmt = [](auto &v) { return "Drop"; };
     drop_type.eq = [](auto &x, auto &y) { return true; };  
 
     drop_type.call.emplace([](auto &scp, auto &v, bool now) {
 	return try_pop(scp.thread) ? true : false;
       });
-
-    ordered_type.supers.push_back(&any_type);
-
-    callable_type.supers.push_back(&any_type);
-    callable_type.args.push_back(&any_type);
-
+    
     iter_type.supers.push_back(&any_type);
     iter_type.args.push_back(&any_type);
     iter_type.fmt = [](auto &v) { return fmt("Iter<%0>", v.type->args.at(0)->name); };
@@ -786,8 +791,6 @@ namespace snabel {
 	return true;
       });
     
-    add_func(*this, "nop", {}, {}, nop_imp);
-
     add_func(*this, "is?",
 	     {ArgType(any_type), ArgType(meta_type)}, {ArgType(bool_type)},
 	     is_imp);
@@ -1143,7 +1146,11 @@ namespace snabel {
       });
 
     add_macro(*this, "for", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(For());
+	out.emplace_back(For(true));
+      });
+
+    add_macro(*this, "_for", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(For(false));
       });
 
     add_macro(*this, "while", [](auto pos, auto &in, auto &out) {

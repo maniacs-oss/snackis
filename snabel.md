@@ -319,7 +319,7 @@ The ```for```-loop accepts an iterable and a target, and calls the target with t
 > 0 [1 2 3 4 5 6] &+ for
 21
 
-> 'foo' &nop for $list \- join
+> 'foo' #nop for $list \- join
 'f-o-o'
 
 > 0 {$ 42 lt?} {1 +} while
@@ -408,7 +408,7 @@ Iter<I64>
 
     @r {{
       @q $1 push _
-      @w {_ break} for
+      @w &break _for
     } when yield1} for
 
     @q +? {@w &_ for} when _

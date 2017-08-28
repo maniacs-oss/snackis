@@ -35,7 +35,7 @@ namespace snabel {
     Type &any_type, &bin_type, &bool_type, &byte_type, &callable_type,
       &char_type, &coro_type, &drop_type, &file_type, &func_type, &i64_type,
       &iter_type,
-      &iterable_type, &label_type, &lambda_type, &list_type, &opt_type,
+      &iterable_type, &label_type, &lambda_type, &list_type, &nop_type, &opt_type,
       &ordered_type, &pair_type,
       &path_type, &proc_type, &readable_type, &rfile_type, &random_type, &rat_type,
       &rwfile_type, &str_type, &table_type, &thread_type, &uchar_type, &uid_type,

@@ -103,10 +103,11 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
 
-  struct For: OpImp {    
+  struct For: OpImp {
+    bool push_vals;
     bool compiled;
     
-    For();
+    For(bool push_vals);
     OpImp &get_imp(Op &op) const override;
     bool compile(const Op &op, Scope &scp, OpSeq & out) override;
     bool run(Scope &scp) override;

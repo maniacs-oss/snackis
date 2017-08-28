@@ -292,8 +292,8 @@ namespace snabel {
     return true;
   }
 
-  For::For():
-    OpImp(OP_FOR, "for"), compiled(false)
+  For::For(bool push_vals):
+    OpImp(OP_FOR, "for"), push_vals(push_vals), compiled(false)
   { }
 
   OpImp &For::get_imp(Op &op) const {
@@ -356,10 +356,10 @@ namespace snabel {
     
     if (nxt) {      
       if (tgt->type == &scp.exec.drop_type) { return true; }
-
-      push(thd, *nxt);
+      if (push_vals) { push(thd, *nxt); }
+      if (tgt->type == &scp.exec.nop_type) { return true; }
       scp.break_pc = thd.pc+2;
-      (*tgt->type->call)(scp, *tgt, false);
+      if (!(*tgt->type->call)(scp, *tgt, false)) { return false; }
     } else {
       scp.op_state.erase(pc);
       scp.break_pc = -1;
@@ -971,6 +971,7 @@ namespace snabel {
       }
       
       if (get<bool>(*ok)) {
+	if (tgt->type == &scp.exec.nop_type) { return true; }
 	scp.break_pc = scp.thread.pc+2;
 	(*tgt->type->call)(scp, *tgt, false);
 	return true;
