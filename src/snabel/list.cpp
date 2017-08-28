@@ -176,70 +176,46 @@ namespace snabel {
 
     add_func(exe, "list",
 	     {ArgType(exe.iterable_type)},
-	     {ArgType([&exe](auto &args) {
-		   return &get_list_type(exe,
-					 *get_sub(exe,
-						  *args.at(0).type,
-						  exe.iterable_type)->args.at(0));
-		 })},
 	     iterable_list_imp);
 
     add_func(exe, "nlist",
 	     {ArgType(exe.iterable_type), ArgType(exe.i64_type)},
-	     {ArgType([&exe](auto &args) {
-		   return &get_list_type(exe, *args.at(0).type->args.at(0));
-		 })},
 	     iterable_nlist_imp);
 
     add_func(exe, "list",
 	     {ArgType(exe.meta_type)},
-	     {ArgType([&exe](auto &args) {
-		   return &get_list_type(exe, *args.at(0).type);
-		 })},
 	     list_imp);
 
     add_func(exe, "z?",
-	     {ArgType(exe.list_type)}, {ArgType(exe.bool_type)},
+	     {ArgType(exe.list_type)},
 	     list_zero_imp);
     
     add_func(exe, "+?",
-	     {ArgType(exe.list_type)}, {ArgType(exe.bool_type)},
+	     {ArgType(exe.list_type)},
 	     list_pos_imp);
     
     add_func(exe, "push",
-	     {ArgType(exe.list_type), ArgType(0, 0)}, {ArgType(0)},
+	     {ArgType(exe.list_type), ArgType(0, 0)},
 	     list_push_imp);
     
     add_func(exe, "pop",
-	     {ArgType(exe.list_type)}, {ArgType(0), ArgType(0, 0)},
+	     {ArgType(exe.list_type)},
 	     list_pop_imp);
 
     add_func(exe, "reverse",
-	     {ArgType(exe.list_type)}, {ArgType(0)},
+	     {ArgType(exe.list_type)},
 	     list_reverse_imp);
 
     add_func(exe, "sort",
 	     {ArgType(exe.list_type), ArgType(exe.callable_type)},
-	     {ArgType(0)},
 	     list_sort_imp);
 
     add_func(exe, "unzip",
 	     {ArgType(get_list_type(exe, exe.pair_type))},
-	     {ArgType([&exe](auto &args) {
-		   return &get_iter_type(exe,
-					 *args.at(0).type->args.at(0)->args.at(0));
-		 }),
-		 ArgType([&exe](auto &args) {
-		     return &get_iter_type(exe,
-					   *args.at(0).type->args.at(0)->args.at(1));
-		   })},			
 	     list_unzip_imp);
 
     add_func(exe, "fifo",
 	     {ArgType(exe.list_type)},
-	     {ArgType([&exe](auto &args) {
-		   return &get_iter_type(exe, *args.at(0).type->args.at(0));
-		 })},
 	     list_fifo_imp);
   }
   

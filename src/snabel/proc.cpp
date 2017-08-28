@@ -34,7 +34,6 @@ namespace snabel {
   void init_procs(Exec &exe) {
     add_func(exe, "run",
 	     {ArgType(get_list_type(exe, exe.proc_type))},
-	     {ArgType(get_iter_type(exe, exe.proc_type))},
 	     list_run_imp);
   }
   

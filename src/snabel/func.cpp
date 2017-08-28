@@ -10,10 +10,9 @@
 namespace snabel {
   FuncImp::FuncImp(Func &fn,
 		   const ArgTypes &args,
-		   const ArgTypes &results,
 		   Imp imp,
 		   bool pure):
-    func(fn), args(args), results(results), imp(imp), pure(pure)
+    func(fn), args(args), imp(imp), pure(pure)
   { }
   
   void FuncImp::operator ()(Scope &scp, const Args &args) {
@@ -66,9 +65,8 @@ namespace snabel {
 
   FuncImp &add_imp(Func &fn,
 		   const ArgTypes &args,
-		   const ArgTypes &results,
 		   FuncImp::Imp imp) {
-    return fn.imps.emplace_front(fn, args, results, imp);
+    return fn.imps.emplace_front(fn, args, imp);
   }
 
   opt<Args> match(const FuncImp &imp, Thread &thd, bool conv_args) {

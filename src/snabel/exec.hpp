@@ -57,7 +57,6 @@ namespace snabel {
   Type &get_type(Exec &exe, Type &raw, Types args);
   Type *get_super(Exec &exe, Type &raw, const Types &x, const Types &y);
   Type *get_super(Exec &exe, Type &x, Type &y); 
-  Type *get_sub(Exec &exe, Type &t, Type &raw);
   Type &get_opt_type(Exec &exe, Type &elt);
   Type &get_iter_type(Exec &exe, Type &elt);
   Type &get_iterable_type(Exec &exe, Type &elt);
@@ -65,7 +64,6 @@ namespace snabel {
   FuncImp &add_func(Exec &exe,
 		    const str n,
 		    const ArgTypes &args,
-		    const ArgTypes &results,
 		    FuncImp::Imp imp);
 
   Label &add_label(Exec &exe, const str &tag, bool pmt=false);

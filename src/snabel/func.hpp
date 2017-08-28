@@ -37,13 +37,11 @@ namespace snabel {
 
     Func &func;
     ArgTypes args;
-    ArgTypes results;
     Imp imp;
     bool pure;
     
     FuncImp(Func &fn,
 	    const ArgTypes &args,
-	    const ArgTypes &results,
 	    Imp imp,
 	    bool pure=true);
     void operator ()(Scope &scp, const Args &args);
@@ -59,7 +57,6 @@ namespace snabel {
   Type *get_type(const FuncImp &imp, const ArgType &arg_type, const Args &args);
   FuncImp &add_imp(Func &fn,
 		   const ArgTypes &args,
-		   const ArgTypes &results,
 		   FuncImp::Imp imp);
   opt<Args> match(const FuncImp &imp, Thread &thd, bool conv_args);
   opt<std::pair<FuncImp *, Args>> match(Func &fn,

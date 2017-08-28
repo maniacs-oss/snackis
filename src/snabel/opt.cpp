@@ -99,35 +99,27 @@ namespace snabel {
 
     add_func(exe, "opt",
 	     {ArgType(exe.any_type)},
-	     {ArgType([&exe](auto &args) {
-		   return &get_opt_type(exe, *args.at(0).type);
-		 })},
 	     opt_imp);
 
     add_func(exe, "when",
-	     {ArgType(exe.opt_type), ArgType(exe.callable_type)}, {},
+	     {ArgType(exe.opt_type), ArgType(exe.callable_type)},
 	     when_imp);
 
     add_func(exe, "unless",
-	     {ArgType(exe.opt_type), ArgType(exe.callable_type)}, {},
+	     {ArgType(exe.opt_type), ArgType(exe.callable_type)},
 	     unless_imp);
 
     add_func(exe, "or",
 	     {ArgType(exe.opt_type),
 		 ArgType([](auto &args) { return args.at(0).type->args.at(0); })},
-	     {ArgType([](auto &args) { return args.at(0).type->args.at(0); })},
 	     or_imp);
 
     add_func(exe, "or",
-	     {ArgType(exe.opt_type), ArgType(0)}, {ArgType(0)},
+	     {ArgType(exe.opt_type), ArgType(0)},
 	     or_opt_imp);
 
     add_func(exe, "unopt",
 	     {ArgType(get_iterable_type(exe, exe.opt_type))},
-	     {ArgType([&exe](auto &args) {
-		   auto &elt(*args.at(0).type->args.at(0));
-		   return &get_iter_type(exe, *elt.args.at(0));
-		 })},
 	     unopt_iterable_imp);
   }
 

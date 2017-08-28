@@ -61,31 +61,22 @@ namespace snabel {
 
     add_func(exe, ".",
 	     {ArgType(exe.any_type), ArgType(exe.any_type)},
-	     {ArgType([&exe](auto &args) {
-		   return &get_pair_type(exe, *args.at(0).type, *args.at(1).type);
-		 })},			
 	     zip_imp);
     
     add_func(exe, "zip",
 	     {ArgType(exe.iterable_type), ArgType(exe.iterable_type)},
-	     {ArgType([&exe](auto &args) {
-		   return &get_iter_type(exe,
-					 get_pair_type(exe,
-						       *args.at(0).type->args.at(0),
-						       *args.at(1).type->args.at(0)));
-		 })},			
 	     iterable_zip_imp);
 
     add_func(exe, "left",
-	     {ArgType(exe.pair_type)}, {ArgType(0, 0)},
+	     {ArgType(exe.pair_type)},
 	     left_imp);
 
     add_func(exe, "right",
-	     {ArgType(exe.pair_type)}, {ArgType(0, 1)},
+	     {ArgType(exe.pair_type)},
 	     right_imp);
 
     add_func(exe, "unzip",
-	     {ArgType(exe.pair_type)}, {ArgType(0, 0), ArgType(0, 1)},
+	     {ArgType(exe.pair_type)},
 	     unzip_imp);
   }
 

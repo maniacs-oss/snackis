@@ -162,51 +162,39 @@ namespace snabel {
 
     add_func(exe, "table",
 	     {ArgType(exe.meta_type), ArgType(exe.meta_type)},
-	     {ArgType([&exe](auto &args) {
-		   return &get_table_type(exe, *args.at(0).type, *args.at(1).type);
-		 })},
 	     table_imp);
     
     add_func(exe, "table",
 	     {ArgType(get_iterable_type(exe, exe.pair_type))},
-	     {ArgType(exe.table_type)},
 	     iter_table_imp);
 
     add_func(exe, "len",
 	     {ArgType(exe.table_type)},
-	     {exe.i64_type},
 	     len_imp);
 
     add_func(exe, "z?",
-	     {ArgType(exe.table_type)}, {ArgType(exe.bool_type)},
+	     {ArgType(exe.table_type)},
 	     zero_imp);
     
     add_func(exe, "+?",
-	     {ArgType(exe.table_type)}, {ArgType(exe.bool_type)},
+	     {ArgType(exe.table_type)},
 	     pos_imp);
     
     add_func(exe, "get",
 	     {ArgType(exe.table_type), ArgType(0, 0)},
-	     {ArgType(0),
-		 ArgType([&exe](auto &args){
-		   return &get_opt_type(exe, *args.at(0).type->args.at(1));
-		 })},
 	     get_imp);
 
     add_func(exe, "put",
 	     {ArgType(exe.table_type), ArgType(0, 0), ArgType(0, 1)},
-	     {ArgType(0)},
 	     put_imp);
 
     add_func(exe, "del",
 	     {ArgType(exe.table_type), ArgType(0, 0)},
-	     {ArgType(0)},
 	     del_imp);
 
     add_func(exe, "upsert",
 	     {ArgType(exe.table_type), ArgType(0, 0), ArgType(0, 1),
 		 ArgType(exe.callable_type)},
-	     {ArgType(0)},
 	     upsert_imp);
   }
 
