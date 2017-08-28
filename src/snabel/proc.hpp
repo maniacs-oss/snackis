@@ -21,7 +21,16 @@ namespace snabel {
     
     Proc(const CoroRef &cor);
   };
+  
+  struct ProcIter: Iter {
+    ListRef in;
+    List::const_iterator i;
+    
+    ProcIter(Exec &exe, const ListRef &in);
+    opt<Box> next(Scope &scp) override;
+  };
 
+  void init_procs(Exec &exe);
   void init(Proc &prc, Scope &scp);
   bool call(const ProcRef &prc, Scope &scp, bool now=false);
 }

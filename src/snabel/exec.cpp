@@ -752,6 +752,7 @@ namespace snabel {
     init_pairs(*this);
     init_lists(*this);
     init_tables(*this);
+    init_procs(*this);
     
     add_conv(*this, str_type, ustr_type, [this](auto &v) {	
 	v.type = &ustr_type;

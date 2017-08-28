@@ -361,10 +361,6 @@ add_func(exe, "+",
 Procs allow interleaving multiple cooperative computations in the same thread. The initial yield allows catching the stack and/or environment.
 
 ```
-> proc: foo {|yield 35 push};
-  0 [7] foo &+ for
-42
-
 > let: acc Str list;
   proc: ping {|yield (3 {@acc 'ping' push yield1} for)};
   proc: pong {|yield (3 {@acc 'pong' push yield1} for)};
@@ -404,24 +400,23 @@ Iter<I64>
   write 0 $1 &+ for
 3
 
-> let: q Bin list;
-  'in' rfile read {{@q $1 push _} when} for
-  @q 'out' rwfile write $1 _ 
-  0 $1 &+ for
-2313864
+> func: copy-file {(
+    let: q Bin list;
+    let: wq @q fifo;
+    let: w rwfile @wq $1 write; _
+    let: r rfile read; _
+    yield
 
-> let: q Bin list;
-  let: wq @q fifo;
-  let: w 'out' rwfile @wq $1 write;
+    @r {{
+      @q $1 push _
+      @w {_ break} for
+    } when yield1} for
 
-  'in' rfile read 0 $1 {{
-    $ @q $1 push _
-    len $1 _ + 
-    @w {_ break} for
-  } when} for
-    
-  @q +? {@w {_} for} when _
-2313864
+    @q +? {@w {_} for} when _
+  )};
+
+  'in' 'out' copy-file proc run
+n/a
 ```
 
 ### Random Numbers
