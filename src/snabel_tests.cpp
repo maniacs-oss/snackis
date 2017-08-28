@@ -206,9 +206,13 @@ namespace snabel {
   static void jump_tests() {
     TRY(try_test);    
 
+    rem_env(exe.main_scope, "exit");
     run(exe, "3 4 exit 35 label: exit; +");
     CHECK(get<int64_t>(pop(exe.main)) == 7, _);
 
+    rem_env(exe.main_scope, "foo");
+    rem_env(exe.main_scope, "bar");
+    rem_env(exe.main_scope, "baz");
     run(exe, "bar label: foo; 35 +) baz label: bar; (7 foo label: baz");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
@@ -222,6 +226,7 @@ namespace snabel {
     run(exe, "2 {3 +} call");
     CHECK(get<int64_t>(pop(exe.main)) == 5, _);
 
+    rem_env(exe.main_scope, "bar");
     run(exe, "{let: bar 42; @bar} call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
     CHECK(!find_env(curr_scope(exe.main), "bar"), _);
@@ -248,6 +253,7 @@ namespace snabel {
   static void coro_tests() {
     TRY(try_test);    
     
+    rem_env(exe.main_scope, "foo");
     run(exe,
 	"func: foo {|yield (7 yield 28 +)} call; "
 	"foo foo +");
@@ -587,7 +593,9 @@ namespace snabel {
   void all_tests() {
     TRY(try_snabel);
     const int iters(100), warmups(10);
-    for(int i(0); i < warmups; ++i) { loop(); }
+    for(int i(0); i < warmups; ++i) {
+      loop();
+    }
     auto started(pnow());    
 
     for(int i(0); i < iters; ++i) {

@@ -1354,10 +1354,7 @@ namespace snabel {
 
   bool compile(Exec &exe, const str &in) {
     Exec::Lock lock(exe.mutex);
-    
-    exe.main.ops.clear();
-    clear_labels(exe);
-    size_t lnr(0);
+    size_t lnr(exe.main.ops.size());
     TokSeq toks;
     
     for (auto &ln: parse_lines(in)) {
@@ -1430,6 +1427,7 @@ namespace snabel {
   
   bool run(Exec &exe, const str &in) {
     rewind(exe);
+    exe.main.ops.clear();
     if (!compile(exe, in)) { return false; }
     return run(exe.main);
   }
