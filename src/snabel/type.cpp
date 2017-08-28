@@ -19,6 +19,6 @@ namespace snabel {
 
   bool operator <(const Type &x, const Type &y) {
     return x.name < y.name;
-  }  
+  }
 }
 

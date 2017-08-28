@@ -138,7 +138,11 @@ namespace snabel {
     };
 
     exe.table_type.iter = [&exe](auto &in) {
-      return IterRef(new TableIter(exe, *in.type->args.at(0), get<TableRef>(in)));
+      return IterRef(new TableIter(exe,
+				   get_pair_type(exe,
+						 *in.type->args.at(0),
+						 *in.type->args.at(0)),
+				   get<TableRef>(in)));
     };
 
     exe.table_type.equal = [](auto &x, auto &y) {

@@ -1,7 +1,6 @@
 #ifndef SNABEL_ITERS_HPP
 #define SNABEL_ITERS_HPP
 
-#include <set>
 #include "snabel/box.hpp"
 #include "snabel/iter.hpp"
 #include "snabel/io.hpp"
@@ -24,13 +23,15 @@ namespace snabel {
   };
 
   struct SplitIter: Iter {
+    using SplitFn = func<bool (const char &)>;
+    
     IterRef in;
-    std::set<char> chars;
     BinRef in_buf;
     Bin::iterator in_pos;
+    SplitFn split;
     OutStream out_buf;
     
-    SplitIter(Exec &exe, const IterRef &in, const std::set<char> &cs);
+    SplitIter(Exec &exe, const IterRef &in, SplitFn fn);
     opt<Box> next(Scope &scp) override;
   };
 

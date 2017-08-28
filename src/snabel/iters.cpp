@@ -37,9 +37,9 @@ namespace snabel {
     return nullopt;
   }
 
-  SplitIter::SplitIter(Exec &exe, const IterRef &in, const std::set<char> &cs):
+  SplitIter::SplitIter(Exec &exe, const IterRef &in, SplitFn fn):
     Iter(exe, get_iter_type(exe, get_opt_type(exe, exe.str_type))),
-    in(in), chars(cs)
+    in(in), split(fn)
   { }
   
   opt<Box> SplitIter::next(Scope &scp) {
@@ -51,13 +51,7 @@ namespace snabel {
 
 	if (nxt) {
 	  in_buf = get<BinRef>(*nxt);
-	  in_pos = in_buf->begin();
-
-	  while (in_pos != in_buf->end()) {
-	    auto &c(*in_pos);
-	    if (chars.find(c) == chars.end()) { break; }
-	    in_pos++;
-	  }
+	  in_pos = std::find_if_not(in_buf->begin(), in_buf->end(), split);
 	} else {
 	  in.reset();
 	}
@@ -70,9 +64,7 @@ namespace snabel {
 	break;
       }
       
-      auto fnd(std::find_if(in_pos, in_buf->end(), [this](auto &c) {
-	    return chars.find(c) != chars.end();
-	  }));
+      auto fnd(std::find_if(in_pos, in_buf->end(), split));
       
       if (fnd == in_buf->end()) {
 	auto i(in_pos - in_buf->begin());
@@ -87,14 +79,7 @@ namespace snabel {
 	  out_buf.str("");
 	}
 
-	in_pos = fnd+1;
-	
-	while (in_pos != in_buf->end()) {
-	  auto &c(*in_pos);
-	  if (chars.find(c) == chars.end()) { break; }
-	  in_pos++;
-	}
-
+	in_pos = std::find_if_not(fnd+1, in_buf->end(), split);
 	break;
       }
     }

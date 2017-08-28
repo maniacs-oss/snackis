@@ -416,6 +416,22 @@ Iter<I64>
 
   'in' 'out' copy-file proc run|
 n/a
+
+> func: histogram {
+    let: tbl Str I64 table;
+
+    func: process-file {
+      rfile read unopt words unopt
+      {@tbl $1 1 &+1 upsert _} for
+    };
+
+    &process-file for
+    @tbl list {right $1 right lt?} sort
+    100 nlist
+  };
+
+  ['test1.txt', 'test2.txt'] histogram
+['foo' 21. 'bar' 14. 'baz' 7.]
 ```
 
 ### Random Numbers

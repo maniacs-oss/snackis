@@ -1,3 +1,4 @@
+#include <iostream>
 #include "snabel/error.hpp"
 #include "snabel/exec.hpp"
 #include "snabel/list.hpp"
@@ -176,7 +177,10 @@ namespace snabel {
     add_func(exe, "list",
 	     {ArgType(exe.iterable_type)},
 	     {ArgType([&exe](auto &args) {
-		   return &get_list_type(exe, *args.at(0).type->args.at(0));
+		   return &get_list_type(exe,
+					 *get_sub(exe,
+						  *args.at(0).type,
+						  exe.iterable_type)->args.at(0));
 		 })},
 	     iterable_list_imp);
 

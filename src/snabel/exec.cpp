@@ -316,7 +316,9 @@ namespace snabel {
     
     push(scp.thread,
 	 get_iter_type(exe, get_opt_type(exe, exe.str_type)),
-	 IterRef(new SplitIter(exe, (*in.type->iter)(in), {'\r', '\n'})));
+	 IterRef(new SplitIter(exe, (*in.type->iter)(in), [](auto &c) {
+	       return c == '\r' || c == '\n';
+	     })));
   }
 
   static void iterable_words_imp(Scope &scp, const Args &args) {
@@ -325,11 +327,9 @@ namespace snabel {
     
     push(scp.thread,
 	 get_iter_type(exe, get_opt_type(exe, exe.str_type)),
-	 IterRef(new SplitIter(exe, (*in.type->iter)(in),
-				 {'\r', '\n', '\t', ' ',
-				     ',', '/', '\\', '@', ':', ';', '.', '!', '?',
-				     '<', '>', '[', ']', '{', '}', 
-				     '"', '\''})));
+	 IterRef(new SplitIter(exe, (*in.type->iter)(in), [](auto &c) {
+	       return !isalpha(c);
+	     })));
   }
 
   static void random_imp(Scope &scp, const Args &args) {
@@ -1248,6 +1248,16 @@ namespace snabel {
     return nullptr;
   }
 
+  Type *get_sub(Exec &exe, Type &t, Type &raw) {
+    if (t.raw == &raw) { return &t; }
+    
+    for (auto i(t.supers.rbegin()); i != t.supers.rend(); i++) {
+      auto res(get_sub(exe, **i, raw));
+      if (res) { return res; }
+    }
+
+    return nullptr;
+  }
   
   Type &get_iter_type(Exec &exe, Type &elt) {    
     str n(fmt("Iter<%0>", elt.name));
