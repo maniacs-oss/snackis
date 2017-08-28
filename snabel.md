@@ -327,7 +327,7 @@ The ```for```-loop accepts an iterable and a target, and calls the target with t
 ```
 
 ### Functions
-Each function name represents a set of implementations, and each implementation may declare its parameter- and result types. Implementations are matched in reverse declared order when resolving function calls, to allow overriding existing functionality at any point. Prefixing the name of a function with ```&``` pushes it on the stack for later use. Functions require termination using ```;``` to separate them from surrounding code.
+Each function name represents a set of implementations that are matched in reverse declared order when resolving function calls. Prefixing the name of a function with ```&``` pushes it on the stack for later use. Definitions require termination using ```;``` to separate them from surrounding code.
 
 ```
 > func: foo {35 +}; 7 foo
@@ -353,7 +353,6 @@ static void add_i64(Scope &scp, const Args &args) {
 Exec exe;
 add_func(exe, "+",
          {ArgType(exe.i64_type), ArgType(exe.i64_type)},
-	 {ArgType(exe.i64_type)},
 	 add_i64);
 ```
 
