@@ -203,20 +203,6 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
-  static void jump_tests() {
-    TRY(try_test);    
-
-    rem_env(exe.main_scope, "exit");
-    run(exe, "3 4 exit 35 label: exit; +");
-    CHECK(get<int64_t>(pop(exe.main)) == 7, _);
-
-    rem_env(exe.main_scope, "foo");
-    rem_env(exe.main_scope, "bar");
-    rem_env(exe.main_scope, "baz");
-    run(exe, "bar label: foo; 35 +) baz label: bar; (7 foo label: baz");
-    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
-  }
-
   static void lambda_tests() {
     TRY(try_test);    
 
@@ -572,7 +558,6 @@ namespace snabel {
     group_tests();
     equality_tests();
     let_tests();
-    jump_tests();
     lambda_tests();
     coro_tests();
     cond_tests();

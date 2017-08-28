@@ -1068,29 +1068,6 @@ namespace snabel {
 	}
       });
 
-    add_macro(*this, "label:", [this](auto pos, auto &in, auto &out) {
-	if (in.empty()) {
-	  ERROR(Snabel, fmt("Malformed label on row %0, col %1",
-			    pos.row, pos.col));
-	  return;
-	}
-
-	const str tag(in.at(0).text);
-	in.pop_front();
-
-	if (!in.empty()) {
-	  if (in.at(0).text != ";") {
-	    ERROR(Snabel, fmt("Malformed label on row %0, col %1",
-				pos.row, pos.col));
-	    return;
-	  }
-
-	  in.pop_front();
-	}
-
-	out.emplace_back(Target(add_label(*this, tag)));
-      });
-    
     add_macro(*this, "let:", [this](auto pos, auto &in, auto &out) {
 	if (in.empty()) {
 	  ERROR(Snabel, fmt("Malformed let on row %0, col %1",
@@ -1288,7 +1265,6 @@ namespace snabel {
 	       std::forward_as_tuple(tag),
 	       std::forward_as_tuple(exe, tag, pmt))
 	    .first->second);
-    put_env(exe.main_scope, tag, Box(exe.label_type, &l));
     return l;
   }
 
@@ -1427,6 +1403,7 @@ namespace snabel {
   
   bool run(Exec &exe, const str &in) {
     rewind(exe);
+    clear_labels(exe);
     exe.main.ops.clear();
     if (!compile(exe, in)) { return false; }
     return run(exe.main);
