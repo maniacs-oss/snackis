@@ -526,7 +526,7 @@ namespace snabel {
 
   bool Lambda::run(Scope &scp) {
     auto &thd(scp.thread);
-    Scope &new_scp(begin_scope(thd, true));
+    Scope &new_scp(begin_scope(thd, !(scp.coro && scp.coro->proc)));
     new_scp.target = enter_label;
     new_scp.recall_pc = thd.pc+1;
 
