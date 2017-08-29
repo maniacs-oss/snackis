@@ -57,6 +57,7 @@ namespace gui {
     TRY(try_compile);
     auto code(get_str(GTK_TEXT_VIEW(v->code_fld)));
     auto started(pnow());
+    reset(v->exec);
     snabel::compile(v->exec, code);
     auto stopped(pnow());
     gtk_list_store_clear(v->bcode_store);
@@ -88,6 +89,7 @@ namespace gui {
     snabel::rewind(v->exec);
 
     auto started(pnow());
+    rewind(v->exec);
     auto res(snabel::run(v->exec.main));
     auto stopped(pnow());
     

@@ -128,7 +128,6 @@ namespace snabel {
 
   static void func_tests() {
     TRY(try_test);
-    
     run(exe, "func: foo {35 +}; 7 foo");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
@@ -446,7 +445,7 @@ namespace snabel {
     run(exe, "0 [1 2 3 4 5 6] &+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 21, _);
 
-    run(exe, "'foo' #nop for $list \\- join");
+    run(exe, "|'foo' #nop for $list \\- join");
     CHECK(get<str>(pop(exe.main)) == "f-o-o", _);
 
     run(exe, "0 {$ 42 lt?} {1 +} while");
@@ -578,12 +577,16 @@ namespace snabel {
   void all_tests() {
     TRY(try_snabel);
     const int iters(100), warmups(10);
+
     for(int i(0); i < warmups; ++i) {
+      reset(exe);
       loop();
     }
+    
     auto started(pnow());    
 
     for(int i(0); i < iters; ++i) {
+      reset(exe);
       loop();
       if (i < iters-1) { try_snabel.errors.clear(); }
     }

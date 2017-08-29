@@ -507,7 +507,7 @@ namespace snabel {
     auto &exe(scp.exec);
     tag = uid(exe);
     enter_label = &add_label(exe, fmt("_enter%0", tag));
-    skip_label = &add_label(exe, fmt("_skip%0", tag));    
+    skip_label = &add_label(exe, fmt("_skip%0", tag));
     return true;
   }
 

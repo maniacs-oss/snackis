@@ -7,7 +7,12 @@
 namespace snackis {
   Ctx::Ctx(db::Proc &p, size_t max_buf):
     db::Ctx(p, max_buf), db(*this), settings(*this)
-  { }
+  {
+    snabel::add_func(exec, "say", {snabel::ArgType(exec.str_type)},
+		     [this](auto &scp, auto &args) {
+		       log(*this, get<str>(args.at(0)));
+		     });
+  }
 
   void open(Ctx &ctx) {
     TRACE("Opening Snackis context");

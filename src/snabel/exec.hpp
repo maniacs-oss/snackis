@@ -76,6 +76,7 @@ namespace snabel {
   Uid uid(Exec &exe);
   Box make_opt(Exec &exe, opt<Box> in);
 
+  void reset(Exec &exe);  
   void rewind(Exec &exe);  
   bool compile(Exec &exe, const str &in);
   bool run(Exec &exe, const str &in);

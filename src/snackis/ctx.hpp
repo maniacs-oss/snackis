@@ -1,6 +1,7 @@
 #ifndef SNACKIS_CTX_HPP
 #define SNACKIS_CTX_HPP
 
+#include "snabel/exec.hpp"
 #include "snackis/db.hpp"
 #include "snackis/db/ctx.hpp"
 #include "snackis/settings.hpp"
@@ -11,6 +12,8 @@ namespace snackis {
   struct Ctx: db::Ctx {
     Db db;
     Settings settings;
+    snabel::Exec exec;
+
     Ctx(db::Proc &p, size_t max_buf);
   };
 

@@ -1260,21 +1260,25 @@ namespace snabel {
   }
 
   Label &add_label(Exec &exe, const str &tag, bool pmt) {
-    auto &l(exe.labels
-      .emplace(std::piecewise_construct,
-	       std::forward_as_tuple(tag),
-	       std::forward_as_tuple(exe, tag, pmt))
-	    .first->second);
-    return l;
+    auto res(exe.labels
+	     .emplace(std::piecewise_construct,
+		      std::forward_as_tuple(tag),
+		      std::forward_as_tuple(exe, tag, pmt)));
+
+    if (!res.second) {
+      ERROR(Snabel, fmt("Duplicate label: %0", tag));
+    }
+
+    return res.first->second;
   }
 
   void clear_labels(Exec &exe) {
     for (auto i(exe.labels.begin()); i != exe.labels.end();) {
       auto &l(i->second);
+
       if (l.permanent) {
 	i++;
       } else {
-	rem_env(exe.main_scope, l.tag);
 	i = exe.labels.erase(i);
       }
     }
@@ -1310,6 +1314,13 @@ namespace snabel {
       : Box(exe.opt_type, n_a);
   }
 
+  void reset(Exec &exe) {
+    clear_labels(exe);
+    exe.next_uid.store(1);
+    exe.main.ops.clear();
+    rewind(exe);
+  }
+  
   void rewind(Exec &exe) {
     for (auto i(exe.threads.begin()); i != exe.threads.end();) {
       if (i->first == exe.main.id) {
@@ -1325,7 +1336,7 @@ namespace snabel {
     thd.main_scope.recalls.clear();
     thd.main_scope.return_pc = -1;
     thd.stacks.front().clear();
-    thd.pc = 0;
+    exe.main.pc = 0;
   }
 
   bool compile(Exec &exe, const str &in) {
@@ -1338,13 +1349,17 @@ namespace snabel {
       lnr++;
     }
 
-    compile(exe, toks, exe.main.ops);
+    auto start_pc(exe.main.ops.size());
+    OpSeq in_ops;
+    compile(exe, toks, in_ops);
     TRY(try_compile);
 
     while (true) {
-      rewind(exe);
+      exe.lambdas.clear();
+      while (exe.main.scopes.size() > 1) { exe.main.scopes.pop_back(); }
+      exe.main.pc = start_pc;
       
-      for (auto &op: exe.main.ops) {
+      for (auto &op: in_ops) {
 	if ((!op.prepared && !prepare(op, exe.main_scope)) ||
 	    !try_compile.errors.empty()) {
 	  goto exit;
@@ -1353,60 +1368,55 @@ namespace snabel {
 	exe.main.pc++;
       }
 
-      exe.main.pc = 0;
-      exe.lambdas.clear();
+      exe.main.pc = start_pc;
       bool done(false);
       
       while (!done) {
 	done = true;
 	
-	for (auto &op: exe.main.ops) {
+	for (auto &op: in_ops) {
 	  if (refresh(op, exe.main_scope)) { done = false; }
 	  if (!try_compile.errors.empty()) { goto exit; }
 	  exe.main.pc++;
 	}
       }
 
-      OpSeq out;
+      OpSeq out_ops;
       done = true;
 
-      for (auto &op: exe.main.ops) {
-	if (compile(op, exe.main_scope, out)) { done = false; }
+      for (auto &op: in_ops) {
+	if (compile(op, exe.main_scope, out_ops)) { done = false; }
 	if (!try_compile.errors.empty()) { goto exit; }
       }
 
-      if (done) { break; }
-      exe.main.ops.clear();
-      exe.main.ops.swap(out);
+      if (done) { break; }      
+      in_ops.clear();
+      in_ops.swap(out_ops);
       try_compile.errors.clear();
     }
 
     {
-      OpSeq out;
-      exe.main.pc = 0;
+      OpSeq out_ops;
+      exe.main.pc = start_pc;
       
-      for (auto &op: exe.main.ops) {
-	if (!finalize(op, exe.main_scope, out)) {
+      for (auto &op: in_ops) {
+	if (!finalize(op, exe.main_scope, out_ops)) {
 	  exe.main.pc++;
 	}
 	
 	if (!try_compile.errors.empty()) { goto exit; }
       }
       
-      exe.main.ops.clear();
-      exe.main.ops.swap(out);
+      in_ops.clear();
+      in_ops.swap(out_ops);
     }
   exit:
-    rewind(exe);
+    exe.main.pc = start_pc;
+    std::copy(in_ops.begin(), in_ops.end(), std::back_inserter(exe.main.ops));
     return try_compile.errors.empty();
   }
   
   bool run(Exec &exe, const str &in) {
-    clear_labels(exe);
-    exe.next_uid.store(1);
-    exe.main.ops.clear();
-    rewind(exe);
-    
     if (!compile(exe, in)) { return false; }
     return run(exe.main);
   }

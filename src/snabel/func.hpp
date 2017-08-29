@@ -11,9 +11,10 @@ namespace snabel {
   using namespace snackis;
 
   struct Box;
-  struct Scope;
-  struct Type;
   struct Func;
+  struct Scope;
+  struct Thread;
+  struct Type;
   
   using Args = std::deque<Box>;
 

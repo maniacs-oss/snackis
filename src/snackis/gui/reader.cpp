@@ -60,7 +60,7 @@ namespace gui {
 		      const snabel::ArgTypes &args,
 		      Reader::Cmd cmd) {
     CHECK(rdr.cmds.insert(id).second, _);
-    snabel::add_func(rdr.exec, id, args,
+    snabel::add_func(rdr.ctx.exec, id, args,
 		     [cmd](auto &scp,
 			   auto &args) { cmd(args); });
   }
@@ -69,7 +69,7 @@ namespace gui {
   static void init_id_search(Reader &rdr, const str &id) {
     Ctx &ctx(rdr.ctx);
 
-    add_cmd(rdr, id, {snabel::ArgType(rdr.exec.str_type)}, [&ctx, id](auto args) {
+    add_cmd(rdr, id, {snabel::ArgType(rdr.ctx.exec.str_type)}, [&ctx, id](auto args) {
 	auto *v(new SearchT(ctx));
 	auto id(snabel::get<str>(args[0]));
 	gui::set_str(GTK_ENTRY(v->id_fld), id);
@@ -147,18 +147,19 @@ namespace gui {
 	}
       });
 
-    add_cmd(rdr, "invite", {snabel::ArgType(rdr.exec.str_type)}, [&ctx](auto args) {
-	db::Trans trans(ctx);
-	TRY(try_invite);
-	Invite inv(ctx, snabel::get<str>(args[0]));
-	load(ctx.db.invites, inv);
-	send(inv);
+    add_cmd(rdr, "invite", {snabel::ArgType(rdr.ctx.exec.str_type)},
+	    [&ctx](auto args) {
+	      db::Trans trans(ctx);
+	      TRY(try_invite);
+	      Invite inv(ctx, snabel::get<str>(args[0]));
+	      load(ctx.db.invites, inv);
+	      send(inv);
 	
-	if (try_invite.errors.empty()) {
-	  log(ctx, fmt("Saved new invite: %0", inv.to));
-	  db::commit(trans, fmt("Created invite: ", inv.to));
-	}
-      });
+	      if (try_invite.errors.empty()) {
+		log(ctx, fmt("Saved new invite: %0", inv.to));
+		db::commit(trans, fmt("Created invite: ", inv.to));
+	      }
+	    });
 
     add_cmd(rdr, "lock", {}, [&ctx](auto args) {
 	gtk_widget_hide(left_panel);
@@ -221,16 +222,13 @@ namespace gui {
     }
 
     gtk_entry_completion_set_model(comp, GTK_TREE_MODEL(mod));
-    
   }
   
   static bool exec_cmd(Reader &rdr, const str &in) {
     TRY(try_exec);
 
-    snabel::compile(rdr.exec, in);    
-    begin_scope(rdr.exec.main, false);
-    snabel::run(rdr.exec.main);
-    end_scope(rdr.exec.main);
+    log(rdr.ctx, in);
+    snabel::run(rdr.ctx.exec, in);
      
     if (try_exec.errors.empty()) {
       rdr.last_cmd = in;
@@ -244,8 +242,9 @@ namespace gui {
     const str in(gtk_entry_get_text(GTK_ENTRY(rdr->entry)));
 
     if (exec_cmd(*rdr, in)) {
-      auto res(peek(rdr->exec.main));
-      set_str(GTK_ENTRY(rdr->entry), res ? fmt_arg(*res) : "");
+      auto res(peek(rdr->ctx.exec.main));
+      if (res) { log(rdr->ctx, fmt("\n%0\n%1!", *res, res->type->name)); }
+      set_str(GTK_ENTRY(rdr->entry), "");
     }
     
     if (!get_str(GTK_ENTRY(rdr->entry)).empty()) {
@@ -258,11 +257,6 @@ namespace gui {
   {
     init_cmds(*this);
     init_completion(*this);
-
-    snabel::add_func(exec, "say", {snabel::ArgType(exec.str_type)},
-		     [this](auto &scp, auto &args) {
-		       log(this->ctx, get<str>(args.at(0)));
-		     });
 
     add_style(entry, "reader");
     gtk_widget_set_margin_start(entry, 5);

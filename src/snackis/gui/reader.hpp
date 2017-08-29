@@ -3,7 +3,7 @@
 
 #include <set>
 #include <gtk/gtk.h>
-#include "snabel/exec.hpp"
+#include "snabel/func.hpp"
 #include "snackis/core/func.hpp"
 #include "snackis/gui/widget.hpp"
 
@@ -16,7 +16,6 @@ namespace gui {
     GtkWidget *entry;
     std::set<str> cmds;
     opt<str> last_cmd;
-    snabel::Exec exec;
     
     Reader(Ctx &ctx);
     GtkWidget *ptr() override;
