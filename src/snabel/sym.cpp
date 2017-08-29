@@ -61,7 +61,7 @@ namespace snabel {
     auto &s(res.first->second);
     s.it = res.first;
     *s.pos = (s.it == exe.syms.begin()) ? 0 : (*std::prev(s.it)->second.pos)+1;
-    for (auto i(res.first); i != exe.syms.end(); i++) { (*i->second.pos)++; }
+    for (auto i(std::next(s.it)); i != exe.syms.end(); i++) { (*i->second.pos)++; }
     return s;
   }
 

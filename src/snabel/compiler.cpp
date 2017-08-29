@@ -138,7 +138,7 @@ namespace snabel {
 	(tok.text.size() > 1 && tok.text[0] == '-' && isdigit(tok.text[1]))) {
       out.emplace_back(Push(Box(exe.i64_type, to_int64(tok.text))));
     } else {
-      auto fnd(exe.macros.find(tok.text));
+      auto fnd(exe.macros.find(get_sym(exe, tok.text)));
       
       if (fnd == exe.macros.end()) {
 	out.emplace_back(Deref(tok.text));
