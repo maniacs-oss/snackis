@@ -21,6 +21,10 @@ namespace snabel {
     return x.pos < y.pos;
   }
 
+  static void str_imp(Scope &scp, const Args &args) {
+    push(scp.thread, scp.exec.str_type, name(*get<SymRef>(args.at(0))));
+  }
+
   void init_syms(Exec &exe) {
     exe.sym_type.supers.push_back(&exe.any_type);
     exe.sym_type.supers.push_back(&exe.ordered_type);
@@ -33,6 +37,8 @@ namespace snabel {
     exe.sym_type.lt = [](auto &x, auto &y) {
       return *get<SymRef>(x) < *get<SymRef>(y);
     };
+
+    add_func(exe, "str", {ArgType(exe.sym_type)}, str_imp);
   }
 
   SymRef get_sym(Exec &exe, const str &n) {

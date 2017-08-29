@@ -293,6 +293,12 @@ namespace snabel {
     run_test(exe, "#foo");
     CHECK(name(*get<SymRef>(pop(exe.main))) == "foo", _);
 
+    run_test(exe, "#foo $ ==");
+    CHECK(get<bool>(pop(exe.main)), _);
+
+    run_test(exe, "#foo #bar ==");
+    CHECK(!get<bool>(pop(exe.main)), _);
+
     run_test(exe, "#foo #bar gt?");
     CHECK(get<bool>(pop(exe.main)), _);
   }

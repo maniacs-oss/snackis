@@ -807,160 +807,62 @@ namespace snabel {
 	return true;
       });
     
-    add_func(*this, "is?",
-	     {ArgType(any_type), ArgType(meta_type)},
-	     is_imp);
-   
-    add_func(*this, "type",
-	     {ArgType(any_type)},
-	     type_imp);
-   
-    add_func(*this, "=",
-	     {ArgType(any_type), ArgType(0)},
-	     eq_imp);
-   
-    add_func(*this, "==",
-	     {ArgType(any_type), ArgType(0)},
-	     equal_imp);
-   
-    add_func(*this, "lt?",
-	     {ArgType(ordered_type), ArgType(0)},
-	     lt_imp);
+    add_func(*this, "is?", {ArgType(any_type), ArgType(meta_type)}, is_imp);
+    add_func(*this, "type", {ArgType(any_type)}, type_imp);
 
-    add_func(*this, "lte?",
-	     {ArgType(ordered_type), ArgType(0)},
-	     lte_imp);
+    add_func(*this, "=", {ArgType(any_type), ArgType(0)}, eq_imp);
+    add_func(*this, "==", {ArgType(any_type), ArgType(0)}, equal_imp);
+    
+    add_func(*this, "lt?", {ArgType(ordered_type), ArgType(0)}, lt_imp);
+    add_func(*this, "lte?", {ArgType(ordered_type), ArgType(0)}, lte_imp);
+    add_func(*this, "gt?", {ArgType(ordered_type), ArgType(0)}, gt_imp);
+    add_func(*this, "gte?", {ArgType(ordered_type), ArgType(0)}, gte_imp);
 
-    add_func(*this, "gt?",
-	     {ArgType(ordered_type), ArgType(0)},
-	     gt_imp);
-
-    add_func(*this, "gte?",
-	     {ArgType(ordered_type), ArgType(0)},
-	     gte_imp);
-
-    add_func(*this, "when",
-	     {ArgType(bool_type), ArgType(callable_type)},
-	     when_imp);
+    add_func(*this, "when", {ArgType(bool_type), ArgType(callable_type)}, when_imp);
 
     add_func(*this, "unless",
 	     {ArgType(bool_type), ArgType(callable_type)},
 	     unless_imp);
 
-    add_func(*this, "z?",
-	     {ArgType(i64_type)},
-	     zero_i64_imp);
-    
-    add_func(*this, "+?",
-	     {ArgType(i64_type)},
-	     pos_i64_imp);
+    add_func(*this, "z?", {ArgType(i64_type)}, zero_i64_imp);
+    add_func(*this, "+?", {ArgType(i64_type)}, pos_i64_imp);
+    add_func(*this, "+1", {ArgType(i64_type)}, inc_i64_imp);
+    add_func(*this, "-1", {ArgType(i64_type)}, dec_i64_imp);
 
-    add_func(*this, "+1",
-	     {ArgType(i64_type)},
-	     inc_i64_imp);
+    add_func(*this, "+", {ArgType(i64_type), ArgType(i64_type)}, add_i64_imp);
+    add_func(*this, "-", {ArgType(i64_type), ArgType(i64_type)}, sub_i64_imp);
+    add_func(*this, "*", {ArgType(i64_type), ArgType(i64_type)}, mul_i64_imp);
+    add_func(*this, "/", {ArgType(i64_type), ArgType(i64_type)}, div_i64_imp);
+    add_func(*this, "%", {ArgType(i64_type), ArgType(i64_type)}, mod_i64_imp);
 
-    add_func(*this, "-1",
-	     {ArgType(i64_type)},
-	     dec_i64_imp);
+    add_func(*this, "str", {ArgType(i64_type)}, i64_str_imp);
 
-    add_func(*this, "+",
-	     {ArgType(i64_type), ArgType(i64_type)},
-	     add_i64_imp);
-    add_func(*this, "-",
-	     {ArgType(i64_type), ArgType(i64_type)},
-	     sub_i64_imp);
-    add_func(*this, "*",
-	     {ArgType(i64_type), ArgType(i64_type)},
-	     mul_i64_imp);
-    add_func(*this, "/",
-	     {ArgType(i64_type), ArgType(i64_type)},
-	     div_i64_imp);
-    add_func(*this, "%",
-	     {ArgType(i64_type), ArgType(i64_type)},
-	     mod_i64_imp);
+    add_func(*this, "trunc", {ArgType(rat_type)}, trunc_imp);
+    add_func(*this, "frac", {ArgType(rat_type)}, frac_imp);
+    add_func(*this, "+", {ArgType(rat_type), ArgType(rat_type)}, add_rat_imp);
+    add_func(*this, "-", {ArgType(rat_type), ArgType(rat_type)}, sub_rat_imp);
+    add_func(*this, "*", {ArgType(rat_type), ArgType(rat_type)}, mul_rat_imp);
+    add_func(*this, "/", {ArgType(rat_type), ArgType(rat_type)}, div_rat_imp);
 
-    add_func(*this, "str",
-	     {ArgType(i64_type)},
-	     i64_str_imp);
+    add_func(*this, "bytes", {ArgType(i64_type)}, bytes_imp);
+    add_func(*this, "z?", {ArgType(bin_type)}, bin_zero_imp);
+    add_func(*this, "+?", {ArgType(bin_type)}, bin_pos_imp);
+    add_func(*this, "len", {ArgType(bin_type)}, bin_len_imp);
+    add_func(*this, "str", {ArgType(bin_type)}, bin_str_imp);
+    add_func(*this, "ustr", {ArgType(bin_type)}, bin_ustr_imp);
+    add_func(*this, "append", {ArgType(bin_type), ArgType(bin_type)}, bin_append_imp);
 
-    add_func(*this, "trunc",
-	     {ArgType(rat_type)},
-	     trunc_imp);
-    add_func(*this, "frac",
-	     {ArgType(rat_type)},
-	     frac_imp);
-    add_func(*this, "+",
-	     {ArgType(rat_type), ArgType(rat_type)},
-	     add_rat_imp);
-    add_func(*this, "-",
-	     {ArgType(rat_type), ArgType(rat_type)},
-	     sub_rat_imp);
-    add_func(*this, "*",
-	     {ArgType(rat_type), ArgType(rat_type)},
-	     mul_rat_imp);
-    add_func(*this, "/",
-	     {ArgType(rat_type), ArgType(rat_type)},
-	     div_rat_imp);
+    add_func(*this, "len", {ArgType(str_type)}, str_len_imp);
+    add_func(*this, "bytes", {ArgType(str_type)}, str_bytes_imp);
+    add_func(*this, "ustr", {ArgType(str_type)}, str_ustr_imp);
 
-    add_func(*this, "z?",
-	     {ArgType(bin_type)},
-	     bin_zero_imp);
-    
-    add_func(*this, "+?",
-	     {ArgType(bin_type)},
-	     bin_pos_imp);
-    
-    add_func(*this, "bytes",
-	     {ArgType(i64_type)},
-	     bytes_imp);
+    add_func(*this, "len", {ArgType(ustr_type)}, ustr_len_imp);
+    add_func(*this, "bytes", {ArgType(ustr_type)}, ustr_bytes_imp);
+    add_func(*this, "str", {ArgType(ustr_type)}, ustr_str_imp);
 
-    add_func(*this, "len",
-	     {ArgType(bin_type)},
-	     bin_len_imp);
+    add_func(*this, "uid", {}, uid_imp);
 
-    add_func(*this, "str",
-	     {ArgType(bin_type)},
-	     bin_str_imp);
-
-    add_func(*this, "ustr",
-	     {ArgType(bin_type)},
-	     bin_ustr_imp);
-
-    add_func(*this, "append",
-	     {ArgType(bin_type), ArgType(bin_type)},
-	     bin_append_imp);
-
-    add_func(*this, "len",
-	     {ArgType(str_type)},
-	     str_len_imp);
-
-    add_func(*this, "len",
-	     {ArgType(ustr_type)},
-	     ustr_len_imp);
-
-    add_func(*this, "bytes",
-	     {ArgType(str_type)},
-	     str_bytes_imp);
-
-    add_func(*this, "ustr",
-	     {ArgType(str_type)},
-	     str_ustr_imp);
-
-    add_func(*this, "bytes",
-	     {ArgType(ustr_type)},
-	     ustr_bytes_imp);
-
-    add_func(*this, "str",
-	     {ArgType(ustr_type)},
-	     ustr_str_imp);
-
-    add_func(*this, "uid",
-	     {},
-	     uid_imp);
-
-    add_func(*this, "iter",
-	     {ArgType(iterable_type)},
-	     iter_imp);
+    add_func(*this, "iter", {ArgType(iterable_type)}, iter_imp);
 
     add_func(*this, "str",
 	     {ArgType(get_iterable_type(*this, char_type))},
@@ -978,18 +880,9 @@ namespace snabel {
 	     {ArgType(iterable_type), ArgType(callable_type)},
 	     iterable_map_imp);
         
-    add_func(*this, "rfile",
-	     {ArgType(path_type)},
-	     rfile_imp);
-
-    add_func(*this, "rwfile",
-	     {ArgType(path_type)},
-	     rwfile_imp);
-
-    add_func(*this, "read",
-	     {ArgType(readable_type)},
-	     read_imp);
-
+    add_func(*this, "rfile", {ArgType(path_type)}, rfile_imp);
+    add_func(*this, "rwfile", {ArgType(path_type)}, rwfile_imp);
+    add_func(*this, "read", {ArgType(readable_type)}, read_imp);
     add_func(*this, "write",
 	     {ArgType(get_iterable_type(*this, bin_type)), ArgType(writeable_type)},
 	     write_imp);
@@ -1002,29 +895,14 @@ namespace snabel {
 	     {ArgType(get_iterable_type(*this, bin_type))},
 	     iterable_words_imp);
 
-    add_func(*this, "random",
-	     {ArgType(i64_type)},
-	     random_imp);
+    add_func(*this, "random", {ArgType(i64_type)}, random_imp);
+    add_func(*this, "pop", {ArgType(random_type)}, random_pop_imp);
 
-    add_func(*this, "pop",
-	     {ArgType(random_type)},
-	     random_pop_imp);
+    add_func(*this, "proc", {ArgType(coro_type)}, proc_imp);
+    add_func(*this, "run", {ArgType(proc_type)}, proc_run_imp);
 
-    add_func(*this, "proc",
-	     {ArgType(coro_type)},
-	     proc_imp);
-
-    add_func(*this, "run",
-	     {ArgType(proc_type)},
-	     proc_run_imp);
-
-    add_func(*this, "thread",
-	     {ArgType(callable_type)},
-	     thread_imp);
-
-    add_func(*this, "join",
-	     {ArgType(thread_type)},
-	     thread_join_imp);
+    add_func(*this, "thread", {ArgType(callable_type)}, thread_imp);
+    add_func(*this, "join", {ArgType(thread_type)}, thread_join_imp);
 
     add_macro(*this, "!", [](auto pos, auto &in, auto &out) {	
 	out.emplace_back(Check());
