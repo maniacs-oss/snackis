@@ -10,18 +10,22 @@ namespace snabel {
   using SymTable = std::map<str, Sym>;
 
   struct Sym {
-    Exec &exec;
-    SymTable::iterator it;
-    size_t pos;
+    using Pos = size_t;
     
-    Sym(Exec &exe);
+    SymTable::iterator it;
+    Pos *pos;
+    
+    Sym(const Sym &src);
+    const Sym &operator =(const Sym &);
+
+    Sym(Pos *pos);
   };
 
   bool operator ==(const Sym &x, const Sym &y);
   bool operator <(const Sym &x, const Sym &y);
   
   void init_syms(Exec &exe);
-  Sym &get_sym(Exec &exe, const str &n);
+  const Sym &get_sym(Exec &exe, const str &n);
   const str &name(const Sym &sym);
 }
 
