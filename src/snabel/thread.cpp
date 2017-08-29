@@ -138,9 +138,9 @@ namespace snabel {
   }
 
   bool _break(Thread &thd, int64_t depth) {
-    while (thd.scopes.size() > 1) {
+    while (thd.scopes.size() >= 1) {
       auto &s(thd.scopes.back());
-      
+
       if (s.break_pc > -1) {
 	thd.pc = s.break_pc;
 	s.break_pc = -1;
@@ -148,6 +148,7 @@ namespace snabel {
 	if (!depth) { return true; }
       }
 
+      if (thd.scopes.size() == 1) { break; }
       end_scope(thd);
     }
 
@@ -159,7 +160,7 @@ namespace snabel {
     while (thd.pc < thd.ops.size() && thd.pc != break_pc) {
       auto &op(thd.ops[thd.pc]);
       auto prev_pc(thd.pc);
-      run(op, curr_scope(thd));
+      if (!run(op, curr_scope(thd))) { break; }
       if (thd.pc == prev_pc) { thd.pc++; }
     }
 

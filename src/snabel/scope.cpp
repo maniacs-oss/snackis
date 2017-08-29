@@ -67,15 +67,12 @@ namespace snabel {
     auto &env(scp.thread.env);
     auto fnd(env.find(key));
 
-    if (fnd != env.end()) {
-      ERROR(Snabel, fmt("'%0' is already bound to: %1", key, fnd->second));
-    }
-
     if (fnd == env.end()) {
       env.emplace(std::piecewise_construct,
 		  std::forward_as_tuple(key),
 		  std::forward_as_tuple(val));
     } else {
+      ERROR(Snabel, fmt("Rebinding name: %0", key));
       fnd->second = val;
     }
 
@@ -117,7 +114,10 @@ namespace snabel {
   }
 
   void call(Scope &scp, const Label &lbl, bool now) {
-    CHECK(scp.return_pc == -1, _);
+    if (scp.return_pc != -1) {
+      ERROR(Snabel, fmt("Overwriting return: ", scp.return_pc));
+    }
+    
     scp.return_pc = scp.thread.pc+1;
     jump(scp, lbl);
 
@@ -251,9 +251,7 @@ namespace snabel {
   Thread &start_thread(Scope &scp, const Box &init) {
     Thread &thd(scp.thread);
     Exec &exe(scp.exec);
-    
     Thread::Id id(uid(exe));
-
     Thread *t(nullptr);
 
     {

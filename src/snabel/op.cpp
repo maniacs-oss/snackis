@@ -162,7 +162,7 @@ namespace snabel {
   }
 
   Deref::Deref(const str &name):
-    OpImp(OP_DEREF, "deref"), name(name)
+    OpImp(OP_DEREF, "deref"), name(name), compiled(false)
   { }
 
   OpImp &Deref::get_imp(Op &op) const {
@@ -172,25 +172,23 @@ namespace snabel {
   str Deref::info() const { return name; }
 
   bool Deref::compile(const Op &op, Scope &scp, OpSeq &out) {
+    if (compiled) { return false; }
+    
+    compiled = true;
     auto &exe(scp.exec);
     auto fnd(find_env(scp, name));
     if (!fnd) { return false; }
 
     if (fnd->type == &exe.func_type) {
       out.emplace_back(Funcall(*get<Func *>(*fnd)));
-    } else if (fnd->type == &exe.label_type) {
-      out.emplace_back(Jump(*get<Label *>(*fnd)));
-    } else if (fnd->type->call) {
-      out.emplace_back(Call(*fnd));
     } else {
-      out.emplace_back(Push(*fnd));
+      return false;
     }
 
     return true;
   }
 
   bool Deref::run(Scope &scp) {
-    auto &exe(scp.exec);
     auto &thd(scp.thread);
     auto fnd(find_env(scp, name));
     
@@ -199,7 +197,7 @@ namespace snabel {
       return false;
     }
 
-    if (isa(thd, *fnd, exe.callable_type)) {
+    if (fnd->type->call) {
       return (*fnd->type->call)(scp, *fnd, false);
     }
     
@@ -420,15 +418,6 @@ namespace snabel {
 
   str Getenv::info() const { return id; }
 
-  bool Getenv::compile(const Op &op, Scope &scp, OpSeq &out) {
-    if (id.empty()) { return false; }
-    
-    auto fnd(find_env(scp, id));
-    if (!fnd) { return false; }
-    out.emplace_back(Push(*fnd));
-    return true;
-  }
-
   bool Getenv::run(Scope &scp) {
     auto &exe(scp.exec);
     auto &thd(scp.thread);
@@ -568,11 +557,7 @@ namespace snabel {
 
   bool Putenv::prepare(Scope &scp) {
     auto fnd(find_env(scp, name));
-      
-    if (fnd) {
-      ERROR(Snabel, fmt("'%0' is already bound to: %1", name, *fnd));
-    }
-
+    if (fnd) { ERROR(Snabel, fmt("Rebinding name: %0", name)); }
     return true;
   }
   

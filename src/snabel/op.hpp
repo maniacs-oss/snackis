@@ -89,7 +89,8 @@ namespace snabel {
 
   struct Deref: OpImp {
     str name;
-
+    bool compiled;
+    
     Deref(const str &name);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
@@ -136,7 +137,6 @@ namespace snabel {
     Getenv(const str &id="");
     OpImp &get_imp(Op &op) const override;
     str info() const override;
-    bool compile(const Op &op, Scope &scp, OpSeq & out) override;
     bool run(Scope &scp) override;
   };
 

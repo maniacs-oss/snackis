@@ -1361,7 +1361,7 @@ namespace snabel {
     thd.stacks.front().clear();
   }
 
-  bool compile(Exec &exe, const str &in) {
+  void compile(Exec &exe, const str &in) {
     Exec::Lock lock(exe.mutex);
     size_t lnr(exe.main.ops.size());
     TokSeq toks;
@@ -1377,8 +1377,8 @@ namespace snabel {
     TRY(try_compile);
 
     while (true) {
+      rewind(exe);
       exe.lambdas.clear();
-      while (exe.main.scopes.size() > 1) { exe.main.scopes.pop_back(); }
       exe.main.pc = start_pc;
       
       for (auto &op: in_ops) {
@@ -1429,11 +1429,11 @@ namespace snabel {
   exit:
     exe.main.pc = start_pc;
     std::copy(in_ops.begin(), in_ops.end(), std::back_inserter(exe.main.ops));
-    return try_compile.errors.empty();
   }
   
   bool run(Exec &exe, const str &in) {
-    if (!compile(exe, in)) { return false; }
+    compile(exe, in);
+    rewind(exe);
     return run(exe.main);
   }
 }

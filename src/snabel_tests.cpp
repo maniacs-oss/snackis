@@ -98,6 +98,13 @@ namespace snabel {
 
   Exec exe;
 
+  void run_test(Exec &exe, const str &in) {
+    reset(exe);
+    compile(exe, in);
+    begin_scope(exe.main);
+    run(exe.main);
+  }
+
   static void parens_tests() {
     TRY(try_test);    
     auto ts(parse_expr("foo (bar (35 7)) baz"));
@@ -113,13 +120,13 @@ namespace snabel {
     CHECK(ts[7].text == ")", _);
     CHECK(ts[8].text == "baz", _);
 
-    run(exe, "(1 1 +) (2 2 +) *");
+    run_test(exe, "(1 1 +) (2 2 +) *");
     CHECK(get<int64_t>(pop(exe.main)) == 8, _);    
   }
 
   static void compile_tests() {
     TRY(try_test);
-    run(exe, "let: foo 35; let: bar @foo 7 +");
+    run_test(exe, "let: foo 35; let: bar @foo 7 +");
 
     Scope &scp(curr_scope(exe.main));
     CHECK(get<int64_t>(get_env(scp, "@foo")) == 35, _);
@@ -128,10 +135,10 @@ namespace snabel {
 
   static void func_tests() {
     TRY(try_test);
-    run(exe, "func: foo {35 +}; 7 foo");
+    run_test(exe, "func: foo {35 +}; 7 foo");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run(exe,
+    run_test(exe,
 	"func: foo {\n"
         "35 +\n"
 	"};\n"
@@ -143,43 +150,43 @@ namespace snabel {
   static void type_tests() {
     TRY(try_test);    
 
-    run(exe, "42 I64 is?");
+    run_test(exe, "42 I64 is?");
     CHECK(get<bool>(pop(exe.main)), _);
 
-    run(exe, "42 type");
+    run_test(exe, "42 type");
     CHECK(get<Type *>(pop(exe.main)) == &exe.i64_type, _);
 
-    run(exe, "Iter<>");
+    run_test(exe, "Iter<>");
     CHECK(get<Type *>(pop(exe.main)) == &exe.iter_type, _);
 
-    run(exe, "List<Str>");
+    run_test(exe, "List<Str>");
     CHECK(get<Type *>(pop(exe.main)) == &get_list_type(exe, exe.str_type), _);
 
-    run(exe, "Pair<Str>");
+    run_test(exe, "Pair<Str>");
     CHECK(get<Type *>(pop(exe.main)) ==
 	  &get_pair_type(exe, exe.str_type, exe.any_type), _);
 
-    run(exe, "(List)<I64>");
+    run_test(exe, "(List)<I64>");
     CHECK(get<Type *>(pop(exe.main)) == &get_list_type(exe, exe.i64_type), _);
 
-    run(exe, "I64 list List<I64>!");
+    run_test(exe, "I64 list List<I64>!");
     CHECK(pop(exe.main).type == &get_list_type(exe, exe.i64_type), _);
   }
 
   static void stack_tests() {
     TRY(try_test);    
 
-    run(exe, "42 _");
+    run_test(exe, "42 _");
     CHECK(!peek(exe.main), _);
 
-    run(exe, "7 35 |");
+    run_test(exe, "7 35 |");
     CHECK(!peek(exe.main), _);
   }
 
   static void group_tests() {
     TRY(try_test);    
     
-    run(exe, "(42 let: foo 21; @foo)");
+    run_test(exe, "(42 let: foo 21; @foo)");
     Scope &scp1(curr_scope(exe.main));
     CHECK(get<int64_t>(pop(scp1.thread)) == 21, _);
     CHECK(!peek(scp1.thread), _);
@@ -189,72 +196,70 @@ namespace snabel {
   static void equality_tests() {
     TRY(try_test);    
 
-    run(exe, "[1 2 3] [1 2 3] =");
+    run_test(exe, "[1 2 3] [1 2 3] =");
     CHECK(!get<bool>(pop(exe.main)), _);
 
-    run(exe, "[1 2 3] [1 2 3] ==");
+    run_test(exe, "[1 2 3] [1 2 3] ==");
     CHECK(get<bool>(pop(exe.main)), _);
   }
 
   static void let_tests() {
     TRY(try_test);    
-    run(exe, "let: foo 35 7 +; @foo");
+    run_test(exe, "let: foo 35 7 +; @foo");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
   static void lambda_tests() {
     TRY(try_test);    
 
-    run(exe, "{3 4 +} call 35 +");
+    run_test(exe, "{3 4 +} call 35 +");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run(exe, "2 {3 +} call");
+    run_test(exe, "2 {3 +} call");
     CHECK(get<int64_t>(pop(exe.main)) == 5, _);
 
-    rem_env(exe.main_scope, "bar");
-    run(exe, "{let: bar 42; @bar} call");
+    run_test(exe, "{let: bar 42; @bar} call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
     CHECK(!find_env(curr_scope(exe.main), "bar"), _);
 
-    run(exe, "let: fn {7 +}; 35 @fn call");
+    run_test(exe, "let: fn {7 +}; 35 @fn call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run(exe, "{7 35 + return 99} call");
+    run_test(exe, "{7 35 + return 99} call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run(exe, "{#t {42} when} call");
+    run_test(exe, "{#t {42} when} call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run(exe, "#t {$ &return when #f} call");
+    run_test(exe, "#t {$ &return when #f} call");
     CHECK(get<bool>(pop(exe.main)), _);
 
-    run(exe, "42 {1 - $ z? &return when recall 2 +} call");
+    run_test(exe, "42 {1 - $ z? &return when recall 2 +} call");
     CHECK(get<int64_t>(pop(exe.main)) == 82, _);
 
-    run(exe, "42 {1 - $ z? &return when (2 (|recall) +)} call");
+    run_test(exe, "42 {1 - $ z? &return when (2 (|recall) +)} call");
     CHECK(get<int64_t>(pop(exe.main)) == 82, _);
   }
 
   static void coro_tests() {
     TRY(try_test);    
     
-    rem_env(exe.main_scope, "foo");
-    run(exe,
+    run_test(exe,
 	"func: foo {|yield (7 yield 28 +)} call; "
 	"foo foo +");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run(exe,
+    run_test(exe,
 	"func: foo {|yield (let: bar 28; 7 yield @bar +)} call; "
 	"foo foo +");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run(exe,
+    run_test(exe,
 	"func: foo {|yield ([7 35] &yield for &+)} call; "
 	"foo foo foo call");
-	CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run(exe,
+    run_test(exe,
 	"let: acc I64 list; "
 
 	"func: foo {|yield ( "
@@ -269,26 +274,26 @@ namespace snabel {
   static void cond_tests() {
     TRY(try_test);    
     
-    run(exe, "7 #t {35 +} when");
+    run_test(exe, "7 #t {35 +} when");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run(exe, "7 #f {35 +} when");
+    run_test(exe, "7 #f {35 +} when");
     CHECK(get<int64_t>(pop(exe.main)) == 7, _);
 
-    run(exe, "7 #t {35 +} unless");
+    run_test(exe, "7 #t {35 +} unless");
     CHECK(get<int64_t>(pop(exe.main)) == 7, _);
 
-    run(exe, "7 #f {35 +} unless");
+    run_test(exe, "7 #f {35 +} unless");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
   static void str_tests() {
     TRY(try_test);    
     
-    run(exe, "'foo' len");
+    run_test(exe, "'foo' len");
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
 
-    run(exe,
+    run_test(exe,
 	"['foo\\r\\n\\r\\nbar\\r\\n\\r\\nbaz' bytes]"
 	"lines unopt \\, join");	
     CHECK(get<str>(pop(exe.main)) == "foo,bar,baz", _);
@@ -297,30 +302,30 @@ namespace snabel {
   static void bin_tests() {
     TRY(try_test);    
     
-    run(exe, "3 bytes len");
+    run_test(exe, "3 bytes len");
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
 
-    run(exe, "'foo' bytes str");
+    run_test(exe, "'foo' bytes str");
     CHECK(get<str>(pop(exe.main)) == "foo", _);
 
-    run(exe, "'foo' bytes 'bar' bytes append str");
+    run_test(exe, "'foo' bytes 'bar' bytes append str");
     CHECK(get<str>(pop(exe.main)) == "foobar", _);
 
-    run(exe, "u'foo' bytes str");
+    run_test(exe, "u'foo' bytes str");
     CHECK(get<str>(pop(exe.main)) == "foo", _);
   }
 
   static void uid_tests() {
     TRY(try_test);    
     
-    run(exe, "uid uid ==");
+    run_test(exe, "uid uid ==");
     CHECK(!get<bool>(pop(exe.main)), _);
   }
 
   static void list_push_tests() {
     TRY(try_test);    
 
-    run(exe, "[0] 1 push");
+    run_test(exe, "[0] 1 push");
     auto lsb(pop(exe.main));
     auto ls(get<ListRef>(lsb));
     CHECK(ls->size() == 2, _);
@@ -329,7 +334,7 @@ namespace snabel {
   static void list_pop_tests() {
     TRY(try_test);    
 
-    run(exe, "[7 35] pop");    
+    run_test(exe, "[7 35] pop");    
     CHECK(get<int64_t>(pop(exe.main)) == 35, _);
     auto lsb(pop(exe.main));
     auto ls(get<ListRef>(lsb));
@@ -340,7 +345,7 @@ namespace snabel {
   static void list_reverse_tests() {
     TRY(try_test);    
 
-    run(exe, "[0 1 2] reverse");
+    run_test(exe, "[0 1 2] reverse");
     auto lsb(pop(exe.main));
     auto ls(get<ListRef>(lsb));
     CHECK(ls->size() == 3, _);
@@ -353,32 +358,32 @@ namespace snabel {
   static void iter_tests() {
     TRY(try_test);    
 
-    run(exe, "7 \\, join");
+    run_test(exe, "7 \\, join");
     CHECK(get<str>(pop(exe.main)) == "0,1,2,3,4,5,6", _);
 
-    run(exe, "let: foo 'bar' iter; @foo list");
+    run_test(exe, "let: foo 'bar' iter; @foo list");
     CHECK(get<ListRef>(pop(exe.main))->size() == 3, _);
 
-    run(exe, "7 iter 7 iter =");
+    run_test(exe, "7 iter 7 iter =");
     CHECK(!get<bool>(pop(exe.main)), _);
 
-    run(exe, "7 list");
+    run_test(exe, "7 list");
     CHECK(get<ListRef>(pop(exe.main))->size() == 7, _);
 
-    run(exe, "[1 2 3] ['foo' 'bar'] zip list");
+    run_test(exe, "[1 2 3] ['foo' 'bar'] zip list");
     CHECK(get<ListRef>(pop(exe.main))->size() == 2, _);
 
-    run(exe, "[1 2 3] {7 *} map &+ for");
+    run_test(exe, "[1 2 3] {7 *} map &+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run(exe, "'abcabcabc' {\\a =} filter str");
+    run_test(exe, "'abcabcabc' {\\a =} filter str");
     CHECK(get<str>(pop(exe.main)) == "aaa", _);
   }
   
   static void list_tests() {
     TRY(try_test);    
 
-    run(exe, "[0 1 2]");
+    run_test(exe, "[0 1 2]");
     auto lsb(pop(exe.main));
     CHECK(lsb.type == &get_list_type(exe, exe.i64_type), _);
     auto ls(get<ListRef>(lsb));
@@ -388,16 +393,16 @@ namespace snabel {
       CHECK(get<int64_t>(ls->at(i)) == i, _);
     }
 
-    run(exe, "Str list 'foo' push");
+    run_test(exe, "Str list 'foo' push");
     CHECK(get<ListRef>(pop(exe.main))->size() == 1, _);
 
-    run(exe, "['foo' 'bar'] 7 list zip list unzip _ list");
+    run_test(exe, "['foo' 'bar'] 7 list zip list unzip _ list");
     CHECK(get<str>(get<ListRef>(pop(exe.main))->back()) == "bar", _);
 
-    run(exe, "['foo' 7. 'bar' 35.] unzip _ list");
+    run_test(exe, "['foo' 7. 'bar' 35.] unzip _ list");
     CHECK(get<str>(get<ListRef>(pop(exe.main))->back()) == "bar", _);
 
-    run(exe, "[2 3 1] &lt? sort pop");
+    run_test(exe, "[2 3 1] &lt? sort pop");
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
       
     list_push_tests();
@@ -408,78 +413,78 @@ namespace snabel {
   static void pair_tests() {
     TRY(try_test);    
 
-    run(exe, "42 'foo'.");
+    run_test(exe, "42 'foo'.");
     auto p(get<PairRef>(pop(exe.main)));
     CHECK(get<int64_t>(p->first) == 42, _);    
     CHECK(get<str>(p->second) == "foo", _);    
 
-    run(exe, "'foo' 42. left");
+    run_test(exe, "'foo' 42. left");
     CHECK(get<str>(pop(exe.main)) == "foo", _);    
     
-    run(exe, "'foo' 42. right");
+    run_test(exe, "'foo' 42. right");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);    
     
-    run(exe, "42 'foo'. unzip");
+    run_test(exe, "42 'foo'. unzip");
     CHECK(get<str>(pop(exe.main)) == "foo", _);    
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);    
   }
 
   static void loop_tests() {
     TRY(try_test);    
-
-    run(exe, "0 7 &+ for");
+    
+    run_test(exe, "0 7 &+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 21, _);
 
-    run(exe, "0 7 {$ 5 = {_ break} when +} for");
+    run_test(exe, "0 7 {$ 5 = {_ break} when +} for");
     CHECK(get<int64_t>(pop(exe.main)) == 10, _);
 
-    run(exe, "0 7 {$ 5 = &break when +} for _");
+    run_test(exe, "0 7 {$ 5 = &break when +} for _");
     CHECK(get<int64_t>(pop(exe.main)) == 10, _);
 
-    run(exe, "0 7 {$ 1 {_ 5 = {break} when} for +} for");
+    run_test(exe, "0 7 {$ 1 {_ 5 = {break} when} for +} for");
     CHECK(get<int64_t>(pop(exe.main)) == 21, _);
 
-    run(exe, "0 7 {$ 1 {_ 5 = {_ break1} when +} for} for");
+    run_test(exe, "0 7 {$ 1 {_ 5 = {_ break1} when +} for} for");
     CHECK(get<int64_t>(pop(exe.main)) == 10, _);
 
-    run(exe, "0 [1 2 3 4 5 6] &+ for");
+    run_test(exe, "0 [1 2 3 4 5 6] &+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 21, _);
 
-    run(exe, "|'foo' #nop for $list \\- join");
+    run_test(exe, "'foo' #nop for $list \\- join");
     CHECK(get<str>(pop(exe.main)) == "f-o-o", _);
 
-    run(exe, "0 {$ 42 lt?} {1 +} while");
+    run_test(exe, "0 {$ 42 lt?} {1 +} while");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
   static void rat_tests() {
     TRY(try_test);    
 
-    run(exe, "1 2 / 2 3 / + -1 6 / +");
+    run_test(exe, "1 2 / 2 3 / + -1 6 / +");
     CHECK(get<Rat>(pop(exe.main)) == Rat(1, 1), _);
 
-    run(exe, "-1 -2 / -1 2 / +");
+    run_test(exe, "-1 -2 / -1 2 / +");
     CHECK(get<Rat>(pop(exe.main)) == Rat(0, 1), _);
 
-    run(exe, "4 6 / -1 3 / -");
+    run_test(exe, "4 6 / -1 3 / -");
     CHECK(get<Rat>(pop(exe.main)) == Rat(1, 1), _);
 
-    run(exe, "-4 6 / 1 3 / -");
+    run_test(exe, "-4 6 / 1 3 / -");
     CHECK(get<Rat>(pop(exe.main)) == Rat(1, 1, true), _);
 
-    run(exe, "2 3 / -1 2 / *");
+    run_test(exe, "2 3 / -1 2 / *");
     CHECK(get<Rat>(pop(exe.main)) == Rat(1, 3, true), _);
 
-    run(exe, "1 3 / -5 /");
+    run_test(exe, "1 3 / -5 /");
     CHECK(get<Rat>(pop(exe.main)) == Rat(1, 15, true), _);
 
-    run(exe, "-7 3 / trunc");
+    run_test(exe, "-7 3 / trunc");
     CHECK(get<int64_t>(pop(exe.main)) == -2, _);
 
-    run(exe, "-7 3 / frac");
+    run_test(exe, "-7 3 / frac");
     CHECK(get<Rat>(pop(exe.main)) == Rat(1, 3, true), _);
 
-    run(exe,
+    run_test(exe,
 	"1 1 / "
 	"10 {_ 3 /} for "
 	"10 {_ 3 *} for");
@@ -489,45 +494,45 @@ namespace snabel {
   static void opt_tests() {
     TRY(try_test);    
 
-    run(exe, "42 opt");
+    run_test(exe, "42 opt");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run(exe, "#n/a 42 or");
+    run_test(exe, "#n/a 42 or");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run(exe, "7 opt 42 opt or");
+    run_test(exe, "7 opt 42 opt or");
     CHECK(get<int64_t>(pop(exe.main)) == 7, _);
 
-    run(exe, "0 [7 opt #n/a 35 opt] unopt &+ for");
+    run_test(exe, "0 [7 opt #n/a 35 opt] unopt &+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
   static void io_tests() {
     TRY(try_test);    
 
-    run(exe, "0 '../dist/snackis' rfile read {{len $1 _ +} when} for");
+    run_test(exe, "0 '../dist/snackis' rfile read {{len $1 _ +} when} for");
     CHECK(get<int64_t>(pop(exe.main)) > 3000000, _);
 
-    run(exe, "['foo' bytes] 'tmp' rwfile write 0 $1 &+ for");
+    run_test(exe, "['foo' bytes] 'tmp' rwfile write 0 $1 &+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
   }
   
   static void proc_tests() {
     TRY(try_test);    
     
-    run(exe,
+    run_test(exe,
 	"func: foo {|yield (yield 35 push)} call proc;"
 	"0 [7] foo foo iter &+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run(exe,
+    run_test(exe,
 	"let: acc Str list; "
 	"func: ping {|yield (3 {@acc 'ping' push yield1} for)} call proc; "
 	"func: pong {|yield (3 {@acc 'pong' push yield1} for)} call proc; "
 	"[&ping &pong] run &_ for");
     CHECK(get<ListRef>(get_env(exe.main_scope, "@acc"))->size() == 6, _);
   
-    run(exe,
+    run_test(exe,
 	"let: acc I64 list; "
 
 	"let: foo {|yield ( "
@@ -543,7 +548,7 @@ namespace snabel {
   static void thread_tests() {
     TRY(try_test);    
     Exec exe;
-    run(exe, "7 {35 +} thread join");
+    run_test(exe, "7 {35 +} thread join");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
     }*/
   
@@ -578,15 +583,11 @@ namespace snabel {
     TRY(try_snabel);
     const int iters(100), warmups(10);
 
-    for(int i(0); i < warmups; ++i) {
-      reset(exe);
-      loop();
-    }
+    for(int i(0); i < warmups; ++i) { loop(); }
     
     auto started(pnow());    
 
     for(int i(0); i < iters; ++i) {
-      reset(exe);
       loop();
       if (i < iters-1) { try_snabel.errors.clear(); }
     }
