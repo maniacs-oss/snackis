@@ -14,6 +14,7 @@
 
 namespace snabel {
   struct Op;
+  struct Sym;
 
   const int MAX_TARGET(10);
   
@@ -27,7 +28,8 @@ namespace snabel {
     std::map<str, Label> labels;
     std::deque<Lambda *> lambdas;
     std::map<Thread::Id, Thread> threads;
-    
+    std::map<str, Sym *> syms;
+      
     Thread &main;
     std::mutex mutex;
     Scope &main_scope;
