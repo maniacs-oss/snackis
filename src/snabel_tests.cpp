@@ -228,10 +228,10 @@ namespace snabel {
     run_test(exe, "{7 35 + return 99} call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run_test(exe, "{#t {42} when} call");
+    run_test(exe, "{true {42} when} call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run_test(exe, "#t {$ &return when #f} call");
+    run_test(exe, "true {$ &return when false} call");
     CHECK(get<bool>(pop(exe.main)), _);
 
     run_test(exe, "42 {1 - $ z? &return when recall 2 +} call");
@@ -274,16 +274,16 @@ namespace snabel {
   static void cond_tests() {
     TRY(try_test);    
     
-    run_test(exe, "7 #t {35 +} when");
+    run_test(exe, "7 true {35 +} when");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run_test(exe, "7 #f {35 +} when");
+    run_test(exe, "7 false {35 +} when");
     CHECK(get<int64_t>(pop(exe.main)) == 7, _);
 
-    run_test(exe, "7 #t {35 +} unless");
+    run_test(exe, "7 true {35 +} unless");
     CHECK(get<int64_t>(pop(exe.main)) == 7, _);
 
-    run_test(exe, "7 #f {35 +} unless");
+    run_test(exe, "7 false {35 +} unless");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
@@ -450,7 +450,7 @@ namespace snabel {
     run_test(exe, "0 [1 2 3 4 5 6] &+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 21, _);
 
-    run_test(exe, "'foo' #nop for $list \\- join");
+    run_test(exe, "'foo' &nop for $list \\- join");
     CHECK(get<str>(pop(exe.main)) == "f-o-o", _);
 
     run_test(exe, "0 {$ 42 lt?} {1 +} while");
@@ -497,13 +497,13 @@ namespace snabel {
     run_test(exe, "42 opt");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run_test(exe, "#n/a 42 or");
+    run_test(exe, "nil 42 or");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
     run_test(exe, "7 opt 42 opt or");
     CHECK(get<int64_t>(pop(exe.main)) == 7, _);
 
-    run_test(exe, "0 [7 opt #n/a 35 opt] unopt &+ for");
+    run_test(exe, "0 [7 opt nil 35 opt] unopt &+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 

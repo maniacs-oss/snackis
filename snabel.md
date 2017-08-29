@@ -9,7 +9,7 @@ Like Yoda of Star Wars-fame, and yesterdays scientific calculators; as well as m
 ```
 > 'Hello World!' say
 Hello World!
-n/a
+nil
 
 > 7 35 +
 42
@@ -54,10 +54,10 @@ Two kinds of equality are supported, shallow and deep. Each use a separate opera
 
 ```
 > [3 4 35] [3 4 35] =
-#f
+false
 
 > [3 4 35] [3 4 35] ==
-#t
+true
 ```
 
 ### Bindings
@@ -79,7 +79,7 @@ I64!
 I64!
 
 > [7 35] List<I64> is?
-#t
+true
 
 > 42 Str!
 Check failed, expected Str!
@@ -100,7 +100,7 @@ u'foo'
 u'foo'
 
 > u'foo' 'foo' =
-#t
+true
 
 > 'ö' len
 2
@@ -173,7 +173,7 @@ Pairs have first class support and all iterables support zipping/unzipping. Pair
 ```
 
 #### Optional Values
-Optional values are supported through the ```Opt<T>```-type. The empty value is called ```#n/a```.
+Optional values are supported through the ```Opt<T>```-type. The empty value is called ```nil```.
 
 ```
 > 42 opt
@@ -182,22 +182,22 @@ Opt(42)
 > 7 opt {35 +} when
 42
 
-> #n/a {42} unless
+> nil {42} unless
 42
 
-> #n/a 42 or
+> nil 42 or
 42
 
-> #n/a 42 opt or
+> nil 42 opt or
 Opt(42)
 
 > 7 opt 42 opt or
 Opt(7)
 
-> [7 opt #n/a 35 opt]
-[Opt(7) #n/a Opt(35)]
+> [7 opt nil 35 opt]
+[Opt(7) nil Opt(35)]
 
-> [7 opt #n/a 35 opt] unopt list
+> [7 opt nil 35 opt] unopt list
 [7 35]
 ```
 
@@ -263,10 +263,10 @@ Coro(_enter1:1)
 ```when``` accepts a condition and a callable target, the target is called if the condition is true. ```unless``` is the opposite of ```when```.
 
 ```
-> 7 #f {35 +} when
+> 7 false {35 +} when
 7
 
-> 7 #f {35 +} unless
+> 7 false {35 +} unless
 42
 ```
 
@@ -285,7 +285,7 @@ Many things in snabel are iterable, numbers, strings and lists to name a few. Sn
 ```
 
 #### Loops
-The ```for```-loop accepts an iterable and a target, and calls the target with the last value pushed on the stack as long as the iterator returns values; and the ```while```-loop accepts a condition and a target, and calls the target as long as the condition pushes ```#t```. ```break``` may be used to exit loops early, use ```&break``` to get a target that breaks when called.
+The ```for```-loop accepts an iterable and a target, and calls the target with the last value pushed on the stack as long as the iterator returns values; and the ```while```-loop accepts a condition and a target, and calls the target as long as the condition pushes ```true```. ```break``` may be used to exit loops early, use ```&break``` to get a target that breaks when called.
 
 ```
 > 0 7 &+ for
@@ -297,7 +297,7 @@ The ```for```-loop accepts an iterable and a target, and calls the target with t
 > 0 [1 2 3 4 5 6] &+ for
 21
 
-> 'foo' #nop for $list \- join
+> 'foo' &nop for $list \- join
 'f-o-o'
 
 > 0 {$ 42 lt?} {1 +} while
@@ -354,7 +354,7 @@ Snabel provides non-blocking IO in the form of iterators. The provided target is
 foo
 bar
 baz
-n/a
+nil
 
 > 'snackis' rfile
 RFile(11)
@@ -392,7 +392,7 @@ Iter<I64>
   )};
 
   'in' 'out' copy-file proc run|
-n/a
+nil
 
 > func: histogram {
     let: max-len; _

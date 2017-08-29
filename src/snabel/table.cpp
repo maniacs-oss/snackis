@@ -70,7 +70,7 @@ namespace snabel {
     auto fnd(tbl.find(key));
     
     if (fnd == tbl.end()) {
-      push(thd, get_opt_type(exe, *tbl_arg.type->args.at(1)), n_a);
+      push(thd, get_opt_type(exe, *tbl_arg.type->args.at(1)), nil);
     } else {
       push(thd, get_opt_type(exe, *fnd->second.type), fnd->second.val);
     }

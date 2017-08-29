@@ -463,13 +463,12 @@ namespace snabel {
     callable_type.args.push_back(&any_type);
 
     nop_type.args.push_back(&callable_type);
-    nop_type.fmt = [](auto &v) { return "Nop"; };
+    nop_type.fmt = [](auto &v) { return "&nop"; };
     nop_type.eq = [](auto &x, auto &y) { return true; };  
     nop_type.call.emplace([](auto &scp, auto &v, bool now) { return true; });
-    put_env(main_scope, "#nop", Box(nop_type, n_a));    
     
     drop_type.args.push_back(&callable_type);
-    drop_type.fmt = [](auto &v) { return "Drop"; };
+    drop_type.fmt = [](auto &v) { return "&_"; };
     drop_type.eq = [](auto &x, auto &y) { return true; };  
 
     drop_type.call.emplace([](auto &scp, auto &v, bool now) {
@@ -516,10 +515,10 @@ namespace snabel {
     byte_type.lt = [](auto &x, auto &y) { return get<Byte>(x) < get<Byte>(y); };
 
     bool_type.supers.push_back(&any_type);
-    bool_type.fmt = [](auto &v) { return get<bool>(v) ? "#t" : "#f"; };
+    bool_type.fmt = [](auto &v) { return get<bool>(v) ? "true" : "false"; };
     bool_type.eq = [](auto &x, auto &y) { return get<bool>(x) == get<bool>(y); };
-    put_env(main_scope, "#t", Box(bool_type, true));
-    put_env(main_scope, "#f", Box(bool_type, false));
+    put_env(main_scope, "true", Box(bool_type, true));
+    put_env(main_scope, "false", Box(bool_type, false));
 
     char_type.supers.push_back(&any_type);
     char_type.supers.push_back(&ordered_type);
@@ -1142,6 +1141,10 @@ namespace snabel {
     add_macro(*this, "while", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(While());
       });
+
+    add_macro(*this, "nil", [this](auto pos, auto &in, auto &out) {
+	out.emplace_back(Push(Box(opt_type, nil)));
+      });
   }
 
   Macro &add_macro(Exec &exe, const str &n, Macro::Imp imp) {
@@ -1333,7 +1336,7 @@ namespace snabel {
   Box make_opt(Exec &exe, opt<Box> in) {
     return in
       ? Box(get_opt_type(exe, *in->type), in->val)
-      : Box(exe.opt_type, n_a);
+      : Box(exe.opt_type, nil);
   }
 
   void reset(Exec &exe) {

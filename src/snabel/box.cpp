@@ -2,7 +2,7 @@
 #include "snabel/exec.hpp"
 
 namespace snabel {
-  NA n_a;
+  Nil nil;
 
   Box::Box(Type &t, const Val &v):
     type(&t), val(v)
@@ -107,7 +107,7 @@ namespace snabel {
   }
 
   bool empty(const Box &b) {
-    return std::holds_alternative<NA>(b.val);
+    return std::holds_alternative<Nil>(b.val);
   }
 }
 

@@ -74,12 +74,12 @@ namespace snabel {
     exe.opt_type.args.push_back(&exe.any_type);
 
     exe.opt_type.dump = [](auto &v) -> str {
-      if (empty(v)) { return "#n/a"; }
+      if (empty(v)) { return "nil"; }
       return fmt("Opt(%0)", v.type->args.at(0)->dump(v));
     };
     
     exe.opt_type.fmt = [](auto &v) -> str {
-      if (empty(v)) { return "#n/a"; }
+      if (empty(v)) { return "nil"; }
       return fmt("Opt(%0)", v.type->args.at(0)->fmt(v));
     };
 
@@ -94,8 +94,6 @@ namespace snabel {
       if (!empty(x) || !empty(y)) { return false; }
       return x.type->equal(x, y);
     };
-
-    put_env(exe.main_scope, "#n/a", Box(exe.opt_type, n_a));
 
     add_func(exe, "opt",
 	     {ArgType(exe.any_type)},

@@ -104,7 +104,7 @@ namespace gui {
 	log(v->ctx, "Finished loading (%0us):\n%1\n%2!",
 	    t, res->type->dump(*res), res->type->name);
       } else {
-	log(v->ctx, "Finished loading (%0us):\nn/a", t);
+	log(v->ctx, "Finished loading (%0us):\nnil", t);
       }
     }
   }
