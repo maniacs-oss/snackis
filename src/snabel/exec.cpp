@@ -15,6 +15,7 @@
 #include "snabel/proc.hpp"
 #include "snabel/range.hpp"
 #include "snabel/str.hpp"
+#include "snabel/sym.hpp"
 #include "snabel/table.hpp"
 #include "snabel/type.hpp"
 
@@ -413,6 +414,7 @@ namespace snabel {
     rat_type(add_type(*this, "Rat")),
     rwfile_type(add_type(*this, "RWFile")),    
     str_type(add_type(*this, "Str")),
+    sym_type(add_type(*this, "Sym")),
     table_type(add_type(*this, "Table")),
     thread_type(add_type(*this, "Thread")),
     uchar_type(add_type(*this, "UChar")),
@@ -774,6 +776,7 @@ namespace snabel {
       break_target[i]->break_depth = i+1;
     }
 
+    init_syms(*this);
     init_opts(*this);
     init_pairs(*this);
     init_lists(*this);

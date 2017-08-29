@@ -287,6 +287,16 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
+  static void sym_tests() {
+    TRY(try_test);    
+    
+    run_test(exe, "#foo");
+    CHECK(name(*get<SymRef>(pop(exe.main))) == "foo", _);
+
+    run_test(exe, "#foo #bar gt?");
+    CHECK(get<bool>(pop(exe.main)), _);
+  }
+
   static void str_tests() {
     TRY(try_test);    
     
@@ -565,6 +575,7 @@ namespace snabel {
     lambda_tests();
     coro_tests();
     cond_tests();
+    sym_tests();
     str_tests();
     bin_tests();
     uid_tests();

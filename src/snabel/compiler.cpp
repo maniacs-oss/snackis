@@ -13,7 +13,7 @@ namespace snabel {
     if (tok.text.at(0) == '"') {
       // Skip comments
     } else if (tok.text.at(0) == '#') {
-      //out.emplace_back(Push(tok.text));
+      out.emplace_back(Push(Box(exe.sym_type, get_sym(exe, tok.text.substr(1)))));
     } else if (tok.text == "&_") {
       out.emplace_back(Push(Box(exe.drop_type, nil)));
     } else if (tok.text == "&nop") {
