@@ -57,14 +57,17 @@ namespace gui {
     TRY(try_compile);
     auto code(get_str(GTK_TEXT_VIEW(v->code_fld)));
     auto started(pnow());
-    reset(v->exec);
-    snabel::compile(v->exec, code);
+    v->run_pc = v->ctx.exec.main.ops.size();
+    snabel::compile(v->ctx.exec, code);
     auto stopped(pnow());
     gtk_list_store_clear(v->bcode_store);
 
-    for (auto &op: v->exec.main.ops) {
+    for (auto i(std::next(v->ctx.exec.main.ops.begin(), v->run_pc));
+	 i != v->ctx.exec.main.ops.end();
+	 i++) {
       GtkTreeIter iter;
       gtk_list_store_append(v->bcode_store, &iter);
+      auto &op(*i);
       
       gtk_list_store_set(v->bcode_store, &iter,
 			 BCODE_PTR, &op,
@@ -73,35 +76,35 @@ namespace gui {
 			 -1);
     }
 
-    log(v->ctx, "Finished compiling in %0us", usecs(stopped-started));
+    log(v->ctx, "Finished compiling (%0us)", usecs(stopped-started));
     
     if (try_compile.errors.empty()) {
       gtk_widget_grab_focus(v->bcode_lst);
-      gtk_widget_set_sensitive(v->run_btn, true);
+      gtk_widget_set_sensitive(v->load_btn, true);
     } else {
       gtk_widget_grab_focus(v->code_fld);
-      gtk_widget_set_sensitive(v->run_btn, false);
+      gtk_widget_set_sensitive(v->load_btn, false);
     }
   }
 
-  static void on_run(gpointer *_, ScriptView *v) {
+  static void on_load(gpointer *_, ScriptView *v) {
     TRY(try_run);
-    snabel::rewind(v->exec);
-
+    snabel::rewind(v->ctx.exec);
     auto started(pnow());
-    rewind(v->exec);
-    auto res(snabel::run(v->exec.main));
+    rewind(v->ctx.exec);
+    v->ctx.exec.main.pc = v->run_pc;
+    auto res(snabel::run(v->ctx.exec.main));
     auto stopped(pnow());
     
     if (res) {
-      log(v->ctx, "Finished running in %0us", usecs(stopped-started));
+      auto res(peek(v->ctx.exec.main));
+      auto t(usecs(stopped-started));
 
-      auto res(peek(v->exec.main));
       if (res) {
-	log(v->ctx, "Script result:\n%0\n%1!",
-	    res->type->dump(*res), res->type->name);
+	log(v->ctx, "Finished loading (%0us):\n%1\n%2!",
+	    t, res->type->dump(*res), res->type->name);
       } else {
-	log(v->ctx, "Script result: n/a");
+	log(v->ctx, "Finished loading (%0us):\nn/a", t);
       }
     }
   }
@@ -136,10 +139,10 @@ namespace gui {
     add_col(GTK_TREE_VIEW(v.bcode_lst), "Info", BCODE_INFO, true);
     gtk_container_add(GTK_CONTAINER(right), gtk_widget_get_parent(v.bcode_lst));
 
-    gtk_widget_set_halign(v.run_btn, GTK_ALIGN_START);
-    gtk_widget_set_sensitive(v.run_btn, false);
-    g_signal_connect(v.run_btn, "clicked", G_CALLBACK(on_run), &v);
-    gtk_container_add(GTK_CONTAINER(right), v.run_btn);
+    gtk_widget_set_halign(v.load_btn, GTK_ALIGN_START);
+    gtk_widget_set_sensitive(v.load_btn, false);
+    g_signal_connect(v.load_btn, "clicked", G_CALLBACK(on_load), &v);
+    gtk_container_add(GTK_CONTAINER(right), v.load_btn);
     
     return frm;
   }
@@ -176,18 +179,13 @@ namespace gui {
     tags_fld(gtk_entry_new()),
     code_fld(new_text_view()),
     bcode_lst(new_tree_view(GTK_TREE_MODEL(bcode_store))),
-    compile_btn(gtk_button_new_with_mnemonic("Compil_e")),
-    run_btn(gtk_button_new_with_mnemonic("_Run")),
+    compile_btn(gtk_button_new_with_mnemonic("C_ompile")),
+    load_btn(gtk_button_new_with_mnemonic("_Load")),
     peer_lst(ctx, "Peer", this->rec.peer_ids),
     post_lst(ctx)
   {
     const UId me(whoamid(ctx));
 
-    snabel::add_func(exec, "say", {snabel::ArgType(exec.str_type)},
-		     [this](auto &scp, auto &args) {
-		       log(ctx, get<str>(args.at(0)));
-		     });
-    
     g_signal_connect(new_script_btn, "clicked", G_CALLBACK(on_new_script), this);
     gtk_container_add(GTK_CONTAINER(menu), new_script_btn);
     gtk_widget_set_sensitive(find_posts_btn,

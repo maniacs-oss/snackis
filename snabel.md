@@ -395,19 +395,22 @@ Iter<I64>
 n/a
 
 > func: histogram {
+    let: max-len; _
+    let: min-wlen; _
     let: tbl Str I64 table;
 
     func: process-file {
       rfile read unopt words unopt
+      {len @min-wlen gte? $1 _} filter
       {@tbl $1 1 &+1 upsert _} for
     };
 
     &process-file for
     @tbl list {right $1 right lt?} sort
-    100 nlist
+    @max-len nlist
   };
 
-  ['test1.txt', 'test2.txt'] histogram
+  ['test1.txt', 'test2.txt'] 3 100 histogram
 ['foo' 21. 'bar' 14. 'baz' 7.]
 ```
 

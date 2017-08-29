@@ -159,21 +159,10 @@ namespace snabel {
     while (thd.pc < thd.ops.size() && thd.pc != break_pc) {
       auto &op(thd.ops[thd.pc]);
       auto prev_pc(thd.pc);
-      
-      if (!run(op, curr_scope(thd))) {
-	ERROR(Snabel, fmt("Error on line %0: %1 %2",
-			  thd.pc, op.imp.name, op.imp.info()));
-	return false;
-      }
-      
+      run(op, curr_scope(thd));
       if (thd.pc == prev_pc) { thd.pc++; }
     }
 
     return true;
-  }
-
-  bool run(Thread &thd) {
-    begin_scope(thd);
-    return run(thd, -1);
   }
 }

@@ -224,9 +224,9 @@ namespace gui {
     gtk_entry_completion_set_model(comp, GTK_TREE_MODEL(mod));
   }
   
-  static bool exec_cmd(Reader &rdr, const str &in) {
+  static bool exec_cmd(Reader &rdr, str in) {
     TRY(try_exec);
-
+    if (in.empty() && rdr.last_cmd) { in = *rdr.last_cmd; }
     log(rdr.ctx, in);
     snabel::run(rdr.ctx.exec, in);
      

@@ -19,7 +19,7 @@ namespace snabel {
       if (!x) { return nullopt; }
       push(thd, *x);
       (*target.type->call)(scp, target, true);
-      auto out(peek(thd));
+      auto out(try_pop(thd));
       
       if (!out) {
 	ERROR(Snabel, "Filter iterator target failed");

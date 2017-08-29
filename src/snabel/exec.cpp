@@ -45,9 +45,23 @@ namespace snabel {
     push(scp.thread, scp.exec.bool_type, x.type->lt(x, y));
   }
 
+  static void lte_imp(Scope &scp, const Args &args) {
+    auto &x(args.at(0)), &y(args.at(1));
+    push(scp.thread, scp.exec.bool_type,
+	 x.type->lt(x, y) ||
+	 x.type->eq(x, y));
+  }
+
   static void gt_imp(Scope &scp, const Args &args) {
     auto &x(args.at(0)), &y(args.at(1));
     push(scp.thread, scp.exec.bool_type, x.type->gt(x, y));
+  }
+
+  static void gte_imp(Scope &scp, const Args &args) {
+    auto &x(args.at(0)), &y(args.at(1));
+    push(scp.thread, scp.exec.bool_type,
+	 x.type->gt(x, y) ||
+	 x.type->eq(x, y));
   }
 
   static void when_imp(Scope &scp, const Args &args) {
@@ -811,9 +825,17 @@ namespace snabel {
 	     {ArgType(ordered_type), ArgType(0)},
 	     lt_imp);
 
+    add_func(*this, "lte?",
+	     {ArgType(ordered_type), ArgType(0)},
+	     lte_imp);
+
     add_func(*this, "gt?",
 	     {ArgType(ordered_type), ArgType(0)},
 	     gt_imp);
+
+    add_func(*this, "gte?",
+	     {ArgType(ordered_type), ArgType(0)},
+	     gte_imp);
 
     add_func(*this, "when",
 	     {ArgType(bool_type), ArgType(callable_type)},
@@ -1318,6 +1340,7 @@ namespace snabel {
     clear_labels(exe);
     exe.next_uid.store(1);
     exe.main.ops.clear();
+    exe.main.pc = 0;
     rewind(exe);
   }
   
@@ -1336,7 +1359,6 @@ namespace snabel {
     thd.main_scope.recalls.clear();
     thd.main_scope.return_pc = -1;
     thd.stacks.front().clear();
-    exe.main.pc = 0;
   }
 
   bool compile(Exec &exe, const str &in) {
@@ -1360,11 +1382,7 @@ namespace snabel {
       exe.main.pc = start_pc;
       
       for (auto &op: in_ops) {
-	if ((!op.prepared && !prepare(op, exe.main_scope)) ||
-	    !try_compile.errors.empty()) {
-	  goto exit;
-	}
-	
+	if (!op.prepared && !prepare(op, exe.main_scope)) { goto exit; }
 	exe.main.pc++;
       }
 
@@ -1376,7 +1394,6 @@ namespace snabel {
 	
 	for (auto &op: in_ops) {
 	  if (refresh(op, exe.main_scope)) { done = false; }
-	  if (!try_compile.errors.empty()) { goto exit; }
 	  exe.main.pc++;
 	}
       }
@@ -1386,7 +1403,6 @@ namespace snabel {
 
       for (auto &op: in_ops) {
 	if (compile(op, exe.main_scope, out_ops)) { done = false; }
-	if (!try_compile.errors.empty()) { goto exit; }
       }
 
       if (done) { break; }      

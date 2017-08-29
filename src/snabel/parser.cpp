@@ -58,24 +58,29 @@ namespace snabel {
       '{', '}', '(', ')', '[', ']', '<', '>', '|', ';', '!', '.' };
     
     size_t i(0);
-    bool quoted(false);
+    bool cquoted(false), squoted(false);
     
     for (size_t j(0); j < in.size(); j++) {
       char c(in[j]);
 
-      while (quoted && c != '\'' && c != '"') {
+      while (cquoted && c != '"') {
 	j++;
 	c = in[j];
       }
 
-      if ((c == '\'' || c == '"') &&
-	  (j == 0 || in[j-1] != '\\')) { quoted = !quoted; }
-      
+      if (c == '"' && (j == 0 || in[j-1] != '\\')) { cquoted = !cquoted; }
+
+      while (squoted && c != '\'') {
+	j++;
+	c = in[j];
+      }
+
+      if (c == '\'' && (j == 0 || in[j-1] != '\\')) { squoted = !squoted; }
       const size_t cp(j);
 
       if ((split.find(c) != split.end() ||
 	   c == '\'' || c == '"' || c == '\n' || c == ' ') &&
-	  !quoted && j > i) {
+	  !cquoted && !squoted && j > i) {
 	if (split.find(in[i]) != split.end()) { i++; }
 	const str s(trim(in.substr(i, (c == '\'' || c == '"') ? j-i+1 : j-i)));
 	if (!s.empty()) { out.emplace_back(s, Pos(lnr, i)); }

@@ -570,8 +570,7 @@ namespace snabel {
     auto fnd(find_env(scp, name));
       
     if (fnd) {
-      ERROR(Snabel, fmt("Duplicate env: %0", name));
-      return false;
+      ERROR(Snabel, fmt("'%0' is already bound to: %1", name, *fnd));
     }
 
     return true;

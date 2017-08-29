@@ -13,11 +13,11 @@ namespace gui {
     GtkListStore *bcode_store;
 
     GtkWidget *new_script_btn, *find_posts_btn, *post_btn, *name_fld,
-      *tags_fld, *code_fld, *bcode_lst, *compile_btn, *run_btn;
+      *tags_fld, *code_fld, *bcode_lst, *compile_btn, *load_btn;
     
     PeerList peer_lst;
     FeedHistory post_lst;
-    snabel::Exec exec;
+    int64_t run_pc;
     
     ScriptView(const Script &rec);
     bool save() override;
