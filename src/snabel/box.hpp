@@ -8,7 +8,6 @@
 #include "snabel/bin.hpp"
 #include "snabel/iter.hpp"
 #include "snabel/random.hpp"
-#include "snabel/sym.hpp"
 #include "snabel/uid.hpp"
 #include "snackis/core/error.hpp"
 #include "snackis/core/fmt.hpp"
@@ -28,6 +27,7 @@ namespace snabel {
   struct IOQueue;
   struct Label;
   struct Scope;
+  struct Sym;
   struct Thread;
   struct Type;
 
@@ -49,8 +49,8 @@ namespace snabel {
   using Val = std::variant<Nil, bool, Byte, char, int64_t, Path, Rat, str, uchar,
 			   Uid, ustr,
 			   BinRef, CoroRef, FileRef, IterRef, IOBufRef, IOQueueRef,
-			   ListRef, PairRef, ProcRef, RandomRef, SymRef, TableRef,
-			   Func *, Label *, Thread *, Type *>;
+			   ListRef, PairRef, ProcRef, RandomRef, TableRef,
+			   Func *, Label *, Sym *, Thread *, Type *>;
   
   struct Box {
     Type *type;
