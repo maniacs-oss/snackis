@@ -2,7 +2,7 @@
 #define SNABEL_LABEL_HPP
 
 #include <cstdint>
-#include "snackis/core/str.hpp"
+#include "snabel/sym.hpp"
 
 namespace snabel {
   using namespace snackis;
@@ -11,11 +11,11 @@ namespace snabel {
 
   struct Label {
     Exec &exec;
-    str tag;
+    const Sym tag;
     bool permanent;
     int64_t pc, return_depth, recall_depth, yield_depth, break_depth;
     
-    Label(Exec &exe, const str &tag, bool pmt);
+    Label(Exec &exe, const Sym &tag, bool pmt);
   };
 }
 

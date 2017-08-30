@@ -380,7 +380,7 @@ namespace snabel {
   }
 
   str Funcall::info() const {
-    return fn.name;
+    return snabel::name(fn.name);
   }
 
   bool Funcall::run(Scope &scp) {
@@ -399,7 +399,7 @@ namespace snabel {
     
     if (!m) {
       ERROR(Snabel, fmt("Function not applicable: %0\n%1", 
-			fn.name, curr_stack(thd)));
+			snabel::name(fn.name), curr_stack(thd)));
       return false;
     }
 
@@ -450,7 +450,7 @@ namespace snabel {
     return true;
   }
 
-  Jump::Jump(const str &tag):
+  Jump::Jump(const Sym &tag):
     OpImp(OP_JUMP, "jump"), tag(tag), label(nullptr)
   { }
 
@@ -463,7 +463,7 @@ namespace snabel {
   }
 
   str Jump::info() const {
-    return fmt("%0:%1", tag, label ? to_str(label->pc) : "?");
+    return fmt("%0:%1", snabel::name(tag), label ? to_str(label->pc) : "?");
   }
 
   bool Jump::refresh(Scope &scp) {
@@ -473,7 +473,7 @@ namespace snabel {
 
   bool Jump::run(Scope &scp) {
     if (!label) {
-      ERROR(Snabel, fmt("Missing label: %0", tag));
+      ERROR(Snabel, fmt("Missing label: %0", snabel::name(tag)));
       return false;
     }
 
@@ -743,7 +743,7 @@ namespace snabel {
   }
 
   str Target::info() const {
-    return fmt("%0:%1", label.tag, label.pc);
+    return fmt("%0:%1", snabel::name(label.tag), label.pc);
   }
 
   bool Target::finalize(const Op &op, Scope &scp, OpSeq & out) {

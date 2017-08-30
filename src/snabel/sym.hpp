@@ -1,9 +1,12 @@
 #ifndef SNABEL_SYM_HPP
 #define SNABEL_SYM_HPP
 
+#include <map>
 #include "snackis/core/str.hpp"
 
 namespace snabel {
+  using namespace snackis;
+  
   struct Exec;
   struct Sym;
 

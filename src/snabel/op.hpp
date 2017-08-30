@@ -141,10 +141,10 @@ namespace snabel {
   };
 
   struct Jump: OpImp {
-    str tag;
+    const Sym tag;
     Label *label;
     
-    Jump(const str &tag);
+    Jump(const Sym &tag);
     Jump(Label &label);
     OpImp &get_imp(Op &op) const override;
     str info() const override;

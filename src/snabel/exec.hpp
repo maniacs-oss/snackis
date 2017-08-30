@@ -24,8 +24,8 @@ namespace snabel {
     std::map<Sym, Macro> macros;
     std::map<Sym, Type> types;
     std::map<std::pair<Type *, Type *>, Conv> convs;
-    std::map<str, Func> funcs;
-    std::map<str, Label> labels;
+    std::map<Sym, Func> funcs;
+    std::map<Sym, Label> labels;
     std::deque<Lambda *> lambdas;
     std::map<Thread::Id, Thread> threads;
     SymTable syms;
@@ -69,8 +69,9 @@ namespace snabel {
 		    const ArgTypes &args,
 		    FuncImp::Imp imp);
 
+  Label &add_label(Exec &exe, const Sym &tag, bool pmt=false);
   Label &add_label(Exec &exe, const str &tag, bool pmt=false);
-  Label *find_label(Exec &exe, const str &tag);
+  Label *find_label(Exec &exe, const Sym &tag);
   void clear_labels(Exec &exe);
     
   void add_conv(Exec &exe, Type &from, Type &to, Conv conv);

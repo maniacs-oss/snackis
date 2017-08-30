@@ -21,8 +21,8 @@ namespace snabel {
     imp(scp, args);
   }
 
-  Func::Func(const str &nam):
-    name(nam)
+  Func::Func(const Sym &n):
+    name(n)
   { }
 
   ArgType::ArgType(Type &type):

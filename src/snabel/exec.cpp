@@ -636,7 +636,11 @@ namespace snabel {
     
     func_type.supers.push_back(&any_type);
     func_type.supers.push_back(&callable_type);
-    func_type.fmt = [](auto &v) { return fmt("Func(%0)", get<Func *>(v)->name); };
+
+    func_type.fmt = [](auto &v) {
+      return fmt("Func(%0)", name(get<Func *>(v)->name));
+    };
+
     func_type.eq = [](auto &x, auto &y) { return get<Func *>(x) == get<Func *>(y); };
     
     func_type.call.emplace([](auto &scp, auto &v, bool now) {
@@ -646,7 +650,7 @@ namespace snabel {
 
 	if (!m) {
 	  ERROR(Snabel, fmt("Function not applicable: %0\n%1", 
-			    fn.name, curr_stack(thd)));
+			    name(fn.name), curr_stack(thd)));
 	  return false;
 	}
 
@@ -660,15 +664,17 @@ namespace snabel {
     i64_type.fmt = [](auto &v) { return fmt_arg(get<int64_t>(v)); };
     i64_type.eq = [](auto &x, auto &y) { return get<int64_t>(x) == get<int64_t>(y); };
     i64_type.lt = [](auto &x, auto &y) { return get<int64_t>(x) < get<int64_t>(y); };
+
     i64_type.iter = [this](auto &in) {
       return IterRef(new RangeIter(*this, Range(0, get<int64_t>(in))));
     };
     
     label_type.supers.push_back(&any_type);
     label_type.supers.push_back(&callable_type);
+    
     label_type.fmt = [](auto &v) {
       auto &l(*get<Label *>(v));
-      return fmt("%0:%1", l.tag, l.pc);
+      return fmt("%0:%1", name(l.tag), l.pc);
     };
 
     label_type.eq = [](auto &x, auto &y) {
@@ -688,7 +694,7 @@ namespace snabel {
 
     lambda_type.fmt = [](auto &v) {
       auto &l(*get<Label *>(v));
-      return fmt("Lambda(%0:%1)", l.tag, l.pc);
+      return fmt("Lambda(%0:%1)", name(l.tag), l.pc);
     };
     
     lambda_type.eq = [](auto &x, auto &y) {
@@ -705,7 +711,7 @@ namespace snabel {
 
     coro_type.fmt = [](auto &v) {
       auto &c(*get<CoroRef>(v));
-      return fmt("Coro(%0:%1)", c.target.tag, c.target.pc);
+      return fmt("Coro(%0:%1)", name(c.target.tag), c.target.pc);
     };
     
     coro_type.eq = [](auto &x, auto &y) {
@@ -1163,12 +1169,13 @@ namespace snabel {
 		    const str n,
 		    const ArgTypes &args,
 		    FuncImp::Imp imp) {
-    auto fnd(exe.funcs.find(n));
+    auto &sn(get_sym(exe, n));
+    auto fnd(exe.funcs.find(sn));
 
     if (fnd == exe.funcs.end()) {
       auto &fn(exe.funcs.emplace(std::piecewise_construct,
-				  std::forward_as_tuple(n),
-				  std::forward_as_tuple(n)).first->second);
+				  std::forward_as_tuple(sn),
+				  std::forward_as_tuple(sn)).first->second);
       put_env(exe.main_scope, n, Box(exe.func_type, &fn));
       return add_imp(fn, args, imp);
     }
@@ -1176,17 +1183,21 @@ namespace snabel {
     return add_imp(fnd->second, args, imp);
   }
 
-  Label &add_label(Exec &exe, const str &tag, bool pmt) {
+  Label &add_label(Exec &exe, const Sym &tag, bool pmt) {
     auto res(exe.labels
 	     .emplace(std::piecewise_construct,
 		      std::forward_as_tuple(tag),
 		      std::forward_as_tuple(exe, tag, pmt)));
 
     if (!res.second) {
-      ERROR(Snabel, fmt("Duplicate label: %0", tag));
+      ERROR(Snabel, fmt("Duplicate label: %0", name(tag)));
     }
 
     return res.first->second;
+  }
+
+  Label &add_label(Exec &exe, const str &tag, bool pmt) {
+    return add_label(exe, get_sym(exe, tag), pmt);
   }
 
   void clear_labels(Exec &exe) {
@@ -1201,7 +1212,7 @@ namespace snabel {
     }
   }
 
-  Label *find_label(Exec &exe, const str &tag) {
+  Label *find_label(Exec &exe, const Sym &tag) {
     auto fnd(exe.labels.find(tag));
     if (fnd == exe.labels.end()) { return nullptr; }
     return &fnd->second;

@@ -50,9 +50,9 @@ namespace snabel {
   };
 
   struct Func {
-    str name;
+    const Sym name;
     std::deque<FuncImp> imps;
-    Func(const str &nam);
+    Func(const Sym &n);
   };
 
   Type *get_type(const FuncImp &imp, const ArgType &arg_type, const Args &args);
