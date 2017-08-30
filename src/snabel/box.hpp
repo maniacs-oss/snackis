@@ -28,6 +28,7 @@ namespace snabel {
   struct IOQueue;
   struct Label;
   struct Scope;
+  struct Struct;
   struct Thread;
   struct Type;
 
@@ -40,6 +41,7 @@ namespace snabel {
   using Pair = std::pair<Box, Box>;
   using PairRef = std::shared_ptr<Pair>;
   using ProcRef = std::shared_ptr<Proc>;
+  using StructRef = std::shared_ptr<Struct>;
   using Table = std::map<Box, Box>;
   using TableRef = std::shared_ptr<Table>;
     
@@ -49,7 +51,7 @@ namespace snabel {
   using Val = std::variant<Nil, bool, Byte, char, int64_t, Path, Rat, str, uchar,
 			   Uid, ustr,
 			   BinRef, CoroRef, FileRef, IterRef, IOBufRef, IOQueueRef,
-			   ListRef, PairRef, ProcRef, RandomRef, TableRef,
+			   ListRef, PairRef, ProcRef, RandomRef, StructRef, TableRef,
 			   Func *, Label *, Sym, Thread *, Type *>;
   
   struct Box {

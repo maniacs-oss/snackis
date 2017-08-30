@@ -445,6 +445,13 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);    
   }
 
+  static void struct_tests() {
+    TRY(try_test);    
+    
+    run_test(exe, "struct: Foo a I64 b List<Str>; Foo new Foo is?");
+    CHECK(get<bool>(pop(exe.main)), _);
+  }
+  
   static void loop_tests() {
     TRY(try_test);    
     
@@ -588,6 +595,7 @@ namespace snabel {
     iter_tests();
     list_tests();
     pair_tests();
+    struct_tests();
     loop_tests();
     rat_tests();
     opt_tests();

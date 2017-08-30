@@ -15,14 +15,16 @@
 #include "snabel/proc.hpp"
 #include "snabel/range.hpp"
 #include "snabel/str.hpp"
+#include "snabel/struct.hpp"
 #include "snabel/sym.hpp"
 #include "snabel/table.hpp"
 #include "snabel/type.hpp"
 
 namespace snabel {
   static void is_imp(Scope &scp, const Args &args) {
-    auto &v(args.at(0));
-    auto &t(args.at(1));
+    auto &v(args.at(0)), &t(args.at(1));
+    
+    push(scp.thread, v);
     push(scp.thread, scp.exec.bool_type, isa(scp.thread, v, *get<Type *>(t)));
   }
 
@@ -383,6 +385,7 @@ namespace snabel {
     rat_type(add_type(*this, "Rat")),
     rwfile_type(add_type(*this, "RWFile")),    
     str_type(add_type(*this, "Str")),
+    struct_type(add_type(*this, "Struct")),
     sym_type(add_type(*this, "Sym")),
     table_type(add_type(*this, "Table")),
     thread_type(add_type(*this, "Thread")),
@@ -717,9 +720,10 @@ namespace snabel {
     init_pairs(*this);
     init_lists(*this);
     init_tables(*this);
+    init_structs(*this);
     init_procs(*this);
     init_io(*this);
-    
+
     add_conv(*this, str_type, ustr_type, [this](auto &v) {	
 	v.type = &ustr_type;
 	v.val = uconv.from_bytes(get<str>(v));
@@ -913,8 +917,15 @@ namespace snabel {
 	} else {
 	  out.emplace_back(Backup(false));
 	  auto &n(get_sym(*this, in.at(0).text));
-	  add_type(*this, n);
-	  
+	  auto &t(get_struct_type(*this, n));
+	  auto &mt(get_meta_type(*this, t));
+
+	  add_func(*this, "new", {ArgType(mt)}, [&t](auto &scp, auto &args) {
+	      push(scp.thread,
+		   *get<Type *>(args.at(0)),
+		   std::make_shared<Struct>(t));
+	    });
+
 	  in.pop_front();
 	  auto end(find_end(in.begin(), in.end()));
 
@@ -937,7 +948,7 @@ namespace snabel {
 	      break;
 	    }
 	  }
-	  
+	    
 	  if (end != in.end()) { in.pop_front(); }
 	}
       });
