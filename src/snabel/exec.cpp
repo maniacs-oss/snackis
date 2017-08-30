@@ -906,6 +906,38 @@ namespace snabel {
 	}
       });
 
+    add_macro(*this, "struct:", [this](auto pos, auto &in, auto &out) {
+	if (in.empty()) {
+	  ERROR(Snabel, fmt("Malformed struct on row %0, col %1",
+			    pos.row, pos.col));
+	} else {
+	  out.emplace_back(Backup(false));
+	  str n(in.at(0).text);
+
+	  in.pop_front();
+	  auto end(find_end(in.begin(), in.end()));
+
+	  while (in.begin() != end) {
+	    str fn(in.front().text);
+	    in.pop_front();
+
+	    if (in.begin() == end) {
+	      ERROR(Snabel, fmt("Malformed struct on row %0, col %1",
+				pos.row, pos.col));
+	      break;
+	    }
+       
+	    str ft(in.front().text);
+	    in.pop_front();
+	    std::cout << "fn: " << fn << ", ft: " << ft << std::endl;
+	  }
+	  
+	  if (end != in.end()) { in.pop_front(); }
+	  //out.emplace_back(Funcall(funcs.find(get_sym(*this, "struct"))->second));
+	  out.emplace_back(Putenv(get_sym(*this, fmt("%0", n))));
+	}
+      });
+    
     add_macro(*this, "$list", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Stash());
       });

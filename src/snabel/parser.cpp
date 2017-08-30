@@ -55,7 +55,7 @@ namespace snabel {
   
   void parse_expr(const str &in, size_t lnr, TokSeq &out) {
     static const std::set<char> split {
-      '{', '}', '(', ')', '[', ']', '<', '>', '|', ';', '!', '.' };
+      '{', '}', '(', ')', '[', ']', '|', ';', '!', '.' };
     
     size_t i(0);
     bool cquoted(false), squoted(false);

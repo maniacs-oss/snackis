@@ -1,10 +1,10 @@
 # Snabel
-#### a decently typed language for hackers
+#### a decently typed dynamic language
 
 ![script example](images/script.png?raw=true)
 
 ### Status
-Snabel still has quite some way to go before even coming close to general purpose; I'm a one-man shop and it's development is currently exclusively driven by my own needs and interests. I have yet to do any serious comparisons, but as far as VM-based languages scripting languages go it's pretty fast without trying.
+Snabel still has quite some way to go before claiming general purpose; I'm a one-man shop and it's development is currently exclusively driven by my needs and interests. I have yet to do any serious comparisons, but as far as VM-based languages scripting languages go it's pretty fast without trying.
 
 ### Postfix
 Like Yoda of Star Wars-fame, and yesterdays scientific calculators; as well as most printers in active use; yet unlike currently trending languages; Snabel expects arguments before operations.
