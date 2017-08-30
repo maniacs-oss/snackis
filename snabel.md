@@ -1,5 +1,5 @@
 # Snabel
-#### a fresh take on Forth in C++
+#### a fresh take on Forth in the spirit of Perl
 
 ![script example](images/script.png?raw=true)
 
