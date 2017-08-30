@@ -1,5 +1,5 @@
 # Snabel
-#### a fresh take on Forth in the spirit of Perl
+#### a decently typed language for hackers
 
 ![script example](images/script.png?raw=true)
 
