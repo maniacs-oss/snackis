@@ -100,7 +100,7 @@ namespace snabel {
     return std::get<Check>(op.data);
   }
 
-  str Check::info() const { return type ? type->name : ""; }
+  str Check::info() const { return type ? snabel::name(type->name) : ""; }
 
   bool Check::compile(const Op &op, Scope &scp, OpSeq &out) {
     if (out.empty()) { return false; }
@@ -154,7 +154,7 @@ namespace snabel {
     
     if (!isa(thd, *v, *t)) {
       ERROR(Snabel, fmt("Check failed, expected %0!\n%1 %2!",
-			t->name, *v, v->type->name));
+			snabel::name(t->name), *v, snabel::name(v->type->name)));
       return false;
     }
 

@@ -127,7 +127,7 @@ namespace snabel {
       
       out.emplace_back(Push(Box(exe.uchar_type, c)));
     } else if (isupper(tok.text[0])) {
-      auto fnd(find_type(exe, tok.text));
+      auto fnd(find_type(exe, get_sym(exe, tok.text)));
 
       if (fnd) {
 	out.emplace_back(Push(Box(get_meta_type(exe, *fnd), fnd)));

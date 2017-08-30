@@ -15,8 +15,8 @@ namespace snabel {
     SymTable::iterator it;
     Pos *pos;
     
-    Sym(const Sym &src);
-    const Sym &operator =(const Sym &);
+    //Sym(const Sym &src);
+    //const Sym &operator =(const Sym &);
 
     Sym(Pos *pos);
   };

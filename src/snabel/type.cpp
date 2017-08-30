@@ -4,11 +4,11 @@
 #include "snabel/type.hpp"
 
 namespace snabel {
-  Type::Type(const str &n):
+  Type::Type(const Sym &n):
     name(n), raw(this), conv(false)
   {
     dump = [this](auto &v) { return fmt(v); };
-    fmt = [n](auto &v) { return n; };
+    fmt = [n](auto &v) { return snabel::name(n); };
     eq = [](auto &x, auto &y) { return false; };
     equal = [this](auto &x, auto &y) { return eq(x, y); };
     gt = [this](auto &x, auto &y) { return !lt(x, y) && !eq(x, y); };

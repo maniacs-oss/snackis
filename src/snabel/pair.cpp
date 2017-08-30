@@ -82,7 +82,7 @@ namespace snabel {
 
   Type &get_pair_type(Exec &exe, Type &lt, Type &rt) {
     auto &thd(exe.main);
-    str n(fmt("Pair<%0 %1>", lt.name, rt.name));
+    auto &n(get_sym(exe, fmt("Pair<%0 %1>", name(lt.name), name(rt.name))));
     auto fnd(find_type(exe, n));
     if (fnd) { return *fnd; }
     

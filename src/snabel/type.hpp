@@ -18,7 +18,7 @@ namespace snabel {
   enum ReadResult {READ_OK, READ_AGAIN, READ_EOF, READ_ERROR};
     
   struct Type {
-    const str name;
+    const Sym name;
     Type *raw;
     Types supers, args;
     bool conv;
@@ -34,7 +34,7 @@ namespace snabel {
     opt<func<ReadResult (const Box &, Bin &)>> read;
     opt<func<int64_t (const Box &, const unsigned char *, int64_t)>> write;
     
-    Type(const str &n);
+    Type(const Sym &n);
     Type(const Type &) = delete;
     ~Type();
     const Type &operator =(const Type &) = delete;

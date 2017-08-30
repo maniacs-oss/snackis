@@ -220,7 +220,7 @@ namespace snabel {
   }
   
   Type &get_list_type(Exec &exe, Type &elt) {    
-    str n(fmt("List<%0>", elt.name));
+    auto &n(get_sym(exe, fmt("List<%0>", name(elt.name))));
     auto fnd(find_type(exe, n));
     if (fnd) { return *fnd; }
     auto &t(add_type(exe, n));

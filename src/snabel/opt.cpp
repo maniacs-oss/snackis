@@ -122,7 +122,7 @@ namespace snabel {
   }
 
   Type &get_opt_type(Exec &exe, Type &elt) {    
-    str n(fmt("Opt<%0>", elt.name));
+    auto &n(get_sym(exe, fmt("Opt<%0>", name(elt.name))));
     auto fnd(find_type(exe, n));
     if (fnd) { return *fnd; }
     auto &t(add_type(exe, n));

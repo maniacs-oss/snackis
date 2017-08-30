@@ -385,7 +385,7 @@ namespace snabel {
 				std::forward_as_tuple(0),
 				std::forward_as_tuple(*this, 0)).first->second),
     main_scope(main.scopes.at(0)),
-    meta_type("Type<Any>"),
+    meta_type(get_sym(*this, "Type<Any>")),
     any_type(add_type(*this, "Any")),
     bin_type(add_type(*this, "Bin")),
     bool_type(add_type(*this, "Bool")),
@@ -453,7 +453,7 @@ namespace snabel {
 
     meta_type.supers.push_back(&any_type);
     meta_type.args.push_back(&any_type);
-    meta_type.fmt = [](auto &v) { return fmt("%0!", get<Type *>(v)->name); };
+    meta_type.fmt = [](auto &v) { return fmt("%0!", name(get<Type *>(v)->name)); };
     meta_type.eq = [](auto &x, auto &y) { return get<Type *>(x) == get<Type *>(y); };
 
     void_type.fmt = [](auto &v) { return "Void"; };
@@ -479,17 +479,24 @@ namespace snabel {
     
     iter_type.supers.push_back(&any_type);
     iter_type.args.push_back(&any_type);
-    iter_type.fmt = [](auto &v) { return fmt("Iter<%0>", v.type->args.at(0)->name); };
+
+    iter_type.fmt = [](auto &v) {
+      return fmt("Iter<%0>", name(v.type->args.at(0)->name));
+    };
+    
     iter_type.eq = [](auto &x, auto &y) {
       return get<IterRef>(x) == get<IterRef>(y);
     };
+    
     iter_type.iter = [](auto &in) { return get<IterRef>(in); };
 
     iterable_type.supers.push_back(&any_type);
     iterable_type.args.push_back(&any_type);
+
     iterable_type.fmt = [](auto &v) {
-      return fmt("Iterable<%0>", v.type->args.at(0)->name);
+      return fmt("Iterable<%0>", name(v.type->args.at(0)->name));
     };
+
     iterable_type.eq = [](auto &x, auto &y) { return false; };
 
     readable_type.supers.push_back(&any_type);
@@ -1035,25 +1042,29 @@ namespace snabel {
   }
   
   Type &get_meta_type(Exec &exe, Type &t) {    
-    str n(fmt("Type<%0>", t.name));
+    auto &n(get_sym(exe, fmt("Type<%0>", name(t.name))));
     auto fnd(find_type(exe, n));
     if (fnd) { return *fnd; }
     auto &mt(add_type(exe, n));
     mt.raw = &exe.meta_type;
     mt.supers.push_back(&exe.meta_type);
     mt.args.push_back(&t);
-    mt.fmt = [](auto &v) { return get<Type *>(v)->name; };
-    mt.eq = [](auto &x, auto &y) { return get<Type *>(x) == get<Type *>(y); };
+    mt.fmt = exe.meta_type.fmt;
+    mt.eq = exe.meta_type.eq;
     return mt;
   }
 
-  Type &add_type(Exec &exe, const str &n) {
+  Type &add_type(Exec &exe, const Sym &n) {
     return exe.types.emplace(std::piecewise_construct,
 			     std::forward_as_tuple(n),
 			     std::forward_as_tuple(n)).first->second; 
   }
 
-  Type *find_type(Exec &exe, const str &n) {
+  Type &add_type(Exec &exe, const str &n) {
+    return add_type(exe, get_sym(exe, n));
+  }
+
+  Type *find_type(Exec &exe, const Sym &n) {
     auto fnd(exe.types.find(n));
     if (fnd == exe.types.end()) { return nullptr; }
     return &fnd->second;
@@ -1063,7 +1074,7 @@ namespace snabel {
     if (args.empty()) { return raw; }
     
     if (args.size() > raw.args.size()) {
-      ERROR(Snabel, fmt("Too many params for type %0", raw.name));
+      ERROR(Snabel, fmt("Too many params for type %0", name(raw.name)));
       return raw;
     }
 
@@ -1085,7 +1096,7 @@ namespace snabel {
       return get_pair_type(exe, *args.at(0), *args.at(1));
     }
 
-    ERROR(Snabel, fmt("Invalid type: %1", raw.name));
+    ERROR(Snabel, fmt("Invalid type: %1", name(raw.name)));
     return raw;
   }
 
@@ -1119,7 +1130,7 @@ namespace snabel {
   }
 
   Type &get_iter_type(Exec &exe, Type &elt) {    
-    str n(fmt("Iter<%0>", elt.name));
+    auto &n(get_sym(exe, fmt("Iter<%0>", name(elt.name))));
     auto fnd(find_type(exe, n));
     if (fnd) { return *fnd; }
     auto &t(add_type(exe, n));
@@ -1135,7 +1146,7 @@ namespace snabel {
   }
 
   Type &get_iterable_type(Exec &exe, Type &elt) {    
-    str n(fmt("Iterable<%0>", elt.name));
+    auto &n(get_sym(exe, fmt("Iterable<%0>", name(elt.name))));
     auto fnd(find_type(exe, n));
     if (fnd) { return *fnd; }
     auto &t(add_type(exe, n));

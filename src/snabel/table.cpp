@@ -199,7 +199,7 @@ namespace snabel {
   }
 
   Type &get_table_type(Exec &exe, Type &key, Type &val) {    
-    str n(fmt("Table<%0 %1>", key.name, val.name));
+    auto &n(get_sym(exe, fmt("Table<%0 %1>", name(key.name), name(val.name))));
     auto fnd(find_type(exe, n));
     if (fnd) { return *fnd; }
     auto &t(add_type(exe, n));

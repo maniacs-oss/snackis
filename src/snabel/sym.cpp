@@ -7,7 +7,7 @@ namespace snabel {
     pos(pos)
   { }
 
-  Sym::Sym(const Sym &src):
+  /*  Sym::Sym(const Sym &src):
     it(src.it), pos(src.pos)
   { }
   
@@ -15,7 +15,7 @@ namespace snabel {
     it = src.it;
     pos = src.pos;
     return *this;
-  }
+    }*/
 
   bool operator ==(const Sym &x, const Sym &y) {
     return x.pos == y.pos;
