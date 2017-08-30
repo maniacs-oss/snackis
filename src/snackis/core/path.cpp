@@ -2,16 +2,28 @@
 
 namespace snackis {  
   bool create_path(const Path &p) {
-    return std::experimental::filesystem::create_directories(p);
+    return stdfs::create_directories(p);
   }
 
   bool path_exists(const Path &p) {
-    return std::experimental::filesystem::exists(p);
+    return stdfs::exists(p);
   }
 
   bool remove_path(const Path &p) {
     std::error_code e;
-    std::experimental::filesystem::remove_all(p, e);
+    stdfs::remove_all(p, e);
     return e.value() == 0;
+  }
+
+  bool is_file(const Path &p) {
+    return stdfs::is_regular_file(p);
+  }
+
+  PathIter end(const PathIter &it) {
+    return stdfs::end(it);
+  }
+
+  RecPathIter end(const RecPathIter &it) {
+    return stdfs::end(it);
   }
 }

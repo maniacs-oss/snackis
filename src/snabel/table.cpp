@@ -141,7 +141,7 @@ namespace snabel {
       return IterRef(new TableIter(exe,
 				   get_pair_type(exe,
 						 *in.type->args.at(0),
-						 *in.type->args.at(0)),
+						 *in.type->args.at(1)),
 				   get<TableRef>(in)));
     };
 

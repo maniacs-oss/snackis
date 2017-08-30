@@ -3,6 +3,7 @@
 
 #include <deque>
 
+#include "snabel/sym.hpp"
 #include "snackis/core/func.hpp"
 #include "snackis/core/opt.hpp"
 #include "snackis/core/uid.hpp"

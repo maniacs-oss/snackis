@@ -292,38 +292,7 @@ namespace snabel {
 
   static void uid_imp(Scope &scp, const Args &args) {
     push(scp.thread, scp.exec.uid_type, uid(scp.exec)); 
-  }
-  
-  static void rfile_imp(Scope &scp, const Args &args) {
-    push(scp.thread,
-	 scp.exec.rfile_type,
-	 std::make_shared<File>(get<Path>(args.at(0)), O_RDONLY));
-  }
-
-  static void rwfile_imp(Scope &scp, const Args &args) {
-    push(scp.thread,
-	 scp.exec.rwfile_type,
-	 std::make_shared<File>(get<Path>(args.at(0)), O_RDWR | O_CREAT | O_TRUNC));
-  }
-
-  static void read_imp(Scope &scp, const Args &args) {
-    Exec &exe(scp.exec);
-    auto &elt(get_opt_type(exe, exe.bin_type));
-    
-    push(scp.thread,
-	 get_iter_type(exe, elt),
-	 IterRef(new ReadIter(exe, elt, args.at(0))));
-  }
-
-  static void write_imp(Scope &scp, const Args &args) {
-    Exec &exe(scp.exec);
-    auto &in(args.at(0));
-    auto &out(args.at(1));
-    push(scp.thread, out);
-    push(scp.thread,
-	 get_iter_type(exe, exe.i64_type),
-	 IterRef(new WriteIter(exe, (*in.type->iter)(in), out)));
-  }
+  }  
 
   static void iterable_lines_imp(Scope &scp, const Args &args) {
     auto &exe(scp.exec);
@@ -587,52 +556,6 @@ namespace snabel {
 	call(get<ProcRef>(v), scp, now);
 	return true;
       });
-
-    file_type.supers.push_back(&any_type);
-    file_type.fmt = [](auto &v) {
-      auto &f(*get<FileRef>(v));
-      return fmt("File(%0)", f.fd);
-    };
-    
-    file_type.eq = [](auto &x, auto &y) {
-      return get<FileRef>(x) == get<FileRef>(y);
-    };
-
-    rfile_type.supers.push_back(&file_type);
-    rfile_type.supers.push_back(&readable_type);
-    rfile_type.fmt = [](auto &v) { return fmt("RFile(%0)", get<FileRef>(v)->fd); };
-    rfile_type.eq = file_type.eq;
-    rfile_type.read = [](auto &in, auto &out) {
-      auto &f(*get<FileRef>(in));
-      auto res(read(f.fd, &out[0], out.size()));
-      if (!res) { return READ_EOF; }
-
-      if (res == -1) {
-	if (errno == EAGAIN) { return READ_AGAIN; }
-	ERROR(Snabel, fmt("Failed reading from file: %0", errno));
-	return READ_ERROR;
-      }
-
-      out.resize(res);
-      return READ_OK;
-    };
-
-    rwfile_type.supers.push_back(&file_type);
-    rwfile_type.supers.push_back(&writeable_type);
-    rwfile_type.fmt = [](auto &v) { return fmt("RWFile(%0)", get<FileRef>(v)->fd); };
-    rwfile_type.eq = file_type.eq;
-    rwfile_type.read = rfile_type.read;
-    rwfile_type.write = [](auto &out, auto data, auto len) {
-      auto &f(*get<FileRef>(out));
-      int res(write(f.fd, data, len));
-
-      if (res == -1) {
-	if (errno == EAGAIN) { return 0; }
-	ERROR(Snabel, fmt("Failed writing to file %0: %1", f.fd, errno));
-      }
-      
-      return res;
-    };
     
     func_type.supers.push_back(&any_type);
     func_type.supers.push_back(&callable_type);
@@ -795,6 +718,7 @@ namespace snabel {
     init_lists(*this);
     init_tables(*this);
     init_procs(*this);
+    init_io(*this);
     
     add_conv(*this, str_type, ustr_type, [this](auto &v) {	
 	v.type = &ustr_type;
@@ -802,21 +726,10 @@ namespace snabel {
 	return true;
       });
 
-    add_conv(*this, str_type, path_type, [this](auto &v) {	
-	v.type = &path_type;
-	v.val = Path(get<str>(v));
-	return true;
-      });
-
     add_conv(*this, i64_type, rat_type, [this](auto &v) {	
 	v.type = &rat_type;
 	auto n(get<int64_t>(v));
 	v.val = Rat(abs(n), 1, n < 0);
-	return true;
-      });
-
-    add_conv(*this, rwfile_type, rfile_type, [this](auto &v) {	
-	v.type = &rfile_type;
 	return true;
       });
     
@@ -893,13 +806,6 @@ namespace snabel {
 	     {ArgType(iterable_type), ArgType(callable_type)},
 	     iterable_map_imp);
         
-    add_func(*this, "rfile", {ArgType(path_type)}, rfile_imp);
-    add_func(*this, "rwfile", {ArgType(path_type)}, rwfile_imp);
-    add_func(*this, "read", {ArgType(readable_type)}, read_imp);
-    add_func(*this, "write",
-	     {ArgType(get_iterable_type(*this, bin_type)), ArgType(writeable_type)},
-	     write_imp);
-
     add_func(*this, "lines",
 	     {ArgType(get_iterable_type(*this, bin_type))},
 	     iterable_lines_imp);

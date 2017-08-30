@@ -113,8 +113,28 @@ true
 'foo,bar,baz'
 ```
 
-#### Rationals
-Snabel provides exact arithmetics using rational numbers. Integers are promoted to rationals automatically as needed, while ```trunc``` may be used to convert rationals to integers.
+#### Symbols
+Symbols are unique strings that support efficient comparisons/ordering. Snabel uses symbols internally for all names.
+
+```
+> #foo
+#foo
+
+> #foo $ =
+true
+
+> #foo 'foo' sym =
+true
+
+> #foo #bar =
+false
+
+#foo #bar gt?
+true
+```
+
+#### Rational Numbers
+Snabel supports exact arithmetics using rational numbers. Integers are promoted to rationals automatically as needed, while ```trunc``` may be used to convert rationals to integers.
 
 ```
 > 1 3 /
@@ -410,7 +430,8 @@ nil
     @max-len nlist
   };
 
-  ['test1.txt', 'test2.txt'] 3 100 histogram
+  '../src' ls-r &file? filter
+  4 100 histogram
 ['foo' 21. 'bar' 14. 'baz' 7.]
 ```
 

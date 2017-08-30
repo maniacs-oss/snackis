@@ -4,12 +4,18 @@
 #include <experimental/filesystem>
 
 namespace snackis {
-  using Path = std::experimental::filesystem::path;
-  using PathIter = std::experimental::filesystem::directory_iterator;
+  namespace stdfs = std::experimental::filesystem;
+
+  using Path = stdfs::path;
+  using PathIter = stdfs::directory_iterator;
+  using RecPathIter = stdfs::recursive_directory_iterator;
   
   bool create_path(const Path &p);
   bool path_exists(const Path &p);
   bool remove_path(const Path &p);
+  bool is_file(const Path &p);
+  PathIter end(const PathIter &it);
+  RecPathIter end(const RecPathIter &it);
 }
 
 #endif

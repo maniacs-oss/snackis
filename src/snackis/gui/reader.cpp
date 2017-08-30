@@ -243,7 +243,11 @@ namespace gui {
 
     if (exec_cmd(*rdr, in)) {
       auto res(peek(rdr->ctx.exec.main));
-      if (res) { log(rdr->ctx, fmt("\n%0\n%1!", *res, res->type->name)); }
+
+      if (res) {
+	log(rdr->ctx, fmt("\n%0\n%1!", *res, snabel::name(res->type->name)));
+      }
+      
       set_str(GTK_ENTRY(rdr->entry), "");
     }
     
