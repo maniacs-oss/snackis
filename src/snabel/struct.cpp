@@ -1,3 +1,4 @@
+#include "snabel/error.hpp"
 #include "snabel/exec.hpp"
 #include "snabel/struct.hpp"
 
@@ -18,7 +19,12 @@ namespace snabel {
 
     return true;
   }
-
+  
+  static void new_imp(Scope &scp, const Args &args) {
+    auto &t(*get<Type *>(args.at(0)));
+    push(scp.thread, t, std::make_shared<Struct>(t));
+  }
+  
   void init_structs(Exec &exe) {
     exe.struct_type.supers.push_back(&exe.any_type);
     exe.struct_type.fmt = [](auto &v) { return fmt_arg(*get<StructRef>(v)); };
@@ -30,6 +36,45 @@ namespace snabel {
     exe.struct_type.equal = [](auto &x, auto &y) {
       return *get<StructRef>(x) == *get<StructRef>(y);
     };
+
+    add_func(exe, "new", {ArgType(get_meta_type(exe, exe.struct_type))},
+	     new_imp);
+    
+    add_macro(exe, "struct:", [&exe](auto pos, auto &in, auto &out) {
+	if (in.empty()) {
+	  ERROR(Snabel, fmt("Malformed struct on row %0, col %1",
+			    pos.row, pos.col));
+	} else {
+	  out.emplace_back(Backup(false));
+	  auto &n(get_sym(exe, in.at(0).text));
+	  get_struct_type(exe, n);
+
+	  in.pop_front();
+	  auto end(find_end(in.begin(), in.end()));
+
+	  while (in.begin() != end) {
+	    str fn(in.front().text);
+	    in.pop_front();
+
+	    if (in.begin() == end) {
+	      ERROR(Snabel, fmt("Malformed struct on row %0, col %1",
+				pos.row, pos.col));
+	      break;
+	    }
+       
+	    str ftn(in.front().text);
+	    in.pop_front();
+	    auto ft(parse_type(exe, ftn, 0).first);
+
+	    if (!ft) {
+	      ERROR(Snabel, fmt("Missing field type: %0", ftn));
+	      break;
+	    }
+	  }
+	    
+	  if (end != in.end()) { in.pop_front(); }
+	}
+      });
   }
 
   Type &get_struct_type(Exec &exe, const Sym &n) {

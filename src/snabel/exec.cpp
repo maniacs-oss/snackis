@@ -909,49 +909,6 @@ namespace snabel {
 	  out.emplace_back(Putenv(get_sym(*this, fmt("@%0", n))));
 	}
       });
-
-    add_macro(*this, "struct:", [this](auto pos, auto &in, auto &out) {
-	if (in.empty()) {
-	  ERROR(Snabel, fmt("Malformed struct on row %0, col %1",
-			    pos.row, pos.col));
-	} else {
-	  out.emplace_back(Backup(false));
-	  auto &n(get_sym(*this, in.at(0).text));
-	  auto &t(get_struct_type(*this, n));
-	  auto &mt(get_meta_type(*this, t));
-
-	  add_func(*this, "new", {ArgType(mt)}, [&t](auto &scp, auto &args) {
-	      push(scp.thread,
-		   *get<Type *>(args.at(0)),
-		   std::make_shared<Struct>(t));
-	    });
-
-	  in.pop_front();
-	  auto end(find_end(in.begin(), in.end()));
-
-	  while (in.begin() != end) {
-	    str fn(in.front().text);
-	    in.pop_front();
-
-	    if (in.begin() == end) {
-	      ERROR(Snabel, fmt("Malformed struct on row %0, col %1",
-				pos.row, pos.col));
-	      break;
-	    }
-       
-	    str ftn(in.front().text);
-	    in.pop_front();
-	    auto ft(parse_type(*this, ftn, 0).first);
-
-	    if (!ft) {
-	      ERROR(Snabel, fmt("Missing field type: %0", ftn));
-	      break;
-	    }
-	  }
-	    
-	  if (end != in.end()) { in.pop_front(); }
-	}
-      });
     
     add_macro(*this, "$list", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Stash());
