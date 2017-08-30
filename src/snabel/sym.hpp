@@ -18,18 +18,20 @@ namespace snabel {
     SymTable::iterator it;
     Pos *pos;
     
-    //Sym(const Sym &src);
-    //const Sym &operator =(const Sym &);
-
     Sym(Pos *pos);
   };
 
-  bool operator ==(const Sym &x, const Sym &y);
-  bool operator <(const Sym &x, const Sym &y);
-  
   void init_syms(Exec &exe);
   const Sym &get_sym(Exec &exe, const str &n);
   const str &name(const Sym &sym);
+
+  constexpr bool operator ==(const Sym &x, const Sym &y) {
+    return x.pos == y.pos;
+  }
+
+  constexpr bool operator <(const Sym &x, const Sym &y) {
+    return *x.pos < *y.pos;
+  }
 }
 
 #endif

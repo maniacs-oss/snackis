@@ -7,24 +7,6 @@ namespace snabel {
     pos(pos)
   { }
 
-  /*  Sym::Sym(const Sym &src):
-    it(src.it), pos(src.pos)
-  { }
-  
-  const Sym &Sym::operator =(const Sym &src) {
-    it = src.it;
-    pos = src.pos;
-    return *this;
-    }*/
-
-  bool operator ==(const Sym &x, const Sym &y) {
-    return x.pos == y.pos;
-  }
-
-  bool operator <(const Sym &x, const Sym &y) {
-    return *x.pos < *y.pos;
-  }
-
   static void sym_imp(Scope &scp, const Args &args) {
     push(scp.thread, scp.exec.sym_type, get_sym(scp.exec, get<str>(args.at(0))));
   }
