@@ -117,7 +117,7 @@ true
 ```
 
 #### Symbols
-Symbols are unique strings that support efficient comparisons/ordering. Snabel uses symbols internally for all names.
+Symbols are unique strings that support efficient comparisons/ordering. Snabel uses symbols internally for all names. Any string may be interned as a symbol, but it makes most sense for smaller sets of short strings that are reused a lot.
 
 ```
 > #foo
@@ -127,6 +127,9 @@ Symbols are unique strings that support efficient comparisons/ordering. Snabel u
 true
 
 > #foo 'foo' sym =
+true
+
+> #foo str 'foo' =
 true
 
 > #foo #bar =
