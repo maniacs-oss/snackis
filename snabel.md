@@ -153,7 +153,7 @@ Snabel supports exact arithmetics using rational numbers. Integers are promoted 
 ```
 
 #### Lists
-Lists are based on deques, which means fast inserts/removals in the front/back and decent random access-performance and memory layout. All list types are parameterized by element type. Lists allocate their memory on the heap and provide reference semantics.
+Lists are based on deques, which means fast inserts/removals in the front/back and decent random access-performance and memory layout. All list types are parameterized by element type, allocate their memory from the heap and provide reference semantics.
 
 ```
 > [1 2 3]
@@ -225,7 +225,7 @@ Opt(7)
 ```
 
 #### Tables
-Tables map keys to values. They may be created from any pair iterable. Iterating a table results in a pair iterator.
+Tables map keys to values, and may be created from any pair iterable. Iterating a table results in a pair iterator.
 ```
 > [7 'foo'. 35 'bar'.] table 35 get
 Opt('bar')
@@ -257,29 +257,6 @@ Lambda(_enter1:0)
   {1 - $ z? &return when recall 2 +}
   call
 82
-```
-
-### Coroutines
-Calling ```yield``` from within a lambda logs the current position, stack and environment before returning; execution will continue from the yielding position with restored stack and environment on next call from the same scope. A fresh coroutine context is returned when calling the lambda, the context may be used for further calls and will reset itself when the coroutine returns. Use ```&yield``` to get a target that yields when called.
-
-```
-> {yield 42} call
-Coro(_enter1:1)
-
-> {yield 42} call call
-42
-
-> func: foo {|yield (7 yield 28 +)} call;
-  foo foo +
-42
-
-> func: foo {|yield (let: bar 35; 7 yield @bar +)} call;
-  foo foo
-42
-
-> func: foo {|yield ([7 35] &yield for &+)} call;
-  foo foo foo call
-42
 ```
 
 ### Conditions
@@ -355,6 +332,29 @@ Exec exe;
 add_func(exe, "+",
          {ArgType(exe.i64_type), ArgType(exe.i64_type)},
 	 add_i64);
+```
+
+### Coroutines
+Calling ```yield``` from a lambda logs the current position, stack and environment before returning; execution continues from the yielding position with restored stack and environment on next call. A fresh coroutine context is returned on first ```yield``` when, the context may be used for further calls and will reset itself when the coroutine returns. Use ```&yield``` to get a target that yields when called.
+
+```
+> {yield 42} call
+Coro(_enter1:1)
+
+> {yield 42} call call
+42
+
+> func: foo {|yield (7 yield 28 +)} call;
+  foo foo +
+42
+
+> func: foo {|yield (let: bar 35; 7 yield @bar +)} call;
+  foo foo
+42
+
+> func: foo {|yield ([7 35] &yield for &+)} call;
+  foo foo foo call
+42
 ```
 
 ### Procs
