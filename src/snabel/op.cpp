@@ -537,14 +537,6 @@ namespace snabel {
     return true;
   }
 
-  Param::Param():
-    OpImp(OP_PARAM, "param")
-  { }
-
-  OpImp &Param::get_imp(Op &op) const {
-    return std::get<Param>(op.data);
-  }
-  
   Putenv::Putenv(const Sym &key):
     OpImp(OP_PUTENV, "putenv"), key(key)
   { }
@@ -788,101 +780,6 @@ namespace snabel {
     return _return(scp, 1);
   }
   
-  Unparam::Unparam():
-    OpImp(OP_UNPARAM, "unparam"), done(false)
-  { }
-
-  OpImp &Unparam::get_imp(Op &op) const {
-    return std::get<Unparam>(op.data);
-  }
-
-  bool Unparam::compile(const Op &op, Scope &scp, OpSeq &out) {
-    auto &exe(scp.exec);
-    auto &thd(scp.thread);
-    
-    if (done) {
-      if (out.empty()) { return false; }
-      auto &prev(out.back());
-      if (prev.imp.code == OP_PUSH) {
-	auto &p(get<Push>(prev.data));
-	auto &v(p.vals.back());
-	
-	if (isa(thd, *v.type, exe.meta_type)) {
-	  auto &t(get_type(exe, *get<Type *>(v)->raw, types));
-	  v.type = &get_meta_type(exe, t);
-	  get<Type *>(v) = &t;
-	  return true;
-	}
-      }
-      
-      return false;
-    }
-    
-    auto i(out.rbegin());
-    size_t cnt(0);
-    
-    for (; i != out.rend(); i++, cnt++) {
-      if (i->imp.code == OP_PARAM) {
-	cnt++;
-	done = true;
-	break;
-      } else if (i->imp.code == OP_UNPARAM) {
-	ERROR(Snabel, "Missing param start");
-	return false;
-      } else if (i->imp.code == OP_PUSH) {
-	auto &p(get<Push>(i->data));
-
-	while (!p.vals.empty()) {
-	  if (!isa(thd, p.vals.back(), exe.meta_type)) { break; }
-	  types.push_front(get<Type *>(p.vals.back()));
-	  p.vals.pop_back();
-	}
-
-	if (!p.vals.empty()) {
-	  break;
-	}
-      } else {
-	break;
-      }
-    }
-
-    if (cnt > 0) {
-      while (cnt > 0) {
-	out.pop_back();
-	cnt--;
-      }
-      
-      out.push_back(op);
-      return true;
-    }
-
-    return false;
-  }
-
-  bool Unparam::run(Scope &scp) {
-    if (!done) {
-      ERROR(Snabel, "Failed parsing params");
-      return false;
-    }
-
-    auto &exe(scp.exec);
-    auto t(peek(scp.thread));
-
-    if (!t) {
-      ERROR(Snabel, "Missing param type");
-    }
-    
-    if (!isa(scp.thread, *t->type, exe.meta_type)) {
-      ERROR(Snabel, fmt("Invalid param type: %0", *t));
-      return false;
-    }
-
-    auto &pt(get_type(exe, *get<Type *>(*t)->raw, types));
-    t->type = &get_meta_type(exe, pt);
-    get<Type *>(*t) = &pt;
-    return true;
-  }
-
   While::While():
     OpImp(OP_WHILE, "while"), compiled(false)
   { }

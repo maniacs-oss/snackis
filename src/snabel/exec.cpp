@@ -856,14 +856,6 @@ namespace snabel {
 	out.emplace_back(Restore());
       });
 
-    add_macro(*this, "<", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(Param());
-      });
-
-    add_macro(*this, ">", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(Unparam());
-      });
-
     add_macro(*this, "$", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Dup());
       });
