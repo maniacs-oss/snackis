@@ -240,6 +240,24 @@ Opt('bar')
 ['bar' 1. 'baz' 1. 'foo' 2.]
 ```
 
+#### Structs
+Structs may be used to create custom composite data types. Constructors and field accessors are automatically created. All fields are expected to be initialized when read, reading uninitialized fields signals errors; use optional types for optional fields.
+
+```
+> struct: Foo a I64 b Str
+
+> Foo new Foo is?
+true
+
+> func: make-foo {Foo new 0 set-a '' set-b}
+
+> make-foo
+Foo(a 0. b ''.)
+
+> make-foo 42 set-a
+Foo(a 42. b ''.)
+```
+
 ### Lambdas
 Wrapping code in braces pushes a pointer on the stack. Lambdas may be exited early by calling ```return```, the final result (if any) is pushed on exit. ```recall``` may be used to call the current lambda recursively. Use ```&return```/```&recall``` to get a target that performs the specified action when called.
 

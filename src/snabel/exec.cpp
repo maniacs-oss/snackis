@@ -1074,17 +1074,13 @@ namespace snabel {
     return t;
   }
       
-  FuncImp &add_func(Exec &exe,
-		    const str n,
-		    const ArgTypes &args,
-		    FuncImp::Imp imp) {
-    auto &sn(get_sym(exe, n));
-    auto fnd(exe.funcs.find(sn));
+  FuncImp &add_func(Exec &exe, const Sym &n, const ArgTypes &args, FuncImp::Imp imp) {
+    auto fnd(exe.funcs.find(n));
 
     if (fnd == exe.funcs.end()) {
       auto &fn(exe.funcs.emplace(std::piecewise_construct,
-				  std::forward_as_tuple(sn),
-				  std::forward_as_tuple(sn)).first->second);
+				  std::forward_as_tuple(n),
+				  std::forward_as_tuple(n)).first->second);
       put_env(exe.main_scope, n, Box(exe.func_type, &fn));
       return add_imp(fn, args, imp);
     }
@@ -1092,6 +1088,10 @@ namespace snabel {
     return add_imp(fnd->second, args, imp);
   }
 
+  FuncImp &add_func(Exec &exe, const str &n, const ArgTypes &args, FuncImp::Imp imp) {
+    return add_func(exe, get_sym(exe, n), args, imp);
+  }
+  
   Label &add_label(Exec &exe, const Sym &tag, bool pmt) {
     auto res(exe.labels
 	     .emplace(std::piecewise_construct,
