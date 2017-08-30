@@ -6,6 +6,9 @@
 
 namespace snabel {
   using namespace snackis;
+
+  struct Exec;
+  struct Type;
   
   struct Pos {
     int64_t row, col;
@@ -28,6 +31,7 @@ namespace snabel {
   TokSeq parse_expr(const str &in, size_t lnr=0);
   TokSeq::iterator find_end(TokSeq::iterator i,
 			    const TokSeq::const_iterator &end);
+  std::pair<Type *, size_t> parse_type(Exec &exe, const str &in, size_t i);
 }
 
 #endif

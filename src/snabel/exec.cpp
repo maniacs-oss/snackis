@@ -912,8 +912,9 @@ namespace snabel {
 			    pos.row, pos.col));
 	} else {
 	  out.emplace_back(Backup(false));
-	  str n(in.at(0).text);
-
+	  auto &n(get_sym(*this, in.at(0).text));
+	  add_type(*this, n);
+	  
 	  in.pop_front();
 	  auto end(find_end(in.begin(), in.end()));
 
@@ -927,14 +928,17 @@ namespace snabel {
 	      break;
 	    }
        
-	    str ft(in.front().text);
+	    str ftn(in.front().text);
 	    in.pop_front();
-	    std::cout << "fn: " << fn << ", ft: " << ft << std::endl;
+	    auto ft(parse_type(*this, ftn, 0).first);
+
+	    if (!ft) {
+	      ERROR(Snabel, fmt("Missing field type: %0", ftn));
+	      break;
+	    }
 	  }
 	  
 	  if (end != in.end()) { in.pop_front(); }
-	  //out.emplace_back(Funcall(funcs.find(get_sym(*this, "struct"))->second));
-	  out.emplace_back(Putenv(get_sym(*this, fmt("%0", n))));
 	}
       });
     
@@ -999,6 +1003,13 @@ namespace snabel {
   }
 
   Type &add_type(Exec &exe, const Sym &n) {
+    auto fnd(exe.types.find(n));
+
+    if (fnd != exe.types.end()) {
+      ERROR(Snabel, fmt("Redefining type: %0", name(n)));
+      return fnd->second;
+    }
+    
     return exe.types.emplace(std::piecewise_construct,
 			     std::forward_as_tuple(n),
 			     std::forward_as_tuple(n)).first->second; 
@@ -1187,7 +1198,7 @@ namespace snabel {
     exe.main.pc = 0;
     rewind(exe);
   }
-  
+
   void rewind(Exec &exe) {
     for (auto i(exe.threads.begin()); i != exe.threads.end();) {
       if (i->first == exe.main.id) {

@@ -166,9 +166,6 @@ namespace snabel {
     CHECK(get<Type *>(pop(exe.main)) ==
 	  &get_pair_type(exe, exe.str_type, exe.any_type), _);
 
-    run_test(exe, "(List)<I64>");
-    CHECK(get<Type *>(pop(exe.main)) == &get_list_type(exe, exe.i64_type), _);
-
     run_test(exe, "I64 list List<I64>!");
     CHECK(pop(exe.main).type == &get_list_type(exe, exe.i64_type), _);
   }

@@ -1,7 +1,9 @@
 #include <iostream>
 
 #include "snabel/error.hpp"
+#include "snabel/exec.hpp"
 #include "snabel/parser.hpp"
+#include "snabel/type.hpp"
 
 namespace snabel {
   Pos::Pos(int64_t row, int64_t col):
@@ -118,5 +120,42 @@ namespace snabel {
     }
     
     return i;
+  }
+
+  std::pair<Type *, size_t> parse_type(Exec &exe, const str &in, size_t i) {
+    while (in[i] == ' ') { i++; }
+
+    if (!in.empty() && in.at(i) == '>') {
+      return std::make_pair(nullptr, i+1);
+    }
+    
+    auto j(in.find('<', i));
+    
+    if (j == str::npos) {
+      j = in.size();
+      if (in.back() == '>') { j--; }
+    }
+       
+    str n((j == str::npos) ? in : in.substr(i, j-i));
+    auto fnd(find_type(exe, get_sym(exe, n)));
+
+    if (!fnd) {
+      ERROR(Snabel, fmt("Type not found: %0", n));
+      return std::make_pair(nullptr, in.size());
+    }
+
+    Types args;
+    i = j+1;
+    
+    if (j != str::npos) {  
+      while (i < in.size()) {
+	auto res(parse_type(exe, in, i));
+	i = res.second;
+	if (!res.first) { break; }
+	args.push_back(res.first);
+      }
+    }
+
+    return std::make_pair(&get_type(exe, *fnd, args), i);
   }
 }

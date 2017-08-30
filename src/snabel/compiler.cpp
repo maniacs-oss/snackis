@@ -127,13 +127,8 @@ namespace snabel {
       
       out.emplace_back(Push(Box(exe.uchar_type, c)));
     } else if (isupper(tok.text[0])) {
-      auto fnd(find_type(exe, get_sym(exe, tok.text)));
-
-      if (fnd) {
-	out.emplace_back(Push(Box(get_meta_type(exe, *fnd), fnd)));
-      } else {
-	ERROR(Snabel, fmt("Type not found: %0", tok.text));
-      }
+      auto t(parse_type(exe, tok.text, 0).first);
+      if (t) { out.emplace_back(Push(Box(get_meta_type(exe, *t), t))); }
     } else if (isdigit(tok.text[0]) || 
 	(tok.text.size() > 1 && tok.text[0] == '-' && isdigit(tok.text[1]))) {
       out.emplace_back(Push(Box(exe.i64_type, to_int64(tok.text))));
