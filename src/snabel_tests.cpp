@@ -129,8 +129,8 @@ namespace snabel {
     run_test(exe, "let: foo 35; let: bar @foo 7 +");
 
     Scope &scp(curr_scope(exe.main));
-    CHECK(get<int64_t>(get_env(scp, "@foo")) == 35, _);
-    CHECK(get<int64_t>(get_env(scp, "@bar")) == 42, _);
+    CHECK(get<int64_t>(*find_env(scp, "@foo")) == 35, _);
+    CHECK(get<int64_t>(*find_env(scp, "@bar")) == 42, _);
   }
 
   static void func_tests() {
@@ -190,7 +190,7 @@ namespace snabel {
     Scope &scp1(curr_scope(exe.main));
     CHECK(get<int64_t>(pop(scp1.thread)) == 21, _);
     CHECK(!peek(scp1.thread), _);
-    CHECK(get<int64_t>(get_env(scp1, "@foo")) == 21, _);
+    CHECK(get<int64_t>(*find_env(scp1, "@foo")) == 21, _);
   }
 
   static void equality_tests() {
@@ -549,7 +549,7 @@ namespace snabel {
 	"func: ping {|yield (3 {@acc 'ping' push yield1} for)} call proc; "
 	"func: pong {|yield (3 {@acc 'pong' push yield1} for)} call proc; "
 	"[&ping &pong] run &_ for");
-    CHECK(get<ListRef>(get_env(exe.main_scope, "@acc"))->size() == 6, _);
+    CHECK(get<ListRef>(*find_env(exe.main_scope, "@acc"))->size() == 6, _);
   
     run_test(exe,
 	"let: acc I64 list; "

@@ -161,7 +161,7 @@ namespace snabel {
     return true;
   }
 
-  Deref::Deref(const str &name):
+  Deref::Deref(const Sym &name):
     OpImp(OP_DEREF, "deref"), name(name), compiled(false)
   { }
 
@@ -169,7 +169,7 @@ namespace snabel {
     return std::get<Deref>(op.data);
   }
 
-  str Deref::info() const { return name; }
+  str Deref::info() const { return snabel::name(name); }
 
   bool Deref::compile(const Op &op, Scope &scp, OpSeq &out) {
     if (compiled) { return false; }
@@ -193,7 +193,7 @@ namespace snabel {
     auto fnd(find_env(scp, name));
     
     if (!fnd) {
-      ERROR(Snabel, fmt("Unknown identifier: %0", name));
+      ERROR(Snabel, fmt("Unknown identifier: %0", snabel::name(name)));
       return false;
     }
 
@@ -408,7 +408,7 @@ namespace snabel {
     return true;
   }
   
-  Getenv::Getenv(const str &id):
+  Getenv::Getenv(opt<Sym> id):
     OpImp(OP_GETENV, "getenv"), id(id)
   { }
 
@@ -416,14 +416,14 @@ namespace snabel {
     return std::get<Getenv>(op.data);
   }
 
-  str Getenv::info() const { return id; }
+  str Getenv::info() const { return id ? snabel::name(*id) : ""; }
 
   bool Getenv::run(Scope &scp) {
     auto &exe(scp.exec);
     auto &thd(scp.thread);
-    str id_str(id);
+    auto id(this->id);
     
-    if (id_str.empty()) {
+    if (!id) {
       auto id_arg(try_pop(thd));
       
       if (!id_arg) {
@@ -431,18 +431,18 @@ namespace snabel {
 	return false;
       }
       
-      if (id_arg->type != &exe.str_type) {
+      if (id_arg->type != &exe.sym_type) {
 	ERROR(Snabel, fmt("Invalid identifier: %0", *id_arg));
 	return false;
       }
       
-      id_str = get<str>(*id_arg);
+      id = get<Sym>(*id_arg);
     }
     
-    auto fnd(find_env(scp, id_str));
+    auto fnd(find_env(scp, *id));
 
     if (!fnd) {
-      ERROR(Snabel, fmt("Unknown identifier: %0", id_str));
+      ERROR(Snabel, fmt("Unknown identifier: %0", snabel::name(*id)));
       return false;
     }
     
@@ -545,33 +545,31 @@ namespace snabel {
     return std::get<Param>(op.data);
   }
   
-  Putenv::Putenv(const str &name):
-    OpImp(OP_PUTENV, "putenv"), name(name)
+  Putenv::Putenv(const Sym &key):
+    OpImp(OP_PUTENV, "putenv"), key(key)
   { }
 
   OpImp &Putenv::get_imp(Op &op) const {
     return std::get<Putenv>(op.data);
   }
 
-  str Putenv::info() const { return name; }
+  str Putenv::info() const { return snabel::name(key); }
 
   bool Putenv::prepare(Scope &scp) {
-    auto fnd(find_env(scp, name));
-    if (fnd) { ERROR(Snabel, fmt("Rebinding name: %0", name)); }
+    auto fnd(find_env(scp, key));
+    if (fnd) { ERROR(Snabel, fmt("Rebinding symbol: %0", snabel::name(key))); }
     return true;
   }
   
   bool Putenv::run(Scope &scp) {
-    auto &s(curr_stack(scp.thread));
+    auto val(try_pop(scp.thread));
 
-    if (s.empty()) {
-      ERROR(Snabel, fmt("Missing env: %0", name));
+    if (!val) {
+      ERROR(Snabel, fmt("Missing symbol value: %0", snabel::name(key)));
       return false;
     }
 
-    val.emplace(s.back());
-    s.pop_back();
-    put_env(scp, name, *val);
+    put_env(scp, key, *val);
     return true;
   }
 

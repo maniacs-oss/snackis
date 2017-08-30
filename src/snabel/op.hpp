@@ -88,10 +88,10 @@ namespace snabel {
   };
 
   struct Deref: OpImp {
-    str name;
+    const Sym name;
     bool compiled;
     
-    Deref(const str &name);
+    Deref(const Sym &name);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
     bool compile(const Op &op, Scope &scp, OpSeq & out) override;
@@ -132,9 +132,9 @@ namespace snabel {
   };
 
   struct Getenv: OpImp {
-    const str id;
+    opt<Sym> id;
     
-    Getenv(const str &id="");
+    Getenv(opt<Sym> id=nullopt);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
     bool run(Scope &scp) override;
@@ -182,10 +182,9 @@ namespace snabel {
   };
 
   struct Putenv: OpImp {
-    str name;
-    opt<Box> val;
+    const Sym key;
     
-    Putenv(const str &name);
+    Putenv(const Sym &key);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
     bool prepare(Scope &scp) override;

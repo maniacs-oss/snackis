@@ -9,6 +9,7 @@
 #include "snabel/env.hpp"
 #include "snabel/func.hpp"
 #include "snabel/op.hpp"
+#include "snabel/sym.hpp"
 #include "snabel/type.hpp"
 #include "snackis/core/str.hpp"
 
@@ -29,7 +30,7 @@ namespace snabel {
 
     std::map<int64_t, OpState> op_state;
     std::deque<Frame> recalls;
-    std::set<str> env_keys;
+    std::set<Sym> env_keys;
     
     Scope(Thread &thread);
     Scope(const Scope &src);
@@ -38,10 +39,11 @@ namespace snabel {
   };
 
   void restore_stack(Scope &scp, size_t len=1);
+  Box *find_env(Scope &scp, const Sym &key);
   Box *find_env(Scope &scp, const str &key);
-  Box get_env(Scope &scp, const str &key);
+  void put_env(Scope &scp, const Sym &key, const Box &val);
   void put_env(Scope &scp, const str &key, const Box &val);
-  bool rem_env(Scope &scp, const str &key);
+  bool rem_env(Scope &scp, const Sym &key);
   void rollback_env(Scope &scp);
   void reset_stack(Scope &scp);
   void jump(Scope &scp, const Label &lbl);

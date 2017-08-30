@@ -13,11 +13,6 @@ namespace snackis {
     Rat(uint64_t num, uint64_t div, bool neg=false);
   };
 
-  uint64_t gcd(uint64_t x, uint64_t y);
-  
-  bool operator ==(const Rat &x, const Rat &y);
-  bool operator <(const Rat &x, const Rat &y);
-
   Rat operator +(const Rat &x, const Rat &y);
   Rat operator -(const Rat &x, const Rat &y);
   Rat operator *(const Rat &x, const Rat &y);
@@ -28,6 +23,24 @@ namespace snackis {
 
   template <>
   str fmt_arg(const snackis::Rat &arg);
+
+  constexpr bool operator ==(const Rat &x, const Rat &y) {
+    return x.num == y.num && x.div == y.div && x.neg == y.neg;
+  }
+
+  constexpr bool operator <(const Rat &x, const Rat &y) {
+    return x.num*y.div < y.num*x.div; 
+  }
+
+  constexpr uint64_t gcd(uint64_t x, uint64_t y) {
+    while (x && y) {
+      auto z(y);
+      y = x % y;
+      x = z;
+    }
+
+    return x;
+  }
 }
 
 #endif

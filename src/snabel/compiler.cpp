@@ -67,9 +67,9 @@ namespace snabel {
       auto i(tok.text.at(6) - '0');
       out.emplace_back(Push(Box(exe.label_type, exe.break_target[i])));
     } else if (tok.text.at(0) == '&') {
-      out.emplace_back(Getenv(tok.text.substr(1)));
+      out.emplace_back(Getenv(get_sym(exe, tok.text.substr(1))));
     } else if (tok.text.at(0) == '@') {
-      out.emplace_back(Getenv(tok.text));
+      out.emplace_back(Getenv(get_sym(exe, tok.text)));
     } else if (tok.text.at(0) == '$' &&
 	       tok.text.size() == 2 &&
 	       isdigit(tok.text.at(1))) {
@@ -141,7 +141,7 @@ namespace snabel {
       auto fnd(exe.macros.find(get_sym(exe, tok.text)));
       
       if (fnd == exe.macros.end()) {
-	out.emplace_back(Deref(tok.text));
+	out.emplace_back(Deref(get_sym(exe, tok.text)));
       } else {
 	fnd->second(tok.pos, in, out);
       }

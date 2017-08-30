@@ -979,7 +979,7 @@ namespace snabel {
 	  if (end != in.end()) { end++; }
 	  in.erase(in.begin(), end);
 	  out.emplace_back(Restore());
-	  out.emplace_back(Putenv(n));
+	  out.emplace_back(Putenv(get_sym(*this, n)));
 	}
       });
 
@@ -996,7 +996,7 @@ namespace snabel {
 	  if (end != in.end()) { end++; }
 	  in.erase(in.begin(), end);
 	  out.emplace_back(Restore());
-	  out.emplace_back(Putenv(fmt("@%0", n)));
+	  out.emplace_back(Putenv(get_sym(*this, fmt("@%0", n))));
 	}
       });
 

@@ -50,20 +50,18 @@ namespace snabel {
     }
   }
 
-  Box *find_env(Scope &scp, const str &key) {
+  Box *find_env(Scope &scp, const Sym &key) {
     auto &env(scp.thread.env);
     auto fnd(env.find(key));
     if (fnd == env.end()) { return nullptr; }
     return &fnd->second;
   }
 
-  Box get_env(Scope &scp, const str &key) {
-    auto fnd(find_env(scp, key));
-    CHECK(fnd, _);
-    return *fnd;
+  Box *find_env(Scope &scp, const str &key) {
+    return find_env(scp, get_sym(scp.exec, key));
   }
 
-  void put_env(Scope &scp, const str &key, const Box &val) {
+  void put_env(Scope &scp, const Sym &key, const Box &val) {
     auto &env(scp.thread.env);
     auto fnd(env.find(key));
 
@@ -72,14 +70,18 @@ namespace snabel {
 		  std::forward_as_tuple(key),
 		  std::forward_as_tuple(val));
     } else {
-      ERROR(Snabel, fmt("Rebinding name: %0", key));
+      ERROR(Snabel, fmt("Rebinding name: %0", name(key)));
       fnd->second = val;
     }
 
     if (&scp != &scp.thread.main_scope) { scp.env_keys.insert(key); }
   }
 
-  bool rem_env(Scope &scp, const str &key) {
+  void put_env(Scope &scp, const str &key, const Box &val) {
+    put_env(scp, get_sym(scp.exec, key), val);
+  }
+  
+  bool rem_env(Scope &scp, const Sym &key) {
     if (&scp != &scp.thread.main_scope) {
       auto fnd(scp.env_keys.find(key));
       if (fnd == scp.env_keys.end()) { return false; }
