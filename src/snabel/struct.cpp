@@ -86,6 +86,12 @@ namespace snabel {
 	    if (isupper(fn.at(0))) {
 	      auto st(parse_type(exe, fn, 0).first);
 	      if (!st) { break; }
+
+	      if (!isa(exe.main, *st, exe.struct_type)) {
+		ERROR(Snabel, fmt("Invalid super struct: %0", name(st->name)));
+		break;
+	      }
+	      
 	      t.supers.push_back(st);
 	      continue;
 	    }
@@ -138,7 +144,8 @@ namespace snabel {
 		       push(scp.thread, sa);
 		     });
 	  }
-	    
+
+	  while (in.begin() != end) { in.pop_front(); }
 	  if (end != in.end()) { in.pop_front(); }
 	}
       });
