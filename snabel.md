@@ -7,24 +7,24 @@
 Snabel still has quite some way to go before claiming general purpose; it's evolution is currently mostly driven by my own needs and interests. I have yet to do any serious comparisons, or optimization; but its more than fast enough for scripting.
 
 ### Dependencies
-Snabel requires a ```C++1z```-capable compiler and standard library to build, and defaults to using clang with ```libc++```. This unfortunately means downloading and manually installing [clang](http://releases.llvm.org/download.html#4.0.0) to even run Snabel, but will improve over time. Snabel further depends on ```libcurl```, ```libpthread```, ```libsodium``` and ```libuuid```.
+Snabel requires a ```C++1z```-capable compiler and standard library to build, and defaults to using clang with ```libc++```. This unfortunately still often means downloading and manually installing [clang](http://releases.llvm.org/download.html#4.0.0) to even run Snabel, but will improve over time. Snabel further depends on ```libcurl```, ```libpthread```, ```libsodium``` and ```libuuid```.
 
 ```
 tar -xzf clang+llvm-4.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
 cd clang+llvm-4.0.0-x86_64-linux-gnu-ubuntu-16.04
 sudo cp -R * /usr/local/
 sudo ldconfig
+
+sudo apt-get install cmake libcurl4-openssl-dev libsodium-dev libuuid1
 ```
 
 ### Getting started
-If you're running ```Linux/64```, copy ```snabel``` from [/dist](https://github.com/andreas-gone-wild/snackis/tree/master/dist) to where you want it and launch with ```rlwrap ./snabel```; otherwise you'll have to build the executable yourself.
+If you're running ```Linux/64```, copy ```snabel``` from [/dist](https://github.com/andreas-gone-wild/snackis/tree/master/dist) to where you want it and run ```rlwrap ./snabel```; otherwise you'll have to build the executable yourself.
 
-### Building
+#### Building
 Once a modern enough compiler is in place, execute the following commands to build Snabel:
 
 ```
-sudo apt-get install cmake libcurl4-openssl-dev libsodium-dev libuuid1
-
 git clone https://github.com/andreas-gone-wild/snackis.git
 mkdir snackis/build
 cd snackis/build
