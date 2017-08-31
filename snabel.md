@@ -17,7 +17,7 @@ sudo ldconfig
 ```
 
 ### Getting started
-If you're running ```Linux/64```, copy ```snabel``` from [/dist](https://github.com/andreas-gone-wild/snackis/tree/master/dist) to where you want it; otherwise you'll have to build the executable yourself.
+If you're running ```Linux/64```, copy ```snabel``` from [/dist](https://github.com/andreas-gone-wild/snackis/tree/master/dist) to where you want it and launch with ```rlwrap ./snabel```; otherwise you'll have to build the executable yourself.
 
 ### Building
 Once a modern enough compiler is in place, execute the following commands to build Snabel:
