@@ -1,5 +1,5 @@
 # Snabel
-#### a decently typed dynamic language
+#### a decently typed Forth with a touch of Perl
 
 ![script example](images/script.png?raw=true)
 
