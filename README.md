@@ -27,6 +27,9 @@ mkdir snackis/build
 cd snackis/build
 cmake ..
 make snackis
+cp snackis ../dist
+cd ..
+cp -R dist/ ?
 ```
 
 ### Master Password

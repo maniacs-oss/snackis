@@ -1,20 +1,47 @@
 # Snabel
 #### a decently typed Forth with a touch of Perl
 
-![script example](images/script.png?raw=true)
+![repl example](images/repl.png?raw=true)
 
 ### Status
-Snabel still has quite some way to go before claiming general purpose; I'm a one-man shop and it's development is currently exclusively driven by my needs and interests. I have yet to do any serious comparisons, or optimization; but its more than fast enough for scripting.
+Snabel still has quite some way to go before claiming general purpose; it's evolution is currently mostly driven by my own needs and interests. I have yet to do any serious comparisons, or optimization; but its more than fast enough for scripting.
+
+### Dependencies
+Snabel requires a ```C++1z```-capable compiler and standard library to build, and defaults to using clang with ```libc++```. This unfortunately means downloading and manually installing [clang](http://releases.llvm.org/download.html#4.0.0) to even run Snabel, but will improve over time. Snabel further depends on ```libcurl```, ```libpthread```, ```libsodium``` and ```libuuid```.
+
+```
+tar -xzf clang+llvm-4.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
+cd clang+llvm-4.0.0-x86_64-linux-gnu-ubuntu-16.04
+sudo cp -R * /usr/local/
+sudo ldconfig
+```
+
+### Getting started
+If you're running ```Linux/64```, copy ```snabel``` from [/dist](https://github.com/andreas-gone-wild/snackis/tree/master/dist) to where you want it; otherwise you'll have to build the executable yourself.
+
+### Building
+Once a modern enough compiler is in place, execute the following commands to build Snabel:
+
+```
+sudo apt-get install cmake libcurl4-openssl-dev libsodium-dev libuuid1
+
+git clone https://github.com/andreas-gone-wild/snackis.git
+mkdir snackis/build
+cd snackis/build
+cmake ..
+make snabel
+cp snabel ?
+```
 
 ### Postfix
 Like Yoda of Star Wars-fame, and yesterdays scientific calculators; as well as most printers in active use; yet unlike currently trending languages; Snabel expects arguments before operations.
 
 ```
-> 'Hello World!' say
+S> 'Hello World!' say
 Hello World!
 nil
 
-> 7 35 +
+S> 7 35 +
 42
 ```
 
@@ -22,19 +49,19 @@ nil
 Values and results from function calls are pushed on the stack in order of appearance. Thanks to lexical scoping and named bindings, keeping the stack squeaky clean is less critical in Snabel. ```$list``` collects all values on the stack in a list that is pushed instead. ```$1```-```$9``` swaps in values, starting from the end; while ```$``` duplicates the last value. ```_``` drops the last value and ```|``` clears the entire stack.
 
 ```
-> 1 2 3 $list
+S> 1 2 3 $list
 [1 2 3]
 
-> 1 2 $ $list
+S> 1 2 $ $list
 [1 2 2]
 
-> 42 7 _ $list
+S> 42 7 _ $list
 [42]
 
-> 42 7 | $list
+S> 42 7 | $list
 []
 
-> 42 35 $1 -
+S> 42 35 $1 -
 -7
 ```
 
@@ -42,13 +69,13 @@ Values and results from function calls are pushed on the stack in order of appea
 Parentheses may be used to divide expressions into separate parts, each level copies the stack on entry and restores it with the result (if any) pushed on exit.
 
 ```
-> (1 2 +) (2 2 *) +
+S> (1 2 +) (2 2 *) +
 7
 
-> 1 (2 3 $list)
+S> 1 (2 3 $list)
 [1 2 3]
 
-> 1 (|2 3 $list) .
+S> 1 (|2 3 $list) .
 1 [2 3].
 ```
 
@@ -56,10 +83,10 @@ Parentheses may be used to divide expressions into separate parts, each level co
 Two kinds of equality are supported, shallow and deep. Each use a separate operator, ```=``` for shallow comparisons and ```==``` for deep.
 
 ```
-> [3 4 35] [3 4 35] =
+S> [3 4 35] [3 4 35] =
 false
 
-> [3 4 35] [3 4 35] ==
+S> [3 4 35] [3 4 35] ==
 true
 ```
 
@@ -67,7 +94,7 @@ true
 The ```let:```-macro may be used to introduce named bindings. Bound names are prefixed with ```@```, lexically scoped and not allowed to change their value once bound in a specific scope. The bound expression is evaluated in a copy of the calling stack, which allows feeding values into a let statement but avoids unintended stack effects. Bindings require termination using ```;``` to separate them from surrounding code.
 
 ```
-> let: fn {7 +}; 35 @fn call
+S> let: fn {7 +}; 35 @fn call
 42
 ```
 
@@ -75,16 +102,16 @@ The ```let:```-macro may be used to introduce named bindings. Bound names are pr
 Types are first class, optionally parameterized and inferred.
 
 ```
-> I64
+S> I64
 I64!
 
-> 42 type
+S> 42 type
 I64!
 
-> [7 35] List<I64> is?
+S> [7 35] List<I64> is?
 true
 
-> 42 Str!
+S> 42 Str!
 Check failed, expected Str!
 42 I64!
 ```
@@ -93,32 +120,33 @@ Check failed, expected Str!
 Strings are mutable collections of characters that provide reference semantics. Snabel makes a difference between byte strings and unicode strings. Unicode strings are processed as UTF-8 when converting to/from bytes and stored internally as UTF-16. Byte strings are automatically promoted to unicode as needed.
 
 ```
-> 'foo'
+S> 'foo'
 'foo'
 
-> 'foo' 'foo' =
+S> 'foo' 'foo' =
 false
 
-> 'foo' 'foo' ==
+S> 'foo' 'foo' ==
 true
 
-> u'foo'
+S> u'foo'
 u'foo'
 
-> 'foo' ustr
+S> 'foo' ustr
 u'foo'
 
-> u'foo' 'foo' =
+S> u'foo' 'foo' =
 true
 
-> 'ö' len
+S> 'ö' len
 2
 
-> u'ö' len
+S> u'ö' len
 1
 
-> ['foo\r\n\r\nbar\r\n\r\nbaz' bytes]
-  lines unopt \, join
+S> ['foo\r\n\r\nbar\r\n\r\nbaz' bytes]
+   lines unopt \, join
+
 'foo,bar,baz'
 ```
 
@@ -126,22 +154,22 @@ true
 Symbols are unique strings that support efficient comparisons/ordering. Snabel uses symbols internally for all names. Any string may be interned as a symbol, but it makes most sense for smaller sets of short strings that are reused a lot.
 
 ```
-> #foo
+S> #foo
 #foo
 
-> #foo $ =
+S> #foo $ =
 true
 
-> #foo 'foo' sym =
+S> #foo 'foo' sym =
 true
 
-> #foo str 'foo' =
+S> #foo str 'foo' =
 true
 
-> #foo #bar =
+S> #foo #bar =
 false
 
-#foo #bar gt?
+S> #foo #bar gt?
 true
 ```
 
@@ -149,15 +177,16 @@ true
 Snabel supports exact arithmetics using rational numbers. Integers are promoted to rationals automatically as needed, while ```trunc``` may be used to convert rationals to integers.
 
 ```
-> 1 3 /
+S> 1 3 /
 1/3
 
-> 10 3 / trunc
+S> 10 3 / trunc
 3
 
-> 1 1 /
-  10 {_ 3 /} for
-  10 {_ 3 *} for
+S> 1 1 /
+   10 {_ 3 /} for
+   10 {_ 3 *} for
+
 1/1
 ```
 
@@ -165,22 +194,22 @@ Snabel supports exact arithmetics using rational numbers. Integers are promoted 
 Lists are based on deques, which means fast inserts/removals in the front/back and decent random access-performance and memory layout. All list types are parameterized by element type, allocate their memory from the heap and provide reference semantics.
 
 ```
-> [1 2 3]
+S> [1 2 3]
 [1 2 3]
 
-> Str list
+S> Str list
 []
 
-> 1 2 3 $list
+S> 1 2 3 $list
 [1 2 3]
 
-> [35 7 + 'foo']
+S> [35 7 + 'foo']
 [42 'foo']
 
-> [1 2] 3 push reverse pop _
+S> [1 2] 3 push reverse pop _
 [3 2]
 
-> [2 3 1] &lt? sort
+S> [2 3 1] &lt? sort
 [1 2 3]
 ```
 
@@ -188,19 +217,19 @@ Lists are based on deques, which means fast inserts/removals in the front/back a
 Pairs have first class support and all iterables support zipping/unzipping. Pairs of values are created using ```.``` while ```zip``` operates on iterables, both values and iterables support ```unzip```.
 
 ```
-> 'foo' 42.
+S> 'foo' 42.
 'foo' 42.
 
-> 'foo' 42. right
+S> 'foo' 42. right
 42
 
-> 'foo' 42. unzip
+S> 'foo' 42. unzip
 'foo' 42
 
-> ['foo' 'bar'] 7 list zip list
+S> ['foo' 'bar'] 7 list zip list
 ['foo' 0. 'bar' 1.]
 
-> ['foo' 0. 'bar' 1.] unzip list $1 list $list
+S> ['foo' 0. 'bar' 1.] unzip list $1 list $list
 [[0 1] ['foo' 'bar']]
 ```
 
@@ -208,41 +237,42 @@ Pairs have first class support and all iterables support zipping/unzipping. Pair
 Optional values are supported through the ```Opt<T>```-type. The empty value is called ```nil```.
 
 ```
-> 42 opt
+S> 42 opt
 Opt(42)
 
-> 7 opt {35 +} when
+S> 7 opt {35 +} when
 42
 
-> nil {42} unless
+S> nil {42} unless
 42
 
-> nil 42 or
+S> nil 42 or
 42
 
-> nil 42 opt or
+S> nil 42 opt or
 Opt(42)
 
-> 7 opt 42 opt or
+S> 7 opt 42 opt or
 Opt(7)
 
-> [7 opt nil 35 opt]
+S> [7 opt nil 35 opt]
 [Opt(7) nil Opt(35)]
 
-> [7 opt nil 35 opt] unopt list
+S> [7 opt nil 35 opt] unopt list
 [7 35]
 ```
 
 #### Tables
 Tables map keys to values, and may be created from any pair iterable. Iterating a table results in a pair iterator.
 ```
-> [7 'foo'. 35 'bar'.] table 35 get
+S> [7 'foo'. 35 'bar'.] table 35 get
 Opt('bar')
 
-> let: acc Str I64 table;
-  ['foo,\nbar.baz;\nfoo!' bytes] words
-  unopt
-  { @acc $1 1 &+1 upsert } for
+S> let: acc Str I64 table;
+   ['foo,\nbar.baz;\nfoo!' bytes] words
+   unopt
+   { @acc $1 1 &+1 upsert } for
+
 ['bar' 1. 'baz' 1. 'foo' 2.]
 ```
 
@@ -250,40 +280,44 @@ Opt('bar')
 Structs may be used to create custom composite data types. Constructors and typed field accessors are automatically created. All fields are expected to be initialized when read, reading uninitialized fields signals errors; use optional types for optional fields. An arbitrary number of super types may be listed after the struct name, fields with the same name share storage. Structs are iterable and produce a sequence of symbol/value-pairs. Struct definitions may appear anywhere in the code, types are defined once on compilation and and may be referenced from any scope after the point of definition. When redefining structs, fresh types are created each time; existing instances reference the previous type as do already compiled type literals.
 
 ```
-> struct: Foo
-    a I64
-    b Str;
-  Foo new Foo is?
+S> struct: Foo
+     a I64
+     b Str;
+   Foo new Foo is?
+
 true
 
-> Foo b
+S> Foo b
 Str!
 
-> func: make-foo {Foo new 0 set-a '' set-b};
-  make-foo
+S> func: make-foo {Foo new 0 set-a '' set-b};
+   make-foo
+   
 Foo(a 0. b ''.)
 
-> make-foo 42 set-a
+S> make-foo 42 set-a
 Foo(a 42. b ''.)
 
-> make-foo 'bar' set-b list
+S> make-foo 'bar' set-b list
 [#a 0. #b 'bar'.]
 
-> struct: Foo
-    c I64;
-  make-foo 42 set-c
+S> struct: Foo
+     c I64;
+   make-foo 42 set-c
+   
 SnabelError: Function not applicable: set-c
 [Foo(a 0. b ''.)]
 
-> Foo new 42 set-c
+S> Foo new 42 set-c
 Foo(c 42.)
 
-> struct: Bar Foo
-    d List<Str>;
-  Bar new Foo is?
+S> struct: Bar Foo
+     d List<Str>;
+   Bar new Foo is?
+   
 true
 
-> Bar new 42 set-c ['baz'] set-d
+S> Bar new 42 set-c ['baz'] set-d
 Bar(c 42. d ['baz'].)
 ```
 
@@ -291,21 +325,16 @@ Bar(c 42. d ['baz'].)
 Wrapping code in braces pushes a pointer on the stack. Lambdas may be exited early by calling ```return```, the final result (if any) is pushed on exit. ```recall``` may be used to call the current lambda recursively. Use ```&return```/```&recall``` to get a target that performs the specified action when called.
 
 ```
-> {1 2 +}
+S> {1 2 +}
 Lambda(_enter1:0)
 
-> {1 2 +} call
+S> {1 2 +} call
 3
 
-> {
-    1 2 + return
-    14 *
-  } call
-3
-
-> 42
-  {1 - $ z? &return when recall 2 +}
-  call
+S> 42
+   {1 - $ z? &return when recall 2 +}
+   call
+   
 82
 ```
 
@@ -313,10 +342,10 @@ Lambda(_enter1:0)
 ```when``` accepts a condition and a callable target, the target is called if the condition is true. ```unless``` is the opposite of ```when```.
 
 ```
-> 7 false {35 +} when
+S> 7 false {35 +} when
 7
 
-> 7 false {35 +} unless
+S> 7 false {35 +} unless
 42
 ```
 
@@ -324,13 +353,13 @@ Lambda(_enter1:0)
 Many things in snabel are iterable, numbers, strings and lists to name a few. Snabel encourages composing iterables into data pipelines for efficient processing.
 
 ```
-> 7 \, join
+S> 7 \, join
 '0,1,2,3,4,5,6'
 
-> [1 2 3] {7 *} map list
+S> [1 2 3] {7 *} map list
 [7 14 27]
 
-> 'abcabcabc' {\a =} filter str
+S> 'abcabcabc' {\a =} filter str
 "aaa"
 ```
 
@@ -338,19 +367,19 @@ Many things in snabel are iterable, numbers, strings and lists to name a few. Sn
 The ```for```-loop accepts an iterable and a target, and calls the target with the last value pushed on the stack as long as the iterator returns values; and the ```while```-loop accepts a condition and a target, and calls the target as long as the condition pushes ```true```. ```break``` may be used to exit loops early, use ```&break``` to get a target that breaks when called.
 
 ```
-> 0 7 &+ for
+S> 0 7 &+ for
 21
 
-> 0 7 {$ 5 = {_ break} when +} for
+S> 0 7 {$ 5 = {_ break} when +} for
 10
 
-> 0 [1 2 3 4 5 6] &+ for
+S> 0 [1 2 3 4 5 6] &+ for
 21
 
-> 'foo' &nop for $list \- join
+S> 'foo' &nop for $list \- join
 'f-o-o'
 
-> 0 {$ 42 lt?} {1 +} while
+S> 0 {$ 42 lt?} {1 +} while
 42
 ```
 
@@ -358,10 +387,10 @@ The ```for```-loop accepts an iterable and a target, and calls the target with t
 Each function name represents a set of implementations that are matched in reverse declared order when resolving function calls. Prefixing the name of a function with ```&``` pushes it on the stack for later use. Definitions require termination using ```;``` to separate them from surrounding code.
 
 ```
-> func: foo {35 +}; 7 foo
+S> func: foo {35 +}; 7 foo
 42
 
-> func: foo {35 +}
+S> func: foo {35 +}
   let: bar &foo
   7 @bar call
 42
@@ -388,21 +417,21 @@ add_func(exe, "+",
 Calling ```yield``` from a lambda logs the current position, stack and environment before returning; execution continues from the yielding position with restored stack and environment on next call. A fresh coroutine context is returned on first ```yield``` when, the context may be used for further calls and will reset itself when the coroutine returns. Use ```&yield``` to get a target that yields when called.
 
 ```
-> {yield 42} call
+S> {yield 42} call
 Coro(_enter1:1)
 
-> {yield 42} call call
+S> {yield 42} call call
 42
 
-> func: foo {|yield (7 yield 28 +)} call;
+S> func: foo {|yield (7 yield 28 +)} call;
   foo foo +
 42
 
-> func: foo {|yield (let: bar 35; 7 yield @bar +)} call;
+S> func: foo {|yield (let: bar 35; 7 yield @bar +)} call;
   foo foo
 42
 
-> func: foo {|yield ([7 35] &yield for &+)} call;
+S> func: foo {|yield ([7 35] &yield for &+)} call;
   foo foo foo call
 42
 ```
@@ -411,11 +440,12 @@ Coro(_enter1:1)
 Procs allow interleaving multiple independent flows of control in the same thread. Each proc takes a coroutine as input; when called through a proc, coroutines don't copy arguments or return values.
 
 ```
-> let: acc Str list;
-  func: ping {|yield (3 {@acc 'ping' push yield1} for)} call proc;
-  func: pong {|yield (3 {@acc 'pong' push yield1} for)} call proc;
-  [&ping &pong] run &_ for
-  @acc
+S> let: acc Str list;
+   func: ping {|yield (3 {@acc 'ping' push yield1} for)} call proc;
+   func: pong {|yield (3 {@acc 'pong' push yield1} for)} call proc;
+   [&ping &pong] run &_ for
+   @acc
+
 ['ping' 'pong' 'ping' 'pong 'ping' 'pong']
 ```
 
@@ -423,68 +453,68 @@ Procs allow interleaving multiple independent flows of control in the same threa
 Snabel provides non-blocking IO in the form of iterators. The provided target is called with each read chunk or written number of bytes pushed on the stack. Files come in two flavors, read-only and read-write.
 
 ```
-> ['foo' 'bar' 'baz'] &say for
+S> ['foo' 'bar' 'baz'] &say for
 foo
 bar
 baz
 nil
 
-> 'snackis' rfile
+S> 'snackis' rfile
 RFile(11)
 
-> 'snackis' rfile read
+S> 'snackis' rfile read
 Iter<Bin>
 
-> 0 'snackis' rfile read {{len +} when} for
+S> 0 'snackis' rfile read {{len +} when} for
 2313864
 
-> 'tmp' rwfile
+S> 'tmp' rwfile
 RWFile(12)
 
-> 'foo' bytes 'tmp' rwfile write
+S> 'foo' bytes 'tmp' rwfile write
 Iter<I64>
 
-> ['foo' bytes]
-  'tmp' rwfile
-  write 0 $1 &+ for
+S> ['foo' bytes]
+   'tmp' rwfile
+   write 0 $1 &+ for
+   
 3
 
-> func: copy-file {(
-    let: q Bin list;
-    let: wq @q fifo;
-    let: w rwfile @wq $1 write; _
-    let: r rfile read; _
-    yield
+S> func: copy-file {(
+     let: q Bin list;
+     let: wq @q fifo;
+     let: w rwfile @wq $1 write; _
+     let: r rfile read; _
+     yield
+     @r {{
+       @q $1 push _
+       @w &break _for
+     } when yield1} for
+     @q +? {@w &_ for} when _
+   )};
 
-    @r {{
-      @q $1 push _
-      @w &break _for
-    } when yield1} for
-
-    @q +? {@w &_ for} when _
-  )};
-
-  'in' 'out' copy-file proc run|
+S> 'in' 'out' copy-file proc run|
 nil
 
-> func: histogram {
-    let: max-len; _
-    let: min-wlen; _
-    let: tbl Str I64 table;
+S> func: histogram {
+     let: max-len; _
+     let: min-wlen; _
+     let: tbl Str I64 table;
 
-    func: process-file {
-      rfile read unopt words unopt
-      {len @min-wlen gte? $1 _} filter
-      {@tbl $1 1 &+1 upsert _} for
-    };
+     func: process-file {
+       rfile read unopt words unopt
+       {len @min-wlen gte? $1 _} filter
+       {@tbl $1 1 &+1 upsert _} for
+     };
 
-    &process-file for
-    @tbl list {right $1 right lt?} sort
-    @max-len nlist
-  };
+     &process-file for
+     @tbl list {right $1 right lt?} sort
+     @max-len nlist
+   };
 
-  '../src' ls-r &file? filter
-  4 100 histogram
+S> '../src' ls-r &file? filter
+   4 100 histogram
+  
 ['foo' 21. 'bar' 14. 'baz' 7.]
 ```
 
@@ -532,9 +562,6 @@ add_macro(*this, "let:", [this](auto pos, auto &in, auto &out) {
   }
 });
 ```
-
-### Running the code
-Snabel is designed to eventually be compiled as a standalone library, but is currently being developed as part of [Snackis](https://github.com/andreas-gone-wild/snackis). The easiest way to trying out the examples is to get Snackis up and running, and execute 'script-new' to open the script view.
 
 ### License
 Snabel is licensed under the GNU General Public License Version 3.

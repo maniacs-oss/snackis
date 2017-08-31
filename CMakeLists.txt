@@ -27,11 +27,15 @@ add_executable(chan_perf EXCLUDE_FROM_ALL ${core_src} src/chan_perf.cpp)
 target_include_directories(chan_perf PUBLIC src/)
 target_link_libraries(chan_perf c++experimental pthread sodium uuid)
 
+add_executable(snabel EXCLUDE_FROM_ALL ${core_src} ${snabel_src} src/snabel.cpp)
+target_include_directories(snabel PUBLIC src/)
+target_link_libraries(snabel c++experimental pthread sodium uuid)
+
 file(GLOB_RECURSE gui_src src/snackis/gui/*.cpp)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
 
-add_executable(snackis ${core_src} ${crypt_src} ${db_src} ${net_src} ${snackis_src} ${snabel_src} ${gui_src} src/main.cpp)
+add_executable(snackis ${core_src} ${crypt_src} ${db_src} ${net_src} ${snackis_src} ${snabel_src} ${gui_src} src/snackis.cpp)
 target_compile_options(snackis PUBLIC ${GTK3_CFLAGS_OTHER})
 target_include_directories(snackis PUBLIC src/ ${GTK3_INCLUDE_DIRS})
 target_link_libraries(snackis c++experimental curl pthread sodium uuid ${GTK3_LIBRARIES})
