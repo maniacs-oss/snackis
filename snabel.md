@@ -50,7 +50,6 @@ mkdir snackis/build
 cd snackis/build
 cmake ..
 make snabel
-sudo cp snabel /usr/local/bin
 ```
 
 ### Postfix
