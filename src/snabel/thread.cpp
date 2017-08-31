@@ -114,19 +114,7 @@ namespace snabel {
     
     return i == x.end() && j == y.end();
   }
-  
-  bool isa(Thread &thd, const Type &x, const Type &y) {
-    if (&x == &y || (x.raw == y.raw && isa(thd, x.args, y.args))) { return true; }
-
-    return std::find_if(x.supers.begin(), x.supers.end(), [&thd, &y](auto xs) {
-	return isa(thd, *xs, y);
-      }) != x.supers.end();
-  }
-
-  bool isa(Thread &thd, const Box &val, const Type &typ) {
-    return isa(thd, *val.type, typ);
-  }
-  
+    
   void start(Thread &thd) { thd.imp = std::thread(do_run, &thd); }
 
   void join(Thread &thd, Scope &scp) {

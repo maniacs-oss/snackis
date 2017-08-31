@@ -60,7 +60,6 @@ namespace snabel {
   Type *find_type(Exec &exe, const Sym &n);
   Type &get_type(Exec &exe, Type &raw, Types args);
   Type *get_super(Exec &exe, Type &raw, const Types &x, const Types &y);
-  Type *get_super(Exec &exe, Type &x, Type &y); 
   Type &get_opt_type(Exec &exe, Type &elt);
   Type &get_iter_type(Exec &exe, Type &elt);
   Type &get_iterable_type(Exec &exe, Type &elt);
@@ -83,6 +82,23 @@ namespace snabel {
   void rewind(Exec &exe);  
   void compile(Exec &exe, const str &in);
   bool run(Exec &exe, const str &in);
+
+  constexpr Type *get_super(Exec &exe, Type &x, Type &y) {
+    if (&x == &y) { return &x; }
+
+    if (x.raw && x.raw == y.raw) {
+      return get_super(exe, *x.raw, x.args, y.args);
+    }
+    
+    for (int i(x.supers.size()-1); i >= 0; i--) {
+      for (int j(y.supers.size()-1); j >= 0; j--) {
+	auto res(get_super(exe, *x.supers[i], *y.supers[j]));
+	if (res) { return res; }
+      }
+    }
+
+    return nullptr;
+  }
 }
 
 #endif

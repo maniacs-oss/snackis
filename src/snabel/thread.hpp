@@ -47,13 +47,25 @@ namespace snabel {
 
   int64_t find_break_pc(Thread &thd);
   bool isa(Thread &thd, const Types &x, const Types &y);
-  bool isa(Thread &thd, const Type &x, const Type &y);
-  bool isa(Thread &thd, const Box &val, const Type &typ);
 
   void start(Thread &thd);
   void join(Thread &thd, Scope &scp);
   bool _break(Thread &thd, int64_t depth);
   bool run(Thread &thd, int64_t break_pc=-1); 
+
+  constexpr bool isa(Thread &thd, const Type &x, const Type &y) {
+    if (&x == &y || (x.raw == y.raw && isa(thd, x.args, y.args))) { return true; }
+
+    for (int64_t i(0); i < x.supers.size(); i++) {
+      if (isa(thd, *x.supers[i], y)) { return true; }
+    }
+
+    return false;
+  }
+
+  constexpr bool isa(Thread &thd, const Box &val, const Type &typ) {
+    return isa(thd, *val.type, typ);
+  }
 }
  
 #endif

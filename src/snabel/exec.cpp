@@ -1038,23 +1038,6 @@ namespace snabel {
     return &get_type(exe, raw, args);
   }
 
-  Type *get_super(Exec &exe, Type &x, Type &y) {
-    if (&x == &y) { return &x; }
-
-    if (x.raw && x.raw == y.raw) {
-      return get_super(exe, *x.raw, x.args, y.args);
-    }
-    
-    for (auto i(x.supers.rbegin()); i != x.supers.rend(); i++) {
-      for (auto j(y.supers.rbegin()); j != y.supers.rend(); j++) {
-	auto res(get_super(exe, **i, **j));
-	if (res) { return res; }
-      }
-    }
-
-    return nullptr;
-  }
-
   Type &get_iter_type(Exec &exe, Type &elt) {    
     auto &n(get_sym(exe, fmt("Iter<%0>", name(elt.name))));
     auto fnd(find_type(exe, n));
