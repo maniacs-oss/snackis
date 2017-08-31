@@ -6,8 +6,8 @@
 
 "hgrm.sl"
 
-"Reads text from STDIN and writes N most frequent words longer than M with counts"
-"ordered by frequency to STDOUT.                                                 "
+"Reads text from STDIN and writes N most frequent words longer than M"
+"ordered by frequency to STDOUT.                                     "
 
 "Usage:                  "
 "cat in.txt | hgrm.sl N M"
