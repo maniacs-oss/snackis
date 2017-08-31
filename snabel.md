@@ -9,8 +9,8 @@
 "Reads text from STDIN and writes N most frequent words longer than M"
 "ordered by frequency to STDOUT.                                     "
 
-"Usage:                           "
-"cat foo.txt bar.txt | hgrm.sl N M"
+"Usage:                 "
+"cat *.txt | hgrm.sl N M"
 
 let: min-wlen stoi64; _
 let: max-len stoi64; _
