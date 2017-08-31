@@ -8,13 +8,17 @@
 using namespace snabel;
 using namespace snackis;
 
-int main() {
+int main(int argc, char** argv) {
   Exec exe;
 
   add_func(exe, "say", {ArgType(exe.str_type)},
 	   [](auto &scp, auto &args) {
 	     std::cout << *get<StrRef>(args.at(0)) << std::endl;
 	   });
+
+  for (int i=1; i < argc; i++) {
+    push(exe.main, exe.str_type, std::make_shared<str>(argv[i]));
+  }
   
   OutStream in;
   std::cout << fmt("Snabel v%0\n\n", version_str());

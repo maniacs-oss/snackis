@@ -124,11 +124,6 @@ namespace snabel {
     push(scp.thread, scp.exec.i64_type, x%y);
   }
 
-  static void i64_str_imp(Scope &scp, const Args &args) {
-    push(scp.thread, scp.exec.str_type,
-	 std::make_shared<str>(std::to_string(get<int64_t>(args.at(0)))));
-  }
-
   static void trunc_imp(Scope &scp, const Args &args) {
     push(scp.thread, scp.exec.i64_type, trunc(get<Rat>(args.at(0))));
   }
@@ -179,17 +174,6 @@ namespace snabel {
     push(scp.thread, scp.exec.i64_type, (int64_t)get<BinRef>(in)->size());
   } 
 
-  static void bin_str_imp(Scope &scp, const Args &args) {
-    auto &in(*get<BinRef>(args.at(0)));
-    push(scp.thread, scp.exec.str_type, std::make_shared<str>(in.begin(), in.end()));
-  }
-
-  static void bin_ustr_imp(Scope &scp, const Args &args) {
-    auto &in(*get<BinRef>(args.at(0)));
-    push(scp.thread, scp.exec.ustr_type,
-	 std::make_shared<ustr>(uconv.from_bytes(str(in.begin(), in.end()))));
-  }
-
   static void bin_append_imp(Scope &scp, const Args &args) {
     auto &out(args.at(0));
     auto &tgt(*get<BinRef>(out));
@@ -198,78 +182,10 @@ namespace snabel {
     push(scp.thread, out);
   }
 
-  static void str_len_imp(Scope &scp, const Args &args) {
-    auto &in(args.at(0));
-    push(scp.thread, in);
-    push(scp.thread, scp.exec.i64_type, (int64_t)get<StrRef>(in)->size());
-  }
-
-  static void ustr_len_imp(Scope &scp, const Args &args) {
-    auto &in(args.at(0));
-    push(scp.thread, in);
-    push(scp.thread, scp.exec.i64_type, (int64_t)get<UStrRef>(in)->size());
-  }
-
-  static void str_bytes_imp(Scope &scp, const Args &args) {
-    auto &in(get<StrRef>(args.at(0)));
-    push(scp.thread,
-	 scp.exec.bin_type,
-	 std::make_shared<Bin>(in->begin(), in->end()));
-  }
-
-  static void str_ustr_imp(Scope &scp, const Args &args) {
-    push(scp.thread,
-	 scp.exec.ustr_type,
-	 std::make_shared<ustr>(uconv.from_bytes(*get<StrRef>(args.at(0)))));
-  }
-
-  static void ustr_bytes_imp(Scope &scp, const Args &args) {
-    auto in(uconv.to_bytes(*get<UStrRef>(args.at(0))));
-    push(scp.thread, scp.exec.bin_type, std::make_shared<Bin>(in.begin(), in.end()));
-  }
-
-  static void ustr_str_imp(Scope &scp, const Args &args) {
-    push(scp.thread,
-	 scp.exec.ustr_type,
-	 std::make_shared<str>(uconv.to_bytes(*get<UStrRef>(args.at(0)))));
-  }
-
   static void iter_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
     auto it((*in.type->iter)(in));
     push(scp.thread, it->type, it);
-  }
-
-  static void iterable_str_imp(Scope &scp, const Args &args) {    
-    auto &in(args.at(0));
-    auto it((*in.type->iter)(in));
-    str out;
-    
-    while (true) {
-      auto c(it->next(scp));
-      if (!c) { break; }
-      out.push_back(get<char>(*c));
-    }
-    
-    push(scp.thread, scp.exec.str_type, std::make_shared<str>(out)); 
-  }
-
-  static void iterable_join_str_imp(Scope &scp, const Args &args) {    
-    auto &in(args.at(0));
-    auto it((*in.type->iter)(in));
-    auto &sep(args.at(1));
-    OutStream out;
-    bool first(true);
-    
-    while (true) {
-      auto v(it->next(scp));
-      if (!v) { break; }
-      if (!first) { out << sep.type->fmt(sep); }
-      out << v->type->fmt(*v);
-      first = false;
-    }
-    
-    push(scp.thread, scp.exec.str_type, std::make_shared<str>(out.str())); 
   }
   
   static void iterable_filter_imp(Scope &scp, const Args &args) {
@@ -303,28 +219,6 @@ namespace snabel {
   static void uid_imp(Scope &scp, const Args &args) {
     push(scp.thread, scp.exec.uid_type, uid(scp.exec)); 
   }  
-
-  static void iterable_lines_imp(Scope &scp, const Args &args) {
-    auto &exe(scp.exec);
-    auto &in(args.at(0));
-    
-    push(scp.thread,
-	 get_iter_type(exe, get_opt_type(exe, exe.str_type)),
-	 IterRef(new SplitIter(exe, (*in.type->iter)(in), [](auto &c) {
-	       return c == '\r' || c == '\n';
-	     })));
-  }
-
-  static void iterable_words_imp(Scope &scp, const Args &args) {
-    auto &exe(scp.exec);
-    auto &in(args.at(0));
-    
-    push(scp.thread,
-	 get_iter_type(exe, get_opt_type(exe, exe.str_type)),
-	 IterRef(new SplitIter(exe, (*in.type->iter)(in), [](auto &c) {
-	       return !isalpha(c);
-	     })));
-  }
 
   static void random_imp(Scope &scp, const Args &args) {
     push(scp.thread,
@@ -664,48 +558,7 @@ namespace snabel {
 	call(get<CoroRef>(v), scp, now);
 	return true;
       });
-    
-    str_type.supers.push_back(&any_type);
-    str_type.supers.push_back(&ordered_type);
-    str_type.supers.push_back(&get_iterable_type(*this, char_type));
-    str_type.fmt = [](auto &v) { return *get<StrRef>(v); };
-    str_type.dump = [](auto &v) { return fmt("'%0'", *get<StrRef>(v)); };
-    str_type.eq = [](auto &x, auto &y) { return get<StrRef>(x) == get<StrRef>(y); };
-
-    str_type.equal = [](auto &x, auto &y) {
-      return *get<StrRef>(x) == *get<StrRef>(y);
-    };
-    
-    str_type.lt = [](auto &x, auto &y) { return *get<StrRef>(x) < *get<StrRef>(y); };
-
-    str_type.iter = [this](auto &in) {
-      return IterRef(new StrIter(*this, get<StrRef>(in)));
-    };
-
-    ustr_type.supers.push_back(&any_type);
-    ustr_type.supers.push_back(&ordered_type);
-    ustr_type.supers.push_back(&get_iterable_type(*this, uchar_type));
-
-    ustr_type.fmt = [](auto &v) {
-      return fmt("u'%0'", uconv.to_bytes(*get<UStrRef>(v)));
-    };
-
-    ustr_type.eq = [](auto &x, auto &y) {
-      return get<UStrRef>(x) == get<UStrRef>(y);
-    };
-
-    ustr_type.equal = [](auto &x, auto &y) {
-      return *get<UStrRef>(x) == *get<UStrRef>(y);
-    };
-
-    ustr_type.lt = [](auto &x, auto &y) {
-      return *get<UStrRef>(x) < *get<UStrRef>(y);
-    };
-
-    ustr_type.iter = [this](auto &in) {
-      return IterRef(new UStrIter(*this, get<UStrRef>(in)));
-    };
-    
+        
     rat_type.supers.push_back(&any_type);
     rat_type.supers.push_back(&ordered_type);
     rat_type.fmt = [](auto &v) { return fmt_arg(get<Rat>(v)); };
@@ -747,20 +600,15 @@ namespace snabel {
       break_target[i]->break_depth = i+1;
     }
 
-    init_syms(*this);
     init_opts(*this);
+    init_strs(*this);
+    init_syms(*this);
     init_pairs(*this);
     init_lists(*this);
     init_tables(*this);
     init_structs(*this);
     init_procs(*this);
     init_io(*this);
-
-    add_conv(*this, str_type, ustr_type, [this](auto &v) {	
-	v.type = &ustr_type;
-	v.val = std::make_shared<ustr>(uconv.from_bytes(*get<StrRef>(v)));
-	return true;
-      });
 
     add_conv(*this, i64_type, rat_type, [this](auto &v) {	
 	v.type = &rat_type;
@@ -797,8 +645,6 @@ namespace snabel {
     add_func(*this, "/", {ArgType(i64_type), ArgType(i64_type)}, div_i64_imp);
     add_func(*this, "%", {ArgType(i64_type), ArgType(i64_type)}, mod_i64_imp);
 
-    add_func(*this, "str", {ArgType(i64_type)}, i64_str_imp);
-
     add_func(*this, "trunc", {ArgType(rat_type)}, trunc_imp);
     add_func(*this, "frac", {ArgType(rat_type)}, frac_imp);
     add_func(*this, "+", {ArgType(rat_type), ArgType(rat_type)}, add_rat_imp);
@@ -810,29 +656,11 @@ namespace snabel {
     add_func(*this, "z?", {ArgType(bin_type)}, bin_zero_imp);
     add_func(*this, "+?", {ArgType(bin_type)}, bin_pos_imp);
     add_func(*this, "len", {ArgType(bin_type)}, bin_len_imp);
-    add_func(*this, "str", {ArgType(bin_type)}, bin_str_imp);
-    add_func(*this, "ustr", {ArgType(bin_type)}, bin_ustr_imp);
     add_func(*this, "append", {ArgType(bin_type), ArgType(bin_type)}, bin_append_imp);
-
-    add_func(*this, "len", {ArgType(str_type)}, str_len_imp);
-    add_func(*this, "bytes", {ArgType(str_type)}, str_bytes_imp);
-    add_func(*this, "ustr", {ArgType(str_type)}, str_ustr_imp);
-
-    add_func(*this, "len", {ArgType(ustr_type)}, ustr_len_imp);
-    add_func(*this, "bytes", {ArgType(ustr_type)}, ustr_bytes_imp);
-    add_func(*this, "str", {ArgType(ustr_type)}, ustr_str_imp);
 
     add_func(*this, "uid", {}, uid_imp);
 
     add_func(*this, "iter", {ArgType(iterable_type)}, iter_imp);
-
-    add_func(*this, "str",
-	     {ArgType(get_iterable_type(*this, char_type))},
-	     iterable_str_imp);
-
-    add_func(*this, "join",
-	     {ArgType(iterable_type), ArgType(any_type)},
-	     iterable_join_str_imp);
 
     add_func(*this, "filter",
 	     {ArgType(iterable_type), ArgType(callable_type)},
@@ -842,14 +670,6 @@ namespace snabel {
 	     {ArgType(iterable_type), ArgType(callable_type)},
 	     iterable_map_imp);
         
-    add_func(*this, "lines",
-	     {ArgType(get_iterable_type(*this, bin_type))},
-	     iterable_lines_imp);
-
-    add_func(*this, "words",
-	     {ArgType(get_iterable_type(*this, bin_type))},
-	     iterable_words_imp);
-
     add_func(*this, "random", {ArgType(i64_type)}, random_imp);
     add_func(*this, "pop", {ArgType(random_type)}, random_pop_imp);
 

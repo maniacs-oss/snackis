@@ -22,6 +22,8 @@ namespace snabel {
     UStrIter(Exec &exe, const UStrRef &in);
     opt<Box> next(Scope &scp) override;
   };
+
+  void init_strs(Exec &exe);
 }
 
 #endif
