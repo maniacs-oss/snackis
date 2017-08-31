@@ -22,7 +22,7 @@ int main() {
   str line;
   
   while (true) {
-    std::cout << (line.empty() ? "S: " : "...");
+    std::cout << (line.empty() ? "S: " : "   ");
     std::getline(std::cin, line);
 
     if (line.empty()) {
