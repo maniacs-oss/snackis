@@ -84,10 +84,11 @@ namespace snabel {
       replace(s, "\\n", "\n");
       replace(s, "\\r", "\r");
       replace(s, "\\t", "\t");
-      out.emplace_back(Push(Box(exe.str_type, s)));
+      out.emplace_back(Push(Box(exe.str_type, std::make_shared<str>(s))));
     } else if (tok.text.at(0) == 'u' && tok.text.at(1) == '\'') {
       auto v(tok.text.substr(2, tok.text.size()-3));
-      out.emplace_back(Push(Box(exe.ustr_type, uconv.from_bytes(v))));
+      out.emplace_back(Push(Box(exe.ustr_type,
+				std::make_shared<ustr>(uconv.from_bytes(v)))));
     } else if (tok.text.at(0) == '\\') {
       if (tok.text.size() < 2) {
 	ERROR(Snabel, fmt("Invalid char literal on row %0, col %1: %2",

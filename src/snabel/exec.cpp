@@ -125,7 +125,8 @@ namespace snabel {
   }
 
   static void i64_str_imp(Scope &scp, const Args &args) {
-    push(scp.thread, scp.exec.str_type, std::to_string(get<int64_t>(args.at(0))));
+    push(scp.thread, scp.exec.str_type,
+	 std::make_shared<str>(std::to_string(get<int64_t>(args.at(0)))));
   }
 
   static void trunc_imp(Scope &scp, const Args &args) {
@@ -180,12 +181,13 @@ namespace snabel {
 
   static void bin_str_imp(Scope &scp, const Args &args) {
     auto &in(*get<BinRef>(args.at(0)));
-    push(scp.thread, scp.exec.str_type, str(in.begin(), in.end()));
+    push(scp.thread, scp.exec.str_type, std::make_shared<str>(in.begin(), in.end()));
   }
 
   static void bin_ustr_imp(Scope &scp, const Args &args) {
     auto &in(*get<BinRef>(args.at(0)));
-    push(scp.thread, scp.exec.ustr_type, uconv.from_bytes(str(in.begin(), in.end())));
+    push(scp.thread, scp.exec.ustr_type,
+	 std::make_shared<ustr>(uconv.from_bytes(str(in.begin(), in.end()))));
   }
 
   static void bin_append_imp(Scope &scp, const Args &args) {
@@ -199,31 +201,37 @@ namespace snabel {
   static void str_len_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
     push(scp.thread, in);
-    push(scp.thread, scp.exec.i64_type, (int64_t)get<str>(in).size());
+    push(scp.thread, scp.exec.i64_type, (int64_t)get<StrRef>(in)->size());
   }
 
   static void ustr_len_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
     push(scp.thread, in);
-    push(scp.thread, scp.exec.i64_type, (int64_t)get<ustr>(in).size());
+    push(scp.thread, scp.exec.i64_type, (int64_t)get<UStrRef>(in)->size());
   }
 
   static void str_bytes_imp(Scope &scp, const Args &args) {
-    auto &in(get<str>(args.at(0)));
-    push(scp.thread, scp.exec.bin_type, std::make_shared<Bin>(in.begin(), in.end()));
+    auto &in(get<StrRef>(args.at(0)));
+    push(scp.thread,
+	 scp.exec.bin_type,
+	 std::make_shared<Bin>(in->begin(), in->end()));
   }
 
   static void str_ustr_imp(Scope &scp, const Args &args) {
-    push(scp.thread, scp.exec.ustr_type, uconv.from_bytes(get<str>(args.at(0))));
+    push(scp.thread,
+	 scp.exec.ustr_type,
+	 std::make_shared<ustr>(uconv.from_bytes(*get<StrRef>(args.at(0)))));
   }
 
   static void ustr_bytes_imp(Scope &scp, const Args &args) {
-    auto in(uconv.to_bytes(get<ustr>(args.at(0))));
+    auto in(uconv.to_bytes(*get<UStrRef>(args.at(0))));
     push(scp.thread, scp.exec.bin_type, std::make_shared<Bin>(in.begin(), in.end()));
   }
 
   static void ustr_str_imp(Scope &scp, const Args &args) {
-    push(scp.thread, scp.exec.ustr_type, uconv.to_bytes(get<ustr>(args.at(0))));
+    push(scp.thread,
+	 scp.exec.ustr_type,
+	 std::make_shared<str>(uconv.to_bytes(*get<UStrRef>(args.at(0)))));
   }
 
   static void iter_imp(Scope &scp, const Args &args) {
@@ -243,7 +251,7 @@ namespace snabel {
       out.push_back(get<char>(*c));
     }
     
-    push(scp.thread, scp.exec.str_type, out); 
+    push(scp.thread, scp.exec.str_type, std::make_shared<str>(out)); 
   }
 
   static void iterable_join_str_imp(Scope &scp, const Args &args) {    
@@ -261,7 +269,7 @@ namespace snabel {
       first = false;
     }
     
-    push(scp.thread, scp.exec.str_type, out.str()); 
+    push(scp.thread, scp.exec.str_type, std::make_shared<str>(out.str())); 
   }
   
   static void iterable_filter_imp(Scope &scp, const Args &args) {
@@ -660,26 +668,42 @@ namespace snabel {
     str_type.supers.push_back(&any_type);
     str_type.supers.push_back(&ordered_type);
     str_type.supers.push_back(&get_iterable_type(*this, char_type));
-    str_type.fmt = [](auto &v) { return get<str>(v); };
-    str_type.dump = [](auto &v) { return fmt("'%0'", get<str>(v)); };
-    str_type.eq = [](auto &x, auto &y) { return get<str>(x) == get<str>(y); };
-    str_type.lt = [](auto &x, auto &y) { return get<str>(x) < get<str>(y); };
+    str_type.fmt = [](auto &v) { return *get<StrRef>(v); };
+    str_type.dump = [](auto &v) { return fmt("'%0'", *get<StrRef>(v)); };
+    str_type.eq = [](auto &x, auto &y) { return get<StrRef>(x) == get<StrRef>(y); };
+
+    str_type.equal = [](auto &x, auto &y) {
+      return *get<StrRef>(x) == *get<StrRef>(y);
+    };
+    
+    str_type.lt = [](auto &x, auto &y) { return *get<StrRef>(x) < *get<StrRef>(y); };
 
     str_type.iter = [this](auto &in) {
-      return IterRef(new StrIter(*this, get<str>(in)));
+      return IterRef(new StrIter(*this, get<StrRef>(in)));
     };
 
     ustr_type.supers.push_back(&any_type);
     ustr_type.supers.push_back(&ordered_type);
     ustr_type.supers.push_back(&get_iterable_type(*this, uchar_type));
+
     ustr_type.fmt = [](auto &v) {
-      return fmt("u'%0'", uconv.to_bytes(get<ustr>(v)));
+      return fmt("u'%0'", uconv.to_bytes(*get<UStrRef>(v)));
     };
-    ustr_type.eq = [](auto &x, auto &y) { return get<ustr>(x) == get<ustr>(y); };
-    ustr_type.lt = [](auto &x, auto &y) { return get<ustr>(x) < get<ustr>(y); };
+
+    ustr_type.eq = [](auto &x, auto &y) {
+      return get<UStrRef>(x) == get<UStrRef>(y);
+    };
+
+    ustr_type.equal = [](auto &x, auto &y) {
+      return *get<UStrRef>(x) == *get<UStrRef>(y);
+    };
+
+    ustr_type.lt = [](auto &x, auto &y) {
+      return *get<UStrRef>(x) < *get<UStrRef>(y);
+    };
 
     ustr_type.iter = [this](auto &in) {
-      return IterRef(new UStrIter(*this, get<ustr>(in)));
+      return IterRef(new UStrIter(*this, get<UStrRef>(in)));
     };
     
     rat_type.supers.push_back(&any_type);
@@ -734,7 +758,7 @@ namespace snabel {
 
     add_conv(*this, str_type, ustr_type, [this](auto &v) {	
 	v.type = &ustr_type;
-	v.val = uconv.from_bytes(get<str>(v));
+	v.val = std::make_shared<ustr>(uconv.from_bytes(*get<StrRef>(v)));
 	return true;
       });
 

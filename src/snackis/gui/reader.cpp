@@ -71,7 +71,7 @@ namespace gui {
 
     add_cmd(rdr, id, {snabel::ArgType(rdr.ctx.exec.str_type)}, [&ctx, id](auto args) {
 	auto *v(new SearchT(ctx));
-	auto id(snabel::get<str>(args[0]));
+	auto id(*snabel::get<snabel::StrRef>(args[0]));
 	gui::set_str(GTK_ENTRY(v->id_fld), id);
 	
 	if (find(*v) == 1) {
@@ -151,7 +151,7 @@ namespace gui {
 	    [&ctx](auto args) {
 	      db::Trans trans(ctx);
 	      TRY(try_invite);
-	      Invite inv(ctx, snabel::get<str>(args[0]));
+	      Invite inv(ctx, *snabel::get<snabel::StrRef>(args[0]));
 	      load(ctx.db.invites, inv);
 	      send(inv);
 	

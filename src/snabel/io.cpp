@@ -181,7 +181,7 @@ namespace snabel {
 
     add_conv(exe, exe.str_type, exe.path_type, [&exe](auto &v) {	
 	v.type = &exe.path_type;
-	v.val = Path(get<str>(v));
+	v.val = Path(*get<StrRef>(v));
 	return true;
       });
 

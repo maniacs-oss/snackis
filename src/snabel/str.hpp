@@ -8,17 +8,18 @@ namespace snabel {
   using namespace snackis;
   
   struct StrIter: Iter {
-    const str in;
-    size_t i;
-    StrIter(Exec &exe, const str &in);
+    StrRef in;
+    str::const_iterator i;
+    
+    StrIter(Exec &exe, const StrRef &in);
     opt<Box> next(Scope &scp) override;
   };
 
   struct UStrIter: Iter {
-    const ustr in;
-    size_t i;
+    UStrRef in;
+    ustr::const_iterator i;
     
-    UStrIter(Exec &exe, const ustr &in);
+    UStrIter(Exec &exe, const UStrRef &in);
     opt<Box> next(Scope &scp) override;
   };
 }

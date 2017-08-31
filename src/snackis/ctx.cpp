@@ -10,7 +10,7 @@ namespace snackis {
   {
     snabel::add_func(exec, "say", {snabel::ArgType(exec.str_type)},
 		     [this](auto &scp, auto &args) {
-		       log(*this, get<str>(args.at(0)));
+		       log(*this, *get<snabel::StrRef>(args.at(0)));
 		     });
   }
 

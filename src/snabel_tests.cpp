@@ -309,10 +309,16 @@ namespace snabel {
     run_test(exe, "'foo' len");
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
 
+    run_test(exe, "'foo' 'foo' =");
+    CHECK(!get<bool>(pop(exe.main)), _);
+
+    run_test(exe, "'foo' 'foo' ==");
+    CHECK(get<bool>(pop(exe.main)), _);
+
     run_test(exe,
 	"['foo\\r\\n\\r\\nbar\\r\\n\\r\\nbaz' bytes]"
 	"lines unopt \\, join");	
-    CHECK(get<str>(pop(exe.main)) == "foo,bar,baz", _);
+    CHECK(*get<StrRef>(pop(exe.main)) == "foo,bar,baz", _);
   }
 
   static void bin_tests() {
@@ -322,13 +328,13 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
 
     run_test(exe, "'foo' bytes str");
-    CHECK(get<str>(pop(exe.main)) == "foo", _);
+    CHECK(*get<StrRef>(pop(exe.main)) == "foo", _);
 
     run_test(exe, "'foo' bytes 'bar' bytes append str");
-    CHECK(get<str>(pop(exe.main)) == "foobar", _);
+    CHECK(*get<StrRef>(pop(exe.main)) == "foobar", _);
 
     run_test(exe, "u'foo' bytes str");
-    CHECK(get<str>(pop(exe.main)) == "foo", _);
+    CHECK(*get<StrRef>(pop(exe.main)) == "foo", _);
   }
 
   static void uid_tests() {
@@ -375,7 +381,7 @@ namespace snabel {
     TRY(try_test);    
 
     run_test(exe, "7 \\, join");
-    CHECK(get<str>(pop(exe.main)) == "0,1,2,3,4,5,6", _);
+    CHECK(*get<StrRef>(pop(exe.main)) == "0,1,2,3,4,5,6", _);
 
     run_test(exe, "let: foo 'bar' iter; @foo list");
     CHECK(get<ListRef>(pop(exe.main))->size() == 3, _);
@@ -393,7 +399,7 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
     run_test(exe, "'abcabcabc' {\\a =} filter str");
-    CHECK(get<str>(pop(exe.main)) == "aaa", _);
+    CHECK(*get<StrRef>(pop(exe.main)) == "aaa", _);
   }
   
   static void list_tests() {
@@ -413,10 +419,10 @@ namespace snabel {
     CHECK(get<ListRef>(pop(exe.main))->size() == 1, _);
 
     run_test(exe, "['foo' 'bar'] 7 list zip list unzip _ list");
-    CHECK(get<str>(get<ListRef>(pop(exe.main))->back()) == "bar", _);
+    CHECK(*get<StrRef>(get<ListRef>(pop(exe.main))->back()) == "bar", _);
 
     run_test(exe, "['foo' 7. 'bar' 35.] unzip _ list");
-    CHECK(get<str>(get<ListRef>(pop(exe.main))->back()) == "bar", _);
+    CHECK(*get<StrRef>(get<ListRef>(pop(exe.main))->back()) == "bar", _);
 
     run_test(exe, "[2 3 1] &lt? sort pop");
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
@@ -432,16 +438,16 @@ namespace snabel {
     run_test(exe, "42 'foo'.");
     auto p(get<PairRef>(pop(exe.main)));
     CHECK(get<int64_t>(p->first) == 42, _);    
-    CHECK(get<str>(p->second) == "foo", _);    
+    CHECK(*get<StrRef>(p->second) == "foo", _);    
 
     run_test(exe, "'foo' 42. left");
-    CHECK(get<str>(pop(exe.main)) == "foo", _);    
+    CHECK(*get<StrRef>(pop(exe.main)) == "foo", _);    
     
     run_test(exe, "'foo' 42. right");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);    
     
     run_test(exe, "42 'foo'. unzip");
-    CHECK(get<str>(pop(exe.main)) == "foo", _);    
+    CHECK(*get<StrRef>(pop(exe.main)) == "foo", _);    
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);    
   }
 
@@ -492,7 +498,7 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 21, _);
 
     run_test(exe, "'foo' &nop for $list \\- join");
-    CHECK(get<str>(pop(exe.main)) == "f-o-o", _);
+    CHECK(*get<StrRef>(pop(exe.main)) == "f-o-o", _);
 
     run_test(exe, "0 {$ 42 lt?} {1 +} while");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);

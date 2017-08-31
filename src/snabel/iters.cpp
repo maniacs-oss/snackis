@@ -59,7 +59,7 @@ namespace snabel {
       
       if (!in_buf) {
 	if (!out_buf.tellp()) { return nullopt; }
-	out.val = out_buf.str();
+	out.val = std::make_shared<str>(out_buf.str());
 	out_buf.str("");
 	break;
       }
@@ -75,7 +75,7 @@ namespace snabel {
 	out_buf.write(reinterpret_cast<const char *>(&*in_pos), fnd-in_pos);
 	
 	if (out_buf.tellp()) {
-	  out.val = out_buf.str();
+	  out.val = std::make_shared<str>(out_buf.str());
 	  out_buf.str("");
 	}
 

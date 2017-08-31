@@ -90,11 +90,17 @@ Check failed, expected Str!
 ```
 
 #### Strings
-Snabel makes a difference between byte strings and unicode strings. Unicode strings are processed as UTF-8 when converting to/from bytes and stored internally as UTF-16. Byte strings are automatically promoted to unicode as needed.
+Strings are mutable collections of characters that provide reference semantics. Snabel makes a difference between byte strings and unicode strings. Unicode strings are processed as UTF-8 when converting to/from bytes and stored internally as UTF-16. Byte strings are automatically promoted to unicode as needed.
 
 ```
 > 'foo'
 'foo'
+
+> 'foo' 'foo' =
+false
+
+> 'foo' 'foo' ==
+true
 
 > u'foo'
 u'foo'
