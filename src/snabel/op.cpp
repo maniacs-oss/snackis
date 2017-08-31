@@ -290,6 +290,53 @@ namespace snabel {
     return true;
   }
 
+  Fmt::Fmt(const str &in):
+    OpImp(OP_FMT, "fmt"), in(in)
+  {
+    for (size_t i(0); i < in.size(); i++) {
+      auto &c(in[i]);
+      
+      if ((c == '$')  && (!i || in[i-1] != '\\')) {
+	if (i == in.size()-1 || !isdigit(in[i+1])) {
+	  ERROR(Snabel, fmt("Invalid string format directive: %0", in.substr(i)));
+	  break;
+	}
+
+	subs.emplace_back(i, in.substr(i, 2));
+	i++;
+      }
+    }
+  }
+
+  OpImp &Fmt::get_imp(Op &op) const {
+    return std::get<Fmt>(op.data);
+  }
+
+  bool Fmt::run(Scope &scp) {
+    auto &stack(curr_stack(scp.thread));
+    str out(in);
+    int64_t offs(0);
+    
+    for (auto &s: subs) {
+      auto i(s.second.at(1) - '0');
+
+      if (i >= stack.size()) {
+	ERROR(Snabel, fmt("String format failed: %0\n%1",
+			  in.substr(s.first+offs),
+			  stack));
+	break;
+      }
+
+      auto &v(stack.at(stack.size()-i-1));
+      auto vs(v.type->fmt(v));
+      out.replace(s.first+offs, s.second.size(), vs);
+      offs += vs.size() - s.second.size();
+    }
+    
+    push(scp.thread, scp.exec.str_type, std::make_shared<str>(out));
+    return true;
+  }
+
   For::For(bool push_vals):
     OpImp(OP_FOR, "for"), push_vals(push_vals), compiled(false)
   { }

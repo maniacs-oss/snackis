@@ -84,7 +84,21 @@ namespace snabel {
       replace(s, "\\n", "\n");
       replace(s, "\\r", "\r");
       replace(s, "\\t", "\t");
-      out.emplace_back(Push(Box(exe.str_type, std::make_shared<str>(s))));
+      bool fmt(false);
+      
+      for (size_t i(0); i < s.size(); i++) {
+	auto &c(s[i]);
+	
+	if ((c == '$' || c == '@')  && (!i || s[i-1] != '\\')) {
+	  fmt = true;
+	}
+      }
+
+      if (fmt) {
+	out.emplace_back(Fmt(s));
+      } else {
+	out.emplace_back(Push(Box(exe.str_type, std::make_shared<str>(s))));
+      }
     } else if (tok.text.at(0) == 'u' && tok.text.at(1) == '\'') {
       auto v(tok.text.substr(2, tok.text.size()-3));
       out.emplace_back(Push(Box(exe.ustr_type,

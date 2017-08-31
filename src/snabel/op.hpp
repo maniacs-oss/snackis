@@ -3,6 +3,7 @@
 
 #include <deque>
 #include <utility>
+#include <vector>
 
 #include "snabel/box.hpp"
 #include "snabel/label.hpp"
@@ -20,7 +21,7 @@ namespace snabel {
   struct Op;
 
   enum OpCode { OP_BACKUP, OP_BREAK, OP_CALL, OP_CHECK, OP_DEREF, OP_DROP, OP_DUP,
-		OP_FOR, OP_FUNCALL, OP_GETENV, OP_JUMP, OP_LAMBDA,
+		OP_FMT, OP_FOR, OP_FUNCALL, OP_GETENV, OP_JUMP, OP_LAMBDA,
 		OP_PUSH, OP_PUTENV, OP_RECALL, OP_RESET, OP_RESTORE,
 		OP_RETURN, OP_STASH, OP_SWAP, OP_TARGET, OP_UNLAMBDA,
 	        OP_WHILE, OP_YIELD };
@@ -100,6 +101,15 @@ namespace snabel {
 
   struct Dup: OpImp {
     Dup();
+    OpImp &get_imp(Op &op) const override;
+    bool run(Scope &scp) override;
+  };
+
+  struct Fmt: OpImp {
+    const str in;
+    std::vector<std::pair<size_t, str>> subs;
+    
+    Fmt(const str &in);
     OpImp &get_imp(Op &op) const override;
     bool run(Scope &scp) override;
   };
@@ -276,7 +286,7 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
 
-  using OpData = std::variant<Backup, Break, Call, Check, Deref, Drop, Dup, For,
+  using OpData = std::variant<Backup, Break, Call, Check, Deref, Drop, Dup, Fmt, For,
 			      Funcall, Getenv, Jump, Lambda, Push,
 			      Putenv, Recall, Reset, Restore, Return, Stash, Swap,
 			      Target, Unlambda, While, Yield>;

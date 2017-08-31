@@ -1,7 +1,27 @@
 # Snabel
 #### a decently typed Forth with a touch of Perl
 
-![repl example](images/repl.png?raw=true)
+```
+#!/usr/local/bin/snabel
+
+"hgrm.sl"
+
+"Reads text from STDIN and writes N most frequent words longer than M with counts"
+"ordered by frequency to STDOUT.                                                 "
+
+"Usage:                  "
+"cat in.txt | hgrm.sl N M"
+
+let: min-wlen stoi64; _
+let: max-len stoi64; _
+let: tbl Str I64 table;
+
+stdin read unopt words unopt
+{len @min-wlen gte? $1 _} filter
+{@tbl $1 1 &+1 upsert _} for
+@tbl list {right $1 right lt?} sort
+@max-len nlist {unzip '$1\t$0' say _ _} for
+```
 
 ### Status
 Snabel still has quite some way to go before claiming general purpose; it's evolution is currently mostly driven by my own needs and interests. I have yet to do any serious comparisons, or optimization; but its more than fast enough for scripting.
@@ -19,10 +39,10 @@ sudo apt-get install cmake libcurl4-openssl-dev libsodium-dev libuuid1
 ```
 
 ### Getting started
-If you're running ```Linux/64```, copy ```snabel``` from [/dist](https://github.com/andreas-gone-wild/snackis/tree/master/dist) to where you want it and run ```rlwrap ./snabel```; otherwise you'll have to build the executable yourself.
+If you're running ```Linux/64```, copy ```snabel``` from [/dist](https://github.com/andreas-gone-wild/snackis/tree/master/dist) to ```/usr/local/bin``` and run ```rlwrap snabel```; otherwise you'll have to build the executable yourself.
 
 #### Building
-Once a modern enough compiler is in place, execute the following commands to build Snabel:
+Once dependencies are satisfied, executing the following commands will build Snabel:
 
 ```
 git clone https://github.com/andreas-gone-wild/snackis.git
@@ -30,7 +50,7 @@ mkdir snackis/build
 cd snackis/build
 cmake ..
 make snabel
-cp snabel ?
+sudo cp snabel /usr/local/bin
 ```
 
 ### Postfix

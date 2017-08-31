@@ -77,6 +77,10 @@ namespace snabel {
 	 std::make_shared<str>(std::to_string(get<int64_t>(args.at(0)))));
   }
 
+  static void stoi64_imp(Scope &scp, const Args &args) {
+    push(scp.thread, scp.exec.i64_type, to_int64(*get<StrRef>(args.at(0))));
+  }
+
   static void iterable_str_imp(Scope &scp, const Args &args) {    
     auto &in(args.at(0));
     auto it((*in.type->iter)(in));
@@ -189,6 +193,7 @@ namespace snabel {
     add_func(exe, "str", {ArgType(exe.ustr_type)}, ustr_str_imp);
 
     add_func(exe, "str", {ArgType(exe.i64_type)}, i64_str_imp);
+    add_func(exe, "stoi64", {ArgType(exe.str_type)}, stoi64_imp);
 
     add_func(exe, "str",
 	     {ArgType(get_iterable_type(exe, exe.char_type))},

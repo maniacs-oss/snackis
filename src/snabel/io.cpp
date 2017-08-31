@@ -9,6 +9,10 @@ namespace snabel {
     data(size), rpos(0)
   { }
 
+  File::File(int fd):
+    fd(fd)
+  { }
+  
   File::File(const Path &path, int flags):
     path(path), fd(open(path.c_str(), flags | O_NONBLOCK, 0666))
   {

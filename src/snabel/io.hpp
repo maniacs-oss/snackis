@@ -22,6 +22,7 @@ namespace snabel {
   struct File {
     Path path;
     int fd;
+    File(int fd);
     File(const Path &path, int flags);
     ~File();
   };

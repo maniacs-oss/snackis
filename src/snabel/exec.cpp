@@ -1020,7 +1020,11 @@ namespace snabel {
     TokSeq toks;
     
     for (auto &ln: parse_lines(in)) {
-      if (!ln.empty()) { parse_expr(ln, lnr, toks); }
+      if (!ln.empty() &&
+	  !(ln.at(0) == '#' && ln.at(1) == '!')) {
+	parse_expr(ln, lnr, toks);
+      }
+
       lnr++;
     }
 
@@ -1030,7 +1034,6 @@ namespace snabel {
     TRY(try_compile);
 
     while (true) {
-      rewind(exe);
       exe.lambdas.clear();
       exe.main.pc = start_pc;
       
@@ -1086,7 +1089,6 @@ namespace snabel {
   
   bool run(Exec &exe, const str &in) {
     compile(exe, in);
-    rewind(exe);
     return run(exe.main);
   }
 }
