@@ -455,6 +455,11 @@ namespace snabel {
     rem_env(exe.main_scope, "Foo");
     run_test(exe, "struct: Foo a I64 b List<Str>; Foo new 42 set-a a");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+
+    rem_env(exe.main_scope, "Foo");
+    rem_env(exe.main_scope, "Bar");    
+    run_test(exe, "struct: Foo a I64; struct: Bar Foo b Str; Bar new 42 set-a a");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
   
   static void loop_tests() {

@@ -84,6 +84,13 @@ namespace snabel {
 	    auto &fns(get_sym(exe, in.front().text));
 	    in.pop_front();
 
+	    if (isupper(fn.at(0))) {
+	      auto st(parse_type(exe, fn, 0).first);
+	      if (!st) { break; }
+	      t.supers.push_back(st);
+	      continue;
+	    }
+	    
 	    if (in.begin() == end) {
 	      ERROR(Snabel, fmt("Malformed struct definition on row %0, col %1",
 				pos.row, pos.col));
@@ -94,10 +101,7 @@ namespace snabel {
 	    in.pop_front();
 	    auto pft(parse_type(exe, ftn, 0).first);
 
-	    if (!pft) {
-	      ERROR(Snabel, fmt("Missing field type: %0", ftn));
-	      break;
-	    }
+	    if (!pft) { break; }
 
 	    auto &ft(*pft);
 	    auto &fmt(get_meta_type(exe, ft));
