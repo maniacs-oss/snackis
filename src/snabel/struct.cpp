@@ -71,8 +71,14 @@ namespace snabel {
 	  ERROR(Snabel, fmt("Malformed struct definition on row %0, col %1",
 			    pos.row, pos.col));
 	} else {
-	  auto &n(get_sym(exe, in.at(0).text));
-	  auto &t(add_struct_type(exe, n));
+	  auto &n(in.at(0).text);
+	  
+	  if (!isupper(n.at(0))) {
+	    ERROR(Snabel, fmt("Struct name should be capitalized: %0", n)); 
+	  }
+	  
+	  auto &ns(get_sym(exe, n));
+	  auto &t(add_struct_type(exe, ns));
 	  auto &mt(get_meta_type(exe, t));
 
 	  in.pop_front();
@@ -115,7 +121,7 @@ namespace snabel {
 		push(scp.thread, fmt, &ft);
 	      });
 
-	    add_func(exe, fns, {ArgType(t)}, [&n, &fns, &ft](auto &scp, auto &args) {
+	    add_func(exe, fns, {ArgType(t)}, [n, &fns, &ft](auto &scp, auto &args) {
 		auto &thd(scp.thread);
 		auto &fs(get<StructRef>(args.at(0))->fields);
 		auto fnd(fs.find(fns));
@@ -123,7 +129,7 @@ namespace snabel {
 		if (fnd == fs.end()) {
 		  ERROR(Snabel, 
 			snackis::fmt("Reading uninitialized struct field: %0.%1",
-				     name(n), name(fns)));
+				     n, name(fns)));
 		  
 		  push(thd, get_opt_type(scp.exec, ft), nil);
 		} else {
