@@ -156,6 +156,6 @@ namespace snabel {
       }
     }
 
-    return std::make_pair(&get_type(exe, *fnd, args), i);
+    return std::make_pair(args.empty() ? fnd : &get_type(exe, *fnd, args), i);
   }
 }

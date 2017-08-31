@@ -1,11 +1,28 @@
+#include <iostream>
 #include "snabel/error.hpp"
 #include "snabel/exec.hpp"
+#include "snabel/pair.hpp"
 #include "snabel/struct.hpp"
 
 namespace snabel {
   Struct::Struct(Type &t):
     type(t)
   { }
+
+  StructIter::StructIter(Exec &exe, const StructRef &in):
+    Iter(exe, get_iter_type(exe, get_pair_type(exe, exe.sym_type, exe.any_type))),
+    in(in), it(in->fields.begin())
+  { }
+  
+  opt<Box> StructIter::next(Scope &scp) {
+    if (it == in->fields.end()) { return nullopt; }
+    auto res(*it);
+    it++;
+
+    return Box(get_pair_type(exec, exec.sym_type, *res.second.type), 
+	       std::make_shared<Pair>(Box(exec.sym_type, res.first),
+				      res.second));
+  }
 
   bool operator==(const Struct &x, const Struct &y) {
     if (x.fields.size() != y.fields.size()) { return false; }
@@ -27,6 +44,11 @@ namespace snabel {
   
   void init_structs(Exec &exe) {
     exe.struct_type.supers.push_back(&exe.any_type);
+    auto &it_type(get_iterable_type(exe,
+				    get_pair_type(exe,
+						 exe.sym_type,
+						 exe.any_type)));
+    exe.struct_type.supers.push_back(&it_type);
     exe.struct_type.fmt = [](auto &v) { return fmt_arg(*get<StructRef>(v)); };
     
     exe.struct_type.eq = [](auto &x, auto &y) {
@@ -37,22 +59,22 @@ namespace snabel {
       return *get<StructRef>(x) == *get<StructRef>(y);
     };
 
+    exe.struct_type.iter = [&exe](auto &in) {
+      return IterRef(new StructIter(exe, get<StructRef>(in)));
+    };
+    
     auto &meta(get_meta_type(exe, exe.struct_type));
     add_func(exe, "new", {ArgType(meta)}, new_imp);
     
     add_macro(exe, "struct:", [&exe](auto pos, auto &in, auto &out) {
 	if (in.empty()) {
-	  ERROR(Snabel, fmt("Malformed struct on row %0, col %1",
+	  ERROR(Snabel, fmt("Malformed struct definition on row %0, col %1",
 			    pos.row, pos.col));
 	} else {
 	  out.emplace_back(Backup(false));
 	  auto &n(get_sym(exe, in.at(0).text));
-
-	  if (find_type(exe, n)) {
-	    ERROR(Snabel, fmt("Redefining struct: %0", name(n)));
-	  }
-	  
-	  auto &t(get_struct_type(exe, n));
+	  auto &t(add_struct_type(exe, n));
+	  auto &mt(get_meta_type(exe, t));
 
 	  in.pop_front();
 	  auto end(find_end(in.begin(), in.end()));
@@ -63,38 +85,46 @@ namespace snabel {
 	    in.pop_front();
 
 	    if (in.begin() == end) {
-	      ERROR(Snabel, fmt("Malformed struct on row %0, col %1",
+	      ERROR(Snabel, fmt("Malformed struct definition on row %0, col %1",
 				pos.row, pos.col));
 	      break;
 	    }
        
 	    str ftn(in.front().text);
 	    in.pop_front();
-	    auto ft(parse_type(exe, ftn, 0).first);
+	    auto pft(parse_type(exe, ftn, 0).first);
 
-	    if (!ft) {
+	    if (!pft) {
 	      ERROR(Snabel, fmt("Missing field type: %0", ftn));
 	      break;
 	    }
 
-	    add_func(exe, fns, {ArgType(t)}, [&n, &fns, ft](auto &scp, auto &args) {
+	    auto &ft(*pft);
+	    auto &fmt(get_meta_type(exe, ft));
+
+	    add_func(exe, fns, {ArgType(mt)}, [&fmt, &ft](auto &scp, auto &args) {
+		push(scp.thread, fmt, &ft);
+	      });
+
+	    add_func(exe, fns, {ArgType(t)}, [&n, &fns, &ft](auto &scp, auto &args) {
 		auto &thd(scp.thread);
 		auto &fs(get<StructRef>(args.at(0))->fields);
 		auto fnd(fs.find(fns));
 		
 		if (fnd == fs.end()) {
-		  ERROR(Snabel, fmt("Reading uninitialized field: %0.%1",
-				    name(n), name(fns)));
+		  ERROR(Snabel, 
+			snackis::fmt("Reading uninitialized struct field: %0.%1",
+				     name(n), name(fns)));
 		  
-		  push(thd, get_opt_type(scp.exec, *ft), nil);
+		  push(thd, get_opt_type(scp.exec, ft), nil);
 		} else {
 		  push(thd, fnd->second);
 		}
 	      });
 	    
-	    add_func(exe, fmt("set-%0", fn),
-		     {ArgType(t), ArgType(*ft)},
-		     [&n, &fns, &ft](auto &scp, auto &args) {
+	    add_func(exe, snackis::fmt("set-%0", fn),
+		     {ArgType(t), ArgType(ft)},
+		     [&fns](auto &scp, auto &args) {
 		       auto &sa(args.at(0));
 		       auto &fs(get<StructRef>(sa)->fields);
 		       auto &v(args.at(1));
@@ -111,14 +141,12 @@ namespace snabel {
       });
   }
 
-  Type &get_struct_type(Exec &exe, const Sym &n) {
-    auto fnd(find_type(exe, n));
-    if (fnd) { return *fnd; }
+  Type &add_struct_type(Exec &exe, const Sym &n) {
     auto &t(add_type(exe, n));
-    t.raw = &exe.struct_type;
     t.supers.push_back(&exe.struct_type);
     t.fmt = exe.struct_type.fmt;
     t.eq = exe.struct_type.eq;
+    t.iter = exe.struct_type.iter;
     return t;
   }
 }

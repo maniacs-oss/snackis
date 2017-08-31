@@ -14,10 +14,18 @@ namespace snabel {
     Fields fields;
     Struct(Type &t);
   };
-  
+
+  struct StructIter: Iter {
+    StructRef in;
+    Struct::Fields::const_iterator it;
+    
+    StructIter(Exec &exe, const StructRef &in);
+    opt<Box> next(Scope &scp) override;
+  };
+
   bool operator==(const Struct &x, const Struct &y);
   void init_structs(Exec &exe);
-  Type &get_struct_type(Exec &exe, const Sym &n);
+  Type &add_struct_type(Exec &exe, const Sym &n);
 }
 
 namespace snackis {

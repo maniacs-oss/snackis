@@ -351,6 +351,14 @@ namespace snabel {
     join(*get<Thread *>(args.at(0)), scp);
   }
 
+  static str meta_fmt(const Box &v) {
+    return fmt("%0!", name(get<Type *>(v)->name));
+  }
+
+  static bool meta_eq(const Box &x, const Box &y) {
+    return get<Type *>(x) == get<Type *>(y);
+  }
+  
   Exec::Exec():
     main(threads.emplace(std::piecewise_construct,
 				std::forward_as_tuple(0),
@@ -425,8 +433,8 @@ namespace snabel {
 
     meta_type.supers.push_back(&any_type);
     meta_type.args.push_back(&any_type);
-    meta_type.fmt = [](auto &v) { return fmt("%0!", name(get<Type *>(v)->name)); };
-    meta_type.eq = [](auto &x, auto &y) { return get<Type *>(x) == get<Type *>(y); };
+    meta_type.fmt = meta_fmt;
+    meta_type.eq = meta_eq;
 
     void_type.fmt = [](auto &v) { return "Void"; };
     void_type.eq = [](auto &x, auto &y) { return true; };  
@@ -953,36 +961,39 @@ namespace snabel {
     auto &n(get_sym(exe, fmt("Type<%0>", name(t.name))));
     auto fnd(find_type(exe, n));
     if (fnd) { return *fnd; }
-    auto &mt(add_type(exe, n));
+    auto &mt(add_type(exe, n, true));
     mt.raw = &exe.meta_type;
     mt.supers.push_back(&exe.meta_type);
     mt.args.push_back(&t);
-    mt.fmt = exe.meta_type.fmt;
-    mt.eq = exe.meta_type.eq;
+    mt.fmt = meta_fmt;
+    mt.eq = meta_eq;
     return mt;
   }
 
-  Type &add_type(Exec &exe, const Sym &n) {
-    auto fnd(exe.types.find(n));
-
-    if (fnd != exe.types.end()) {
+  Type &add_type(Exec &exe, const Sym &n, bool meta) {
+    auto fnd(find_env(exe.main_scope, n));
+    auto &t(exe.types.emplace_back(n));
+    auto &mt(meta ? exe.meta_type : get_meta_type(exe, t));
+    
+    if (fnd) {
       ERROR(Snabel, fmt("Redefining type: %0", name(n)));
-      return fnd->second;
+      fnd->type = &mt;
+      fnd->val = &t;
+    } else {
+      put_env(exe.main_scope, n, Box(mt, &t));
     }
     
-    return exe.types.emplace(std::piecewise_construct,
-			     std::forward_as_tuple(n),
-			     std::forward_as_tuple(n)).first->second; 
+    return t;
   }
 
-  Type &add_type(Exec &exe, const str &n) {
-    return add_type(exe, get_sym(exe, n));
+  Type &add_type(Exec &exe, const str &n, bool meta) {
+    return add_type(exe, get_sym(exe, n), meta);
   }
 
   Type *find_type(Exec &exe, const Sym &n) {
-    auto fnd(exe.types.find(n));
-    if (fnd == exe.types.end()) { return nullptr; }
-    return &fnd->second;
+    auto fnd(find_env(exe.main_scope, n));
+    if (!fnd) { return nullptr; }
+    return get<Type *>(*fnd);
   }
 
   Type &get_type(Exec &exe, Type &raw, Types args) {

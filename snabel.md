@@ -241,13 +241,16 @@ Opt('bar')
 ```
 
 #### Structs
-Structs may be used to create custom composite data types. Constructors and field accessors are automatically created. All fields are expected to be initialized when read, reading uninitialized fields signals errors; use optional types for optional fields.
+Structs may be used to create custom composite data types. Constructors and field accessors are automatically created. All fields are expected to be initialized when read, reading uninitialized fields signals errors; use optional types for optional fields. Structs are iterable and produce a sequence of symbol/value-pairs. Struct definitions may appear anywhere in the code, types are defined once on compilation and and may be referenced from any scope. When redefining structs, fresh types are created each time; existing instances carry the existing type.
 
 ```
 > struct: Foo a I64 b Str
 
 > Foo new Foo is?
 true
+
+> Foo b
+Str!
 
 > func: make-foo {Foo new 0 set-a '' set-b}
 
@@ -256,6 +259,15 @@ Foo(a 0. b ''.)
 
 > make-foo 42 set-a
 Foo(a 42. b ''.)
+
+> make-foo 'bar' set-b list
+[#a 0. #b 'bar'.]
+
+> let: foo make-foo;
+  struct: Foo abc I64;
+  @foo 42 set-abc
+
+> make-foo 42 set-abc
 ```
 
 ### Lambdas

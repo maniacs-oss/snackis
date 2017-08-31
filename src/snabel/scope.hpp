@@ -44,6 +44,7 @@ namespace snabel {
   void put_env(Scope &scp, const Sym &key, const Box &val);
   void put_env(Scope &scp, const str &key, const Box &val);
   bool rem_env(Scope &scp, const Sym &key);
+  bool rem_env(Scope &scp, const str &key);
   void rollback_env(Scope &scp);
   void reset_stack(Scope &scp);
   void jump(Scope &scp, const Label &lbl);

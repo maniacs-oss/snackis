@@ -2,6 +2,7 @@
 #define SNABEL_EXEC_HPP
 
 #include <atomic>
+#include <list>
 #include <mutex>
 #include <map>
 
@@ -22,7 +23,7 @@ namespace snabel {
     using Lock = std::unique_lock<std::mutex>;
     
     std::map<Sym, Macro> macros;
-    std::map<Sym, Type> types;
+    std::list<Type> types;
     std::map<std::pair<Type *, Type *>, Conv> convs;
     std::map<Sym, Func> funcs;
     std::map<Sym, Label> labels;
@@ -54,8 +55,8 @@ namespace snabel {
   Macro &add_macro(Exec &exe, const str &n, Macro::Imp imp);
 
   Type &get_meta_type(Exec &exe, Type &t);
-  Type &add_type(Exec &exe, const Sym &n);
-  Type &add_type(Exec &exe, const str &n);
+  Type &add_type(Exec &exe, const Sym &n, bool meta=false);
+  Type &add_type(Exec &exe, const str &n, bool meta=false);
   Type *find_type(Exec &exe, const Sym &n);
   Type &get_type(Exec &exe, Type &raw, Types args);
   Type *get_super(Exec &exe, Type &raw, const Types &x, const Types &y);

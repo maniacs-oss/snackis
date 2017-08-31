@@ -92,6 +92,10 @@ namespace snabel {
     return true;
   }
 
+  bool rem_env(Scope &scp, const str &key) {
+    return rem_env(scp, get_sym(scp.exec, key));
+  }
+
   void rollback_env(Scope &scp) {
     for (auto &k: scp.env_keys) { scp.thread.env.erase(k); }
     scp.env_keys.clear();

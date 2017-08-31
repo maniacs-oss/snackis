@@ -447,10 +447,12 @@ namespace snabel {
 
   static void struct_tests() {
     TRY(try_test);    
-    
+
+    rem_env(exe.main_scope, "Foo");
     run_test(exe, "struct: Foo a I64 b List<Str>; Foo new Foo is?");
     CHECK(get<bool>(pop(exe.main)), _);
 
+    rem_env(exe.main_scope, "Foo");
     run_test(exe, "struct: Foo a I64 b List<Str>; Foo new 42 set-a a");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
