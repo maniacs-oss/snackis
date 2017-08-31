@@ -449,17 +449,25 @@ namespace snabel {
     TRY(try_test);    
 
     rem_env(exe.main_scope, "Foo");
-    run_test(exe, "struct: Foo a I64 b List<Str>; Foo new Foo is?");
+    run_test(exe, "struct: Foo a I64; Foo new Foo is?");
     CHECK(get<bool>(pop(exe.main)), _);
 
     rem_env(exe.main_scope, "Foo");
-    run_test(exe, "struct: Foo a I64 b List<Str>; Foo new 42 set-a a");
+    run_test(exe, "struct: Foo a I64; Foo new 42 set-a a");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
     rem_env(exe.main_scope, "Foo");
     rem_env(exe.main_scope, "Bar");    
     run_test(exe, "struct: Foo a I64; struct: Bar Foo b Str; Bar new 42 set-a a");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+
+    rem_env(exe.main_scope, "Foo");
+    run_test(exe, "struct: Foo a I64; Foo new 42 set-a list pop right");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+
+    rem_env(exe.main_scope, "Foo");
+    run_test(exe, "struct: Foo a I64; Foo new 42 set-a table len");
+    CHECK(get<int64_t>(pop(exe.main)) == 1, _);
   }
   
   static void loop_tests() {

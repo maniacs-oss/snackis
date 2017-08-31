@@ -27,9 +27,9 @@ namespace snabel {
   static void iter_table_imp(Scope &scp, const Args &args) {
     auto &exe(scp.exec);
     auto &in(args.at(0));
-    auto &elt(*in.type->args.at(0));
     auto out(std::make_shared<Table>());
     auto it((*in.type->iter)(in));
+    auto &elt(*it->type.args.at(0));
 
     while (true) {
       auto nxt(it->next(scp));
