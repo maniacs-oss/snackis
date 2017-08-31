@@ -71,7 +71,6 @@ namespace snabel {
 	  ERROR(Snabel, fmt("Malformed struct definition on row %0, col %1",
 			    pos.row, pos.col));
 	} else {
-	  out.emplace_back(Backup(false));
 	  auto &n(get_sym(exe, in.at(0).text));
 	  auto &t(add_struct_type(exe, n));
 	  auto &mt(get_meta_type(exe, t));
