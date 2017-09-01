@@ -114,7 +114,7 @@ namespace gui {
 	push_view(new Decrypt(ctx));
       });
 
-    add_cmd(rdr, "rewrite!", {}, [&ctx](auto args) {
+    add_cmd(rdr, "rewrite-db", {}, [&ctx](auto args) {
 	log(ctx, "Rewriting database...");
 	log(ctx, fmt("Finished rewriting, %0k reclaimed",
 		     rewrite_db(ctx) / 1000));
