@@ -36,21 +36,28 @@ static void stdin_imp(Scope &scp, const Args &args) {
   push(scp.thread, scp.exec.rfile_type, std::make_shared<File>(fileno(stdin)));
 }
 
+static void stdout_imp(Scope &scp, const Args &args) {
+  push(scp.thread, scp.exec.wfile_type, std::make_shared<File>(fileno(stdout)));
+}
+
 int main(int argc, char** argv) {
+  error_handler = [](auto &errors) {
+    for (auto e: errors) { std::cerr << e->what << std::endl; }
+  };
+
   Exec exe;
   add_func(exe, "say", {ArgType(exe.str_type)}, say_imp);
   add_func(exe, "stdin", {}, stdin_imp);
+  add_func(exe, "stdout", {}, stdout_imp);
 
   if (argc > 1) {
-    TRY(try_load);
-
     for (int i=2; i < argc; i++) {
       push(exe.main, exe.str_type, std::make_shared<str>(argv[i]));
     }
     
     auto in(slurp(argv[1]));
     if (in) { run(exe, *in); }
-    return try_load.errors.empty() ? 0 : -1;
+    return 0;
   }
   
   OutStream in;

@@ -10,6 +10,7 @@
 #include "snabel/iter.hpp"
 #include "snabel/iters.hpp"
 #include "snabel/list.hpp"
+#include "snabel/net.hpp"
 #include "snabel/opt.hpp"
 #include "snabel/pair.hpp"
 #include "snabel/proc.hpp"
@@ -298,11 +299,15 @@ namespace snabel {
     struct_type(add_type(*this, "Struct")),
     sym_type(add_type(*this, "Sym")),
     table_type(add_type(*this, "Table")),
+    tcp_server_type(add_type(*this, "TCPServer")),
+    tcp_socket_type(add_type(*this, "TCPSocket")),
+    tcp_stream_type(add_type(*this, "TCPStream")),
     thread_type(add_type(*this, "Thread")),
     uchar_type(add_type(*this, "UChar")),
     uid_type(add_type(*this, "Uid")),
     ustr_type(add_type(*this, "UStr")),
     void_type(add_type(*this, "Void")),
+    wfile_type(add_type(*this, "WFile")),
     writeable_type(add_type(*this, "Writeable")),
     return_target {
     &add_label(*this, "_return", true), &add_label(*this, "_return1", true),
@@ -518,11 +523,8 @@ namespace snabel {
     };
 
     label_type.call.emplace([](auto &scp, auto &v, bool now) {
-	auto &thd(scp.thread);
-	auto break_pc(thd.pc);
 	jump(scp, *get<Label *>(v));
-	if (!now) { return true; }
-	return run(thd, break_pc);
+	return true;
       });
 
     lambda_type.supers.push_back(&any_type);
@@ -609,7 +611,8 @@ namespace snabel {
     init_structs(*this);
     init_procs(*this);
     init_io(*this);
-
+    init_net(*this);
+    
     add_conv(*this, i64_type, rat_type, [this](auto &v) {	
 	v.type = &rat_type;
 	auto n(get<int64_t>(v));

@@ -40,8 +40,12 @@ namespace snackis {
   }
   
   void throw_error(Error *e) {
-    assert(!try_stack.empty());
     assert(e);
-    try_stack.back()->errors.push_back(e);
+
+    if (try_stack.empty()) {
+      error_handler({e});
+    } else {
+      try_stack.back()->errors.push_back(e);
+    }
   }
 }

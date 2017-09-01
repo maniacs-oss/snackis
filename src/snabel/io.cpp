@@ -11,7 +11,10 @@ namespace snabel {
 
   File::File(int fd):
     fd(fd)
-  { }
+  {
+    int flags = fcntl(fd, F_GETFL, 0);
+    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+  }
   
   File::File(const Path &path, int flags):
     path(path), fd(open(path.c_str(), flags | O_NONBLOCK, 0666))
@@ -130,7 +133,7 @@ namespace snabel {
   }
 
   void init_io(Exec &exe){
-    exe.file_type.supers.push_back(&exe.any_type);
+    exe.file_type.supers.push_back(&exe.ordered_type);
     exe.file_type.fmt = [](auto &v) {
       auto &f(*get<FileRef>(v));
       return fmt("File(%0)", f.fd);
@@ -140,6 +143,10 @@ namespace snabel {
       return get<FileRef>(x) == get<FileRef>(y);
     };
 
+    exe.file_type.lt = [](auto &x, auto &y) {
+      return get<FileRef>(x)->fd < get<FileRef>(y)->fd;
+    };
+      
     exe.rfile_type.supers.push_back(&exe.file_type);
     exe.rfile_type.supers.push_back(&exe.readable_type);
     exe.rfile_type.fmt = [](auto &v) {
@@ -162,16 +169,16 @@ namespace snabel {
       return READ_OK;
     };
 
-    exe.rwfile_type.supers.push_back(&exe.file_type);
-    exe.rwfile_type.supers.push_back(&exe.writeable_type);
+    exe.wfile_type.supers.push_back(&exe.file_type);
+    exe.wfile_type.supers.push_back(&exe.writeable_type);
 
-    exe.rwfile_type.fmt = [](auto &v) {
-      return fmt("RWFile(%0)", get<FileRef>(v)->fd);
+    exe.wfile_type.fmt = [](auto &v) {
+      return fmt("Wfile(%0)", get<FileRef>(v)->fd);
     };
     
-    exe.rwfile_type.eq = exe.file_type.eq;
-    exe.rwfile_type.read = exe.rfile_type.read;
-    exe.rwfile_type.write = [](auto &out, auto data, auto len) {
+    exe.wfile_type.eq = exe.file_type.eq;
+
+    exe.wfile_type.write = [](auto &out, auto data, auto len) {
       auto &f(*get<FileRef>(out));
       int res(write(f.fd, data, len));
 
@@ -182,6 +189,17 @@ namespace snabel {
       
       return res;
     };
+    
+    exe.rwfile_type.supers.push_back(&exe.file_type);
+    exe.rwfile_type.supers.push_back(&exe.writeable_type);
+
+    exe.rwfile_type.fmt = [](auto &v) {
+      return fmt("RWFile(%0)", get<FileRef>(v)->fd);
+    };
+    
+    exe.rwfile_type.eq = exe.file_type.eq;
+    exe.rwfile_type.read = exe.rfile_type.read;
+    exe.rwfile_type.write = exe.wfile_type.write;
 
     add_conv(exe, exe.str_type, exe.path_type, [&exe](auto &v) {	
 	v.type = &exe.path_type;

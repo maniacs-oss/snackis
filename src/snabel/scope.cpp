@@ -137,7 +137,7 @@ namespace snabel {
   bool yield(Scope &scp, int64_t depth) {
     Thread &thd(scp.thread);
     bool dec_pc(false);
-    
+
     while (depth && thd.scopes.size() > 1) {
       depth--;
       auto &prev_scp(*std::next(thd.scopes.rbegin()));

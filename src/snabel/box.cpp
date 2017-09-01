@@ -1,4 +1,5 @@
 #include "snabel/box.hpp"
+#include "snabel/error.hpp"
 #include "snabel/exec.hpp"
 
 namespace snabel {
@@ -17,6 +18,11 @@ namespace snabel {
   }
 
   bool operator <(const Box &x, const Box &y) {
+    if (!x.type->lt) {
+      ERROR(Snabel, fmt("Missing lt implementation for value: %0", x));
+      return false;
+    }
+    
     return x.type == y.type && x.type->lt(x, y);
   }
 
