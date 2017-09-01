@@ -1,7 +1,8 @@
 #ifndef SNABEL_TYPE_HPP
 #define SNABEL_TYPE_HPP
 
-#include <deque>
+#include <vector>
+
 #include "snabel/box.hpp"
 #include "snabel/iter.hpp"
 #include "snackis/core/func.hpp"
@@ -12,7 +13,7 @@ namespace snabel {
 
   struct Scope;
 
-  using Types = std::deque<Type *>;
+  using Types = std::vector<Type *>;
   using Conv = func<bool (Box &)>;
 
   enum ReadResult {READ_OK, READ_AGAIN, READ_EOF, READ_ERROR};

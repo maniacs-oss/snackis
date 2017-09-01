@@ -2,6 +2,7 @@
 #define SNABEL_FUNC_HPP
 
 #include <deque>
+#include <vector>
 
 #include "snabel/sym.hpp"
 #include "snackis/core/func.hpp"
@@ -17,7 +18,7 @@ namespace snabel {
   struct Thread;
   struct Type;
   
-  using Args = std::deque<Box>;
+  using Args = std::vector<Box>;
 
   struct ArgType {
     using Fn = func<Type *(const Args &)>;
@@ -32,7 +33,7 @@ namespace snabel {
     ArgType(Fn fn);
   };
   
-  using ArgTypes = std::deque<ArgType>;
+  using ArgTypes = std::vector<ArgType>;
 
   struct FuncImp {
     using Imp = func<void (Scope &, const Args &)>;
