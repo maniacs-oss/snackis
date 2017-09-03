@@ -5,10 +5,15 @@
 #include <random>
 #include <thread>
 
+#include <poll.h>
+
 #include "snabel/op.hpp"
+#include "snabel/poll.hpp"
 #include "snabel/scope.hpp"
 
 namespace snabel {
+  const int POLL_MAX_FDS(10);
+
   struct Thread {
     using Id = Uid;
   
@@ -18,15 +23,21 @@ namespace snabel {
     OpSeq ops;
     int64_t pc;
     Env env;
-    std::default_random_engine random;
     
     std::deque<Scope> scopes;
     std::deque<Stack> stacks;
     Scope &main_scope;
-    
+
+    FileRef _stdin, _stdout;
+    size_t io_counter;
+    std::deque<FDSet> poll_queue;
+    std::default_random_engine random;
+
     Thread(Exec &exe, Id id);
   };
 
+  void init_threads(Exec &exe);
+  
   Scope &curr_scope(Thread &thd);
   const Stack &curr_stack(const Thread &thd);
   Stack &curr_stack(Thread &thd);
@@ -46,13 +57,15 @@ namespace snabel {
   bool end_scope(Thread &thd);
 
   int64_t find_break_pc(Thread &thd);
+  void poll(Thread &thd, const FileRef &f);
+  void idle(Thread &thd);
   bool isa(Thread &thd, const Types &x, const Types &y);
 
   void start(Thread &thd);
   void join(Thread &thd, Scope &scp);
   bool _break(Thread &thd, int64_t depth);
   bool run(Thread &thd, int64_t break_pc=-1); 
-
+  
   constexpr bool isa(Thread &thd, const Type &x, const Type &y) {
     if (&x == &y || (x.raw == y.raw && isa(thd, x.args, y.args))) { return true; }
 

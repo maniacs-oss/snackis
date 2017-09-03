@@ -13,6 +13,10 @@ namespace snackis {
 
   PTime pnow() { return PClock::now(); }
 
+  std::chrono::microseconds usecs(size_t n) {
+    return std::chrono::microseconds(n);
+  }
+
   str fmt(const Time &tim, const str &spec) {
     if (tim == null_time || tim == max_time) { return ""; }
     Stream buf;

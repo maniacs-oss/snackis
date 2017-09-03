@@ -8,12 +8,16 @@
 #include "snabel/error.hpp"
 #include "snabel/io.hpp"
 #include "snabel/net.hpp"
+#include "snabel/thread.hpp"
 
 namespace snabel {
-  AcceptIter::AcceptIter(Exec &exe, const FileRef &in):
-    Iter(exe, get_iter_type(exe, get_opt_type(exe, exe.tcp_stream_type))),
+  AcceptIter::AcceptIter(Thread &thd, const FileRef &in):
+    Iter(thd.exec, get_iter_type(thd.exec,
+				 get_opt_type(thd.exec, thd.exec.tcp_stream_type))),
     in(in)
-  { }
+  {
+    poll(thd, this->in);
+  }
   
   opt<Box> AcceptIter::next(Scope &scp) {
     struct sockaddr_in addr;
@@ -28,7 +32,9 @@ namespace snabel {
       return Box(*type.args.at(0), nil);
     }
 
-    return Box(*type.args.at(0), std::make_shared<File>(fd));		
+    auto f(std::make_shared<File>(fd));
+    poll(scp.thread, f);
+    return Box(*type.args.at(0), f);
   }
   
   static void tcp_socket_imp(Scope &scp, const Args &args) {
@@ -60,6 +66,7 @@ namespace snabel {
       }
     }
 
+    poll(scp.thread, f);
     push(scp.thread, scp.exec.tcp_stream_type, f);  
   }
 
@@ -96,7 +103,7 @@ namespace snabel {
 
     push(scp.thread,
 	 get_iter_type(exe, get_opt_type(exe, exe.tcp_stream_type)),
-	 IterRef(new AcceptIter(exe, f)));
+	 IterRef(new AcceptIter(scp.thread, f)));
   }
 
   void init_net(Exec &exe) {
@@ -113,8 +120,8 @@ namespace snabel {
       return fmt("TCPServer(%0)", get<FileRef>(v)->fd);
     };
     exe.tcp_server_type.eq = exe.file_type.eq;
-
     
+    exe.tcp_stream_type.supers.push_back(&exe.file_type);
     exe.tcp_stream_type.supers.push_back(&exe.readable_type);
     exe.tcp_stream_type.supers.push_back(&exe.writeable_type);
     exe.tcp_stream_type.read = exe.rwfile_type.read;

@@ -25,9 +25,9 @@ namespace snabel {
   }
 
   File::~File() {
-    if (fd != -1) { close(fd); }
+    if (fd != -1) { close(*this); }
   }
-
+  
   ReadIter::ReadIter(Exec &exe, Type &elt, const Box &in):
     Iter(exe, get_iter_type(exe, elt)),
     in(in), elt(elt)
@@ -35,12 +35,14 @@ namespace snabel {
   
   opt<Box> ReadIter::next(Scope &scp) {
     if (!out) { out.emplace(elt, std::make_shared<Bin>(READ_BUF_SIZE)); }
-    auto res((*in.type->read)(in, *get<BinRef>(*out)));
+    auto &buf(*get<BinRef>(*out));
+    auto res((*in.type->read)(in, buf));
     
     switch (res) {
     case READ_OK: {
-      auto res(out);
+      auto res(*out);
       out.reset();
+      scp.thread.io_counter += buf.size();
       return res;
     }
     case READ_AGAIN:
@@ -72,6 +74,7 @@ namespace snabel {
     res = (*out.type->write)(out, &b[wpos], b.size()-wpos);
     if (res == -1) { return nullopt; }
     wpos += res;
+    scp.thread.io_counter += res;
     
     if (wpos == b.size()) {
       in_buf.reset();
@@ -79,6 +82,33 @@ namespace snabel {
     }
     
     return result;
+  }
+
+  void unpoll(File &f) {
+    auto &fds(*f.poll_fd->first);
+    fds[f.poll_fd->second].fd = -1;
+    
+    if (std::find_if(fds.begin(),
+		     fds.end(),
+		     [](auto &pfd) { return pfd.fd > -1; }) == fds.end()) {
+      fds.clear();
+    }
+
+    f.poll_fd.reset();
+  }
+
+  void close(File &f) {
+    ::close(f.fd);
+    if (f.poll_fd) { unpoll(f); }
+    f.fd = -1;
+  }
+
+  static void stdin_imp(Scope &scp, const Args &args) {
+    push(scp.thread, scp.exec.rfile_type, scp.thread._stdin);
+  }
+  
+  static void stdout_imp(Scope &scp, const Args &args) {
+    push(scp.thread, scp.exec.wfile_type, scp.thread._stdout);
   }
 
   static void rfile_imp(Scope &scp, const Args &args) {
@@ -116,6 +146,10 @@ namespace snabel {
 	 IterRef(new WriteIter(exe, (*in.type->iter)(in), out)));
   }
 
+  static void close_imp(Scope &scp, const Args &args) {
+    close(*get<FileRef>(args.at(0)));
+  }
+
   static void ls_imp(Scope &scp, const Args &args) {
     Exec &exe(scp.exec);
     auto &in(get<Path>(args.at(0)));
@@ -132,6 +166,10 @@ namespace snabel {
 	 IterRef(new DirIter<true>(exe, in)));
   }
 
+  static void idle_imp(Scope &scp, const Args &args) {
+    idle(scp.thread);
+  }
+  
   void init_io(Exec &exe){
     exe.file_type.supers.push_back(&exe.ordered_type);
     exe.file_type.fmt = [](auto &v) {
@@ -164,7 +202,7 @@ namespace snabel {
 	ERROR(Snabel, fmt("Failed reading from file: %0", errno));
 	return READ_ERROR;
       }
-
+      
       out.resize(res);
       return READ_OK;
     };
@@ -212,6 +250,9 @@ namespace snabel {
 	return true;
       });
 
+    add_func(exe, "stdin", {}, stdin_imp);
+    add_func(exe, "stdout", {}, stdout_imp);
+
     add_func(exe, "rfile", {ArgType(exe.path_type)}, rfile_imp);
     add_func(exe, "rwfile", {ArgType(exe.path_type)}, rwfile_imp);
     add_func(exe, "file?", {ArgType(exe.path_type)}, file_p_imp);
@@ -222,7 +263,10 @@ namespace snabel {
 		 ArgType(exe.writeable_type)},
 	     write_imp);
     
+    add_func(exe, "close", {ArgType(exe.file_type)}, close_imp);
+
     add_func(exe, "ls", {ArgType(exe.path_type)}, ls_imp);    
     add_func(exe, "ls-r", {ArgType(exe.path_type)}, ls_r_imp);    
+    add_func(exe, "idle", {}, idle_imp);    
   }
 }

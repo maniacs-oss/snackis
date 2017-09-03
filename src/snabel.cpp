@@ -32,14 +32,6 @@ static void say_imp(Scope &scp, const Args &args) {
   std::cout << *get<StrRef>(args.at(0)) << std::endl;
 }
 
-static void stdin_imp(Scope &scp, const Args &args) {
-  push(scp.thread, scp.exec.rfile_type, std::make_shared<File>(fileno(stdin)));
-}
-
-static void stdout_imp(Scope &scp, const Args &args) {
-  push(scp.thread, scp.exec.wfile_type, std::make_shared<File>(fileno(stdout)));
-}
-
 int main(int argc, char** argv) {
   error_handler = [](auto &errors) {
     for (auto e: errors) { std::cerr << e->what << std::endl; }
@@ -47,8 +39,6 @@ int main(int argc, char** argv) {
 
   Exec exe;
   add_func(exe, "say", {ArgType(exe.str_type)}, say_imp);
-  add_func(exe, "stdin", {}, stdin_imp);
-  add_func(exe, "stdout", {}, stdout_imp);
 
   if (argc > 1) {
     for (int i=2; i < argc; i++) {

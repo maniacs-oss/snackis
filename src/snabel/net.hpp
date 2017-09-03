@@ -3,11 +3,12 @@
 
 namespace snabel {
   struct Exec;
-
+  struct Thread;
+  
   struct AcceptIter: Iter {
     FileRef in;
     
-    AcceptIter(Exec &exe, const FileRef &in);
+    AcceptIter(Thread &thd, const FileRef &in);
     opt<Box> next(Scope &scp) override;
   };
 

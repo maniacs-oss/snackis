@@ -7,11 +7,12 @@
 #include "snabel/box.hpp"
 #include "snabel/error.hpp"
 #include "snabel/iter.hpp"
+#include "snabel/poll.hpp"
 #include "snackis/core/path.hpp"
 
 namespace snabel {
   const size_t READ_BUF_SIZE(25000);
-  
+
   struct IOBuf {
     Bin data;
     int64_t rpos;
@@ -22,6 +23,8 @@ namespace snabel {
   struct File {
     Path path;
     int fd;
+    opt<std::pair<FDSet *, size_t>> poll_fd;
+    
     File(int fd);
     File(const Path &path, int flags);
     ~File();
@@ -56,6 +59,8 @@ namespace snabel {
   };
 
   void init_io(Exec &exe);
+  void unpoll(File &f);
+  void close(File &f);
 
   constexpr bool operator ==(const IOBuf &x, const IOBuf &y) {
     for (int64_t i(0); i < x.rpos && i < y.rpos; i++) {

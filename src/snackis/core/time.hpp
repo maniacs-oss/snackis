@@ -21,6 +21,8 @@ namespace snackis {
   template <>
   str fmt_arg(const Time &arg);
 
+  std::chrono::microseconds usecs(size_t n);
+
   template <typename...Args>
   auto usecs(std::chrono::duration<Args...> d) {
     return std::chrono::duration_cast<std::chrono::microseconds>(d).count();

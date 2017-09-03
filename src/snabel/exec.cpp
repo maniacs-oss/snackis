@@ -245,15 +245,6 @@ namespace snabel {
     while (call(p, scp, true));
   }
 
-  static void thread_imp(Scope &scp, const Args &args) {
-    auto &t(start_thread(scp, args.at(0)));
-    push(scp.thread, scp.exec.thread_type, &t);
-  }
-
-  static void thread_join_imp(Scope &scp, const Args &args) {
-    join(*get<Thread *>(args.at(0)), scp);
-  }
-
   static str meta_fmt(const Box &v) {
     return fmt("%0!", name(get<Type *>(v)->name));
   }
@@ -589,12 +580,6 @@ namespace snabel {
       return IterRef(new RandomIter(*this, get<RandomRef>(in)));
     };
 
-    thread_type.supers.push_back(&any_type);
-    thread_type.fmt = [](auto &v) { return fmt("thread_%0", get<Thread *>(v)->id); };
-    thread_type.eq = [](auto &x, auto &y) {
-      return get<Thread *>(x) == get<Thread *>(y);
-    };
-
     for (int i(0); i < MAX_TARGET; i++) {
       return_target[i]->return_depth = i+1;
       recall_target[i]->recall_depth = i+1;
@@ -612,6 +597,7 @@ namespace snabel {
     init_procs(*this);
     init_io(*this);
     init_net(*this);
+    init_threads(*this);
     
     add_conv(*this, i64_type, rat_type, [this](auto &v) {	
 	v.type = &rat_type;
@@ -678,9 +664,6 @@ namespace snabel {
 
     add_func(*this, "proc", {ArgType(coro_type)}, proc_imp);
     add_func(*this, "run", {ArgType(proc_type)}, proc_run_imp);
-
-    add_func(*this, "thread", {ArgType(callable_type)}, thread_imp);
-    add_func(*this, "join", {ArgType(thread_type)}, thread_join_imp);
 
     add_macro(*this, "!", [](auto pos, auto &in, auto &out) {	
 	out.emplace_back(Check());

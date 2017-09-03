@@ -1,6 +1,8 @@
 #include <iostream>
+#include "snackis/core/time.hpp"
 #include "snabel/error.hpp"
 #include "snabel/exec.hpp"
+#include "snabel/io.hpp"
 #include "snabel/thread.hpp"
 
 namespace snabel {
@@ -13,10 +15,49 @@ namespace snabel {
     exec(exe),
     id(id),
     pc(0),
-    random(std::random_device()()),
-    main_scope(scopes.emplace_back(*this))
+    main_scope(scopes.emplace_back(*this)),
+    _stdin(std::make_shared<File>(fileno(stdin))),
+    _stdout(std::make_shared<File>(fileno(stdout))),
+    io_counter(0),
+    random(std::random_device()())
   {
     stacks.emplace_back();
+    poll_queue.emplace_back();
+    poll(*this, _stdin);
+  }
+
+  static void thread_imp(Scope &scp, const Args &args) {
+    auto &t(start_thread(scp, args.at(0)));
+    push(scp.thread, scp.exec.thread_type, &t);
+  }
+
+  static void join_imp(Scope &scp, const Args &args) {
+    join(*get<Thread *>(args.at(0)), scp);
+  }
+
+  static void resched_imp(Scope &scp, const Args &args) {
+    std::this_thread::yield();
+  }
+
+  static void sleep_imp(Scope &scp, const Args &args) {
+    std::this_thread::sleep_for(usecs(get<int64_t>(args.at(0))));
+  }
+
+  void init_threads(Exec &exe) {
+    exe.thread_type.supers.push_back(&exe.any_type);
+
+    exe.thread_type.fmt = [](auto &v) {
+      return fmt("thread_%0", get<Thread *>(v)->id);
+    };
+
+    exe.thread_type.eq = [](auto &x, auto &y) {
+      return get<Thread *>(x) == get<Thread *>(y);
+    };
+
+    add_func(exe, "thread", {ArgType(exe.callable_type)}, thread_imp);
+    add_func(exe, "join", {ArgType(exe.thread_type)}, join_imp);
+    add_func(exe, "resched", {}, resched_imp);
+    add_func(exe, "sleep", {ArgType(exe.i64_type)}, sleep_imp);
   }
 
   Scope &curr_scope(Thread &thd) {
@@ -104,6 +145,54 @@ namespace snabel {
     return -1;
   }
 
+  void poll(Thread &thd, const FileRef &f) {
+    if (!f->poll_fd) {
+      auto &fds(thd.poll_queue.back());
+      auto &pfd(fds.emplace_back());
+      pfd.fd = f->fd;
+      pfd.events = POLLIN;
+      f->poll_fd = std::make_pair(&fds, fds.size()-1);
+      if (fds.size() == POLL_MAX_FDS) { thd.poll_queue.emplace_back(); }
+    }
+  }
+  
+  void idle(Thread &thd) {
+    const int TIMEOUT_MAX(1000 / thd.poll_queue.size());
+    int timeout(0);
+
+    if (thd.io_counter) {
+      thd.io_counter = 0;
+    } else {
+      while (true) {
+	for (auto i(thd.poll_queue.begin()); i != thd.poll_queue.end();) {
+	  if (i->empty()) {
+	    thd.poll_queue.erase(i);
+	    continue;
+	  }
+	  
+	  auto &fds(*i);
+	  
+	  switch (::poll(&fds[0], fds.size(), timeout)) {
+	  case -1:
+	    ERROR(Snabel, fmt("Failed polling: %0", errno));
+	  case 0:
+	    break;
+	  default:
+	    if (i != thd.poll_queue.begin() && thd.poll_queue.size() > 1) {
+	      std::rotate(i, std::next(i), thd.poll_queue.begin());
+	    }
+	    
+	    return;
+	  }
+
+	  i++;
+	}
+	
+	if (timeout < TIMEOUT_MAX) { timeout++; }
+      }
+    }
+  }
+  
   bool isa(Thread &thd, const Types &x, const Types &y) {
     if (x.size() != y.size()) { return false; }
     auto i(x.begin()), j(y.begin());
