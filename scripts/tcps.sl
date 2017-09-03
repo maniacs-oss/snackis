@@ -18,7 +18,7 @@ let: server tcp-socket
      @addr @port bind
      1 accept;
 
-let: do-recv {(
+func: do-recv {(
   let: client; _
   yield
 
@@ -50,7 +50,7 @@ func: do-send {(
   @q fifo @c write {@q z? &yield1 when} _for
 )};
 
-let: do-server {(
+func: do-server {(
   yield
 
   @server {
@@ -60,7 +60,7 @@ let: do-server {(
      let: s do-send proc; _
      $ @queues $1 @q put _
      $ @senders $1 @s put _
-     @do-recv call proc @procs $1 push _ _} when
+     do-recv proc @procs $1 push _ _} when
 
     idle
     yield1
@@ -72,5 +72,5 @@ func: do-out {(
   @out fifo stdout write {@out z? &yield1 when} _for
 )} call proc;
 
-let: procs [@do-server];
+let: procs [&do-server];
 @procs run &nop _for
