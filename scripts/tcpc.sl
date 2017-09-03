@@ -46,6 +46,5 @@ func: do-out {(
 )} call proc;
 
 stdin unblock _
-let: procs [&do-recv];
-@procs run &nop _for
+&do-recv run
 [&do-send &do-out] run &nop _for
