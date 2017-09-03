@@ -27,7 +27,7 @@ let: do-recv {(
 
     @queues {$ left @client = {
       unzip @data push _
-      @senders $1 get {call} when 
+      @senders $1 get {call} when
     } unless _} for
 
     @out @data push _
@@ -36,8 +36,9 @@ let: do-recv {(
     yield1
   } for
 
-  @client close
   @queues @client del _
+  @senders @client del _
+  @client close
   'disconnect' say
 )};
 
@@ -46,7 +47,7 @@ func: do-send {(
   let: c; _
   yield
 
-  @q @c write &yield for
+  @q @c write &yield _for
 )};
 
 let: do-server {(
@@ -69,7 +70,7 @@ let: do-server {(
 func: do-out {(
   let: q @out fifo;
   yield
-  @q stdout write &nop _for
+  @q stdout write &yield _for
 )} call proc;
 
 let: procs [@do-server];
