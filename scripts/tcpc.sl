@@ -14,10 +14,8 @@ let: in Bin list;
 let: out Bin list;
 
 func: do-send {(
-  let: q @in fifo;
   yield
-  
-  @q @server write &yield _for
+  @in fifo @server write {@in z? &yield1 when} _for
 )} call proc;
 
 func: do-recv {(
@@ -43,10 +41,8 @@ func: do-in {(
 )} call proc;
 
 func: do-out {(
-  let: q @out fifo;
   yield
-
-  @q stdout write &yield _for
+  @out fifo stdout write {@out z? &yield1 when} _for
 )} call proc;
 
 stdin unblock _

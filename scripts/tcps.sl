@@ -47,7 +47,7 @@ func: do-send {(
   let: c; _
   yield
 
-  @q @c write &yield _for
+  @q fifo @c write {@q z? &yield1 when} _for
 )};
 
 let: do-server {(
@@ -57,7 +57,7 @@ let: do-server {(
     {'connect' say
      Bin list
      let: q;
-     let: s fifo do-send proc; _
+     let: s do-send proc; _
      $ @queues $1 @q put _
      $ @senders $1 @s put _
      @do-recv call proc @procs $1 push _ _} when
@@ -68,9 +68,8 @@ let: do-server {(
 )} call proc;
 
 func: do-out {(
-  let: q @out fifo;
   yield
-  @q stdout write &yield _for
+  @out fifo stdout write {@out z? &yield1 when} _for
 )} call proc;
 
 let: procs [@do-server];
