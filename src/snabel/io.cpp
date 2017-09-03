@@ -9,13 +9,10 @@ namespace snabel {
     data(size), rpos(0)
   { }
 
-  File::File(int fd):
+  File::File(int fd, bool block):
     fd(fd)
   {
-    //if (!isatty(fd)) {
-      int flags = fcntl(fd, F_GETFL, 0);
-      fcntl(fd, F_SETFL, flags | O_NONBLOCK);
-      //}
+    if (!block) { unblock(*this); }
   }
   
   File::File(const Path &path, int flags):
@@ -93,6 +90,11 @@ namespace snabel {
     return result;
   }
 
+  void unblock(File &f) {
+    auto flags(fcntl(f.fd, F_GETFL, 0));
+    fcntl(f.fd, F_SETFL, flags | O_NONBLOCK);
+  }
+
   void unpoll(File &f) {
     auto &fds(*f.poll_fd->first);
     fds[f.poll_fd->second].fd = -1;
@@ -132,6 +134,12 @@ namespace snabel {
 	 std::make_shared<File>(get<Path>(args.at(0)), O_RDWR | O_CREAT | O_TRUNC));
   }
 
+  static void unblock_imp(Scope &scp, const Args &args) {
+    auto &in(args.at(0));
+    push(scp.thread, in);
+    unblock(*get<FileRef>(in));
+  }
+  
   static void file_p_imp(Scope &scp, const Args &args) {
     push(scp.thread, scp.exec.bool_type, is_file(get<Path>(args.at(0))));
   }
@@ -203,6 +211,7 @@ namespace snabel {
     exe.rfile_type.eq = exe.file_type.eq;
     exe.rfile_type.read = [](auto &in, auto &out) {
       auto &f(*get<FileRef>(in));
+      if (f.fd == -1) { return READ_EOF; }
       auto res(read(f.fd, &out[0], out.size()));
       if (!res) { return READ_EOF; }
 
@@ -264,6 +273,7 @@ namespace snabel {
 
     add_func(exe, "rfile", {ArgType(exe.path_type)}, rfile_imp);
     add_func(exe, "rwfile", {ArgType(exe.path_type)}, rwfile_imp);
+    add_func(exe, "unblock", {ArgType(exe.file_type)}, unblock_imp);
     add_func(exe, "file?", {ArgType(exe.path_type)}, file_p_imp);
     add_func(exe, "read", {ArgType(exe.readable_type)}, read_imp);
 

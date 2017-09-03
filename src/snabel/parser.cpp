@@ -64,7 +64,7 @@ namespace snabel {
     
     for (size_t j(0); j < in.size(); j++) {
       char c(in[j]);
-
+      
       while (cquoted && c != '"') {
 	j++;
 	c = in[j];

@@ -16,8 +16,8 @@ namespace snabel {
     id(id),
     pc(0),
     main(scopes.emplace_back(*this)),
-    _stdin(std::make_shared<File>(fileno(stdin))),
-    _stdout(std::make_shared<File>(fileno(stdout))),
+    _stdin(std::make_shared<File>(fileno(stdin), true)),
+    _stdout(std::make_shared<File>(fileno(stdout), true)),
     io_counter(0),
     random(std::random_device()())
   {

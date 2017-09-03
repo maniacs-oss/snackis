@@ -142,6 +142,7 @@ namespace snabel {
 	
 	if (cor) {
 	  cor->proc.reset();
+	  prev_scp.coro = nullptr;
 	} else {
 	  cor = std::make_shared<Coro>(curr_scp);
 	  new_cor = true;

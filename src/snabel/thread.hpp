@@ -20,6 +20,7 @@ namespace snabel {
     Exec &exec;
     const Id id;
     std::thread imp;
+    std::deque<FDSet> poll_queue;
     OpSeq ops;
     int64_t pc;
     
@@ -29,7 +30,6 @@ namespace snabel {
 
     FileRef _stdin, _stdout;
     size_t io_counter;
-    std::deque<FDSet> poll_queue;
     std::default_random_engine random;
 
     Thread(Exec &exe, Id id);

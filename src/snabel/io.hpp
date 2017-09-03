@@ -25,7 +25,7 @@ namespace snabel {
     int fd;
     opt<std::pair<FDSet *, size_t>> poll_fd;
     
-    File(int fd);
+    File(int fd, bool block=false);
     File(const Path &path, int flags);
     ~File();
   };
@@ -59,6 +59,7 @@ namespace snabel {
   };
 
   void init_io(Exec &exe);
+  void unblock(File &f);
   void unpoll(File &f);
   void close(File &f);
 
