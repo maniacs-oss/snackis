@@ -22,13 +22,17 @@ let: do-recv {(
   let: client; _
   yield
 
-  @client read {
-    {let: data; _
-     @queues {$ left @client = {
-       unzip @data push _
-       @senders $1 get {call} when 
-     } unless _} for
-     @out @data push _} when
+  @client read {{
+    let: data; _
+
+    @queues {$ left @client = {
+      unzip @data push _
+      @senders $1 get {call} when 
+    } unless _} for
+
+    @out @data push _
+    do-out} when
+
     yield1
   } for
 
@@ -62,10 +66,11 @@ let: do-server {(
   } for
 )} call proc;
 
-let: refresh {(
+func: do-out {(
+  let: q @out fifo;
   yield
-  {@out fifo stdout write &yield1 _for yield1} loop
+  @q stdout write &nop _for
 )} call proc;
 
-let: procs [@do-server @refresh];
+let: procs [@do-server];
 @procs run &nop _for
