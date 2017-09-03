@@ -21,10 +21,10 @@ namespace snabel {
   struct Op;
 
   enum OpCode { OP_BACKUP, OP_BREAK, OP_CALL, OP_CHECK, OP_DEREF, OP_DROP, OP_DUP,
-		OP_FMT, OP_FOR, OP_FUNCALL, OP_GETENV, OP_JUMP, OP_LAMBDA,
+		OP_FMT, OP_FOR, OP_FUNCALL, OP_GETENV, OP_JUMP, OP_LAMBDA, OP_LOOP,
 		OP_PUSH, OP_PUTENV, OP_RECALL, OP_RESET, OP_RESTORE,
 		OP_RETURN, OP_STASH, OP_SWAP, OP_TARGET, OP_UNLAMBDA,
-	        OP_WHILE, OP_YIELD };
+	        OP_YIELD };
 
   using OpSeq = std::deque<Op>;
 
@@ -175,6 +175,20 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
 
+  struct Loop: OpImp {    
+    bool compiled;
+    
+    Loop();
+    OpImp &get_imp(Op &op) const override;
+    bool compile(const Op &op, Scope &scp, OpSeq & out) override;    
+    bool run(Scope &scp) override;
+
+    struct State {
+      Box target;
+      State(const Box &cnd);
+    };    
+  };
+
   struct Push: OpImp {
     Stack vals;
     
@@ -263,20 +277,6 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
 
-  struct While: OpImp {    
-    bool compiled;
-    
-    While();
-    OpImp &get_imp(Op &op) const override;
-    bool compile(const Op &op, Scope &scp, OpSeq & out) override;    
-    bool run(Scope &scp) override;
-
-    struct State {
-      Box cond, target;
-      State(const Box &cnd, const Box &tgt);
-    };    
-  };
-
   struct Yield: OpImp {
     int64_t depth;
     
@@ -287,11 +287,11 @@ namespace snabel {
   };
 
   using OpData = std::variant<Backup, Break, Call, Check, Deref, Drop, Dup, Fmt, For,
-			      Funcall, Getenv, Jump, Lambda, Push,
+			      Funcall, Getenv, Jump, Lambda, Loop, Push,
 			      Putenv, Recall, Reset, Restore, Return, Stash, Swap,
-			      Target, Unlambda, While, Yield>;
+			      Target, Unlambda, Yield>;
 
-  using OpState = std::variant<For::State, While::State>;
+  using OpState = std::variant<For::State, Loop::State>;
 
   struct Op {
     OpData data;

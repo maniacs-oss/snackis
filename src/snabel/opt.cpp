@@ -34,12 +34,23 @@ namespace snabel {
       (*tgt.type->call)(scp, tgt, false); 
     }
   }
-
+  
   static void unless_imp(Scope &scp, const Args &args) {
     auto &cnd(args.at(0)), &tgt(args.at(1));
     if (empty(cnd)) { (*tgt.type->call)(scp, tgt, false); }
   }
 
+  static void if_imp(Scope &scp, const Args &args) {
+    auto &cnd(args.at(0)), &left(args.at(1)), &right(args.at(2));
+    
+    if (empty(cnd)) {
+      (*right.type->call)(scp, right, false);       
+    } else { 
+      push(scp.thread, *cnd.type->args.at(0), cnd.val);
+      (*left.type->call)(scp, left, false); 
+    }
+  }
+  
   static void or_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
     auto &alt(args.at(1));
@@ -106,6 +117,11 @@ namespace snabel {
     add_func(exe, "unless",
 	     {ArgType(exe.opt_type), ArgType(exe.callable_type)},
 	     unless_imp);
+
+    add_func(exe, "if",
+	     {ArgType(exe.opt_type), ArgType(exe.callable_type),
+		 ArgType(exe.callable_type)},
+	     if_imp);
 
     add_func(exe, "or",
 	     {ArgType(exe.opt_type),

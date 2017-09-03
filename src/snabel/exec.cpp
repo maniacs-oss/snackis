@@ -772,8 +772,8 @@ namespace snabel {
 	out.emplace_back(For(false));
       });
 
-    add_macro(*this, "while", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(While());
+    add_macro(*this, "loop", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(Loop());
       });
 
     add_macro(*this, "nil", [this](auto pos, auto &in, auto &out) {
@@ -995,8 +995,8 @@ namespace snabel {
     auto &thd(exe.main);
     while (thd.scopes.size() > 1) { thd.scopes.pop_back(); }
     while (thd.stacks.size() > 1) { thd.stacks.pop_back(); }
-    thd.main_scope.recalls.clear();
-    thd.main_scope.return_pc = -1;
+    thd.main.recalls.clear();
+    thd.main.return_pc = -1;
     thd.stacks.front().clear();
   }
 

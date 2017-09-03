@@ -578,12 +578,68 @@ namespace snabel {
 		std::inserter(new_scp.op_state, new_scp.op_state.end()));
       std::copy(cor->recalls.begin(), cor->recalls.end(),
 		std::back_inserter(new_scp.recalls));
-      for (auto &v: cor->env) { put_env(new_scp, v.first, v.second); }
+      new_scp.env.swap(cor->env);
     }
 
     return true;
   }
 
+  Loop::Loop():
+    OpImp(OP_LOOP, "loop"), compiled(false)
+  { }
+
+  OpImp &Loop::get_imp(Op &op) const {
+    return std::get<Loop>(op.data);
+  }
+
+  bool Loop::compile(const Op &op, Scope &scp, OpSeq &out) {
+    if (compiled) { return false; }
+    compiled = true;
+    auto &exe(scp.exec);
+    auto &lbl(add_label(exe, fmt("_loop%0", uid(exe))));
+    out.emplace_back(Target(lbl));
+    out.push_back(op);
+    out.emplace_back(Jump(lbl));
+    return true;
+  }
+
+  bool Loop::run(Scope &scp) {
+    auto &thd(scp.thread);
+
+    opt<Box> tgt;
+    auto fnd(scp.op_state.find(pc));
+
+    if (fnd == scp.op_state.end()) {
+      tgt = try_pop(thd);
+    
+      if (!tgt) {
+	ERROR(Snabel, "Missing while target");
+	return false;
+      }
+      
+      if (!tgt->type->call) {
+	ERROR(Snabel, fmt("Invalid while target: %0", *tgt));
+	return false;
+      }
+    
+      scp.op_state.emplace(std::piecewise_construct,
+			   std::forward_as_tuple(pc),
+			   std::forward_as_tuple(State(*tgt)));
+    } else {
+      auto &s(get<State>(fnd->second));
+      tgt.emplace(s.target);
+    }
+    
+    if (tgt->type == &scp.exec.nop_type) { return true; }
+    scp.break_pc = scp.thread.pc+2;
+    (*tgt->type->call)(scp, *tgt, false);
+    return true;
+  }
+
+  Loop::State::State(const Box &tgt):
+    target(tgt)
+  { }
+  
   Putenv::Putenv(const Sym &key):
     OpImp(OP_PUTENV, "putenv"), key(key)
   { }
@@ -827,96 +883,6 @@ namespace snabel {
     return _return(scp, 1);
   }
   
-  While::While():
-    OpImp(OP_WHILE, "while"), compiled(false)
-  { }
-
-  OpImp &While::get_imp(Op &op) const {
-    return std::get<While>(op.data);
-  }
-
-  bool While::compile(const Op &op, Scope &scp, OpSeq &out) {
-    if (compiled) { return false; }
-    compiled = true;
-    auto &exe(scp.exec);
-    auto &lbl(add_label(exe, fmt("_while%0", uid(exe))));
-    out.emplace_back(Target(lbl));
-    out.push_back(op);
-    out.emplace_back(Jump(lbl));
-    return true;
-  }
-
-  bool While::run(Scope &scp) {
-    auto &exe(scp.exec);
-    auto &thd(scp.thread);
-
-    opt<Box> cnd, tgt;
-    auto fnd(scp.op_state.find(pc));
-
-    if (fnd == scp.op_state.end()) {
-      tgt = try_pop(thd);
-    
-      if (!tgt) {
-	ERROR(Snabel, "Missing while target");
-	return false;
-      }
-      
-      if (!tgt->type->call) {
-	ERROR(Snabel, fmt("Invalid while target: %0", *tgt));
-	return false;
-      }
-    
-      cnd = try_pop(thd);
-      
-      if (!cnd) {
-	ERROR(Snabel, "Missing while condition");
-	return false;
-      }
-      
-      if (!cnd->type->call)     {
-	ERROR(Snabel, fmt("Invalid while condition: %0", *cnd));
-	return false;
-      }
-
-      scp.op_state.emplace(std::piecewise_construct,
-			   std::forward_as_tuple(pc),
-			   std::forward_as_tuple(State(*cnd, *tgt)));
-    } else {
-      auto &s(get<State>(fnd->second));
-      cnd.emplace(s.cond);
-      tgt.emplace(s.target);
-    }
-    
-    (*cnd->type->call)(scp, *cnd, true);
-    auto ok(try_pop(thd));
-
-    if (ok) {
-      if (ok->type != &exe.bool_type) {
-	ERROR(Snabel, fmt("Invalid while condition: %0", *ok));
-	return false;
-      }
-      
-      if (get<bool>(*ok)) {
-	if (tgt->type == &scp.exec.nop_type) { return true; }
-	scp.break_pc = scp.thread.pc+2;
-	(*tgt->type->call)(scp, *tgt, false);
-	return true;
-      }
-    } else {
-      ERROR(Snabel, "Missing while condition");
-      return false;
-    }
-
-    scp.op_state.erase(pc);
-    scp.break_pc = -1;
-    scp.thread.pc += 2;
-    return true;
-  }
-
-  While::State::State(const Box &cnd, const Box &tgt):
-    cond(cnd), target(tgt)
-  { }
-
   Yield::Yield(int64_t depth):
     OpImp(OP_YIELD, "yield"), depth(depth)
   { }

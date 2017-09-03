@@ -15,7 +15,7 @@ namespace snabel {
     exec(exe),
     id(id),
     pc(0),
-    main_scope(scopes.emplace_back(*this)),
+    main(scopes.emplace_back(*this)),
     _stdin(std::make_shared<File>(fileno(stdin))),
     _stdout(std::make_shared<File>(fileno(stdout))),
     io_counter(0),
@@ -175,6 +175,7 @@ namespace snabel {
 	  switch (::poll(&fds[0], fds.size(), timeout)) {
 	  case -1:
 	    ERROR(Snabel, fmt("Failed polling: %0", errno));
+	    return;
 	  case 0:
 	    break;
 	  default:

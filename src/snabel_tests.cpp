@@ -500,7 +500,7 @@ namespace snabel {
     run_test(exe, "'foo' &nop for $list \\- join");
     CHECK(*get<StrRef>(pop(exe.main)) == "f-o-o", _);
 
-    run_test(exe, "0 {$ 42 lt?} {1 +} while");
+    run_test(exe, "0 {+1 $ 42 = &break when} loop");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
@@ -577,7 +577,7 @@ namespace snabel {
 	"func: ping {|yield (3 {@acc 'ping' push yield1} for)} call proc; "
 	"func: pong {|yield (3 {@acc 'pong' push yield1} for)} call proc; "
 	"[&ping &pong] run &_ for");
-    CHECK(get<ListRef>(*find_env(exe.main_scope, "@acc"))->size() == 6, _);
+    CHECK(get<ListRef>(*find_env(curr_scope(exe.main), "@acc"))->size() == 6, _);
   
     run_test(exe,
 	"let: acc I64 list; "

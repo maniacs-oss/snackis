@@ -12,8 +12,10 @@ namespace snabel {
   File::File(int fd):
     fd(fd)
   {
-    int flags = fcntl(fd, F_GETFL, 0);
-    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+    //if (!isatty(fd)) {
+      int flags = fcntl(fd, F_GETFL, 0);
+      fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+      //}
   }
   
   File::File(const Path &path, int flags):
@@ -63,14 +65,21 @@ namespace snabel {
   { }
   
   opt<Box> WriteIter::next(Scope &scp){
+    auto &res(get<int64_t>(result));
+
     if (!in_buf) {
       auto nxt(in->next(scp));
       if (!nxt) { return nullopt; }
+
+      if (empty(*nxt)) {
+	res = 0;
+	return result;
+      }
+      
       in_buf = get<BinRef>(*nxt);
     }
 
     auto &b(*in_buf);
-    auto &res(get<int64_t>(result));
     res = (*out.type->write)(out, &b[wpos], b.size()-wpos);
     if (res == -1) { return nullopt; }
     wpos += res;
@@ -98,8 +107,8 @@ namespace snabel {
   }
 
   void close(File &f) {
-    ::close(f.fd);
     if (f.poll_fd) { unpoll(f); }
+    ::close(f.fd);
     f.fd = -1;
   }
 
@@ -260,6 +269,11 @@ namespace snabel {
 
     add_func(exe, "write",
 	     {ArgType(get_iterable_type(exe, exe.bin_type)),
+		 ArgType(exe.writeable_type)},
+	     write_imp);
+
+    add_func(exe, "write",
+	     {ArgType(get_iterable_type(exe, get_opt_type(exe, exe.bin_type))),
 		 ArgType(exe.writeable_type)},
 	     write_imp);
     

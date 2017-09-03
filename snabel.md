@@ -383,7 +383,7 @@ S: 'abcabcabc' {\a =} filter str
 ```
 
 #### Loops
-The ```for```-loop accepts an iterable and a target, and calls the target with the last value pushed on the stack as long as the iterator returns values; and the ```while```-loop accepts a condition and a target, and calls the target as long as the condition pushes ```true```. ```break``` may be used to exit loops early, use ```&break``` to get a target that breaks when called.
+The ```for```-loop accepts an iterable and a target, and calls the target with the last value pushed on the stack as long as the iterator returns values; while ```loop``` calls the target until it exits by other means. ```break``` may be used to exit loops early, use ```&break``` to get a target that breaks when called.
 
 ```
 S: 0 7 &+ for
@@ -398,7 +398,7 @@ S: 0 [1 2 3 4 5 6] &+ for
 S: 'foo' &nop for $list \- join
 'f-o-o'
 
-S: 0 {$ 42 lt?} {1 +} while
+S: 0 {+1 $ 42 = &break when} loop
 42
 ```
 

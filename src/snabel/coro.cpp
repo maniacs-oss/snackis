@@ -12,18 +12,9 @@ namespace snabel {
 
   void refresh(Coro &cor, Scope &scp) {
     refresh(dynamic_cast<Frame &>(cor), scp);
-    cor.op_state.clear();
-    std::copy(scp.op_state.begin(), scp.op_state.end(),
-	      std::inserter(cor.op_state, cor.op_state.end()));
-    cor.recalls.clear();
-    std::copy(scp.recalls.begin(), scp.recalls.end(),
-	      std::back_inserter(cor.recalls));
-    auto &thd(scp.thread);
-    cor.env.clear();
-    
-    for (auto &k: scp.env_keys) {
-      cor.env.insert(std::make_pair(k, thd.env.at(k)));
-    }
+    cor.op_state.swap(scp.op_state);
+    cor.recalls.swap(scp.recalls);
+    cor.env.swap(scp.env);
   }
 
   void reset(Coro &cor) {

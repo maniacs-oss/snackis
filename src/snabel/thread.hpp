@@ -22,11 +22,10 @@ namespace snabel {
     std::thread imp;
     OpSeq ops;
     int64_t pc;
-    Env env;
     
     std::deque<Scope> scopes;
     std::deque<Stack> stacks;
-    Scope &main_scope;
+    Scope &main;
 
     FileRef _stdin, _stdout;
     size_t io_counter;

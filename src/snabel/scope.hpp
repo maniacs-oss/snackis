@@ -21,6 +21,7 @@ namespace snabel {
   struct Scope {
     Thread &thread;
     Exec &exec;
+    Scope *parent;
     opt<Proc *> proc;
 
     Label *target;
@@ -30,10 +31,10 @@ namespace snabel {
 
     std::map<int64_t, OpState> op_state;
     std::deque<Frame> recalls;
-    std::set<Sym> env_keys;
+    Env env;
     
     Scope(Thread &thread);
-    Scope(const Scope &src);
+    Scope(Scope &prt);
     ~Scope();
     const Scope &operator =(const Scope &) = delete;
   };
@@ -45,7 +46,6 @@ namespace snabel {
   void put_env(Scope &scp, const str &key, const Box &val);
   bool rem_env(Scope &scp, const Sym &key);
   bool rem_env(Scope &scp, const str &key);
-  void rollback_env(Scope &scp);
   void reset_stack(Scope &scp);
   void jump(Scope &scp, const Label &lbl);
   void call(Scope &scp, const Label &lbl, bool now=false);
