@@ -19,8 +19,8 @@ let: server tcp-socket
      1 accept;
 
 func: do-recv {(
-  let: client; _
   yield
+  let: client; _
 
   @client read {{
     let: data; _
@@ -43,9 +43,9 @@ func: do-recv {(
 )};
 
 func: do-send {(
+  yield
   let: q; _
   let: c; _
-  yield
 
   @q fifo @c write {@q z? &yield1 when} _for
 )};
