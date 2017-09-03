@@ -24,6 +24,8 @@ func: do-recv {(
   @server read {
     {@out $1 push _} when
     @out +? &do-out when _
+    do-in
+    idle
     yield1
   } for
 )} call proc;
@@ -34,8 +36,6 @@ func: do-in {(
   stdin read {
     {@in $1 push _} when
     @in +? &do-send when _
-    do-recv
-    idle
     yield1
   } for
 )} call proc;
@@ -46,5 +46,6 @@ func: do-out {(
 )} call proc;
 
 stdin unblock _
-[&do-in] run &nop _for
+let: procs [&do-recv];
+@procs run &nop _for
 [&do-send &do-out] run &nop _for

@@ -63,26 +63,26 @@ namespace snabel {
 	 std::make_shared<List>());    
   }
 
-  static void list_zero_imp(Scope &scp, const Args &args) {
+  static void zero_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
     push(scp.thread, in);
     push(scp.thread, scp.exec.bool_type, get<ListRef>(in)->empty());
   }
 
-  static void list_pos_imp(Scope &scp, const Args &args) {
+  static void pos_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
     push(scp.thread, in);
     push(scp.thread, scp.exec.bool_type, !get<ListRef>(in)->empty());
   }
   
-  static void list_push_imp(Scope &scp, const Args &args) {
+  static void push_imp(Scope &scp, const Args &args) {
     auto &lst(args.at(0));
     auto &el(args.at(1));
     get<ListRef>(lst)->push_back(el);
     push(scp.thread, lst);    
   }
 
-  static void list_pop_imp(Scope &scp, const Args &args) {
+  static void pop_imp(Scope &scp, const Args &args) {
     auto &lst_arg(args.at(0));
     auto &lst(*get<ListRef>(lst_arg));
     push(scp.thread, lst_arg);
@@ -90,14 +90,20 @@ namespace snabel {
     lst.pop_back();
   }
 
-  static void list_reverse_imp(Scope &scp, const Args &args) {
+  static void reverse_imp(Scope &scp, const Args &args) {
     auto &in_arg(args.at(0));
     auto &in(*get<ListRef>(in_arg));
     std::reverse(in.begin(), in.end());
     push(scp.thread, in_arg); 
   }
 
-  static void list_sort_imp(Scope &scp, const Args &args) {
+  static void clear_imp(Scope &scp, const Args &args) {
+    auto &in_arg(args.at(0));
+    get<ListRef>(in_arg)->clear();
+    push(scp.thread, in_arg); 
+  }
+
+  static void sort_imp(Scope &scp, const Args &args) {
     auto &thd(scp.thread);
     auto &in_arg(args.at(0));
     auto &in(*get<ListRef>(in_arg));
@@ -119,7 +125,7 @@ namespace snabel {
       });    
   }
 
-  static void list_unzip_imp(Scope &scp, const Args &args) {
+  static void unzip_imp(Scope &scp, const Args &args) {
     auto &exe(scp.exec);
     auto &in(args.at(0));
 
@@ -138,7 +144,7 @@ namespace snabel {
 	     })));
   }
 
-  static void list_fifo_imp(Scope &scp, const Args &args) {
+  static void fifo_imp(Scope &scp, const Args &args) {
     auto &exe(scp.exec);
     auto &in(args.at(0));
     auto &elt(*in.type->args.at(0));
@@ -188,35 +194,39 @@ namespace snabel {
 
     add_func(exe, "z?",
 	     {ArgType(exe.list_type)},
-	     list_zero_imp);
+	     zero_imp);
     
     add_func(exe, "+?",
 	     {ArgType(exe.list_type)},
-	     list_pos_imp);
+	     pos_imp);
     
     add_func(exe, "push",
 	     {ArgType(exe.list_type), ArgType(0, 0)},
-	     list_push_imp);
+	     push_imp);
     
     add_func(exe, "pop",
 	     {ArgType(exe.list_type)},
-	     list_pop_imp);
+	     pop_imp);
 
     add_func(exe, "reverse",
 	     {ArgType(exe.list_type)},
-	     list_reverse_imp);
+	     reverse_imp);
 
     add_func(exe, "sort",
 	     {ArgType(exe.list_type), ArgType(exe.callable_type)},
-	     list_sort_imp);
+	     sort_imp);
+
+    add_func(exe, "clear",
+	     {ArgType(exe.list_type)},
+	     clear_imp);
 
     add_func(exe, "unzip",
 	     {ArgType(get_list_type(exe, exe.pair_type))},
-	     list_unzip_imp);
+	     unzip_imp);
 
     add_func(exe, "fifo",
 	     {ArgType(exe.list_type)},
-	     list_fifo_imp);
+	     fifo_imp);
   }
   
   Type &get_list_type(Exec &exe, Type &elt) {    
