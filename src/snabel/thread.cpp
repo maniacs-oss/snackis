@@ -148,7 +148,7 @@ namespace snabel {
     if (thd.io_counter) {
       thd.io_counter = 0;
     } else {
-      const int TIMEOUT_MAX(1000 / thd.poll_queue.size());
+      const int TMIN(2), TMAX(128);
       pollfd fds[POLL_SET_SIZE];
       auto f(thd.poll_queue.begin());
       int timeout(0);
@@ -175,7 +175,8 @@ namespace snabel {
 	  return;
 	}
 
-	if (timeout < TIMEOUT_MAX) { timeout++; }
+	
+	if (timeout < TMAX) { timeout = timeout ? timeout*2 : TMIN; }
       }
     }
   }
