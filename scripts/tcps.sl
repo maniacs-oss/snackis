@@ -26,16 +26,19 @@ func: do-recv {(
   let: in;
   | yield
 
-  @in read {{
-    let: data; _
+  @in read {
+    { let: data; _
 
-    @clients {unzip $1 @in = {
-      queue @data push _
-      sender call
-    } unless _} for
+      @clients {
+        unzip $1 @in = {
+          queue @data push _
+          sender call
+        }   unless _
+      } for
 
-    @out @data push _
-    do-out} when
+      @out @data push _
+      do-out
+    } when
 
     yield1
   } for

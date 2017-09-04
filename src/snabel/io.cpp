@@ -236,6 +236,7 @@ namespace snabel {
 
     exe.wfile_type.write = [](auto &out, auto data, auto len) {
       auto &f(*get<FileRef>(out));
+      if (f.fd == -1) { return -1; }
       int res(write(f.fd, data, len));
 
       if (res == -1) {
