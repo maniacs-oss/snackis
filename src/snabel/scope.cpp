@@ -187,7 +187,7 @@ namespace snabel {
 	  end_scope(thd);
 	  thd.pc = ps.return_pc;
 	  ps.return_pc = -1;
-	  if (ps.coro) { reset(*ps.coro); }
+	  if (ps.coro) { ps.coro->done = true; }
 	  ps.coro.reset();
 	} else {
 	  recall_return(s);

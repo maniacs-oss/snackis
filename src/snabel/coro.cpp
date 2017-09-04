@@ -7,7 +7,7 @@
 
 namespace snabel {
   Coro::Coro(Scope &scp):
-    target(*scp.target), start_pc(scp.thread.pc+1), proc(nullptr)
+    target(*scp.target), proc(nullptr), done(false)
   { }
 
   void refresh(Coro &cor, Scope &scp) {
@@ -17,18 +17,10 @@ namespace snabel {
     cor.env.swap(scp.env);
   }
 
-  void reset(Coro &cor) {
-    reset(dynamic_cast<Frame &>(cor));
-    cor.op_state.clear();
-    cor.recalls.clear();
-    cor.env.clear();
-    cor.pc = cor.start_pc;
-    cor.proc.reset();
-  }
-  
   bool call(const CoroRef &cor, Scope &scp, bool now) {
+    if (cor->done) { return false; };
     scp.coro = cor;
     call(scp, cor->target, now);
-    return cor->pc > cor->start_pc;    
+    return !cor->done;
   }
 }

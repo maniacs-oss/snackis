@@ -14,8 +14,8 @@ namespace snabel {
     Env env;
 
     Label &target;
-    int64_t start_pc;
     ProcRef proc;
+    bool done;
     
     Coro(Scope &scp);
     Coro(const Coro &) = delete;
@@ -23,7 +23,6 @@ namespace snabel {
   };
   
   void refresh(Coro &cor, Scope &scp);
-  void reset(Coro &cor);
   bool call(const CoroRef &cor, Scope &scp, bool now);
 }
 
