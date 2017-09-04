@@ -210,7 +210,7 @@ namespace snabel {
     };
 
     exe.file_type.lt = [](auto &x, auto &y) {
-      return get<FileRef>(x)->fd < get<FileRef>(y)->fd;
+      return get<FileRef>(x) < get<FileRef>(y);
     };
       
     exe.rfile_type.supers.push_back(&exe.file_type);
