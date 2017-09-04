@@ -123,8 +123,10 @@ namespace snabel {
 
 	    add_func(exe, fns, {ArgType(t)}, [n, &fns, &ft](auto &scp, auto &args) {
 		auto &thd(scp.thread);
-		auto &fs(get<StructRef>(args.at(0))->fields);
+		auto &self(args.at(0));
+		auto &fs(get<StructRef>(self)->fields);
 		auto fnd(fs.find(fns));
+		push(thd, self);
 		
 		if (fnd == fs.end()) {
 		  ERROR(Snabel, 
@@ -140,14 +142,14 @@ namespace snabel {
 	    add_func(exe, snackis::fmt("set-%0", fn),
 		     {ArgType(t), ArgType(ft)},
 		     [&fns](auto &scp, auto &args) {
-		       auto &sa(args.at(0));
-		       auto &fs(get<StructRef>(sa)->fields);
+		       auto &self(args.at(0));
+		       auto &fs(get<StructRef>(self)->fields);
 		       auto &v(args.at(1));
 		       auto res(fs.emplace(std::piecewise_construct,
 					   std::forward_as_tuple(fns),
 					   std::forward_as_tuple(v)));
 		       if (!res.second) { res.first->second = v; }
-		       push(scp.thread, sa);
+		       push(scp.thread, self);
 		     });
 	  }
 

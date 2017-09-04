@@ -10,8 +10,12 @@
 
 let: port stoi64; _
 let: addr; _
-let: queues TCPStream List<Bin> table;
-let: senders TCPStream Proc table;
+
+struct: Client
+  queue  List<Bin>
+  sender Proc;
+
+let: clients TCPStream Client table;
 let: out Bin list;
 
 let: server tcp-socket
@@ -19,15 +23,15 @@ let: server tcp-socket
      1 accept;
 
 func: do-recv {(
-  yield
-  let: client; _
+  let: in;
+  | yield
 
-  @client read {{
+  @in read {{
     let: data; _
 
-    @queues {$ left @client = {
-      unzip @data push _
-      @senders $1 get {call} when
+    @clients {unzip $1 @in = {
+      queue @data push _
+      sender call
     } unless _} for
 
     @out @data push _
@@ -36,31 +40,38 @@ func: do-recv {(
     yield1
   } for
 
-  @queues @client del _
-  @senders @client del _
-  @client close
+  @clients @in del _
+  @in close
   'disconnect' say
 )};
 
 func: do-send {(
-  yield
   let: q; _
   let: c; _
+  | yield
 
   @q fifo @c write {@q z? &yield1 when} _for
 )};
 
 func: do-server {(
-  yield
+  | yield
 
   @server {
-    {'connect' say
-     Bin list
-     let: q;
-     let: s do-send proc; _
-     $ @queues $1 @q put _
-     $ @senders $1 @s put _
-     do-recv proc @procs $1 push _ _} when
+    { 'connect' say
+      
+      let: in;
+      Bin list
+      let: q;
+      let: s do-send proc; _ _
+
+      @clients @in
+        Client new
+          @q set-queue
+          @s set-sender
+      put _
+      
+      @procs @in do-recv proc $1 _ push _
+    } when
 
     idle
     yield1
@@ -68,7 +79,7 @@ func: do-server {(
 )} call proc;
 
 func: do-out {(
-  yield
+  | yield
   @out fifo stdout write {@out z? &yield1 when} _for
 )} call proc;
 
