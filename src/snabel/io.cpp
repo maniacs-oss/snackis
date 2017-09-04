@@ -9,14 +9,14 @@ namespace snabel {
     data(size), rpos(0)
   { }
 
-  File::File(int fd, bool block):
-    fd(fd)
+  File::File(Thread &thd, int fd, bool block):
+    thread(thd), fd(fd)
   {
     if (!block) { unblock(*this); }
   }
   
-  File::File(const Path &path, int flags):
-    path(path), fd(open(path.c_str(), flags | O_NONBLOCK, 0666))
+  File::File(Thread &thd, const Path &path, int flags):
+    thread(thd), fd(open(path.c_str(), flags | O_NONBLOCK, 0666))
   {
     if (fd == -1) {
       ERROR(Snabel, fmt("Failed opening file '%0': %1", path.string(), errno));
@@ -35,7 +35,7 @@ namespace snabel {
   opt<Box> ReadIter::next(Scope &scp) {
     if (!out) { out.emplace(elt, std::make_shared<Bin>(READ_BUF_SIZE)); }
     auto &buf(*get<BinRef>(*out));
-    auto res((*in.type->read)(in, buf));
+    auto res((*in.type->read)(scp, in, buf));
     
     switch (res) {
     case READ_OK: {
@@ -77,7 +77,7 @@ namespace snabel {
     }
 
     auto &b(*in_buf);
-    res = (*out.type->write)(out, &b[wpos], b.size()-wpos);
+    res = (*out.type->write)(scp, out, &b[wpos], b.size()-wpos);
     if (res == -1) { return nullopt; }
     wpos += res;
     scp.thread.io_counter += res;
@@ -95,23 +95,32 @@ namespace snabel {
     fcntl(f.fd, F_SETFL, flags | O_NONBLOCK);
   }
 
-  void unpoll(File &f) {
-    auto &fds(*f.poll_fd->first);
-    fds[f.poll_fd->second].fd = -1;
-    
-    if (std::find_if(fds.begin(),
-		     fds.end(),
-		     [](auto &pfd) { return pfd.fd > -1; }) == fds.end()) {
-      fds.clear();
-    }
+  void poll(File &f) {    
+    auto &thd(f.thread);
 
-    f.poll_fd.reset();
+    if (f.poll_handle) {
+      auto &i(*f.poll_handle);
+      if (i == thd.poll_queue.begin()) { return; }
+      thd.poll_queue.splice(thd.poll_queue.begin(), thd.poll_queue, i, std::next(i));
+    } else {
+      thd.poll_queue.emplace_front(&f);
+      f.poll_handle = thd.poll_queue.begin();
+    }
+  }
+
+  void unpoll(File &f) {
+    if (f.poll_handle) {
+      f.thread.poll_queue.erase(*f.poll_handle);
+      f.poll_handle.reset();
+    }
   }
 
   void close(File &f) {
-    if (f.poll_fd) { unpoll(f); }
-    ::close(f.fd);
-    f.fd = -1;
+    if (f.fd != -1) {
+      if (f.poll_handle) { unpoll(f); }
+      ::close(f.fd);
+      f.fd = -1;
+    }
   }
 
   static void stdin_imp(Scope &scp, const Args &args) {
@@ -125,13 +134,15 @@ namespace snabel {
   static void rfile_imp(Scope &scp, const Args &args) {
     push(scp.thread,
 	 scp.exec.rfile_type,
-	 std::make_shared<File>(get<Path>(args.at(0)), O_RDONLY));
+	 std::make_shared<File>(scp.thread, get<Path>(args.at(0)), O_RDONLY));
   }
 
   static void rwfile_imp(Scope &scp, const Args &args) {
     push(scp.thread,
 	 scp.exec.rwfile_type,
-	 std::make_shared<File>(get<Path>(args.at(0)), O_RDWR | O_CREAT | O_TRUNC));
+	 std::make_shared<File>(scp.thread,
+				get<Path>(args.at(0)),
+				O_RDWR | O_CREAT | O_TRUNC));
   }
 
   static void unblock_imp(Scope &scp, const Args &args) {
@@ -209,7 +220,7 @@ namespace snabel {
     };
     
     exe.rfile_type.eq = exe.file_type.eq;
-    exe.rfile_type.read = [](auto &in, auto &out) {
+    exe.rfile_type.read = [](auto &scp, auto &in, auto &out) {
       auto &f(*get<FileRef>(in));
       if (f.fd == -1) { return READ_EOF; }
       auto res(read(f.fd, &out[0], out.size()));
@@ -222,6 +233,7 @@ namespace snabel {
       }
       
       out.resize(res);
+      if (f.poll_handle) { poll(f); }
       return READ_OK;
     };
 
@@ -234,7 +246,7 @@ namespace snabel {
     
     exe.wfile_type.eq = exe.file_type.eq;
 
-    exe.wfile_type.write = [](auto &out, auto data, auto len) {
+    exe.wfile_type.write = [](auto &scp, auto &out, auto data, auto len) {
       auto &f(*get<FileRef>(out));
       if (f.fd == -1) { return -1; }
       int res(write(f.fd, data, len));

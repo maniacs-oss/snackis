@@ -20,7 +20,7 @@ namespace snabel {
     Exec &exec;
     const Id id;
     std::thread imp;
-    std::deque<FDSet> poll_queue;
+    PollQueue poll_queue;
     OpSeq ops;
     int64_t pc;
     
@@ -56,7 +56,6 @@ namespace snabel {
   bool end_scope(Thread &thd);
 
   int64_t find_break_pc(Thread &thd);
-  void poll(Thread &thd, const FileRef &f);
   void idle(Thread &thd);
   bool isa(Thread &thd, const Types &x, const Types &y);
 

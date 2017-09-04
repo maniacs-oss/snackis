@@ -16,14 +16,13 @@ namespace snabel {
     id(id),
     pc(0),
     main(scopes.emplace_back(*this)),
-    _stdin(std::make_shared<File>(fileno(stdin), true)),
-    _stdout(std::make_shared<File>(fileno(stdout), true)),
+    _stdin(std::make_shared<File>(*this, fileno(stdin), true)),
+    _stdout(std::make_shared<File>(*this, fileno(stdout), true)),
     io_counter(0),
     random(std::random_device()())
   {
     stacks.emplace_back();
-    poll_queue.emplace_back();
-    poll(*this, _stdin);
+    poll(*_stdin);
   }
 
   static void thread_imp(Scope &scp, const Args &args) {
@@ -144,51 +143,38 @@ namespace snabel {
 
     return -1;
   }
-
-  void poll(Thread &thd, const FileRef &f) {
-    if (!f->poll_fd) {
-      auto &fds(thd.poll_queue.back());
-      auto &pfd(fds.emplace_back());
-      pfd.fd = f->fd;
-      pfd.events = POLLIN;
-      f->poll_fd = std::make_pair(&fds, fds.size()-1);
-      if (fds.size() == POLL_MAX_FDS) { thd.poll_queue.emplace_back(); }
-    }
-  }
   
   void idle(Thread &thd) {
-    const int TIMEOUT_MAX(1000 / thd.poll_queue.size());
-    int timeout(0);
-
     if (thd.io_counter) {
       thd.io_counter = 0;
     } else {
-      while (true) {
-	for (auto i(thd.poll_queue.begin()); i != thd.poll_queue.end();) {
-	  if (i->empty()) {
-	    thd.poll_queue.erase(i);
-	    continue;
-	  }
-	  
-	  auto &fds(*i);
-	  
-	  switch (::poll(&fds[0], fds.size(), timeout)) {
-	  case -1:
-	    ERROR(Snabel, fmt("Failed polling: %0", errno));
-	    return;
-	  case 0:
-	    break;
-	  default:
-	    if (i != thd.poll_queue.begin() && thd.poll_queue.size() > 1) {
-	      std::rotate(i, std::next(i), thd.poll_queue.begin());
-	    }
-	    
-	    return;
-	  }
+      const int TIMEOUT_MAX(1000 / thd.poll_queue.size());
+      pollfd fds[POLL_SET_SIZE];
+      auto f(thd.poll_queue.begin());
+      int timeout(0);
 
-	  i++;
-	}
+      while (true) {
+	int i(0);
+	if (f == thd.poll_queue.end()) { f = thd.poll_queue.begin(); }
 	
+	for (; i < POLL_SET_SIZE && f != thd.poll_queue.end(); i++, f++) {
+	  auto &pfd(fds[i]);
+	  pfd.fd = (*f)->fd;
+	  pfd.events = POLLIN;
+	}
+
+	while (i < POLL_SET_SIZE) { fds[i++].fd = -1; }
+	
+	switch (::poll(fds, POLL_SET_SIZE, timeout)) {
+	case -1:
+	  ERROR(Snabel, fmt("Failed polling: %0", errno));
+	  return;
+	case 0:
+	    break;
+	default:
+	  return;
+	}
+
 	if (timeout < TIMEOUT_MAX) { timeout++; }
       }
     }

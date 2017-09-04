@@ -1,11 +1,15 @@
 #ifndef SNABEL_POLL_HPP
 #define SNABEL_POLL_HPP
 
-#include <vector>
-#include <poll.h>
+#include <list>
 
 namespace snabel {
-  using FDSet = std::vector<pollfd>;
+  struct File;
+  
+  using PollQueue = std::list<File *>;
+  using PollHandle = PollQueue::iterator;
+
+  const int POLL_SET_SIZE(10);
 }
 
 #endif

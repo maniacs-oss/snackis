@@ -16,7 +16,7 @@ namespace snabel {
 				 get_opt_type(thd.exec, thd.exec.tcp_stream_type))),
     in(in)
   {
-    poll(thd, this->in);
+    poll(*this->in);
   }
   
   opt<Box> AcceptIter::next(Scope &scp) {
@@ -32,8 +32,8 @@ namespace snabel {
       return Box(*type.args.at(0), nil);
     }
 
-    auto f(std::make_shared<File>(fd));
-    poll(scp.thread, f);
+    auto f(std::make_shared<File>(scp.thread, fd));
+    poll(*f);
     return Box(*type.args.at(0), f);
   }
   
@@ -46,7 +46,9 @@ namespace snabel {
 
     int so(1);
     setsockopt(fd, IPPROTO_TCP, TCP_QUICKACK, &so, sizeof(so));
-    push(scp.thread, scp.exec.tcp_socket_type, std::make_shared<File>(fd));
+    push(scp.thread,
+	 scp.exec.tcp_socket_type,
+	 std::make_shared<File>(scp.thread, fd));
   }
 
   static void tcp_connect_imp(Scope &scp, const Args &args) {
@@ -66,7 +68,7 @@ namespace snabel {
       }
     }
 
-    poll(scp.thread, f);
+    poll(*f);
     push(scp.thread, scp.exec.tcp_stream_type, f);  
   }
 

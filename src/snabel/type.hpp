@@ -32,8 +32,8 @@ namespace snabel {
     func<str (const Box &)> fmt;
     opt<func<bool (Scope &, const Box &, bool)>> call;
     opt<func<IterRef (const Box &)>> iter;
-    opt<func<ReadResult (const Box &, Bin &)>> read;
-    opt<func<int64_t (const Box &, const unsigned char *, int64_t)>> write;
+    opt<func<ReadResult (Scope &, const Box &, Bin &)>> read;
+    opt<func<int64_t (Scope &, const Box &, const unsigned char *, int64_t)>> write;
     
     Type(const Sym &n);
     Type(const Type &) = delete;

@@ -21,12 +21,12 @@ namespace snabel {
   };
 
   struct File {
-    Path path;
+    Thread &thread;
     int fd;
-    opt<std::pair<FDSet *, size_t>> poll_fd;
+    opt<PollHandle> poll_handle;
     
-    File(int fd, bool block=false);
-    File(const Path &path, int flags);
+    File(Thread &thd, int fd, bool block=false);
+    File(Thread &thd, const Path &path, int flags);
     ~File();
   };
 
@@ -60,6 +60,7 @@ namespace snabel {
 
   void init_io(Exec &exe);
   void unblock(File &f);
+  void poll(File &f);
   void unpoll(File &f);
   void close(File &f);
 
