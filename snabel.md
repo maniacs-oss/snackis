@@ -433,7 +433,7 @@ add_func(exe, "+",
 ```
 
 ### Coroutines
-Calling ```yield``` from a lambda logs the current position, stack and environment before returning; execution continues from the yielding position with restored stack and environment on next call. A fresh coroutine context is returned on first ```yield``` when, the context may be used for further calls and will reset itself when the coroutine returns. Use ```&yield``` to get a target that yields when called.
+Calling ```yield``` from a lambda logs the current position, stack and environment before returning; execution continues from the yielding position with restored stack and environment on next call. A coroutine context is returned on first ```yield```, calling the context resumes execution.  Use ```&yield``` to get a target that yields when called.
 
 ```
 S: {yield 42} call
