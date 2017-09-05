@@ -81,6 +81,7 @@ namespace snabel {
 
   void reset(Exec &exe);  
   void rewind(Exec &exe);  
+  void compile(Exec &exe, TokSeq in, OpSeq &out);
   void compile(Exec &exe, const str &in);
   bool run(Exec &exe, const str &in);
 

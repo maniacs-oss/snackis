@@ -1,7 +1,6 @@
 #include <chrono>
 #include <iostream>
 
-#include "snabel/compiler.hpp"
 #include "snabel/exec.hpp"
 #include "snabel/list.hpp"
 #include "snabel/op.hpp"
@@ -165,9 +164,6 @@ namespace snabel {
     run_test(exe, "Pair<Str>");
     CHECK(get<Type *>(pop(exe.main)) ==
 	  &get_pair_type(exe, exe.str_type, exe.any_type), _);
-
-    run_test(exe, "I64 list List<I64>!");
-    CHECK(pop(exe.main).type == &get_list_type(exe, exe.i64_type), _);
   }
 
   static void stack_tests() {
