@@ -118,7 +118,7 @@ S: let: fn {7 +}; 35 @fn call
 ```
 
 ### Types
-Types are first class, optionally parameterized and inferred.
+Types are first class, optionally parameterized and inferred. Primitive types like booleans, characters and integers use value semantics while composite types such as pairs, strings, lists and tables are accessed by reference.
 
 ```
 S: I64
@@ -129,10 +129,6 @@ I64!
 
 S: [7 35] List<I64> is?
 true
-
-S: 42 Str!
-Check failed, expected Str!
-42 I64!
 ```
 
 #### Strings
