@@ -20,10 +20,10 @@ namespace snabel {
   { }
   
   opt<Box> FifoIter::next(Scope &scp) {
-    if (in->empty()) { return nullopt; }
+    if (in->empty()) { return Box(*type.args.at(0), nil); }
     auto res(in->front());
     in->pop_front();
-    return res;
+    return Box(*type.args.at(0), res.val);
   }
 
   static void iterable_list_imp(Scope &scp, const Args &args) {
@@ -147,7 +147,7 @@ namespace snabel {
   static void fifo_imp(Scope &scp, const Args &args) {
     auto &exe(scp.exec);
     auto &in(args.at(0));
-    auto &elt(*in.type->args.at(0));
+    auto &elt(get_opt_type(exe, *in.type->args.at(0)));
     
     push(scp.thread,
 	 get_iter_type(exe, elt),

@@ -17,10 +17,20 @@ let: server tcp-socket
      @in-addr @in-port bind
      1 accept;
 
-let: do-recv {(
+func: do-send {(
   let: out; _
-  let: in; _
-  yield
+  let: in;
+  | yield
+  
+  @out read @in write &yield _for
+  @in close
+  @out close
+)};
+
+func: do-recv {(
+  let: out; _
+  let: in;
+  | yield
   
   @in read @out write &yield _for
 
@@ -29,27 +39,19 @@ let: do-recv {(
   'disconnect' say
 )};
 
-let: do-send {(
-  let: out; _
-  let: in; _
-  yield
-  
-  @out read @in write &yield _for
-)};
-
-let: do-server {(
-  yield
+func: do-server {(
+  | yield
 
   @server {
     {'connect' say
      tcp-socket @out-addr @out-port connect
-     @do-recv call proc @procs $1 push _
-     @do-send call proc @procs $1 push _ _ _} when
+     do-recv proc @procs $1 push _
+     do-send proc @procs $1 push _ _ _} when
 
-    idle
     yield1
+    idle
   } for
 )} call proc;
 
-let: procs [@do-server];
+let: procs [&do-server];
 @procs run &nop _for

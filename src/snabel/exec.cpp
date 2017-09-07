@@ -234,16 +234,6 @@ namespace snabel {
 	 (*get<RandomRef>(r))(scp.thread.random));
   }
 
-  static void proc_imp(Scope &scp, const Args &args) {
-    push(scp.thread, scp.exec.proc_type,
-	 std::make_shared<Proc>(get<CoroRef>(args.at(0))));
-  }
-
-  static void proc_run_imp(Scope &scp, const Args &args) {
-    auto p(get<ProcRef>(args.at(0)));
-    while (call(p, scp, true));
-  }
-
   static str meta_fmt(const Box &v) {
     return fmt("%0!", name(get<Type *>(v)->name));
   }
@@ -660,9 +650,6 @@ namespace snabel {
         
     add_func(*this, "random", {ArgType(i64_type)}, random_imp);
     add_func(*this, "pop", {ArgType(random_type)}, random_pop_imp);
-
-    add_func(*this, "proc", {ArgType(coro_type)}, proc_imp);
-    add_func(*this, "run", {ArgType(proc_type)}, proc_run_imp);
 
     add_macro(*this, "{", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Lambda());
