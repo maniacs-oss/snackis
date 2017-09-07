@@ -23,6 +23,7 @@ func: do-send {(
   | yield
   
   @out read @in write &yield _for
+  
   @in close
   @out close
 )};
