@@ -174,7 +174,6 @@ namespace snabel {
 	default:
 	  return;
 	}
-
 	
 	if (timeout < TMAX) { timeout = timeout ? timeout*2 : TMIN; }
       }

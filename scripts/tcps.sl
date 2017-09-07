@@ -70,4 +70,4 @@ func: do-out {(
 )} call proc;
 
 let: procs [&do-server &do-out];
-@procs run &nop _for
+@procs run

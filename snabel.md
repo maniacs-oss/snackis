@@ -438,15 +438,15 @@ Coro(_enter1:1)
 S: {yield 42} call call
 42
 
-S: func: foo {|yield (7 yield 28 +)} call;
+S: func: foo {| yield (7 yield 28 +)} call;
   foo foo +
 42
 
-S: func: foo {|yield (let: bar 35; 7 yield @bar +)} call;
+S: func: foo {| yield (let: bar 35; 7 yield @bar +)} call;
   foo foo
 42
 
-S: func: foo {|yield ([7 35] &yield for &+)} call;
+S: func: foo {| yield ([7 35] &yield for &+)} call;
   foo foo foo call
 42
 ```
@@ -456,9 +456,9 @@ Procs allow interleaving multiple independent flows of control in the same threa
 
 ```
 S: let: acc Str list;
-   func: ping {|yield (3 {@acc 'ping' push yield1} for)} call proc;
-   func: pong {|yield (3 {@acc 'pong' push yield1} for)} call proc;
-   [&ping &pong] run &_ for
+   func: ping {| yield (3 {@acc 'ping' push yield1} for)} call proc;
+   func: pong {| yield (3 {@acc 'pong' push yield1} for)} call proc;
+   [&ping &pong] run
    @acc
 
 ['ping' 'pong' 'ping' 'pong 'ping' 'pong']
@@ -500,7 +500,8 @@ S: func: copy-file {(
      let: wq @q fifo;
      let: w rwfile @wq $1 write; _
      let: r rfile read; _
-     yield
+     | yield
+     
      @r {{
        @q $1 push _
        @w &break _for
@@ -508,7 +509,7 @@ S: func: copy-file {(
      @q +? {@w &_ for} when _
    )};
 
-S: 'in' 'out' copy-file proc run|
+S: 'in' 'out' copy-file proc run
 nil
 
 S: func: histogram {

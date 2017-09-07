@@ -8,19 +8,6 @@
 #include "snabel/thread.hpp"
 
 namespace snabel {
-  ProcIter::ProcIter(Exec &exe, const ListRef &in):
-    Iter(exe, get_iter_type(exe, exe.proc_type)), in(in), i(in->begin())
-  { }
-  
-  opt<Box> ProcIter::next(Scope &scp) {
-    if (in->empty()) { return nullopt; }
-    if (i == in->end()) { i = in->begin(); }
-    auto res(*i);
-    if (call(get<ProcRef>(*i), scp, true)) { i++; }
-    else { i = in->erase(i); }
-    return res;
-  }
-
   static void proc_imp(Scope &scp, const Args &args) {
     push(scp.thread, scp.exec.proc_type,
 	 std::make_shared<Proc>(get<CoroRef>(args.at(0))));
@@ -32,12 +19,21 @@ namespace snabel {
   }
 
   static void list_run_imp(Scope &scp, const Args &args) {
-    auto &exe(scp.exec);
-    auto &in(args.at(0));
+    auto &ps(get<ListRef>(args.at(0)));
+    bool done(false);
     
-    push(scp.thread,
-	 get_iter_type(exe, exe.proc_type),
-	 IterRef(new ProcIter(exe, get<ListRef>(in))));
+    while (!done) {
+      done = true;
+
+      for (auto i(ps->begin()); i != ps->end();) {
+	if (call(get<ProcRef>(*i), scp, true)) {
+	  done = false;
+	  i++;
+	} else {
+	  i = ps->erase(i);
+	}
+      }
+    }
   }
 
   static void stop_imp(Scope &scp, const Args &args) {

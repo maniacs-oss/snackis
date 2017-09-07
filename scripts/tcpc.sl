@@ -48,4 +48,4 @@ func: do-out {(
 )} call proc;
 
 stdin unblock _
-[&do-send &do-recv &do-in &do-out] run &nop _for
+[&do-send &do-recv &do-in &do-out] run

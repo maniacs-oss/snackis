@@ -55,4 +55,4 @@ func: do-server {(
 )} call proc;
 
 let: procs [&do-server];
-@procs run &nop _for
+@procs run

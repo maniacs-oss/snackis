@@ -238,24 +238,24 @@ namespace snabel {
     TRY(try_test);    
     
     run_test(exe,
-	"func: foo {|yield (7 yield 28 +)} call; "
+	"func: foo {| yield (7 yield 28 +)} call; "
 	"foo foo +");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
     run_test(exe,
-	"func: foo {|yield (let: bar 28; 7 yield @bar +)} call; "
+	"func: foo {| yield (let: bar 28; 7 yield @bar +)} call; "
 	"foo foo +");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
     run_test(exe,
-	"func: foo {|yield ([7 35] &yield for &+)} call; "
+	"func: foo {| yield ([7 35] &yield for &+)} call; "
 	"foo foo foo call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
     run_test(exe,
 	"let: acc I64 list; "
 
-	"func: foo {|yield ( "
+	"func: foo {| yield ( "
 	"  7 {@acc $1 push yield1} for "
 	")} call; "
 
@@ -564,21 +564,21 @@ namespace snabel {
     TRY(try_test);    
     
     run_test(exe,
-	"func: foo {|yield (yield 35 push)} call proc;"
+	"func: foo {| yield (yield 35 push)} call proc;"
 	"0 [7] foo foo iter &+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
     run_test(exe,
 	"let: acc Str list; "
-	"func: ping {|yield (3 {@acc 'ping' push yield1} for)} call proc; "
-	"func: pong {|yield (3 {@acc 'pong' push yield1} for)} call proc; "
-	"[&ping &pong] run &_ for");
+	"func: ping {| yield (3 {@acc 'ping' push yield1} for)} call proc; "
+	"func: pong {| yield (3 {@acc 'pong' push yield1} for)} call proc; "
+	"[&ping &pong] run");
     CHECK(get<ListRef>(*find_env(curr_scope(exe.main), "@acc"))->size() == 6, _);
   
     run_test(exe,
 	"let: acc I64 list; "
 
-	"let: foo {|yield ( "
+	"let: foo {| yield ( "
 	"  7 {@acc $1 push _ yield1} for "
 	")} call proc; "
 
