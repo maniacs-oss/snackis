@@ -570,9 +570,9 @@ namespace snabel {
 
     run_test(exe,
 	"let: acc Str list; "
-	"func: ping {| yield (3 {@acc 'ping' push yield1} for)} call proc; "
-	"func: pong {| yield (3 {@acc 'pong' push yield1} for)} call proc; "
-	"[&ping &pong] run");
+	"func: do-ping {(| yield 3 {@acc 'ping' push yield1} for)}; "
+	"func: do-pong {(| yield 3 {@acc 'pong' push yield1} for)}; "
+	"[do-ping proc do-pong proc] run");
     CHECK(get<ListRef>(*find_env(curr_scope(exe.main), "@acc"))->size() == 6, _);
   
     run_test(exe,
