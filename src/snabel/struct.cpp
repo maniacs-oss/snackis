@@ -70,16 +70,17 @@ namespace snabel {
 	if (in.empty()) {
 	  ERROR(Snabel, fmt("Malformed struct definition on row %0, col %1",
 			    pos.row, pos.col));
+	  return;
 	} else {
 	  auto &n(in.at(0).text);
 	  
 	  if (!isupper(n.at(0))) {
-	    ERROR(Snabel, fmt("Struct name should be capitalized: %0", n)); 
+	    ERROR(Snabel, fmt("Struct name should be capitalized: %0", n));
+	    return;
 	  }
 	  
 	  auto &ns(get_sym(exe, n));
 	  auto &t(add_struct_type(exe, ns));
-	  auto &mt(get_meta_type(exe, t));
 
 	  in.pop_front();
 	  auto end(find_end(in.begin(), in.end()));
@@ -115,11 +116,6 @@ namespace snabel {
 	    if (!pft) { break; }
 
 	    auto &ft(*pft);
-	    auto &fmt(get_meta_type(exe, ft));
-
-	    add_func(exe, fns, {ArgType(mt)}, [&fmt, &ft](auto &scp, auto &args) {
-		push(scp.thread, fmt, &ft);
-	      });
 
 	    add_func(exe, fns, {ArgType(t)}, [n, &fns, &ft](auto &scp, auto &args) {
 		auto &thd(scp.thread);
@@ -153,8 +149,13 @@ namespace snabel {
 		     });
 	  }
 
-	  while (in.begin() != end) { in.pop_front(); }
-	  if (end != in.end()) { in.pop_front(); }
+	  if (in.at(0).text != ";") {
+	    ERROR(Snabel, fmt("Malformed struct definition on row %0, col %1",
+			      pos.row, pos.col));
+	    return;
+	  }
+
+	  in.pop_front();
 	}
       });
   }

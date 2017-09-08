@@ -302,9 +302,6 @@ S: struct: Foo
 
 true
 
-S: Foo b
-Str!
-
 S: func: make-foo {Foo new 0 set-a '' set-b};
    make-foo
    

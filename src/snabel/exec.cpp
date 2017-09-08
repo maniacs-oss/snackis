@@ -576,6 +576,7 @@ namespace snabel {
       break_target[i]->break_depth = i+1;
     }
 
+    init_types(*this);
     init_opts(*this);
     init_strs(*this);
     init_syms(*this);
@@ -982,9 +983,11 @@ namespace snabel {
     thd.stacks.front().clear();
   }
 
-  void compile(Exec &exe, TokSeq in, OpSeq &out) {
-    while (!in.empty()) {
-      Tok tok(in.at(0));
+  bool compile(Exec &exe, TokSeq in, OpSeq &out) {
+    TRY(try_compile);
+
+    while (!in.empty() && try_compile.errors.empty()) {
+     Tok tok(in.at(0));
       in.pop_front();
     
       if (tok.text.at(0) == '"') {
@@ -1084,6 +1087,7 @@ namespace snabel {
 	if (tok.text.size() < 2) {
 	  ERROR(Snabel, fmt("Invalid char literal on row %0, col %1: %2",
 			    tok.pos.row, tok.pos.col, tok.text));
+	  break;
 	}
 
 	char c(0);
@@ -1103,6 +1107,7 @@ namespace snabel {
 	if (tok.text.size() < 3) {
 	  ERROR(Snabel, fmt("Invalid uchar literal on row %0, col %1: %2",
 			    tok.pos.row, tok.pos.col, tok.text));
+	  break;
 	}
 
 	uchar c(0);
@@ -1136,9 +1141,11 @@ namespace snabel {
 	}
       }
     }
+
+    return try_compile.errors.empty();
   }
 
-  void compile(Exec &exe, const str &in) {
+  bool compile(Exec &exe, const str &in) {
     Exec::Lock lock(exe.mutex);
     size_t lnr(exe.main.ops.size());
     TokSeq toks;
@@ -1154,9 +1161,9 @@ namespace snabel {
 
     auto start_pc(exe.main.ops.size());
     OpSeq in_ops;
-    compile(exe, toks, in_ops);
+    if (!compile(exe, toks, in_ops)) { return false; }
     TRY(try_compile);
-
+    
     while (true) {
       exe.lambdas.clear();
       exe.main.pc = start_pc;
@@ -1209,6 +1216,7 @@ namespace snabel {
   exit:
     exe.main.pc = start_pc;
     std::copy(in_ops.begin(), in_ops.end(), std::back_inserter(exe.main.ops));
+    return true;
   }
   
   bool run(Exec &exe, const str &in) {

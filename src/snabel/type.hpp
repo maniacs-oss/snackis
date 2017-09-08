@@ -42,6 +42,7 @@ namespace snabel {
   };
   
   bool operator <(const Type &x, const Type &y);
+  void init_types(Exec &exe);
 }
 
 #endif
