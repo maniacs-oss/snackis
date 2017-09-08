@@ -1147,18 +1147,10 @@ namespace snabel {
 
   bool compile(Exec &exe, const str &in) {
     Exec::Lock lock(exe.mutex);
-    size_t lnr(exe.main.ops.size());
+
     TokSeq toks;
+    parse_expr(in, 0, toks);
     
-    for (auto &ln: parse_lines(in)) {
-      if (!ln.empty() &&
-	  !(ln.at(0) == '#' && ln.at(1) == '!')) {
-	parse_expr(ln, lnr, toks);
-      }
-
-      lnr++;
-    }
-
     auto start_pc(exe.main.ops.size());
     OpSeq in_ops;
     if (!compile(exe, toks, in_ops)) { return false; }

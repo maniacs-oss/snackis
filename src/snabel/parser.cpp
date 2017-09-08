@@ -14,90 +14,111 @@ namespace snabel {
     text(text), pos(pos)
   { }
 
-  StrSeq parse_lines(const str &in) {
-    size_t i(0), j(0);
-    StrSeq out;
+  static void parse_quote(const str &in,
+			  size_t &lnr,
+			  size_t start,
+			  size_t &i,
+			  char end,
+			  TokSeq &out) {
+    char pc(0);
     
-    while ((j=in.find('\n', j)) != str::npos) {
-      if (j > 0 && in[j-1] == '\\') {
-	j += 2;
-      } else if (j > i) {
-	out.push_back(trim(in.substr(i, j-i)));
-	j++;
-	i = j;
-      } else {
-	j++;
-	i = j;
-      }
-    }
-
-    if (i < in.size()) { out.push_back(trim(in.substr(i))); }
-    return out;
-  }
-
-  size_t parse_pair(const str &in, char fst, char lst) {
-    bool quoted(false);
-    int depth(1);
-    
-    for (size_t i(1); i < in.size(); i++) {
+    for (; i < in.size(); i++) {
       auto &c(in[i]);
-      
-      if (c == '\'') {
-	if (i == 0 || in[i-1] != '\\') { quoted = !quoted; }
-      } else if (c == fst) {
-	depth++;
-      } else if (c == lst) {
-	depth--;
-	if (!depth) { return i; }
-      }
-    }
 
-    return str::npos;
+      if (c == end && pc != '\\') {
+	out.emplace_back(in.substr(start, i-start+1), Pos(lnr, start));
+	break;
+      } else if (c == '\n') {
+	lnr++;
+      }
+
+      pc = c;
+    }
   }
-  
+
+  static void parse_types(const str &in, size_t &lnr, size_t &i) {
+    char pc(0);
+    auto depth(1);
+    i++;
+    
+    for (; i < in.size(); i++) {
+      auto &c(in[i]);
+
+      if (c == '>') {
+	depth--;
+	if (!depth) {
+	  i++;
+	  break;
+	}
+      } else if (c == '<') {
+	depth++;
+      } else if (c == '\n') {
+	lnr++;
+      }
+
+      pc = c;
+    }
+  }
+
   void parse_expr(const str &in, size_t lnr, TokSeq &out) {
     static const std::set<char> split {
-      '{', '}', '(', ')', '[', ']', '|', ';', '!', '.' };
+      '{', '}', '(', ')', '[', ']', '|', ';', '.' };
+
+    size_t i(0), j(0);
+    char pc(0);
     
-    size_t i(0);
-    bool cquoted(false), squoted(false);
-    
-    for (size_t j(0); j < in.size(); j++) {
-      char c(in[j]);
-      
-      while (cquoted && c != '"') {
+    auto push_id = [&]() {
+      if (j > i) {
+	out.emplace_back(in.substr(i, j-i), Pos(lnr, i));
+	i = j;
+      }
+    };
+
+    for (; j < in.size(); j++) {
+      auto &c(in[j]);
+
+      if (c == ' ' || c == '\t') {
+	push_id();
+	i++;
+      } else if (c == '\n') {
+	push_id();
+	i++;
+	lnr++;
+      } else if (c == '"') {
+	push_id();
 	j++;
-	c = in[j];
+	parse_quote(in, lnr, j-1, j, '"', out);
+	i = j+1;
+      } else if (c == '\'') {
+	auto k(j);
+
+	if (pc == 'u') {
+	  k--;
+	  j--;
+	}
+	
+	push_id();
+	j += (pc == 'u') ? 2 : 1;
+	parse_quote(in, lnr, k, j, '\'', out);
+	i = j+1;
+      } else if (c == '<') {
+	parse_types(in, lnr, j);
+	push_id();
+	i++;
+      } else if (split.find(c) != split.end()) {
+	push_id();
+	out.emplace_back(in.substr(i, 1), Pos(lnr, i));
+	i++;
+      } else if (c == '!' && pc == '#') {
+	j = in.find('\n', j);
+	if (j == str::npos) { j = in.size(); }
+	i = j+1;
       }
 
-      if (c == '"' && (j == 0 || in[j-1] != '\\')) { cquoted = !cquoted; }
-
-      while (squoted && c != '\'') {
-	j++;
-	c = in[j];
-      }
-
-      if (c == '\'' && (j == 0 || in[j-1] != '\\')) { squoted = !squoted; }
-      const size_t cp(j);
-
-      if ((split.find(c) != split.end() ||
-	   c == '\'' || c == '"' || c == '\n' || c == ' ') &&
-	  !cquoted && !squoted && j > i) {
-	if (split.find(in[i]) != split.end()) { i++; }
-	const str s(trim(in.substr(i, (c == '\'' || c == '"') ? j-i+1 : j-i)));
-	if (!s.empty()) { out.emplace_back(s, Pos(lnr, i)); }
-	i = (c == '\'' || c == '"') ? j+1 : j;
-      }
-
-      if (split.find(c) != split.end()) {
-	out.emplace_back(in.substr(cp, 1), Pos(lnr, cp));
-      }
-
-      if ((i < j || in.size() == 1) && j == in.size()-1) {
-	str s(trim(in.substr(i)));
-	if (!s.empty()) { out.emplace_back(s, Pos(lnr, i)); }
-      }
+      pc = c;
     }
+
+    push_id();
   }
 
   TokSeq parse_expr(const str &in, size_t lnr) {
@@ -130,13 +151,22 @@ namespace snabel {
     }
     
     auto j(in.find('<', i));
+    bool args_fnd(true);
     
     if (j == str::npos) {
-      j = in.size();
-      if (in.back() == '>') { j--; }
+      auto k(in.find(' ', i));
+
+      if (k == str::npos) {
+	j = in.size();
+	if (in.back() == '>') { j--; }
+      } else {
+	j = k;
+      }
+
+      args_fnd = false;
     }
-       
-    str n((j == str::npos) ? in : in.substr(i, j-i));
+
+    str n(in.substr(i, j-i));
     auto fnd(find_type(exe, get_sym(exe, n)));
 
     if (!fnd) {
@@ -147,7 +177,7 @@ namespace snabel {
     Types args;
     i = j+1;
     
-    if (j != str::npos) {  
+    if (args_fnd) {  
       while (i < in.size()) {
 	auto res(parse_type(exe, in, i));
 	i = res.second;
@@ -157,5 +187,17 @@ namespace snabel {
     }
 
     return std::make_pair(args.empty() ? fnd : &get_type(exe, *fnd, args), i);
+  }
+}
+
+namespace snackis {
+  template <>
+  str fmt_arg(const snabel::Pos &arg) {
+    return fmt("%0:%1", arg.row, arg.col);
+  }
+  
+  template <>
+  str fmt_arg(const snabel::Tok &arg) {
+    return fmt("%0/%1", arg.text, arg.pos);
   }
 }

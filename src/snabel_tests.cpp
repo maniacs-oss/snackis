@@ -11,18 +11,10 @@
 #include "snackis/core/time.hpp"
 
 namespace snabel {
-  static void parse_lines_tests() {
-    TRY(try_test);    
-    auto ls(parse_lines("foo\nbar\nbaz"));
-    CHECK(ls.size() == 3, _);
-    CHECK(ls[0] == "foo", _);
-    CHECK(ls[1] == "bar", _);
-    CHECK(ls[2] == "baz", _);
-  }
-
   static void parse_semicolon_tests() {
     TRY(try_test);    
-    auto ts(parse_expr(";foo; bar baz;"));
+    auto ts(parse_expr(";foo; bar baz;"));    
+
     CHECK(ts.size() == 6, _);
     CHECK(ts[0].text == ";", _);
     CHECK(ts[1].text == "foo", _);
@@ -48,10 +40,10 @@ namespace snabel {
   }
 
   static void parse_str_tests() {
-    auto ts(parse_expr("'foo ' 1 2"));
+    auto ts(parse_expr("u'foo ' 1 2"));
 
     CHECK(ts.size() == 3, _);
-    CHECK(ts[0].text == "'foo '", _);
+    CHECK(ts[0].text == "u'foo '", _);
     CHECK(ts[1].text == "1", _);
     CHECK(ts[2].text == "2", _);
 
@@ -83,8 +75,6 @@ namespace snabel {
   }
 
   static void parse_tests() {
-    parse_lines_tests();
-
     auto ts(parse_expr("1"));	
     CHECK(ts.size() == 1, _);
     CHECK(ts[0].text == "1", _);
@@ -161,9 +151,9 @@ namespace snabel {
     run_test(exe, "List<Str>");
     CHECK(get<Type *>(pop(exe.main)) == &get_list_type(exe, exe.str_type), _);
 
-    run_test(exe, "Pair<Str>");
+    run_test(exe, "Pair<I64 Str>");
     CHECK(get<Type *>(pop(exe.main)) ==
-	  &get_pair_type(exe, exe.str_type, exe.any_type), _);
+	  &get_pair_type(exe, exe.i64_type, exe.str_type), _);
   }
 
   static void stack_tests() {

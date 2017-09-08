@@ -25,13 +25,19 @@ namespace snabel {
   using StrSeq = std::deque<str>;
   using TokSeq = std::deque<Tok>;
 
-  StrSeq parse_lines(const str &in);
-  size_t parse_parens(const str &in);
   void parse_expr(const str &in, size_t lnr, TokSeq &out);
   TokSeq parse_expr(const str &in, size_t lnr=0);
   TokSeq::iterator find_end(TokSeq::iterator i,
 			    const TokSeq::const_iterator &end);
   std::pair<Type *, size_t> parse_type(Exec &exe, const str &in, size_t i);
+}
+
+namespace snackis {
+  template <>
+  str fmt_arg(const snabel::Pos &arg);
+
+  template <>
+  str fmt_arg(const snabel::Tok &arg);
 }
 
 #endif
