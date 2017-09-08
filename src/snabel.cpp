@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
       auto res(try_pop(exe.main));
       
       if (res) {
-	std::cout << fmt("%0\n%1!\n", res->type->dump(*res), name(res->type->name));
+	std::cout << fmt("%0\n%1\n", res->type->dump(*res), name(res->type->name));
       }
 
       std::cout << std::endl;

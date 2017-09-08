@@ -101,7 +101,7 @@ namespace gui {
       auto t(usecs(stopped-started));
 
       if (res) {
-	log(v->ctx, "Finished loading (%0us):\n%1\n%2!",
+	log(v->ctx, "Finished loading (%0us):\n%1\n%2",
 	    t, res->type->dump(*res), snabel::name(res->type->name));
       } else {
 	log(v->ctx, "Finished loading (%0us):\nnil", t);

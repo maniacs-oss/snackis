@@ -122,10 +122,10 @@ Types are first class, optionally parameterized and inferred. Primitive types li
 
 ```
 S: I64
-I64!
+I64
 
 S: 42 type
-I64!
+I64
 
 S: [7 35] List<I64> is?
 true

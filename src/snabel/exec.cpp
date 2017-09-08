@@ -235,7 +235,7 @@ namespace snabel {
   }
 
   static str meta_fmt(const Box &v) {
-    return fmt("%0!", name(get<Type *>(v)->name));
+    return fmt("%0", name(get<Type *>(v)->name));
   }
 
   static bool meta_eq(const Box &x, const Box &y) {
