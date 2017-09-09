@@ -14,18 +14,18 @@ namespace snabel {
     text(text), pos(pos)
   { }
 
-  static void parse_quote(const str &in,
-			  size_t &lnr,
-			  size_t start,
-			  size_t &i,
-			  char end,
-			  TokSeq &out) {
+  static void parse_str(const str &in,
+			size_t &lnr,
+			size_t &i,
+			char delim,
+			TokSeq &out) {
+    auto start(i++);
     char pc(0);
     
     for (; i < in.size(); i++) {
       auto &c(in[i]);
 
-      if (c == end && pc != '\\') {
+      if (c == delim && pc != '\\') {
 	out.emplace_back(in.substr(start, i-start+1), Pos(lnr, start));
 	break;
       } else if (c == '\n') {
@@ -108,17 +108,9 @@ namespace snabel {
 	out.emplace_back(in.substr(i, j-i+2), Pos(lnr, i));
 	j++;
 	i = j+1;
-      } else if (c == '\'') {
-	auto k(j);
-
-	if (pc == 'u') {
-	  k--;
-	  j--;
-	}
-	
+      } else if (c == '\'' || c== '"') {
 	push_id();
-	j += (pc == 'u') ? 2 : 1;
-	parse_quote(in, lnr, k, j, '\'', out);
+	parse_str(in, lnr, j, c, out);
 	i = j+1;
       } else if (c == '<') {
 	parse_types(in, lnr, j);

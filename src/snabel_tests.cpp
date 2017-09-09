@@ -52,17 +52,17 @@ namespace snabel {
   }
 
   static void parse_str_tests() {
-    auto ts(parse_expr("u'foo ' 1 2"));
+    auto ts(parse_expr("'foo ' 1 2"));
 
     CHECK(ts.size() == 3, _);
-    CHECK(ts[0].text == "u'foo '", _);
+    CHECK(ts[0].text == "'foo '", _);
     CHECK(ts[1].text == "1", _);
     CHECK(ts[2].text == "2", _);
 
-    ts = parse_expr("1 'foo' 2");
+    ts = parse_expr("1 \"foo\" 2");
     CHECK(ts.size() == 3, _);
     CHECK(ts[0].text == "1", _);
-    CHECK(ts[1].text == "'foo'", _);
+    CHECK(ts[1].text == "\"foo\"", _);
     CHECK(ts[2].text == "2", _);
 
     ts = parse_expr("let: foo {42}; '@foo'");
@@ -304,7 +304,13 @@ namespace snabel {
 
   static void str_tests() {
     TRY(try_test);    
-    
+
+    run_test(exe, "'' \\f push \\o push \\o push");
+    CHECK(*get<StrRef>(pop(exe.main)) == "foo", _);
+
+    run_test(exe, "\"\" \\\\f push \\\\o push \\\\o push");
+    CHECK(*get<UStrRef>(pop(exe.main)) == uconv.from_bytes("foo"), _);
+
     run_test(exe, "'foo' len");
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
 
@@ -332,7 +338,7 @@ namespace snabel {
     run_test(exe, "'foo' bytes 'bar' bytes append str");
     CHECK(*get<StrRef>(pop(exe.main)) == "foobar", _);
 
-    run_test(exe, "u'foo' bytes str");
+    run_test(exe, "\"foo\" bytes str");
     CHECK(*get<StrRef>(pop(exe.main)) == "foo", _);
   }
 

@@ -426,14 +426,14 @@ namespace snabel {
       
       switch (c) {
       case u' ':
-	return "u\\space";
+	return "\\\\space";
       case u'\n':
-	return "u\\n";
+	return "\\\\n";
       case u'\t':
-	return "u\\t";
+	return "\\\\t";
       }
 
-      return fmt("u\\%0", uconv.to_bytes(ustr(1, c)));
+      return fmt("\\\\%0", uconv.to_bytes(ustr(1, c)));
     };
 
     uchar_type.fmt = [](auto &v) -> str {
@@ -1081,10 +1081,30 @@ namespace snabel {
 	} else {
 	  out.emplace_back(Push(Box(exe.str_type, std::make_shared<str>(s))));
 	}
-      } else if (tok.text.at(0) == 'u' && tok.text.at(1) == '\'') {
-	auto v(tok.text.substr(2, tok.text.size()-3));
+      } else if (tok.text.at(0) == '"') {
+	auto v(tok.text.substr(1, tok.text.size()-2));
 	out.emplace_back(Push(Box(exe.ustr_type,
 				  std::make_shared<ustr>(uconv.from_bytes(v)))));
+      } else if (tok.text.at(0) == '\\' && tok.text.at(1) == '\\') {
+	if (tok.text.size() < 3) {
+	  ERROR(Snabel, fmt("Invalid uchar literal on row %0, col %1: %2",
+			    tok.pos.row, tok.pos.col, tok.text));
+	  break;
+	}
+
+	uchar c(0);
+
+	if (tok.text == "\\\\space") {
+	  c = u' ';
+	} else if (tok.text == "\\\\n") {
+	  c = u'\n';
+	} else if (tok.text == "\\\\t") {
+	  c = u'\t';
+	} else {
+	  c = uconv.from_bytes(str(1, tok.text[2])).at(0);
+	}
+      
+	out.emplace_back(Push(Box(exe.uchar_type, c)));
       } else if (tok.text.at(0) == '\\') {
 	if (tok.text.size() < 2) {
 	  ERROR(Snabel, fmt("Invalid char literal on row %0, col %1: %2",
@@ -1105,26 +1125,6 @@ namespace snabel {
 	}
       
 	out.emplace_back(Push(Box(exe.char_type, c)));
-      } else if (tok.text.at(0) == 'u' && tok.text.at(1) == '\\') {
-	if (tok.text.size() < 3) {
-	  ERROR(Snabel, fmt("Invalid uchar literal on row %0, col %1: %2",
-			    tok.pos.row, tok.pos.col, tok.text));
-	  break;
-	}
-
-	uchar c(0);
-
-	if (tok.text == "u\\space") {
-	  c = u' ';
-	} else if (tok.text == "u\\n") {
-	  c = u'\n';
-	} else if (tok.text == "u\\t") {
-	  c = u'\t';
-	} else {
-	  c = uconv.from_bytes(str(1, tok.text[1])).at(0);
-	}
-      
-	out.emplace_back(Push(Box(exe.uchar_type, c)));
       } else if (isupper(tok.text[0])) {
 	auto t(parse_type(exe, tok.text, 0).first);
 	if (t) { out.emplace_back(Push(Box(get_meta_type(exe, *t), t))); }

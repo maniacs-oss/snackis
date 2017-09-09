@@ -145,7 +145,7 @@ true
 ```
 
 #### Strings
-Strings are mutable collections of characters that provide reference semantics. Snabel makes a difference between byte strings and unicode strings. Unicode strings are processed as UTF-8 when converting to/from bytes and stored internally as UTF-16. Byte strings are automatically promoted to unicode as needed.
+Strings are mutable collections of characters that provide reference semantics. Snabel makes a difference between byte strings and unicode strings. Unicode strings are delimited by ```"```, processed as UTF-8 when converting to/from bytes and stored internally as UTF-16. Byte strings are delimited by ```'```, automatically promoted to unicode as needed.
 
 ```
 S: 'foo'
@@ -157,25 +157,36 @@ false
 S: 'foo' 'foo' ==
 true
 
-S: u'foo'
-u'foo'
+S: "foo"
+"foo"
 
 S: 'foo' ustr
-u'foo'
+"foo"
 
-S: u'foo' 'foo' =
+S: "foo" 'foo' =
 true
 
 S: 'ö' len
 2
 
-S: u'ö' len
+S: "ö" len
 1
 
 S: ['foo\r\n\r\nbar\r\n\r\nbaz' bytes]
    lines unopt \, join
 
 'foo,bar,baz'
+```
+
+#### Characters
+Character literals are supported for both unicode- and byte strings.
+
+```
+S: '' \f push \o push \o push
+'foo'
+
+S: "" \\f push \\o push \\o push
+"foo"
 ```
 
 #### Symbols

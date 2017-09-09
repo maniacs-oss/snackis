@@ -31,6 +31,12 @@ namespace snabel {
     push(scp.thread, scp.exec.i64_type, (int64_t)get<StrRef>(in)->size());
   }
 
+  static void str_push_imp(Scope &scp, const Args &args) {
+    auto &in(args.at(0));
+    get<StrRef>(in)->push_back(get<char>(args.at(1)));
+    push(scp.thread, in);
+  }
+
   static void str_bytes_imp(Scope &scp, const Args &args) {
     auto &in(get<StrRef>(args.at(0)));
     push(scp.thread,
@@ -53,6 +59,12 @@ namespace snabel {
     auto &in(args.at(0));
     push(scp.thread, in);
     push(scp.thread, scp.exec.i64_type, (int64_t)get<UStrRef>(in)->size());
+  }
+
+  static void ustr_push_imp(Scope &scp, const Args &args) {
+    auto &in(args.at(0));
+    get<UStrRef>(in)->push_back(get<uchar>(args.at(1)));
+    push(scp.thread, in);
   }
 
   static void ustr_bytes_imp(Scope &scp, const Args &args) {
@@ -163,7 +175,7 @@ namespace snabel {
     exe.ustr_type.supers.push_back(&get_iterable_type(exe, exe.uchar_type));
 
     exe.ustr_type.fmt = [](auto &v) {
-      return fmt("u'%0'", uconv.to_bytes(*get<UStrRef>(v)));
+      return fmt("\"%0\"", uconv.to_bytes(*get<UStrRef>(v)));
     };
 
     exe.ustr_type.eq = [](auto &x, auto &y) {
@@ -183,11 +195,21 @@ namespace snabel {
     };
 
     add_func(exe, "len", {ArgType(exe.str_type)}, str_len_imp);
+    
+    add_func(exe, "push",
+	     {ArgType(exe.str_type), ArgType(exe.char_type)},
+	     str_push_imp);
+
     add_func(exe, "bytes", {ArgType(exe.str_type)}, str_bytes_imp);
     add_func(exe, "str", {ArgType(exe.bin_type)}, bin_str_imp);
     add_func(exe, "ustr", {ArgType(exe.str_type)}, str_ustr_imp);
 
     add_func(exe, "len", {ArgType(exe.ustr_type)}, ustr_len_imp);
+
+    add_func(exe, "push",
+	     {ArgType(exe.ustr_type), ArgType(exe.uchar_type)},
+	     ustr_push_imp);
+
     add_func(exe, "bytes", {ArgType(exe.ustr_type)}, ustr_bytes_imp);
     add_func(exe, "ustr", {ArgType(exe.bin_type)}, bin_ustr_imp);
     add_func(exe, "str", {ArgType(exe.ustr_type)}, ustr_str_imp);
