@@ -1,11 +1,13 @@
 #!/usr/local/bin/snabel
 
-"tcpc.sl"
+/*
+   tcpc.sl
 
-"Opens a TCP/IP connection to ADDR:PORT and forwards data from/to stdin/stdout."
+   Opens a TCP/IP connection to ADDR:PORT and forwards data from/to stdin/stdout.
 
-"Usage:           "
-"tcpc.sl ADDR PORT"
+   Usage:
+   tcpc.sl ADDR PORT
+*/
 
 let: port stoi64; _
 let: addr; _

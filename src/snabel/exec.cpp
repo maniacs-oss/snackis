@@ -990,7 +990,9 @@ namespace snabel {
      Tok tok(in.at(0));
       in.pop_front();
     
-      if (tok.text.at(0) == '"') {
+      if (tok.text.size() > 1 &&
+	  tok.text.at(0) == '/' &&
+	  (tok.text.at(1) == '*' || tok.text.at(1) == '/')) {
 	// Skip comments
       } else if (tok.text.at(0) == '#') {
 	out.emplace_back(Push(Box(exe.sym_type, get_sym(exe, tok.text.substr(1)))));

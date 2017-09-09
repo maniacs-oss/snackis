@@ -1,12 +1,14 @@
 #!/usr/local/bin/snabel
 
-"hgrm.sl"
+/*
+   hgrm.sl
 
-"Reads text from stdin and writes N most frequent words longer than M"
-"ordered by frequency to stdout.                                     "
+   Reads text from stdin and writes N most frequent words longer than M
+   ordered by frequency to stdout.                                     
 
-"Usage:                 "
-"cat *.txt | hgrm.sl N M"
+   Usage:                 
+   cat *.txt | hgrm.sl N M
+*/
 
 let: min-wlen stoi64; _
 let: max-len stoi64; _

@@ -11,6 +11,18 @@
 #include "snackis/core/time.hpp"
 
 namespace snabel {
+  static void parse_comment_tests() {
+    TRY(try_test);    
+    auto ts(parse_expr("#!/usr/local/bin/snabel\nfoo /* foo\nbar */ 42 //bar \nbaz"));
+
+    CHECK(ts.size() == 5, _);
+    CHECK(ts[0].text == "foo", _);
+    CHECK(ts[1].text == "/* foo\nbar */", _);
+    CHECK(ts[2].text == "42", _);
+    CHECK(ts[3].text == "//bar ", _);
+    CHECK(ts[4].text == "baz", _);
+  }
+
   static void parse_semicolon_tests() {
     TRY(try_test);    
     auto ts(parse_expr(";foo; bar baz;"));    
@@ -78,7 +90,8 @@ namespace snabel {
     auto ts(parse_expr("1"));	
     CHECK(ts.size() == 1, _);
     CHECK(ts[0].text == "1", _);
-    
+
+    parse_comment_tests();
     parse_semicolon_tests();
     parse_braces_tests();
     parse_str_tests();

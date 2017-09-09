@@ -1,12 +1,14 @@
 #!/usr/local/bin/snabel
 
-"tcpp.sl"
+/*
+   tcpp.sl
 
-"Starts a TCP/IP server on IN_ADDR:IN_PORT, opens a connection to OUT_ADDR:OUT_PORT "
-"for each client and forwards data in both directions until either side disconnects."
+   Starts a TCP/IP server on IN_ADDR:IN_PORT, opens a connection to OUT_ADDR:OUT_PORT
+   for each client and forwards data in both directions until either side disconnects.
 
-"Usage:                                   "
-"tcpp.sl IN_ADDR IN_PORT OUT_ADDR OUT_PORT"
+   Usage:                                 
+   tcpp.sl IN_ADDR IN_PORT OUT_ADDR OUT_PORT
+*/
 
 let: out-port stoi64; _
 let: out-addr; _

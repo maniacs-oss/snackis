@@ -4,13 +4,15 @@
 ```
 #!/usr/local/bin/snabel
 
-"hgrm.sl"
+/*
+  hgrm.sl
 
-"Reads text from STDIN and writes N most frequent words longer than M"
-"ordered by frequency to STDOUT.                                     "
+  Reads text from STDIN and writes N most frequent words longer than M
+  ordered by frequency to STDOUT.                                
 
-"Usage:                 "
-"cat *.txt | hgrm.sl N M"
+  Usage:
+  cat *.txt | hgrm.sl N M
+*/
 
 let: min-wlen stoi64; _
 let: max-len stoi64; _
@@ -96,6 +98,17 @@ S: 1 (2 3 $list)
 
 S: 1 (|2 3 $list) .
 1 [2 3].
+```
+
+### Comments
+Snabel supports both block- and single line comments in code.
+
+```
+S: /* This is
+      a block
+      comment */
+
+S: // This is a single line comment
 ```
 
 ### Equality

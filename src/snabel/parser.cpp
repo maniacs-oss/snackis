@@ -84,10 +84,29 @@ namespace snabel {
 	push_id();
 	i++;
 	lnr++;
-      } else if (c == '"') {
+      } else if (c == '/' && pc == '/') {
+	j--;
 	push_id();
+	j = in.find('\n', i);
+
+	if (j == str::npos) {
+	  j = in.size();
+	}
+
+	out.emplace_back(in.substr(i, j-i), Pos(lnr, i));
+	i = j+1;	 
+      } else if (c == '*' && pc == '/') {
+	j--;
+	push_id();
+	j = in.find("*/", i);
+
+	if (j == str::npos) {
+	  ERROR(Snabel, fmt("Open comment at row %0, col %1", lnr, i));
+	  break;
+	}
+
+	out.emplace_back(in.substr(i, j-i+2), Pos(lnr, i));
 	j++;
-	parse_quote(in, lnr, j-1, j, '"', out);
 	i = j+1;
       } else if (c == '\'') {
 	auto k(j);

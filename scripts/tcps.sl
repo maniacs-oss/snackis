@@ -1,12 +1,14 @@
 #!/usr/local/bin/snabel
 
-"tcps.sl"
+/*
+   tcps.sl
 
-"Starts a TCP/IP server on ADDR:PORT and forwards incoming data to STDOUT and all"
-"connected clients except the sender.                                            "
+   Starts a TCP/IP server on ADDR:PORT and forwards incoming data to STDOUT and all
+   connected clients except the sender.
 
-"Usage:           "
-"tcps.sl ADDR PORT"
+   Usage:
+   tcps.sl ADDR PORT
+*/
 
 let: port stoi64; _
 let: addr; _
