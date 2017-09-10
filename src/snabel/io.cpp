@@ -146,9 +146,7 @@ namespace snabel {
   }
 
   static void unblock_imp(Scope &scp, const Args &args) {
-    auto &in(args.at(0));
-    push(scp.thread, in);
-    unblock(*get<FileRef>(in));
+    unblock(*get<FileRef>(args.at(0)));
   }
   
   static void file_p_imp(Scope &scp, const Args &args) {

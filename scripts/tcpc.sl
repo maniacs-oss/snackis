@@ -49,5 +49,5 @@ func: do-out {(
   @out fifo stdout write &yield _for
 )} call proc;
 
-stdin unblock _
+stdin unblock
 [&do-send &do-recv &do-in &do-out] run
