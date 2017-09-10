@@ -47,9 +47,18 @@ namespace snabel {
     push(scp.thread, in);
   }
 
+  static void reverse_imp(Scope &scp, const Args &args) {
+    auto &in(*get<StrRef>(args.at(0)));
+    std::reverse(in.begin(), in.end());
+  }
+
   static void str_push_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
     get<StrRef>(in)->push_back(get<char>(args.at(1)));
+  }
+
+  static void clear_imp(Scope &scp, const Args &args) {
+    get<StrRef>(args.at(0))->clear();
   }
 
   static void str_bytes_imp(Scope &scp, const Args &args) {
@@ -79,10 +88,19 @@ namespace snabel {
     auto &in(*get<UStrRef>(args.at(0))), &x(*get<UStrRef>(args.at(1)));
     push(scp.thread, scp.exec.bool_type, suffix(in, x));
   }
-  
+
+  static void ureverse_imp(Scope &scp, const Args &args) {
+    auto &in(*get<UStrRef>(args.at(0)));
+    std::reverse(in.begin(), in.end());
+  }
+
   static void ustr_push_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
     get<UStrRef>(in)->push_back(get<uchar>(args.at(1)));
+  }
+
+  static void uclear_imp(Scope &scp, const Args &args) {
+    get<UStrRef>(args.at(0))->clear();
   }
 
   static void ustr_bytes_imp(Scope &scp, const Args &args) {
@@ -270,32 +288,31 @@ namespace snabel {
 	     {ArgType(exe.str_type), ArgType(exe.str_type)},
 	     suffix_imp);
 
-    add_func(exe, "upcase",
-	     {ArgType(exe.str_type)},
-	     upcase_imp);
-
-    add_func(exe, "downcase",
-	     {ArgType(exe.str_type)},
-	     downcase_imp);
+    add_func(exe, "upcase", {ArgType(exe.str_type)}, upcase_imp);
+    add_func(exe, "downcase", {ArgType(exe.str_type)}, downcase_imp);
+    add_func(exe, "reverse", {ArgType(exe.str_type)}, reverse_imp);
 
     add_func(exe, "push",
 	     {ArgType(exe.str_type), ArgType(exe.char_type)},
 	     str_push_imp);
 
+    add_func(exe, "clear", {ArgType(exe.str_type)}, clear_imp);
     add_func(exe, "bytes", {ArgType(exe.str_type)}, str_bytes_imp);
     add_func(exe, "str", {ArgType(exe.bin_type)}, bin_str_imp);
     add_func(exe, "ustr", {ArgType(exe.str_type)}, str_ustr_imp);
-
     add_func(exe, "len", {ArgType(exe.ustr_type)}, ulen_imp);
 
     add_func(exe, "suffix?",
 	     {ArgType(exe.ustr_type), ArgType(exe.ustr_type)},
 	     usuffix_imp);
 
+    add_func(exe, "reverse", {ArgType(exe.ustr_type)}, ureverse_imp);
+
     add_func(exe, "push",
 	     {ArgType(exe.ustr_type), ArgType(exe.uchar_type)},
 	     ustr_push_imp);
 
+    add_func(exe, "clear", {ArgType(exe.ustr_type)}, uclear_imp);
     add_func(exe, "bytes", {ArgType(exe.ustr_type)}, ustr_bytes_imp);
     add_func(exe, "ustr", {ArgType(exe.bin_type)}, bin_ustr_imp);
     add_func(exe, "str", {ArgType(exe.ustr_type)}, ustr_str_imp);

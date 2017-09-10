@@ -72,7 +72,12 @@ namespace snabel {
     auto &in(args.at(0));
     push(scp.thread, scp.exec.bool_type, !get<ListRef>(in)->empty());
   }
-  
+
+  static void len_imp(Scope &scp, const Args &args) {
+    auto &in(args.at(0));
+    push(scp.thread, scp.exec.i64_type, (int64_t)get<ListRef>(in)->size());
+  }
+
   static void push_imp(Scope &scp, const Args &args) {
     auto &lst(args.at(0));
     auto &el(args.at(1));
@@ -86,16 +91,12 @@ namespace snabel {
   }
 
   static void reverse_imp(Scope &scp, const Args &args) {
-    auto &in_arg(args.at(0));
-    auto &in(*get<ListRef>(in_arg));
+    auto &in(*get<ListRef>(args.at(0)));
     std::reverse(in.begin(), in.end());
-    push(scp.thread, in_arg); 
   }
 
   static void clear_imp(Scope &scp, const Args &args) {
-    auto &in_arg(args.at(0));
-    get<ListRef>(in_arg)->clear();
-    push(scp.thread, in_arg); 
+    get<ListRef>(args.at(0))->clear();
   }
 
   static void sort_imp(Scope &scp, const Args &args) {
@@ -175,53 +176,35 @@ namespace snabel {
       return true;
     };
 
-    add_func(exe, "list",
-	     {ArgType(exe.iterable_type)},
-	     iterable_list_imp);
+    add_func(exe, "list", {ArgType(exe.iterable_type)}, iterable_list_imp);
 
     add_func(exe, "nlist",
 	     {ArgType(exe.iterable_type), ArgType(exe.i64_type)},
 	     iterable_nlist_imp);
 
-    add_func(exe, "list",
-	     {ArgType(exe.meta_type)},
-	     list_imp);
+    add_func(exe, "list", {ArgType(exe.meta_type)}, list_imp);
+    add_func(exe, "z?", {ArgType(exe.list_type)}, zero_imp);
+    add_func(exe, "+?", {ArgType(exe.list_type)}, pos_imp);
+    add_func(exe, "len", {ArgType(exe.list_type)}, len_imp);
 
-    add_func(exe, "z?",
-	     {ArgType(exe.list_type)},
-	     zero_imp);
-    
-    add_func(exe, "+?",
-	     {ArgType(exe.list_type)},
-	     pos_imp);
-    
     add_func(exe, "push",
 	     {ArgType(exe.list_type), ArgType(0, 0)},
 	     push_imp);
     
-    add_func(exe, "pop",
-	     {ArgType(exe.list_type)},
-	     pop_imp);
-
-    add_func(exe, "reverse",
-	     {ArgType(exe.list_type)},
-	     reverse_imp);
+    add_func(exe, "pop", {ArgType(exe.list_type)}, pop_imp);
+    add_func(exe, "reverse", {ArgType(exe.list_type)}, reverse_imp);
 
     add_func(exe, "sort",
 	     {ArgType(exe.list_type), ArgType(exe.callable_type)},
 	     sort_imp);
 
-    add_func(exe, "clear",
-	     {ArgType(exe.list_type)},
-	     clear_imp);
+    add_func(exe, "clear", {ArgType(exe.list_type)}, clear_imp);
 
     add_func(exe, "unzip",
 	     {ArgType(get_list_type(exe, exe.pair_type))},
 	     unzip_imp);
 
-    add_func(exe, "fifo",
-	     {ArgType(exe.list_type)},
-	     fifo_imp);
+    add_func(exe, "fifo", {ArgType(exe.list_type)}, fifo_imp);
   }
   
   Type &get_list_type(Exec &exe, Type &elt) {    

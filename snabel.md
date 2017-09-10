@@ -246,7 +246,7 @@ S: 1 2 3 $list
 S: [35 7 + 'foo']
 [42 'foo']
 
-S: [1 2] $ 3 push reverse $ pop _
+S: [1 2] $ 3 push $ reverse $ pop _
 [3 2]
 
 S: [2 3 1] &lt? sort

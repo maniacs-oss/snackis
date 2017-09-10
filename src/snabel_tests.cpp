@@ -324,6 +324,18 @@ namespace snabel {
 	"['foo\\r\\n\\r\\nbar\\r\\n\\r\\nbaz' bytes]"
 	"lines unopt \\, join");	
     CHECK(*get<StrRef>(pop(exe.main)) == "foo,bar,baz", _);
+
+    run_test(exe, "'foo' $ reverse");
+    CHECK(*get<StrRef>(pop(exe.main)) == "oof", _);
+
+    run_test(exe, "\"foo\" $ reverse");
+    CHECK(*get<UStrRef>(pop(exe.main)) == uconv.from_bytes("oof"), _);
+
+    run_test(exe, "'foo' $ clear");
+    CHECK(*get<StrRef>(pop(exe.main)) == "", _);
+
+    run_test(exe, "\"foo\" $ clear");
+    CHECK(*get<UStrRef>(pop(exe.main)) == uconv.from_bytes(""), _);
   }
 
   static void bin_tests() {
@@ -372,7 +384,7 @@ namespace snabel {
   static void list_reverse_tests() {
     TRY(try_test);    
 
-    run_test(exe, "[0 1 2] reverse");
+    run_test(exe, "[0 1 2] $ reverse");
     auto lsb(pop(exe.main));
     auto ls(get<ListRef>(lsb));
     CHECK(ls->size() == 3, _);
@@ -431,7 +443,10 @@ namespace snabel {
 
     run_test(exe, "[2 3 1] &lt? sort pop");
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
-      
+
+    run_test(exe, "[1 2 3] $ clear len");
+    CHECK(!get<int64_t>(pop(exe.main)), _);
+    
     list_push_tests();
     list_pop_tests();
     list_reverse_tests();
@@ -596,8 +611,7 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 21, _);
   }
 
-  /*
-  static void thread_tests() {
+  /*static void thread_tests() {
     TRY(try_test);    
     Exec exe;
     run_test(exe, "7 {35 +} thread join");
