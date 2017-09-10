@@ -361,7 +361,7 @@ namespace snabel {
   static void list_pop_tests() {
     TRY(try_test);    
 
-    run_test(exe, "[7 35] pop");    
+    run_test(exe, "[7 35] $ pop");    
     CHECK(get<int64_t>(pop(exe.main)) == 35, _);
     auto lsb(pop(exe.main));
     auto ls(get<ListRef>(lsb));

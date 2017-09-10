@@ -246,7 +246,7 @@ S: 1 2 3 $list
 S: [35 7 + 'foo']
 [42 'foo']
 
-S: [1 2] 3 push reverse pop _
+S: [1 2] 3 push reverse $ pop _
 [3 2]
 
 S: [2 3 1] &lt? sort
@@ -595,7 +595,7 @@ S: '../src' ls-r &file? filter
 Random numbers are supported through ranged generators that may be treated as infinite iterators.
 
 ```
-> 100 random pop $1 pop $1 _ $list
+> 100 random $ pop $1 pop $1 $list
 [61 23]
 
 > 100 random 3 nlist

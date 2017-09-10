@@ -254,7 +254,6 @@ namespace snabel {
 
   static void random_pop_imp(Scope &scp, const Args &args) {
     auto &r(args.at(0));
-    push(scp.thread, r);
     push(scp.thread,
 	 scp.exec.i64_type,
 	 (*get<RandomRef>(r))(scp.thread.random));

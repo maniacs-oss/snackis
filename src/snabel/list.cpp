@@ -81,9 +81,7 @@ namespace snabel {
   }
 
   static void pop_imp(Scope &scp, const Args &args) {
-    auto &lst_arg(args.at(0));
-    auto &lst(*get<ListRef>(lst_arg));
-    push(scp.thread, lst_arg);
+    auto &lst(*get<ListRef>(args.at(0)));
     push(scp.thread, lst.back());
     lst.pop_back();
   }
