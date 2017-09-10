@@ -189,7 +189,6 @@ namespace snabel {
 
   static void bin_zero_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
-    push(scp.thread, in);
     push(scp.thread, scp.exec.bool_type, get<BinRef>(in)->empty());
   }
 
