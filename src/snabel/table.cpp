@@ -63,7 +63,6 @@ namespace snabel {
     auto &tbl_arg(args.at(0));
     auto &tbl(*get<TableRef>(tbl_arg));
     auto &key(args.at(1));
-    push(thd, tbl_arg);
     auto fnd(tbl.find(key));
     
     if (fnd == tbl.end()) {
@@ -113,11 +112,9 @@ namespace snabel {
   }
 
   static void del_imp(Scope &scp, const Args &args) {
-    auto &tbl_arg(args.at(0));
-    auto &tbl(*get<TableRef>(tbl_arg));
+    auto &tbl(*get<TableRef>(args.at(0)));
     auto &key(args.at(1));
     tbl.erase(key);
-    push(scp.thread, tbl_arg);
   }
 
   void init_tables(Exec &exe) {

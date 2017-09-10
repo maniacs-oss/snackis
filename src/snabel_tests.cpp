@@ -181,7 +181,7 @@ namespace snabel {
 
   static void group_tests() {
     TRY(try_test);    
-    
+   
     run_test(exe, "(42 let: foo 21; @foo)");
     Scope &scp1(curr_scope(exe.main));
     CHECK(get<int64_t>(pop(scp1.thread)) == 21, _);

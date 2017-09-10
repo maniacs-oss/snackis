@@ -45,7 +45,7 @@ func: do-recv {(
     yield1
   } for
 
-  @clients @in del _
+  @clients @in del
   @in close
   'disconnect' say
 )};
