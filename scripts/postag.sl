@@ -7,6 +7,23 @@
    cat *.txt | postag.sl
 */
 
+let: lookup [
+  'a'    #AT.
+  'and'  #CC.
+  'are'  #BER.
+  'in'   #IN.
+  'is'   #BEZ.
+  'of'   #IN.
+  'on'   #IN.
+  'our'  #PP$.
+  'so'   #QL.
+  'that' #CS.
+  'the'  #AT.
+  'this' #DT.
+  'was'  #BEDZ.
+  'what' #WDT.
+] table;
+
 func: guess-tag {
   let: w; _
   
@@ -25,23 +42,6 @@ func: guess-tag {
    {true}
      #NN.] cond
 };
-
-let: lookup [
-  'a'    #AT.
-  'and'  #CC.
-  'are'  #BER.
-  'in'   #IN.
-  'is'   #BEZ.
-  'of'   #IN.
-  'on'   #IN.
-  'our'  #PP$.
-  'so'   #QL.
-  'that' #CS.
-  'the'  #AT.
-  'this' #DT.
-  'was'  #BEDZ.
-  'what' #WDT.
-] table;
 
 func: get-tag {
   $ @lookup $1 get &nop &guess-tag if
