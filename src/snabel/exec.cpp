@@ -361,7 +361,7 @@ namespace snabel {
     nop_type.eq = [](auto &x, auto &y) { return true; };  
     nop_type.call = [](auto &scp, auto &v, bool now) { return true; };
     
-    drop_type.args.push_back(&callable_type);
+    drop_type.supers.push_back(&callable_type);
     drop_type.fmt = [](auto &v) { return "&_"; };
     drop_type.eq = [](auto &x, auto &y) { return true; };  
 
