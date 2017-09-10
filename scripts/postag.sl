@@ -26,7 +26,28 @@ func: guess-tag {
      #NN.] cond
 };
 
+let: lookup [
+  'a'    #AT.
+  'and'  #CC.
+  'are'  #BER.
+  'in'   #IN.
+  'is'   #BEZ.
+  'of'   #IN.
+  'on'   #IN.
+  'our'  #PP$.
+  'so'   #QL.
+  'that' #CS.
+  'the'  #AT.
+  'this' #DT.
+  'was'  #BEDZ.
+  'what' #WDT.
+] table;
+
+func: get-tag {
+  $ @lookup $1 get &nop &guess-tag if
+};
+
 stdin read unopt
 words unopt
 {$ downcase} map
-{$ guess-tag '$1\t$0' say _ _} for
+{$ get-tag '$1\t$0' say _ _} for

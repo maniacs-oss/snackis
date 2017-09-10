@@ -134,6 +134,10 @@ namespace snabel {
     add_func(exe, "unopt",
 	     {ArgType(get_iterable_type(exe, exe.opt_type))},
 	     unopt_iterable_imp);
+
+    add_macro(exe, "nil", [&exe](auto pos, auto &in, auto &out) {
+	out.emplace_back(Push(Box(exe.opt_type, nil)));
+      });    
   }
 
   Type &get_opt_type(Exec &exe, Type &elt) {    

@@ -356,7 +356,7 @@ namespace snabel {
     callable_type.supers.push_back(&any_type);
     callable_type.args.push_back(&any_type);
 
-    nop_type.args.push_back(&callable_type);
+    nop_type.supers.push_back(&callable_type);
     nop_type.fmt = [](auto &v) { return "&nop"; };
     nop_type.eq = [](auto &x, auto &y) { return true; };  
     nop_type.call = [](auto &scp, auto &v, bool now) { return true; };
@@ -473,7 +473,6 @@ namespace snabel {
       return true;
     };
 
-    lambda_type.supers.push_back(&any_type);
     lambda_type.supers.push_back(&callable_type);
 
     lambda_type.fmt = [](auto &v) {
@@ -731,10 +730,6 @@ namespace snabel {
 
     add_macro(*this, "loop", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Loop());
-      });
-
-    add_macro(*this, "nil", [this](auto pos, auto &in, auto &out) {
-	out.emplace_back(Push(Box(opt_type, nil)));
       });
   }
 
