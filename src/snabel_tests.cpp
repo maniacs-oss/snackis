@@ -336,6 +336,12 @@ namespace snabel {
 
     run_test(exe, "\"foo\" $ clear");
     CHECK(*get<UStrRef>(pop(exe.main)) == uconv.from_bytes(""), _);
+
+    run_test(exe, "'Foo' $ upcase");
+    CHECK(*get<StrRef>(pop(exe.main)) == "FOO", _);
+
+    run_test(exe, "'Foo' $ downcase");
+    CHECK(*get<StrRef>(pop(exe.main)) == "foo", _);
   }
 
   static void bin_tests() {

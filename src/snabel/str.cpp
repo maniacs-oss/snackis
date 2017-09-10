@@ -36,15 +36,11 @@ namespace snabel {
   }
 
   static void upcase_imp(Scope &scp, const Args &args) {
-    auto &in(args.at(0));
-    upcase(*get<StrRef>(in));
-    push(scp.thread, in);
+    upcase(*get<StrRef>(args.at(0)));
   }
 
   static void downcase_imp(Scope &scp, const Args &args) {
-    auto &in(args.at(0));
-    downcase(*get<StrRef>(in));
-    push(scp.thread, in);
+    downcase(*get<StrRef>(args.at(0)));
   }
 
   static void reverse_imp(Scope &scp, const Args &args) {

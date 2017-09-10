@@ -27,5 +27,5 @@ func: guess-tag {
 };
 
 stdin read unopt words unopt
-&downcase map
+{$ downcase} map
 {$ guess-tag '$1\t$0' say _ _} for
