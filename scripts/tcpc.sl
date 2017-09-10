@@ -15,13 +15,13 @@ let: server tcp-socket @addr @port connect;
 let: in Bin list;
 let: out Bin list;
 
-func: do-send {(
-  | yield
+func: do-send (
+  |yield
   @in fifo @server write &yield _for
-)} call proc;
+);
 
-func: do-recv {(
-  | yield
+func: do-recv (
+  |yield
 
   @server read {
     {@out $1 push} when
@@ -29,25 +29,30 @@ func: do-recv {(
   } for
 
   @server close
-  &do-send stop
-  &do-in stop
-  &do-out stop
-)} call proc;
+  @do-send stop
+  @do-in stop
+  @do-out stop
+);
 
-func: do-in {(
-  | yield
+func: do-in (
+  |yield
 
   stdin read {
     {@in $1 push} when
     yield1
     idle
   } for
-)} call proc;
+);
 
-func: do-out {(
-  | yield
+
+func: do-out (
+  |yield
   @out fifo stdout write &yield _for
-)} call proc;
+);
+
+let: do-send do-send proc;
+let: do-in do-in proc;
+let: do-out do-out proc;
 
 stdin unblock
-[&do-send &do-recv &do-in &do-out] run
+[@do-send do-recv proc @do-in @do-out] run

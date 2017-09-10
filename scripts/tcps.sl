@@ -20,17 +20,17 @@ let: server tcp-socket
      @addr @port bind
      1 accept;
 
-func: do-send {(
+func: do-send (
   let: q; _
   let: c;
-  | yield
+  |yield
 
   @q fifo @c write &yield _for
-)};
+);
 
-func: do-recv {(
+func: do-recv (
   let: in;
-  | yield
+  |yield
 
   @in read {
     { let: data; _
@@ -48,10 +48,10 @@ func: do-recv {(
   @clients @in del
   @in close
   'disconnect' say
-)};
+);
 
-func: do-server {(
-  | yield
+func: do-server (
+  |yield
 
   @server {
     { 'connect' say
@@ -64,12 +64,13 @@ func: do-server {(
     yield1
     idle
   } for
-)} call proc;
+);
 
-func: do-out {(
-  | yield
+func: do-out (
+  |yield
   @out fifo stdout write &yield _for
-)} call proc;
+);
 
-let: procs [&do-server &do-out];
+let: procs [do-server proc
+            do-out proc];
 @procs run

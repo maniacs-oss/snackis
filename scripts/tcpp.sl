@@ -19,31 +19,31 @@ let: server tcp-socket
      @in-addr @in-port bind
      1 accept;
 
-func: do-send {(
+func: do-send (
   let: out; _
   let: in;
-  | yield
+  |yield
   
   @out read @in write &yield _for
   
   @in close
   @out close
-)};
+);
 
-func: do-recv {(
+func: do-recv (
   let: out; _
   let: in;
-  | yield
+  |yield
   
   @in read @out write &yield _for
 
   @in close
   @out close
   'disconnect' say
-)};
+);
 
-func: do-server {(
-  | yield
+func: do-server (
+  |yield
 
   @server {
     {'connect' say
@@ -54,7 +54,7 @@ func: do-server {(
     yield1
     idle
   } for
-)} call proc;
+);
 
-let: procs [&do-server];
+let: procs [do-server proc];
 @procs run

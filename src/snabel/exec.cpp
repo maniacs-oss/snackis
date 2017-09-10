@@ -667,14 +667,14 @@ namespace snabel {
 	  ERROR(Snabel, fmt("Malformed func on row %0, col %1",
 			    pos.row, pos.col));
 	} else {
-	  out.emplace_back(Backup(true));
+	  out.emplace_back(Lambda());
 	  const str n(in.at(0).text);
 	  auto start(std::next(in.begin()));
 	  auto end(find_end(start, in.end()));
 	  compile(*this, TokSeq(start, end), out);
 	  if (end != in.end()) { end++; }
 	  in.erase(in.begin(), end);
-	  out.emplace_back(Restore());
+	  out.emplace_back(Unlambda());
 	  out.emplace_back(Putenv(get_sym(*this, n)));
 	}
       });

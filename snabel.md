@@ -382,7 +382,8 @@ S: struct: Foo
 
 true
 
-S: func: make-foo {Foo new 0 set-a '' set-b};
+S: func: make-foo
+     Foo new 0 set-a '' set-b;
    make-foo
    
 Foo(a 0. b ''.)
@@ -463,7 +464,7 @@ S: false 42 nil if
 
 nil
 
-S: func: guess-pos {
+S: func: guess-pos
      let: w; _
   
      [{@w 'ed' suffix?}
@@ -479,8 +480,7 @@ S: func: guess-pos {
       {@w 's' suffix?}
         #NNS.
       {true}
-        #NN.] cond
-   };
+        #NN.] cond;
 
    'flower\'s' guess-pos 
 
@@ -533,13 +533,13 @@ S: 0 {+1 $ 42 = &break when} loop
 Each function name represents a set of implementations that are matched in reverse declared order when resolving function calls. Prefixing the name of a function with ```&``` pushes it on the stack for later use. Definitions require termination using ```;``` to separate them from surrounding code.
 
 ```
-S: func: foo {35 +}; 7 foo
+S: func: foo 35 +; 7 foo
 
 42
 
-S: func: foo {35 +}
-  let: bar &foo
-  7 @bar call
+S: func: foo 35 +;
+   let: bar &foo
+   7 @bar call
 
 42
 ```
@@ -573,18 +573,8 @@ S: {yield 42} call call
 
 42
 
-S: func: foo {| yield (7 yield 28 +)} call;
-  foo foo +
-
-42
-
-S: func: foo {| yield (let: bar 35; 7 yield @bar +)} call;
-  foo foo
-
-42
-
-S: func: foo {| yield ([7 35] &yield for &+)} call;
-  foo foo foo call
+S: func: foo |yield (7 yield 28 +);
+   foo $ call $1 call +
 
 42
 ```
@@ -594,8 +584,10 @@ Procs allow interleaving multiple independent flows of control in the same threa
 
 ```
 S: let: acc Str list;
-   func: do-ping {(| yield 3 {@acc 'ping' push yield1} for)};
-   func: do-pong {(| yield 3 {@acc 'pong' push yield1} for)};
+   func: do-ping
+     (|yield 3 {@acc 'ping' push yield1} for);
+   func: do-pong
+     (|yield 3 {@acc 'pong' push yield1} for);
    [do-ping proc do-pong proc] run
    @acc
 
@@ -639,19 +631,19 @@ S: ['foo' bytes]
    
 3
 
-S: func: copy-file {(
+S: func: copy-file (
      let: q Bin list;
      let: wq @q fifo;
      let: w rwfile @wq $1 write; _
      let: r rfile read; _
-     | yield
+     |yield
      
      @r {{
        @q $1 push
        @w &break _for
      } when yield1} for
      @q +? {@w &_ for} when
-   )};
+   );
 
 S: 'in' 'out' copy-file proc run
 nil

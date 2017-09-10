@@ -25,7 +25,7 @@ let: lookup [
   'what' #WDT.
 ] table;
 
-func: guess-tag {
+func: guess-tag
   let: w; _
   
   [{@w 'ed' suffix?}
@@ -41,12 +41,10 @@ func: guess-tag {
    {@w 's' suffix?}
      #NNS.
    {true}
-     #NN.] cond
-};
+     #NN.] cond;
 
-func: get-tag {
-  $ @lookup $1 get &nop &guess-tag if
-};
+func: get-tag
+  $ @lookup $1 get &nop &guess-tag if;
 
 stdin read unopt
 words unopt
