@@ -22,7 +22,7 @@ stdin read unopt words unopt
 {len @min-wlen gte?} filter
 &downcase map
 {@tbl $1 1 &+1 upsert _} for
-@tbl list {right $1 right lt?} sort
+@tbl list $ {right $1 right lt?} sort
 @max-len nlist {unzip '$1\t$0' say _ _} for
 ```
 
@@ -249,7 +249,7 @@ S: [35 7 + 'foo']
 S: [1 2] $ 3 push $ reverse $ pop _
 [3 2]
 
-S: [2 3 1] &lt? sort
+S: [2 3 1] $ &lt? sort
 [1 2 3]
 ```
 
@@ -568,27 +568,6 @@ S: func: copy-file {(
 
 S: 'in' 'out' copy-file proc run
 nil
-
-S: func: histogram {
-     let: max-len; _
-     let: min-wlen; _
-     let: tbl Str I64 table;
-
-     func: process-file {
-       rfile read unopt words unopt
-       {len @min-wlen gte? $1 _} filter
-       {@tbl $1 1 &+1 upsert} for
-     };
-
-     &process-file for
-     @tbl list {right $1 right lt?} sort
-     @max-len nlist
-   };
-
-S: '../src' ls-r &file? filter
-   4 100 histogram
-  
-['foo' 21. 'bar' 14. 'baz' 7.]
 ```
 
 ### Random Numbers

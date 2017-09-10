@@ -101,10 +101,8 @@ namespace snabel {
 
   static void sort_imp(Scope &scp, const Args &args) {
     auto &thd(scp.thread);
-    auto &in_arg(args.at(0));
-    auto &in(*get<ListRef>(in_arg));
+    auto &in(*get<ListRef>(args.at(0)));
     auto &tgt(args.at(1));
-    push(scp.thread, in_arg); 
 
     std::stable_sort(in.begin(), in.end(), [&scp, &thd, &tgt](auto &x, auto &y) {
 	push(thd, x);

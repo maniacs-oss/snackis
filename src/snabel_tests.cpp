@@ -441,7 +441,7 @@ namespace snabel {
     run_test(exe, "['foo' 7. 'bar' 35.] unzip _ list");
     CHECK(*get<StrRef>(get<ListRef>(pop(exe.main))->back()) == "bar", _);
 
-    run_test(exe, "[2 3 1] &lt? sort pop");
+    run_test(exe, "[2 3 1] $ &lt? sort pop");
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
 
     run_test(exe, "[1 2 3] $ clear len");

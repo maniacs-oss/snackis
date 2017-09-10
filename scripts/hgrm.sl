@@ -18,5 +18,5 @@ stdin read unopt words unopt
 {len @min-wlen gte?} filter
 &downcase map
 {@tbl $1 1 &++ upsert} for
-@tbl list {right $1 right lt?} sort
+@tbl list $ {right $1 right lt?} sort
 @max-len nlist {unzip '$1\t$0' say _ _} for
