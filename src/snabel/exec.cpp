@@ -23,8 +23,6 @@
 namespace snabel {
   static void is_imp(Scope &scp, const Args &args) {
     auto &v(args.at(0)), &t(args.at(1));
-    
-    push(scp.thread, v);
     push(scp.thread, scp.exec.bool_type, isa(scp.thread, v, *get<Type *>(t)));
   }
 
