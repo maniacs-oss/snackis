@@ -26,6 +26,7 @@ func: guess-tag {
      #NN.] cond
 };
 
-stdin read unopt words unopt
+stdin read unopt
+words unopt
 {$ downcase} map
 {$ guess-tag '$1\t$0' say _ _} for
