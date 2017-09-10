@@ -230,10 +230,10 @@ namespace snabel {
     run_test(exe, "true {$ &return when false} call");
     CHECK(get<bool>(pop(exe.main)), _);
 
-    run_test(exe, "42 {1 - $ z? &return when recall 2 +} call");
+    run_test(exe, "42 {-- $ z? &return when recall 2 +} call");
     CHECK(get<int64_t>(pop(exe.main)) == 82, _);
 
-    run_test(exe, "42 {1 - $ z? &return when (2 (|recall) +)} call");
+    run_test(exe, "42 {-- $ z? &return when (2 (|recall) +)} call");
     CHECK(get<int64_t>(pop(exe.main)) == 82, _);
   }
 
@@ -505,7 +505,7 @@ namespace snabel {
     run_test(exe, "'foo' &nop for $list \\- join");
     CHECK(*get<StrRef>(pop(exe.main)) == "f-o-o", _);
 
-    run_test(exe, "0 {+1 $ 42 = &break when} loop");
+    run_test(exe, "0 {++ $ 42 = &break when} loop");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 

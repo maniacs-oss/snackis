@@ -369,7 +369,7 @@ S: {1 2 +} call
 3
 
 S: 42
-   {1 - $ z? &return when recall 2 +}
+   {-- $ z? &return when recall 2 +}
    call
    
 82
@@ -563,7 +563,7 @@ S: func: copy-file {(
        @q $1 push _
        @w &break _for
      } when yield1} for
-     @q +? {@w &_ for} when _
+     @q +? {@w &_ for} when
    )};
 
 S: 'in' 'out' copy-file proc run

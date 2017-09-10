@@ -194,7 +194,6 @@ namespace snabel {
 
   static void bin_pos_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
-    push(scp.thread, in);
     push(scp.thread, scp.exec.bool_type, !get<BinRef>(in)->empty());
   }
 
@@ -593,8 +592,8 @@ namespace snabel {
 
     add_func(*this, "z?", {ArgType(i64_type)}, zero_i64_imp);
     add_func(*this, "+?", {ArgType(i64_type)}, pos_i64_imp);
-    add_func(*this, "+1", {ArgType(i64_type)}, inc_i64_imp);
-    add_func(*this, "-1", {ArgType(i64_type)}, dec_i64_imp);
+    add_func(*this, "++", {ArgType(i64_type)}, inc_i64_imp);
+    add_func(*this, "--", {ArgType(i64_type)}, dec_i64_imp);
 
     add_func(*this, "+", {ArgType(i64_type), ArgType(i64_type)}, add_i64_imp);
     add_func(*this, "-", {ArgType(i64_type), ArgType(i64_type)}, sub_i64_imp);

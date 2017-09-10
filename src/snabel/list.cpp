@@ -70,7 +70,6 @@ namespace snabel {
 
   static void pos_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
-    push(scp.thread, in);
     push(scp.thread, scp.exec.bool_type, !get<ListRef>(in)->empty());
   }
   
