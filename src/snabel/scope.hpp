@@ -30,7 +30,6 @@ namespace snabel {
     bool push_result;
 
     std::map<int64_t, OpState> op_state;
-    std::deque<Frame> recalls;
     Env env;
     
     Scope(Thread &thread);

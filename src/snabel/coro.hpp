@@ -2,15 +2,15 @@
 #define SNABEL_CORO_HPP
 
 #include "snabel/env.hpp"
-#include "snabel/frame.hpp"
 #include "snabel/op.hpp"
 
 namespace snabel {
   struct Proc;
   
-  struct Coro: Frame {
+  struct Coro {
+    int64_t pc;
+    std::deque<Stack> stacks;
     std::map<int64_t, OpState> op_state;
-    std::deque<Frame> recalls;
     Env env;
 
     Label &target;

@@ -491,8 +491,6 @@ namespace snabel {
 		std::back_inserter(thd.stacks));
       std::copy(cor->op_state.begin(), cor->op_state.end(),
 		std::inserter(new_scp.op_state, new_scp.op_state.end()));
-      std::copy(cor->recalls.begin(), cor->recalls.end(),
-		std::back_inserter(new_scp.recalls));
       new_scp.env.swap(cor->env);
     }
 

@@ -20,6 +20,7 @@ let: lookup [
   'that' #CS.
   'the'  #AT.
   'this' #DT.
+  'to'   #TO.
   'was'  #BEDZ.
   'what' #WDT.
 ] table;

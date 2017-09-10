@@ -172,27 +172,21 @@ namespace snabel {
     auto &thd(scp.thread);
     
     while (thd.scopes.size() > 1 && depth) {
-      auto &s(thd.scopes.back());
       depth--;
 
       if (!depth) {
-	if (s.recalls.empty()) {
-	  auto &ps(*std::next(thd.scopes.rbegin()));	  
-	  
-	  if (ps.return_pc == -1) {
-	    ERROR(Snabel, "Missing return pc");
-	    return false;
-	  }
-	  
-	  end_scope(thd);
-	  thd.pc = ps.return_pc;
-	  ps.return_pc = -1;
-	  if (ps.coro) { ps.coro->done = true; }
-	  ps.coro.reset();
-	} else {
-	  recall_return(s);
+	auto &ps(*std::next(thd.scopes.rbegin()));	  
+	
+	if (ps.return_pc == -1) {
+	  ERROR(Snabel, "Missing return pc");
+	  return false;
 	}
-
+	
+	end_scope(thd);
+	thd.pc = ps.return_pc;
+	ps.return_pc = -1;
+	if (ps.coro) { ps.coro->done = true; }
+	ps.coro.reset();
 	break;
       }
       
@@ -216,9 +210,8 @@ namespace snabel {
 	}
 	
 	auto &thd(s.thread);
-	auto &frm(s.recalls.emplace_back());
-	refresh(frm, s);
 	reset_stack(thd, s.stack_depth, true);
+	s.env.clear();
 	thd.pc = s.recall_pc;
 	break;
       }
@@ -227,18 +220,6 @@ namespace snabel {
     }
 
     return true;
-  }
-
-  void recall_return(Scope &scp) {
-    auto &thd(scp.thread);
-    auto &frm(scp.recalls.back());
-    thd.pc = frm.pc;
-    opt<Box> last;
-    if (!thd.stacks.back().empty()) { last = pop(thd); }    
-    std::copy(frm.stacks.begin(), frm.stacks.end(),
-	      std::back_inserter(thd.stacks));
-    if (last) { push(thd, *last); }
-    scp.recalls.pop_back();
   }
 
   Thread &start_thread(Scope &scp, const Box &init) {

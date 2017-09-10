@@ -947,7 +947,6 @@ namespace snabel {
     auto &thd(exe.main);
     while (thd.scopes.size() > 1) { thd.scopes.pop_back(); }
     while (thd.stacks.size() > 1) { thd.stacks.pop_back(); }
-    thd.main.recalls.clear();
     thd.main.return_pc = -1;
     thd.stacks.front().clear();
   }

@@ -61,10 +61,12 @@ Like Yoda of Star Wars-fame, and yesterdays scientific calculators; as well as m
 
 ```
 S: 'Hello World!' say
+
 Hello World!
 nil
 
 S: 7 35 +
+
 42
 ```
 
@@ -73,18 +75,23 @@ Values and results from function calls are pushed on the stack in order of appea
 
 ```
 S: 1 2 3 $list
+
 [1 2 3]
 
 S: 1 2 $ $list
+
 [1 2 2]
 
 S: 42 7 _ $list
+
 [42]
 
 S: 42 7 | $list
+
 []
 
 S: 42 35 $1 -
+
 -7
 ```
 
@@ -93,12 +100,15 @@ Parentheses may be used to divide expressions into separate parts, each level co
 
 ```
 S: (1 2 +) (2 2 *) +
+
 7
 
 S: 1 (2 3 $list)
+
 [1 2 3]
 
 S: 1 (|2 3 $list) .
+
 1 [2 3].
 ```
 
@@ -118,9 +128,11 @@ Two kinds of equality are supported, shallow and deep. Each use a separate opera
 
 ```
 S: [3 4 35] [3 4 35] =
+
 false
 
 S: [3 4 35] [3 4 35] ==
+
 true
 ```
 
@@ -129,6 +141,7 @@ The ```let:```-macro may be used to introduce named bindings. Bound names are pr
 
 ```
 S: let: fn {7 +}; 35 @fn call
+
 42
 ```
 
@@ -137,12 +150,15 @@ Types are first class, optionally parameterized and inferred. Primitive types li
 
 ```
 S: I64
+
 I64
 
 S: 42 type
+
 I64
 
 S: [7 35] List<I64> is?
+
 true
 ```
 
@@ -151,27 +167,35 @@ Strings are mutable collections of characters that provide reference semantics. 
 
 ```
 S: 'foo'
+
 'foo'
 
 S: 'foo' 'foo' =
+
 false
 
 S: 'foo' 'foo' ==
+
 true
 
 S: "foo"
+
 "foo"
 
 S: 'foo' ustr
+
 "foo"
 
 S: "foo" 'foo' =
+
 true
 
 S: 'ö' len
+
 2
 
 S: "ö" len
+
 1
 
 S: ['foo\r\n\r\nbar\r\n\r\nbaz' bytes]
@@ -185,9 +209,11 @@ Character literals are supported for both unicode- and byte strings.
 
 ```
 S: '' $ \f push $ \o push $ \o push
+
 'foo'
 
 S: "" $ \\f push $ \\o push $ \\o push
+
 "foo"
 ```
 
@@ -196,21 +222,27 @@ Symbols are unique strings that support efficient comparisons/ordering. Snabel u
 
 ```
 S: #foo
+
 #foo
 
 S: #foo $ =
+
 true
 
 S: #foo 'foo' sym =
+
 true
 
 S: #foo str 'foo' =
+
 true
 
 S: #foo #bar =
+
 false
 
 S: #foo #bar gt?
+
 true
 ```
 
@@ -219,9 +251,11 @@ Snabel supports exact arithmetics using rational numbers. Integers are promoted 
 
 ```
 S: 1 3 /
+
 1/3
 
 S: 10 3 / trunc
+
 3
 
 S: 1 1 /
@@ -236,21 +270,27 @@ Lists are based on deques, which means fast inserts/removals in the front/back a
 
 ```
 S: [1 2 3]
+
 [1 2 3]
 
 S: Str list
+
 []
 
 S: 1 2 3 $list
+
 [1 2 3]
 
 S: [35 7 + 'foo']
+
 [42 'foo']
 
 S: [1 2] $ 3 push $ reverse $ pop _
+
 [3 2]
 
 S: [2 3 1] $ &lt? sort
+
 [1 2 3]
 ```
 
@@ -259,18 +299,23 @@ Pairs have first class support and all iterables support zipping/unzipping. Pair
 
 ```
 S: 'foo' 42.
+
 'foo' 42.
 
 S: 'foo' 42. right
+
 42
 
 S: 'foo' 42. unzip
+
 'foo' 42
 
 S: ['foo' 'bar'] 7 list zip list
+
 ['foo' 0. 'bar' 1.]
 
 S: ['foo' 0. 'bar' 1.] unzip list $1 list $list
+
 [[0 1] ['foo' 'bar']]
 ```
 
@@ -279,27 +324,35 @@ Optional values are supported through the ```Opt<T>```-type. The empty value is 
 
 ```
 S: 42 opt
+
 Opt(42)
 
 S: 7 opt {35 +} when
+
 42
 
 S: nil {42} unless
+
 42
 
 S: nil 42 or
+
 42
 
 S: nil 42 opt or
+
 Opt(42)
 
 S: 7 opt 42 opt or
+
 Opt(7)
 
 S: [7 opt nil 35 opt]
+
 [Opt(7) nil Opt(35)]
 
 S: [7 opt nil 35 opt] unopt list
+
 [7 35]
 ```
 
@@ -307,6 +360,7 @@ S: [7 opt nil 35 opt] unopt list
 Tables map keys to values, and may be created from any pair iterable. Iterating a table results in a pair iterator.
 ```
 S: [7 'foo'. 35 'bar'.] table 35 get
+
 Opt('bar')
 
 S: let: acc Str I64 table;
@@ -334,9 +388,11 @@ S: func: make-foo {Foo new 0 set-a '' set-b};
 Foo(a 0. b ''.)
 
 S: make-foo 42 set-a
+
 Foo(a 42. b ''.)
 
 S: make-foo 'bar' set-b list
+
 [#a 0. #b 'bar'.]
 
 S: struct: Foo
@@ -347,6 +403,7 @@ SnabelError: Function not applicable: set-c
 [Foo(a 0. b ''.)]
 
 S: Foo new 42 set-c
+
 Foo(c 42.)
 
 S: struct: Bar Foo
@@ -364,16 +421,18 @@ Wrapping code in braces pushes a pointer on the stack. Lambdas may be exited ear
 
 ```
 S: {1 2 +}
+
 Lambda(_enter1:0)
 
 S: {1 2 +} call
+
 3
 
 S: 42
-   {-- $ z? &return when recall 2 +}
+   {-- $ z? &return when recall}
    call
    
-82
+0
 ```
 
 ### Conditions
@@ -381,21 +440,27 @@ S: 42
 
 ```
 S: 7 true {35 +} when
+
 42
 
 S: 7 false {35 +} when
+
 7
 
 S: 7 true {35 +} unless
+
 7
 
 S: 7 false {35 +} unless
+
 42
 
 S: true 42 nil if
+
 42
 
 S: false 42 nil if
+
 nil
 
 S: func: guess-pos {
@@ -427,12 +492,15 @@ Many things in snabel are iterable, numbers, strings and lists to name a few. Sn
 
 ```
 S: 7 \, join
+
 '0,1,2,3,4,5,6'
 
 S: [1 2 3] {7 *} map list
+
 [7 14 27]
 
 S: 'abcabcabc' {\a =} filter str
+
 "aaa"
 ```
 
@@ -441,18 +509,23 @@ The ```for```-loop accepts an iterable and a target, and calls the target with t
 
 ```
 S: 0 7 &+ for
+
 21
 
 S: 0 7 {$ 5 = {_ break} when +} for
+
 10
 
 S: 0 [1 2 3 4 5 6] &+ for
+
 21
 
 S: 'foo' &nop for $list \- join
+
 'f-o-o'
 
 S: 0 {+1 $ 42 = &break when} loop
+
 42
 ```
 
@@ -461,11 +534,13 @@ Each function name represents a set of implementations that are matched in rever
 
 ```
 S: func: foo {35 +}; 7 foo
+
 42
 
 S: func: foo {35 +}
   let: bar &foo
   7 @bar call
+
 42
 ```
 
@@ -491,21 +566,26 @@ Calling ```yield``` from a lambda logs the current position, stack and environme
 
 ```
 S: {yield 42} call
+
 Coro(_enter1:1)
 
 S: {yield 42} call call
+
 42
 
 S: func: foo {| yield (7 yield 28 +)} call;
   foo foo +
+
 42
 
 S: func: foo {| yield (let: bar 35; 7 yield @bar +)} call;
   foo foo
+
 42
 
 S: func: foo {| yield ([7 35] &yield for &+)} call;
   foo foo foo call
+
 42
 ```
 
@@ -527,24 +607,30 @@ Snabel provides non-blocking IO in the form of iterators. The provided target is
 
 ```
 S: ['foo' 'bar' 'baz'] &say for
+
 foo
 bar
 baz
 nil
 
 S: 'snackis' rfile
+
 RFile(11)
 
 S: 'snackis' rfile read
+
 Iter<Bin>
 
 S: 0 'snackis' rfile read {{len +} when} for
+
 2313864
 
 S: 'tmp' rwfile
+
 RWFile(12)
 
 S: 'foo' bytes 'tmp' rwfile write
+
 Iter<I64>
 
 S: ['foo' bytes]
@@ -576,9 +662,11 @@ Random numbers are supported through ranged generators that may be treated as in
 
 ```
 > 100 random $ pop $1 pop $1 $list
+
 [61 23]
 
 > 100 random 3 nlist
+
 [18 29 63]
 ```
 
@@ -587,6 +675,7 @@ Starting a new thread copies program, stack and environment to a separate struct
 
 ```
 > 7 {35 +} thread join
+
 42
 ```
 

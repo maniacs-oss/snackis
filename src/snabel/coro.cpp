@@ -7,13 +7,17 @@
 
 namespace snabel {
   Coro::Coro(Scope &scp):
-    target(*scp.target), proc(nullptr), done(false)
+    pc(-1), target(*scp.target), proc(nullptr), done(false)
   { }
 
   void refresh(Coro &cor, Scope &scp) {
-    refresh(dynamic_cast<Frame &>(cor), scp);
+    auto &thd(scp.thread);
+    cor.pc = thd.pc+1;
+    
+    cor.stacks.assign(std::next(thd.stacks.begin(), scp.stack_depth),
+		      thd.stacks.end());
+    
     cor.op_state.swap(scp.op_state);
-    cor.recalls.swap(scp.recalls);
     cor.env.swap(scp.env);
   }
 
