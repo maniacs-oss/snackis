@@ -168,7 +168,7 @@ namespace snabel {
     Exec &exe(scp.exec);
     auto &in(args.at(0));
     auto &out(args.at(1));
-    push(scp.thread, out);
+
     push(scp.thread,
 	 get_iter_type(exe, exe.i64_type),
 	 IterRef(new WriteIter(exe, (*in.type->iter)(in), out)));
@@ -181,6 +181,7 @@ namespace snabel {
   static void ls_imp(Scope &scp, const Args &args) {
     Exec &exe(scp.exec);
     auto &in(get<Path>(args.at(0)));
+
     push(scp.thread,
 	 get_iter_type(exe, exe.path_type),
 	 IterRef(new DirIter<false>(exe, in)));
@@ -189,6 +190,7 @@ namespace snabel {
   static void ls_r_imp(Scope &scp, const Args &args) {
     Exec &exe(scp.exec);
     auto &in(get<Path>(args.at(0)));
+
     push(scp.thread,
 	 get_iter_type(exe, exe.path_type),
 	 IterRef(new DirIter<true>(exe, in)));
@@ -200,6 +202,7 @@ namespace snabel {
   
   void init_io(Exec &exe){
     exe.file_type.supers.push_back(&exe.ordered_type);
+
     exe.file_type.fmt = [](auto &v) {
       auto &f(*get<FileRef>(v));
       return fmt("File(%0)", f.fd);
