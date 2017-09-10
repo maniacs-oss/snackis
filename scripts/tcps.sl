@@ -58,7 +58,7 @@ func: do-server {(
       do-recv proc @procs $1 push
       Bin list
       do-send proc @procs $1 push
-      @clients $2 $2 put _
+      @clients $2 $2 put
     } when
 
     yield1

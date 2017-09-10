@@ -577,7 +577,7 @@ S: func: histogram {
      func: process-file {
        rfile read unopt words unopt
        {len @min-wlen gte? $1 _} filter
-       {@tbl $1 1 &+1 upsert _} for
+       {@tbl $1 1 &+1 upsert} for
      };
 
      &process-file for

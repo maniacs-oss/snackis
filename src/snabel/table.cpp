@@ -74,11 +74,9 @@ namespace snabel {
   }
 
   static void put_imp(Scope &scp, const Args &args) {
-    auto &tbl_arg(args.at(0));
-    auto &tbl(*get<TableRef>(tbl_arg));
+    auto &tbl(*get<TableRef>(args.at(0)));
     auto &key(args.at(1));
     auto &val(args.at(2));
-    push(scp.thread, tbl_arg);
     auto fnd(tbl.find(key));
     
     if (fnd == tbl.end()) {
@@ -91,12 +89,10 @@ namespace snabel {
   }
 
   static void upsert_imp(Scope &scp, const Args &args) {
-    auto &tbl_arg(args.at(0));
-    auto &tbl(*get<TableRef>(tbl_arg));
+    auto &tbl(*get<TableRef>(args.at(0)));
     auto &key(args.at(1));
     auto &val(args.at(2));
     auto &tgt(args.at(3));    
-    push(scp.thread, tbl_arg);
     auto fnd(tbl.find(key));
     
     if (fnd == tbl.end()) {
