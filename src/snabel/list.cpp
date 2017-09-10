@@ -113,7 +113,7 @@ namespace snabel {
     std::stable_sort(in.begin(), in.end(), [&scp, &thd, &tgt](auto &x, auto &y) {
 	push(thd, x);
 	push(thd, y);
-	(*tgt.type->call)(scp, tgt, true);
+	tgt.type->call(scp, tgt, true);
 	auto res(try_pop(thd));
 
 	if (!res) {

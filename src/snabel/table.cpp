@@ -108,7 +108,7 @@ namespace snabel {
 		  std::forward_as_tuple(val));
     } else {
       push(scp.thread, fnd->second);
-      (*tgt.type->call)(scp, tgt, true);
+      tgt.type->call(scp, tgt, true);
       auto res(try_pop(scp.thread));
 
       if (res) {

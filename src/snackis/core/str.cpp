@@ -4,7 +4,7 @@
 #include "snackis/core/str.hpp"
 
 namespace snackis {
-  std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> uconv;
+  std::wstring_convert<std::codecvt_utf8_utf16<uchar>, uchar> uconv;
   const str whitespace(" \t\r\n");
   
   str trim(const str& in) {
@@ -21,13 +21,12 @@ namespace snackis {
     return out;
   }
 
-  void replace(str &in, const str &from, const str &to) {
-    size_t i(0);
-    
-    while ((i = in.find(from, i)) != std::string::npos) {
-      in.replace(i, from.length(), to);
-      i += to.length();
-    }
+  void upcase(str &in) {
+    std::transform(in.begin(), in.end(), in.begin(), toupper);
+  }
+
+  void downcase(str &in) {
+    std::transform(in.begin(), in.end(), in.begin(), tolower);
   }
 
   size_t find_ci(const str &stack, const str& needle) {

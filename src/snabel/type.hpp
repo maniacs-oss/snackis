@@ -30,7 +30,7 @@ namespace snabel {
     func<bool (const Box &, const Box &)> gt;
     func<str (const Box &)> dump;
     func<str (const Box &)> fmt;
-    opt<func<bool (Scope &, const Box &, bool)>> call;
+    func<bool (Scope &, const Box &, bool)> call;
     opt<func<IterRef (const Box &)>> iter;
     opt<func<ReadResult (Scope &, const Box &, Bin &)>> read;
     opt<func<int64_t (Scope &, const Box &, const unsigned char *, int64_t)>> write;

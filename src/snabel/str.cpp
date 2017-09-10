@@ -25,10 +25,27 @@ namespace snabel {
     return Box(exec.uchar_type, res);
   }
 
-  static void str_len_imp(Scope &scp, const Args &args) {
+  static void len_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
     push(scp.thread, in);
     push(scp.thread, scp.exec.i64_type, (int64_t)get<StrRef>(in)->size());
+  }
+
+  static void suffix_imp(Scope &scp, const Args &args) {
+    auto &in(*get<StrRef>(args.at(0))), &x(*get<StrRef>(args.at(1)));
+    push(scp.thread, scp.exec.bool_type, suffix(in, x));
+  }
+
+  static void upcase_imp(Scope &scp, const Args &args) {
+    auto &in(args.at(0));
+    upcase(*get<StrRef>(in));
+    push(scp.thread, in);
+  }
+
+  static void downcase_imp(Scope &scp, const Args &args) {
+    auto &in(args.at(0));
+    downcase(*get<StrRef>(in));
+    push(scp.thread, in);
   }
 
   static void str_push_imp(Scope &scp, const Args &args) {
@@ -55,12 +72,17 @@ namespace snabel {
 	 std::make_shared<ustr>(uconv.from_bytes(*get<StrRef>(args.at(0)))));
   }
 
-  static void ustr_len_imp(Scope &scp, const Args &args) {
+  static void ulen_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
     push(scp.thread, in);
     push(scp.thread, scp.exec.i64_type, (int64_t)get<UStrRef>(in)->size());
   }
 
+  static void usuffix_imp(Scope &scp, const Args &args) {
+    auto &in(*get<UStrRef>(args.at(0))), &x(*get<UStrRef>(args.at(1)));
+    push(scp.thread, scp.exec.bool_type, suffix(in, x));
+  }
+  
   static void ustr_push_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
     get<UStrRef>(in)->push_back(get<uchar>(args.at(1)));
@@ -143,11 +165,63 @@ namespace snabel {
     push(scp.thread,
 	 get_iter_type(exe, get_opt_type(exe, exe.str_type)),
 	 IterRef(new SplitIter(exe, (*in.type->iter)(in), [](auto &c) {
-	       return !isalpha(c);
+	       return c != '\'' && !isalpha(c);
 	     })));
   }
   
   void init_strs(Exec &exe) {
+    exe.char_type.supers.push_back(&exe.any_type);
+    exe.char_type.supers.push_back(&exe.ordered_type);
+
+    exe.char_type.dump = [](auto &v) -> str {
+      auto c(get<char>(v));
+      
+      switch (c) {
+      case ' ':
+	return "\\space";
+      case '\n':
+	return "\\n";
+      case '\t':
+	return "\\t";
+      }
+
+      return fmt("\\%0", str(1, c));
+    };
+
+    exe.char_type.fmt = [](auto &v) -> str { return str(1, get<char>(v)); };
+    exe.char_type.eq = [](auto &x, auto &y) { return get<char>(x) == get<char>(y); };
+    exe.char_type.lt = [](auto &x, auto &y) { return get<char>(x) < get<char>(y); };
+    
+    exe.uchar_type.supers.push_back(&exe.any_type);
+    exe.uchar_type.supers.push_back(&exe.ordered_type);
+    
+    exe.uchar_type.dump = [](auto &v) -> str {
+      auto c(get<uchar>(v));
+      
+      switch (c) {
+      case u' ':
+	return "\\\\space";
+      case u'\n':
+	return "\\\\n";
+      case u'\t':
+	return "\\\\t";
+      }
+
+      return fmt("\\\\%0", uconv.to_bytes(ustr(1, c)));
+    };
+
+    exe.uchar_type.fmt = [](auto &v) -> str {
+      return uconv.to_bytes(ustr(1, get<uchar>(v)));
+    };
+    
+    exe.uchar_type.eq = [](auto &x, auto &y) {
+      return get<uchar>(x) == get<uchar>(y);
+    };
+    
+    exe.uchar_type.lt = [](auto &x, auto &y) {
+      return get<uchar>(x) < get<uchar>(y);
+    };
+
     exe.str_type.supers.push_back(&exe.any_type);
     exe.str_type.supers.push_back(&exe.ordered_type);
     exe.str_type.supers.push_back(&get_iterable_type(exe, exe.char_type));
@@ -194,8 +268,20 @@ namespace snabel {
       return IterRef(new UStrIter(exe, get<UStrRef>(in)));
     };
 
-    add_func(exe, "len", {ArgType(exe.str_type)}, str_len_imp);
+    add_func(exe, "len", {ArgType(exe.str_type)}, len_imp);
     
+    add_func(exe, "suffix?",
+	     {ArgType(exe.str_type), ArgType(exe.str_type)},
+	     suffix_imp);
+
+    add_func(exe, "upcase",
+	     {ArgType(exe.str_type)},
+	     upcase_imp);
+
+    add_func(exe, "downcase",
+	     {ArgType(exe.str_type)},
+	     downcase_imp);
+
     add_func(exe, "push",
 	     {ArgType(exe.str_type), ArgType(exe.char_type)},
 	     str_push_imp);
@@ -204,7 +290,11 @@ namespace snabel {
     add_func(exe, "str", {ArgType(exe.bin_type)}, bin_str_imp);
     add_func(exe, "ustr", {ArgType(exe.str_type)}, str_ustr_imp);
 
-    add_func(exe, "len", {ArgType(exe.ustr_type)}, ustr_len_imp);
+    add_func(exe, "len", {ArgType(exe.ustr_type)}, ulen_imp);
+
+    add_func(exe, "suffix?",
+	     {ArgType(exe.ustr_type), ArgType(exe.ustr_type)},
+	     usuffix_imp);
 
     add_func(exe, "push",
 	     {ArgType(exe.ustr_type), ArgType(exe.uchar_type)},

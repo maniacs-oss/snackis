@@ -69,14 +69,45 @@ namespace snabel {
 
   static void when_imp(Scope &scp, const Args &args) {
     auto &cnd(args.at(0)), &tgt(args.at(1));
-    if (get<bool>(cnd)) { (*tgt.type->call)(scp, tgt, false); }
+    if (get<bool>(cnd)) { tgt.type->call(scp, tgt, false); }
   }
 
   static void unless_imp(Scope &scp, const Args &args) {
     auto &cnd(args.at(0)), &tgt(args.at(1));
-    if (!get<bool>(cnd)) { (*tgt.type->call)(scp, tgt, false); }
+    if (!get<bool>(cnd)) { tgt.type->call(scp, tgt, false); }
   }
 
+  static void if_imp(Scope &scp, const Args &args) {
+    auto &cnd(get<bool>(args.at(0)));
+    auto &tgt(cnd ? args.at(1) : args.at(0));
+    tgt.type->call(scp, tgt, false);
+  }
+
+  static void cond_imp(Scope &scp, const Args &args) {
+    auto &exe(scp.exec);
+    auto in(args.at(0));
+    auto it((*in.type->iter)(in));
+
+    while (true) {
+      auto nxt(it->next(scp));
+      if (!nxt) { break; }
+      auto &cs(*get<PairRef>(*nxt));
+      cs.first.type->call(scp, cs.first, true);
+      auto res(try_pop(scp.thread));
+      if (!res) { continue; }
+      
+      if (res->type != &exe.bool_type) {
+	ERROR(Snabel, fmt("Invalid cond case result: %0", *res));
+	break;
+      }
+
+      if (get<bool>(*res)) {
+	cs.second.type->call(scp, cs.second, true);
+	break;
+      }
+    }
+  }
+  
   static void zero_i64_imp(Scope &scp, const Args &args) {
     bool res(get<int64_t>(args.at(0)) == 0);
     push(scp.thread, scp.exec.bool_type, res);
@@ -334,15 +365,15 @@ namespace snabel {
     nop_type.args.push_back(&callable_type);
     nop_type.fmt = [](auto &v) { return "&nop"; };
     nop_type.eq = [](auto &x, auto &y) { return true; };  
-    nop_type.call.emplace([](auto &scp, auto &v, bool now) { return true; });
+    nop_type.call = [](auto &scp, auto &v, bool now) { return true; };
     
     drop_type.args.push_back(&callable_type);
     drop_type.fmt = [](auto &v) { return "&_"; };
     drop_type.eq = [](auto &x, auto &y) { return true; };  
 
-    drop_type.call.emplace([](auto &scp, auto &v, bool now) {
-	return try_pop(scp.thread) ? true : false;
-      });
+    drop_type.call = [](auto &scp, auto &v, bool now) {
+      return try_pop(scp.thread) ? true : false;
+    };
     
     iter_type.supers.push_back(&any_type);
     iter_type.args.push_back(&any_type);
@@ -396,65 +427,6 @@ namespace snabel {
     put_env(main_scope, "true", Box(bool_type, true));
     put_env(main_scope, "false", Box(bool_type, false));
 
-    char_type.supers.push_back(&any_type);
-    char_type.supers.push_back(&ordered_type);
-
-    char_type.dump = [](auto &v) -> str {
-      auto c(get<char>(v));
-      
-      switch (c) {
-      case ' ':
-	return "\\space";
-      case '\n':
-	return "\\n";
-      case '\t':
-	return "\\t";
-      }
-
-      return fmt("\\%0", str(1, c));
-    };
-
-    char_type.fmt = [](auto &v) -> str { return str(1, get<char>(v)); };
-    char_type.eq = [](auto &x, auto &y) { return get<char>(x) == get<char>(y); };
-    char_type.lt = [](auto &x, auto &y) { return get<char>(x) < get<char>(y); };
-    
-    uchar_type.supers.push_back(&any_type);
-    uchar_type.supers.push_back(&ordered_type);
-    
-    uchar_type.dump = [](auto &v) -> str {
-      auto c(get<uchar>(v));
-      
-      switch (c) {
-      case u' ':
-	return "\\\\space";
-      case u'\n':
-	return "\\\\n";
-      case u'\t':
-	return "\\\\t";
-      }
-
-      return fmt("\\\\%0", uconv.to_bytes(ustr(1, c)));
-    };
-
-    uchar_type.fmt = [](auto &v) -> str {
-      return uconv.to_bytes(ustr(1, get<uchar>(v)));
-    };
-    
-    uchar_type.eq = [](auto &x, auto &y) { return get<uchar>(x) == get<uchar>(y); };
-    uchar_type.lt = [](auto &x, auto &y) { return get<uchar>(x) < get<uchar>(y); };
-
-    proc_type.supers.push_back(&any_type);
-    proc_type.supers.push_back(&callable_type);
-    proc_type.fmt = [](auto &v) { return fmt("Proc(%0)", get<ProcRef>(v)->id); };
-    proc_type.eq = [](auto &x, auto &y) {
-      return get<ProcRef>(x) == get<ProcRef>(y);
-    };
-
-    proc_type.call.emplace([](auto &scp, auto &v, bool now) {
-	call(get<ProcRef>(v), scp, now);
-	return true;
-      });
-    
     func_type.supers.push_back(&any_type);
     func_type.supers.push_back(&callable_type);
 
@@ -464,20 +436,20 @@ namespace snabel {
 
     func_type.eq = [](auto &x, auto &y) { return get<Func *>(x) == get<Func *>(y); };
     
-    func_type.call.emplace([](auto &scp, auto &v, bool now) {
-	auto &thd(scp.thread);
-	auto &fn(*get<Func *>(v));
-	auto m(match(fn, thd));
-
-	if (!m) {
-	  ERROR(Snabel, fmt("Function not applicable: %0\n%1", 
-			    name(fn.name), curr_stack(thd)));
-	  return false;
-	}
-
-	(*m->first)(scp, m->second);
-	return true;
-      });
+    func_type.call = [](auto &scp, auto &v, bool now) {
+      auto &thd(scp.thread);
+      auto &fn(*get<Func *>(v));
+      auto m(match(fn, thd));
+      
+      if (!m) {
+	ERROR(Snabel, fmt("Function not applicable: %0\n%1", 
+			  name(fn.name), curr_stack(thd)));
+	return false;
+      }
+      
+      (*m->first)(scp, m->second);
+      return true;
+    };
 
     i64_type.supers.push_back(&any_type);
     i64_type.supers.push_back(&ordered_type);
@@ -502,10 +474,10 @@ namespace snabel {
       return get<Label *>(x) == get<Label *>(y);
     };
 
-    label_type.call.emplace([](auto &scp, auto &v, bool now) {
-	jump(scp, *get<Label *>(v));
-	return true;
-      });
+    label_type.call = [](auto &scp, auto &v, bool now) {
+      jump(scp, *get<Label *>(v));
+      return true;
+    };
 
     lambda_type.supers.push_back(&any_type);
     lambda_type.supers.push_back(&callable_type);
@@ -519,10 +491,10 @@ namespace snabel {
       return get<Label *>(x) == get<Label *>(y);
     };
 
-    lambda_type.call.emplace([](auto &scp, auto &v, bool now) {
-	call(scp, *get<Label *>(v), now);
-	return true;
-      });
+    lambda_type.call = [](auto &scp, auto &v, bool now) {
+      call(scp, *get<Label *>(v), now);
+      return true;
+    };
 
     coro_type.supers.push_back(&any_type);
     coro_type.supers.push_back(&callable_type);
@@ -536,10 +508,10 @@ namespace snabel {
       return get<CoroRef>(x) == get<CoroRef>(y);
     };
 
-    coro_type.call.emplace([](auto &scp, auto &v, bool now) {
-	call(get<CoroRef>(v), scp, now);
-	return true;
-      });
+    coro_type.call = [](auto &scp, auto &v, bool now) {
+      call(get<CoroRef>(v), scp, now);
+      return true;
+    };
         
     rat_type.supers.push_back(&any_type);
     rat_type.supers.push_back(&ordered_type);
@@ -607,11 +579,19 @@ namespace snabel {
     add_func(*this, "gt?", {ArgType(ordered_type), ArgType(0)}, gt_imp);
     add_func(*this, "gte?", {ArgType(ordered_type), ArgType(0)}, gte_imp);
 
-    add_func(*this, "when", {ArgType(bool_type), ArgType(callable_type)}, when_imp);
+    add_func(*this, "when", {ArgType(bool_type), ArgType(any_type)}, when_imp);
 
     add_func(*this, "unless",
-	     {ArgType(bool_type), ArgType(callable_type)},
+	     {ArgType(bool_type), ArgType(any_type)},
 	     unless_imp);
+
+    add_func(*this, "if",
+	     {ArgType(bool_type), ArgType(any_type), ArgType(any_type)},
+	     if_imp);
+
+    add_func(*this, "cond",
+	     {ArgType(get_iterable_type(*this, pair_type))},
+	     cond_imp);
 
     add_func(*this, "z?", {ArgType(i64_type)}, zero_i64_imp);
     add_func(*this, "+?", {ArgType(i64_type)}, pos_i64_imp);
@@ -1063,9 +1043,10 @@ namespace snabel {
 	}
       } else if (tok.text.at(0) == '\'') {
 	auto s(tok.text.substr(1, tok.text.size()-2));
-	replace(s, "\\n", "\n");
-	replace(s, "\\r", "\r");
-	replace(s, "\\t", "\t");
+	replace<str>(s, "\\n", "\n");
+	replace<str>(s, "\\r", "\r");
+	replace<str>(s, "\\t", "\t");
+	replace<str>(s, "\\'", "'");
 	bool fmt(false);
       
 	for (size_t i(0); i < s.size(); i++) {
@@ -1082,9 +1063,14 @@ namespace snabel {
 	  out.emplace_back(Push(Box(exe.str_type, std::make_shared<str>(s))));
 	}
       } else if (tok.text.at(0) == '"') {
-	auto v(tok.text.substr(1, tok.text.size()-2));
+	auto s(uconv.from_bytes(tok.text.substr(1, tok.text.size()-2)));
+	replace<ustr>(s, u"\\n", u"\n");
+	replace<ustr>(s, u"\\r", u"\r");
+	replace<ustr>(s, u"\\t", u"\t");
+	replace<ustr>(s, u"\\\"", u"\"");
+
 	out.emplace_back(Push(Box(exe.ustr_type,
-				  std::make_shared<ustr>(uconv.from_bytes(v)))));
+				  std::make_shared<ustr>(s))));
       } else if (tok.text.at(0) == '\\' && tok.text.at(1) == '\\') {
 	if (tok.text.size() < 3) {
 	  ERROR(Snabel, fmt("Invalid uchar literal on row %0, col %1: %2",

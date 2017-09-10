@@ -15,10 +15,12 @@ namespace snackis {
   using ustr = std::u16string;
   extern const str whitespace;
   extern std::wstring_convert<std::codecvt_utf8_utf16<uchar>, uchar> uconv;
-
+  
   str trim(const str& in);
   str fill(const str &in, char ch, size_t len);
-  void replace(str &in, const str &from, const str &to);
+
+  void upcase(str &in);
+  void downcase(str &in);
   
   template <typename IterT, typename T>
   str join(IterT beg, IterT end, T sep) {
@@ -30,6 +32,22 @@ namespace snackis {
     }
     
     return out.str();
+  }
+
+  template <typename T>
+  bool suffix(const T &in, const T &sfx) {    
+    if (sfx.size() > in.size()) return false;
+    return std::equal(sfx.rbegin(), sfx.rend(), in.rbegin());
+  }
+
+  template <typename T>
+  void replace(T &in, const T &from, const T &to) {
+    size_t i(0);
+    
+    while ((i = in.find(from, i)) != T::npos) {
+      in.replace(i, from.length(), to);
+      i += to.length();
+    }
   }
 
   std::set<str> word_set(const str &in);

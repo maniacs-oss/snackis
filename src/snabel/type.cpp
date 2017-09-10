@@ -12,10 +12,15 @@ namespace snabel {
     fmt = [](auto &v) { return snabel::name(v.type->name); };
     eq = [](auto &x, auto &y) { return false; };
     equal = [](auto &x, auto &y) { return x.type->eq(x, y); };
-    
+      
     gt = [](auto &x, auto &y) {
       auto &t(*x.type);
       return !t.lt(x, y) && !t.eq(x, y);
+    };
+
+    call = [](auto &scp, auto &v, auto now) {
+      push(scp.thread, v);
+      return true;
     };
   }
 

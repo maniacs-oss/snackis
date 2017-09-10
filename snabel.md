@@ -20,6 +20,7 @@ let: tbl Str I64 table;
 
 stdin read unopt words unopt
 {len @min-wlen gte? $1 _} filter
+&downcase map
 {@tbl $1 1 &+1 upsert _} for
 @tbl list {right $1 right lt?} sort
 @max-len nlist {unzip '$1\t$0' say _ _} for
@@ -375,14 +376,49 @@ S: 42
 ```
 
 ### Conditions
-```when``` accepts a condition and a callable target, the target is called if the condition is true. ```unless``` is the opposite of ```when```.
+```when``` takes a condition and a callable target, the target is called if the condition is true. ```unless``` is the opposite of ```when```. ```if``` takes a condition and two targets, one that's called if the condition is true and one thats called otherwise. ```cond``` takes an iterator of conditions/target pairs, and calls the first target which condition returns true.
 
 ```
+S: 7 true {35 +} when
+42
+
 S: 7 false {35 +} when
+7
+
+S: 7 true {35 +} unless
 7
 
 S: 7 false {35 +} unless
 42
+
+S: true 42 nil if
+42
+
+S: false 42 nil if
+nil
+
+S: func: guess-pos {
+     let: w; _
+  
+     [{@w 'ed' suffix?}
+        #VBD.
+      {@w 'es' suffix?}
+        #VBZ.
+      {@w 'ing' suffix?}
+        #VBG.
+      {@w 'ould' suffix?}
+        #MD.
+      {@w '\'s' suffix?}
+        #NN$.
+      {@w 's' suffix?}
+        #NNS.
+      {true}
+        #NN.] cond
+   };
+
+   'flower\'s' guess-pos 
+
+#NN$
 ```
 
 ### Iterators

@@ -75,7 +75,7 @@ namespace snabel {
   }
 
   bool Call::run(Scope &scp) {
-    if (target) { return (*target->type->call)(scp, *target, false); }
+    if (target) { return target->type->call(scp, *target, false); }
     auto tgt(try_pop(scp.thread));
     
     if (!tgt) {
@@ -83,12 +83,7 @@ namespace snabel {
       return false;
     }
     
-    if (!tgt->type->call) {
-      ERROR(Snabel, fmt("Invalid call target: %0", *tgt));
-      return false;
-    }
-    
-    bool ok((*tgt->type->call)(scp, *tgt, false));
+    bool ok(tgt->type->call(scp, *tgt, false));
     return ok;
   }
 
@@ -120,7 +115,6 @@ namespace snabel {
   }
 
   bool Deref::run(Scope &scp) {
-    auto &thd(scp.thread);
     auto fnd(find_env(scp, name));
     
     if (!fnd) {
@@ -128,12 +122,7 @@ namespace snabel {
       return false;
     }
 
-    if (fnd->type->call) {
-      return (*fnd->type->call)(scp, *fnd, false);
-    }
-    
-    push(thd, *fnd);
-    return true;
+    return fnd->type->call(scp, *fnd, false);
   }
 
   Drop::Drop(size_t count):
@@ -301,11 +290,6 @@ namespace snabel {
 	return false;
       }
     
-      if (!tgt->type->call) {
-	ERROR(Snabel, fmt("Invalid for target: %0", *tgt));
-	return false;
-      }
-    
       auto cnd(try_pop(thd));
     
       if (!cnd) {
@@ -335,7 +319,7 @@ namespace snabel {
       if (push_vals) { push(thd, *nxt); }
       if (tgt->type == &scp.exec.nop_type) { return true; }
       scp.break_pc = thd.pc+2;
-      if (!(*tgt->type->call)(scp, *tgt, false)) { return false; }
+      if (!tgt->type->call(scp, *tgt, false)) { return false; }
     } else {
       scp.op_state.erase(pc);
       scp.break_pc = -1;
@@ -548,11 +532,6 @@ namespace snabel {
 	return false;
       }
       
-      if (!tgt->type->call) {
-	ERROR(Snabel, fmt("Invalid while target: %0", *tgt));
-	return false;
-      }
-    
       scp.op_state.emplace(std::piecewise_construct,
 			   std::forward_as_tuple(pc),
 			   std::forward_as_tuple(State(*tgt)));
@@ -563,7 +542,7 @@ namespace snabel {
     
     if (tgt->type == &scp.exec.nop_type) { return true; }
     scp.break_pc = scp.thread.pc+2;
-    (*tgt->type->call)(scp, *tgt, false);
+    tgt->type->call(scp, *tgt, false);
     return true;
   }
 

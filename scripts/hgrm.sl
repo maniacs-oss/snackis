@@ -16,6 +16,7 @@ let: tbl Str I64 table;
 
 stdin read unopt words unopt
 {len @min-wlen gte? $1 _} filter
+&downcase map
 {@tbl $1 1 &+1 upsert _} for
 @tbl list {right $1 right lt?} sort
 @max-len nlist {unzip '$1\t$0' say _ _} for

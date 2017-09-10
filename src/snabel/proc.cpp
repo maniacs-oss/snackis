@@ -41,6 +41,19 @@ namespace snabel {
   }
   
   void init_procs(Exec &exe) {
+    exe.proc_type.supers.push_back(&exe.any_type);
+    exe.proc_type.supers.push_back(&exe.callable_type);
+    exe.proc_type.fmt = [](auto &v) { return fmt("Proc(%0)", get<ProcRef>(v)->id); };
+    
+    exe.proc_type.eq = [](auto &x, auto &y) {
+      return get<ProcRef>(x) == get<ProcRef>(y);
+    };
+
+    exe.proc_type.call = [](auto &scp, auto &v, bool now) {
+      call(get<ProcRef>(v), scp, now);
+      return true;
+    };
+
     add_func(exe, "proc", {ArgType(exe.coro_type)}, proc_imp);
     add_func(exe, "run", {ArgType(exe.proc_type)}, run_imp);
 
