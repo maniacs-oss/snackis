@@ -15,7 +15,7 @@ let: max-len stoi64; _
 let: tbl Str I64 table;
 
 stdin read unopt words unopt
-{len @min-wlen gte? $1 _} filter
+{len @min-wlen gte?} filter
 &downcase map
 {@tbl $1 1 &+1 upsert _} for
 @tbl list {right $1 right lt?} sort

@@ -562,7 +562,7 @@ namespace snabel {
   static void io_tests() {
     TRY(try_test);    
 
-    run_test(exe, "0 '../dist/snackis' rfile read {{len $1 _ +} when} for");
+    run_test(exe, "0 '../dist/snackis' rfile read {{len +} when} for");
     CHECK(get<int64_t>(pop(exe.main)) > 3000000, _);
 
     run_test(exe, "['foo' bytes] 'tmp' rwfile write 0 $1 &+ for");

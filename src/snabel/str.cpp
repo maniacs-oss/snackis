@@ -27,7 +27,6 @@ namespace snabel {
 
   static void len_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
-    push(scp.thread, in);
     push(scp.thread, scp.exec.i64_type, (int64_t)get<StrRef>(in)->size());
   }
 
@@ -74,7 +73,6 @@ namespace snabel {
 
   static void ulen_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
-    push(scp.thread, in);
     push(scp.thread, scp.exec.i64_type, (int64_t)get<UStrRef>(in)->size());
   }
 
