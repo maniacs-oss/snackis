@@ -305,10 +305,10 @@ namespace snabel {
   static void str_tests() {
     TRY(try_test);    
 
-    run_test(exe, "'' \\f push \\o push \\o push");
+    run_test(exe, "'' $ \\f push $ \\o push $ \\o push");
     CHECK(*get<StrRef>(pop(exe.main)) == "foo", _);
 
-    run_test(exe, "\"\" \\\\f push \\\\o push \\\\o push");
+    run_test(exe, "\"\" $ \\\\f push $ \\\\o push $ \\\\o push");
     CHECK(*get<UStrRef>(pop(exe.main)) == uconv.from_bytes("foo"), _);
 
     run_test(exe, "'foo' len");
@@ -352,7 +352,7 @@ namespace snabel {
   static void list_push_tests() {
     TRY(try_test);    
 
-    run_test(exe, "[0] 1 push");
+    run_test(exe, "[0] $ 1 push");
     auto lsb(pop(exe.main));
     auto ls(get<ListRef>(lsb));
     CHECK(ls->size() == 2, _);
@@ -420,7 +420,7 @@ namespace snabel {
       CHECK(get<int64_t>(ls->at(i)) == i, _);
     }
 
-    run_test(exe, "Str list 'foo' push");
+    run_test(exe, "Str list $ 'foo' push");
     CHECK(get<ListRef>(pop(exe.main))->size() == 1, _);
 
     run_test(exe, "['foo' 'bar'] 7 list zip list unzip _ list");
@@ -573,7 +573,7 @@ namespace snabel {
     TRY(try_test);    
     
     run_test(exe,
-	"func: foo {| yield (yield 35 push)} call proc;"
+	"func: foo {| yield (yield $ 35 push)} call proc;"
 	"0 [7] foo foo iter &+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
@@ -588,7 +588,7 @@ namespace snabel {
 	"let: acc I64 list; "
 
 	"let: foo {| yield ( "
-	"  7 {@acc $1 push _ yield1} for "
+	"  7 {@acc $1 push yield1} for "
 	")} call proc; "
 
 	"@foo run "

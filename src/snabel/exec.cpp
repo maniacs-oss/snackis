@@ -77,7 +77,7 @@ namespace snabel {
 
   static void if_imp(Scope &scp, const Args &args) {
     auto &cnd(get<bool>(args.at(0)));
-    auto &tgt(cnd ? args.at(1) : args.at(0));
+    auto &tgt(args.at(cnd ? 1 : 2));
     tgt.type->call(scp, tgt, false);
   }
 

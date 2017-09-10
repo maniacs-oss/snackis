@@ -24,7 +24,7 @@ func: do-recv {(
   | yield
 
   @server read {
-    {@out $1 push _} when
+    {@out $1 push} when
     yield1
   } for
 
@@ -38,7 +38,7 @@ func: do-in {(
   | yield
 
   stdin read {
-    {@in $1 push _} when
+    {@in $1 push} when
     yield1
     idle
   } for

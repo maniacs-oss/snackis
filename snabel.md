@@ -183,10 +183,10 @@ S: ['foo\r\n\r\nbar\r\n\r\nbaz' bytes]
 Character literals are supported for both unicode- and byte strings.
 
 ```
-S: '' \f push \o push \o push
+S: '' $ \f push $ \o push $ \o push
 'foo'
 
-S: "" \\f push \\o push \\o push
+S: "" $ \\f push $ \\o push $ \\o push
 "foo"
 ```
 
@@ -246,7 +246,7 @@ S: 1 2 3 $list
 S: [35 7 + 'foo']
 [42 'foo']
 
-S: [1 2] 3 push reverse $ pop _
+S: [1 2] $ 3 push reverse $ pop _
 [3 2]
 
 S: [2 3 1] &lt? sort
@@ -560,7 +560,7 @@ S: func: copy-file {(
      | yield
      
      @r {{
-       @q $1 push _
+       @q $1 push
        @w &break _for
      } when yield1} for
      @q +? {@w &_ for} when

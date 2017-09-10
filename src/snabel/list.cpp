@@ -77,7 +77,6 @@ namespace snabel {
     auto &lst(args.at(0));
     auto &el(args.at(1));
     get<ListRef>(lst)->push_back(el);
-    push(scp.thread, lst);    
   }
 
   static void pop_imp(Scope &scp, const Args &args) {

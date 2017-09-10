@@ -36,10 +36,10 @@ func: do-recv {(
     { let: data; _
 
       @clients {
-        unzip $1 @in = {@data push} unless _
+        unzip $1 @in = {_} {@data push} if
       } for
 
-      @out @data push _
+      @out @data push
     } when
 
     yield1
@@ -55,9 +55,9 @@ func: do-server {(
 
   @server {
     { 'connect' say
-      do-recv proc @procs $1 push _
+      do-recv proc @procs $1 push
       Bin list
-      do-send proc @procs $1 push _
+      do-send proc @procs $1 push
       @clients $2 $2 put _
     } when
 

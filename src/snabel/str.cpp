@@ -50,7 +50,6 @@ namespace snabel {
   static void str_push_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
     get<StrRef>(in)->push_back(get<char>(args.at(1)));
-    push(scp.thread, in);
   }
 
   static void str_bytes_imp(Scope &scp, const Args &args) {
@@ -84,7 +83,6 @@ namespace snabel {
   static void ustr_push_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
     get<UStrRef>(in)->push_back(get<uchar>(args.at(1)));
-    push(scp.thread, in);
   }
 
   static void ustr_bytes_imp(Scope &scp, const Args &args) {

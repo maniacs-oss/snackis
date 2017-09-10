@@ -48,8 +48,8 @@ func: do-server {(
   @server {
     {'connect' say
      tcp-socket @out-addr @out-port connect
-     do-recv proc @procs $1 push _
-     do-send proc @procs $1 push _ _ _} when
+     do-recv proc @procs $1 push
+     do-send proc @procs $1 push _ _} when
 
     yield1
     idle
