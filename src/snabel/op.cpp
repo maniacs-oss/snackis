@@ -214,16 +214,26 @@ namespace snabel {
     OpImp(OP_FMT, "fmt"), in(in)
   {
     for (size_t i(0); i < in.size(); i++) {
-      auto &c(in[i]);
-      
-      if ((c == '$')  && (!i || in[i-1] != '\\')) {
-	if (i == in.size()-1 || !isdigit(in[i+1])) {
-	  ERROR(Snabel, fmt("Invalid string format directive: %0", in.substr(i)));
+      if (!i || in[i-1] != '\\') {
+	switch(in[i]) {
+	case '$': {
+	  if (i == in.size()-1 || !isdigit(in[i+1])) {
+	    ERROR(Snabel, fmt("Invalid format directive: %0", in.substr(i)));
+	    i = in.size();
+	    break;
+	  }
+	  
+	  subs.emplace_back(i, in.substr(i, 2));
+	  i += 2;
 	  break;
 	}
-
-	subs.emplace_back(i, in.substr(i, 2));
-	i++;
+	case '@': {
+	  auto j(in.find(';', i));
+	  if (j == str::npos) { j = in.size(); }  
+	  subs.emplace_back(i, in.substr(i, j-i));
+	  i = j+1;
+	  break;
+	}}
       }
     }
   }
@@ -238,19 +248,41 @@ namespace snabel {
     int64_t offs(0);
     
     for (auto &s: subs) {
-      auto i(s.second.at(1) - '0');
-
-      if (i >= stack.size()) {
-	ERROR(Snabel, fmt("String format failed: %0\n%1",
-			  in.substr(s.first+offs),
-			  stack));
+      switch(s.second.at(0)) {
+      case '$': {
+	auto i(s.second.at(1) - '0');
+	
+	if (i >= stack.size()) {
+	  ERROR(Snabel, fmt("Format failed: %0\n%1",
+			    in.substr(s.first+offs),
+			    stack));
+	  return false;
+	}
+	
+	auto &v(stack.at(stack.size()-i-1));
+	auto vs(v.type->fmt(v));
+	out.replace(s.first+offs, s.second.size(), vs);
+	offs += vs.size() - s.second.size();
 	break;
       }
+      case '@': {
+	auto v(find_env(scp, s.second));
+	
+	if (!v) {
+	  ERROR(Snabel, fmt("Unknown format identifier: %0",
+			    in.substr(s.first+offs)));
+	  return false;
+	}
 
-      auto &v(stack.at(stack.size()-i-1));
-      auto vs(v.type->fmt(v));
-      out.replace(s.first+offs, s.second.size(), vs);
-      offs += vs.size() - s.second.size();
+	auto vs(v->type->fmt(*v));
+	out.replace(s.first+offs, s.second.size()+1, vs);
+	offs += vs.size() - s.second.size();
+	break;
+      }
+      default:
+	ERROR(Snabel, fmt("Invalid format directive: %0", s.second));
+	return false;
+      }
     }
     
     push(scp.thread, scp.exec.str_type, std::make_shared<str>(out));

@@ -342,6 +342,12 @@ namespace snabel {
 
     run_test(exe, "'Foo' $ downcase");
     CHECK(*get<StrRef>(pop(exe.main)) == "foo", _);
+
+    run_test(exe, "42 'foo$0'");
+    CHECK(*get<StrRef>(pop(exe.main)) == "foo42", _);
+
+    run_test(exe, "let: foo 42; '@foo;bar'");
+    CHECK(*get<StrRef>(pop(exe.main)) == "42bar", _);
   }
 
   static void bin_tests() {
