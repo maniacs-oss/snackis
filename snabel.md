@@ -675,15 +675,15 @@ S: 7 {35 +} thread join
 Functions defined via the host api may be tagged as safe or unsafe. Safe functions are guaranteed to not cause effects visible from the outside; most of the functionality in Snabel's IO, network and thread vocabularies is unsafe. Calling ```safe``` increases the safety level for the current scope; there is no way of decreasing it short of closing the scope; and the level is inherited by sub scopes. Environment lookups are limited to the same safety level, and any executable definitions inherit the current safety level on compilation.
 
 ```
-S: {safe let: foo 42; {@foo 'hello $0' _} call} call
+S: {safe let: foo 42; {@foo 'bar $0' _} call} call
 
-'hello 42'
+'bar 42'
 
-S: {let: foo 42; {safe @foo 'hello $0' _} call} call
+S: {let: foo 42; {safe @foo 'bar $0' _} call} call
 
 Error: Unknown identifier: @foo
 
-S: {safe func: foo 'hello' say 42; &foo} call call
+S: {safe func: foo 'bar' say; &foo} call call
 
 Error: Unsafe call not allowed: say
 ```
