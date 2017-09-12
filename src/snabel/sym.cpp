@@ -30,8 +30,8 @@ namespace snabel {
       return get<Sym>(x) < get<Sym>(y);
     };
 
-    add_func(exe, "sym", {ArgType(exe.str_type)}, sym_imp);
-    add_func(exe, "str", {ArgType(exe.sym_type)}, str_imp);
+    add_func(exe, "sym", Func::Const, {ArgType(exe.str_type)}, sym_imp);
+    add_func(exe, "str", Func::Const, {ArgType(exe.sym_type)}, str_imp);
   }
 
   const Sym &get_sym(Exec &exe, const str &n) {

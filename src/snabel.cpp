@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
   };
 
   Exec exe;
-  add_func(exe, "say", {ArgType(exe.str_type)}, say_imp);
+  add_func(exe, "say", Func::Unsafe, {ArgType(exe.str_type)}, say_imp);
 
   if (argc > 1) {
     for (int i=2; i < argc; i++) {
@@ -68,6 +68,8 @@ int main(int argc, char** argv) {
       
       if (res) {
 	std::cout << fmt("%0\n%1\n", res->type->dump(*res), name(res->type->name));
+      } else {
+	std::cout << "nil" << std::endl;
       }
 
       std::cout << std::endl;

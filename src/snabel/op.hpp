@@ -128,6 +128,7 @@ namespace snabel {
     Funcall(Func &fn);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
+    bool refresh(Scope &scp) override;
     bool run(Scope &scp) override;
   };
 

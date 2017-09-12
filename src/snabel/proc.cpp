@@ -54,14 +54,14 @@ namespace snabel {
       return true;
     };
 
-    add_func(exe, "proc", {ArgType(exe.coro_type)}, proc_imp);
-    add_func(exe, "run", {ArgType(exe.proc_type)}, run_imp);
+    add_func(exe, "proc", Func::Safe, {ArgType(exe.coro_type)}, proc_imp);
+    add_func(exe, "run", Func::Safe, {ArgType(exe.proc_type)}, run_imp);
 
-    add_func(exe, "run",
+    add_func(exe, "run", Func::Safe,
 	     {ArgType(get_list_type(exe, exe.proc_type))},
 	     list_run_imp);
 
-    add_func(exe, "stop", {ArgType(exe.proc_type)}, stop_imp);
+    add_func(exe, "stop", Func::Safe, {ArgType(exe.proc_type)}, stop_imp);
   }
   
   Proc::Proc(const CoroRef &cor):

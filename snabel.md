@@ -556,7 +556,7 @@ static void add_i64(Scope &scp, const Args &args) {
 }
 
 Exec exe;
-add_func(exe, "+",
+add_func(exe, "+", Func::Pure,
          {ArgType(exe.i64_type), ArgType(exe.i64_type)},
 	 add_i64);
 ```

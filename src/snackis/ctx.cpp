@@ -8,7 +8,8 @@ namespace snackis {
   Ctx::Ctx(db::Proc &p, size_t max_buf):
     db::Ctx(p, max_buf), db(*this), settings(*this)
   {
-    snabel::add_func(exec, "say", {snabel::ArgType(exec.str_type)},
+    snabel::add_func(exec, "say", snabel::Func::Unsafe,
+		     {snabel::ArgType(exec.str_type)},
 		     [this](auto &scp, auto &args) {
 		       log(*this, *get<snabel::StrRef>(args.at(0)));
 		     });

@@ -53,10 +53,10 @@ namespace snabel {
       return get<Thread *>(x) == get<Thread *>(y);
     };
 
-    add_func(exe, "thread", {ArgType(exe.callable_type)}, thread_imp);
-    add_func(exe, "join", {ArgType(exe.thread_type)}, join_imp);
-    add_func(exe, "resched", {}, resched_imp);
-    add_func(exe, "sleep", {ArgType(exe.i64_type)}, sleep_imp);
+    add_func(exe, "thread", Func::Unsafe, {ArgType(exe.callable_type)}, thread_imp);
+    add_func(exe, "join", Func::Unsafe, {ArgType(exe.thread_type)}, join_imp);
+    add_func(exe, "resched", Func::Unsafe, {}, resched_imp);
+    add_func(exe, "sleep", Func::Unsafe, {ArgType(exe.i64_type)}, sleep_imp);
   }
 
   Scope &curr_scope(Thread &thd) {
@@ -221,10 +221,17 @@ namespace snabel {
   }
 
   bool run(Thread &thd, int64_t break_pc) {
+    auto scope_depth(thd.scopes.size());
+    
     while (thd.pc < thd.ops.size() && thd.pc != break_pc) {
       auto &op(thd.ops[thd.pc]);
       auto prev_pc(thd.pc);
-      if (!run(op, curr_scope(thd))) { break; }
+
+      if (!run(op, curr_scope(thd))) {
+	while (thd.scopes.size() > scope_depth) { end_scope(thd); }
+	return false;
+      }
+      
       if (thd.pc == prev_pc) { thd.pc++; }
     }
 

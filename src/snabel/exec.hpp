@@ -65,8 +65,17 @@ namespace snabel {
   Type &get_iter_type(Exec &exe, Type &elt);
   Type &get_iterable_type(Exec &exe, Type &elt);
 
-  FuncImp &add_func(Exec &exe, const Sym &n, const ArgTypes &args, FuncImp::Imp imp);
-  FuncImp &add_func(Exec &exe, const str &n, const ArgTypes &args, FuncImp::Imp imp);
+  FuncImp &add_func(Exec &exe,
+		    const Sym &n,
+		    int sec,
+		    const ArgTypes &args,
+		    FuncImp::Imp imp);
+  
+  FuncImp &add_func(Exec &exe,
+		    const str &n,
+		    int sec,
+		    const ArgTypes &args,
+		    FuncImp::Imp imp);
 
   Label &add_label(Exec &exe, const Sym &tag, bool pmt=false);
   Label &add_label(Exec &exe, const str &tag, bool pmt=false);

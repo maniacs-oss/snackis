@@ -136,19 +136,19 @@ namespace snabel {
     exe.tcp_stream_type.eq = exe.file_type.eq;
     exe.tcp_stream_type.lt = exe.file_type.lt;
     
-    add_func(exe, "tcp-socket", {}, tcp_socket_imp);
+    add_func(exe, "tcp-socket", Func::Unsafe, {}, tcp_socket_imp);
     
-    add_func(exe, "connect",
+    add_func(exe, "connect", Func::Unsafe, 
 	     {ArgType(exe.tcp_socket_type),
 		 ArgType(exe.str_type), ArgType(exe.i64_type)},
 	     tcp_connect_imp);
 
-    add_func(exe, "bind",
+    add_func(exe, "bind", Func::Unsafe, 
 	     {ArgType(exe.tcp_socket_type),
 		 ArgType(exe.str_type), ArgType(exe.i64_type)},
 	     tcp_bind_imp);
     
-    add_func(exe, "accept",
+    add_func(exe, "accept", Func::Unsafe, 
 	     {ArgType(exe.tcp_server_type), ArgType(exe.i64_type)},
 	     tcp_accept_imp);
   }

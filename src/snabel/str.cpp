@@ -278,57 +278,57 @@ namespace snabel {
       return IterRef(new UStrIter(exe, get<UStrRef>(in)));
     };
 
-    add_func(exe, "len", {ArgType(exe.str_type)}, len_imp);
+    add_func(exe, "len", Func::Const, {ArgType(exe.str_type)}, len_imp);
     
-    add_func(exe, "suffix?",
+    add_func(exe, "suffix?", Func::Const,
 	     {ArgType(exe.str_type), ArgType(exe.str_type)},
 	     suffix_imp);
 
-    add_func(exe, "upcase", {ArgType(exe.str_type)}, upcase_imp);
-    add_func(exe, "downcase", {ArgType(exe.str_type)}, downcase_imp);
-    add_func(exe, "reverse", {ArgType(exe.str_type)}, reverse_imp);
+    add_func(exe, "upcase", Func::Safe, {ArgType(exe.str_type)}, upcase_imp);
+    add_func(exe, "downcase", Func::Safe, {ArgType(exe.str_type)}, downcase_imp);
+    add_func(exe, "reverse", Func::Safe, {ArgType(exe.str_type)}, reverse_imp);
 
-    add_func(exe, "push",
+    add_func(exe, "push", Func::Safe,
 	     {ArgType(exe.str_type), ArgType(exe.char_type)},
 	     str_push_imp);
 
-    add_func(exe, "clear", {ArgType(exe.str_type)}, clear_imp);
-    add_func(exe, "bytes", {ArgType(exe.str_type)}, str_bytes_imp);
-    add_func(exe, "str", {ArgType(exe.bin_type)}, bin_str_imp);
-    add_func(exe, "ustr", {ArgType(exe.str_type)}, str_ustr_imp);
-    add_func(exe, "len", {ArgType(exe.ustr_type)}, ulen_imp);
+    add_func(exe, "clear", Func::Safe, {ArgType(exe.str_type)}, clear_imp);
+    add_func(exe, "bytes", Func::Const, {ArgType(exe.str_type)}, str_bytes_imp);
+    add_func(exe, "str", Func::Const, {ArgType(exe.bin_type)}, bin_str_imp);
+    add_func(exe, "ustr", Func::Const, {ArgType(exe.str_type)}, str_ustr_imp);
+    add_func(exe, "len", Func::Const, {ArgType(exe.ustr_type)}, ulen_imp);
 
-    add_func(exe, "suffix?",
+    add_func(exe, "suffix?", Func::Const,
 	     {ArgType(exe.ustr_type), ArgType(exe.ustr_type)},
 	     usuffix_imp);
 
-    add_func(exe, "reverse", {ArgType(exe.ustr_type)}, ureverse_imp);
+    add_func(exe, "reverse", Func::Safe, {ArgType(exe.ustr_type)}, ureverse_imp);
 
-    add_func(exe, "push",
+    add_func(exe, "push", Func::Safe,
 	     {ArgType(exe.ustr_type), ArgType(exe.uchar_type)},
 	     ustr_push_imp);
 
-    add_func(exe, "clear", {ArgType(exe.ustr_type)}, uclear_imp);
-    add_func(exe, "bytes", {ArgType(exe.ustr_type)}, ustr_bytes_imp);
-    add_func(exe, "ustr", {ArgType(exe.bin_type)}, bin_ustr_imp);
-    add_func(exe, "str", {ArgType(exe.ustr_type)}, ustr_str_imp);
+    add_func(exe, "clear", Func::Safe, {ArgType(exe.ustr_type)}, uclear_imp);
+    add_func(exe, "bytes", Func::Const, {ArgType(exe.ustr_type)}, ustr_bytes_imp);
+    add_func(exe, "ustr", Func::Const, {ArgType(exe.bin_type)}, bin_ustr_imp);
+    add_func(exe, "str", Func::Const, {ArgType(exe.ustr_type)}, ustr_str_imp);
 
-    add_func(exe, "str", {ArgType(exe.i64_type)}, i64_str_imp);
-    add_func(exe, "stoi64", {ArgType(exe.str_type)}, stoi64_imp);
+    add_func(exe, "str", Func::Const, {ArgType(exe.i64_type)}, i64_str_imp);
+    add_func(exe, "stoi64", Func::Const, {ArgType(exe.str_type)}, stoi64_imp);
 
-    add_func(exe, "str",
+    add_func(exe, "str", Func::Const,
 	     {ArgType(get_iterable_type(exe, exe.char_type))},
 	     iterable_str_imp);
 
-    add_func(exe, "join",
+    add_func(exe, "join", Func::Const,
 	     {ArgType(exe.iterable_type), ArgType(exe.any_type)},
 	     iterable_join_str_imp);
 
-    add_func(exe, "lines",
+    add_func(exe, "lines", Func::Const,
 	     {ArgType(get_iterable_type(exe, exe.bin_type))},
 	     iterable_lines_imp);
 
-    add_func(exe, "words",
+    add_func(exe, "words", Func::Const,
 	     {ArgType(get_iterable_type(exe, exe.bin_type))},
 	     iterable_words_imp);
 

@@ -31,6 +31,11 @@ namespace snabel {
     push(scp.thread, get_meta_type(scp.exec, *v.type), v.type);
   }
 
+  static void safe_imp(Scope &scp, const Args &args) {
+    scp.safe_level++;
+    std::cout << "safe" << std::endl;
+  }
+
   static void eq_imp(Scope &scp, const Args &args) {
     auto &x(args.at(0)), &y(args.at(1));
     push(scp.thread, scp.exec.bool_type, x.type->eq(x, y));
@@ -561,69 +566,102 @@ namespace snabel {
 	return true;
       });
     
-    add_func(*this, "is?", {ArgType(any_type), ArgType(meta_type)}, is_imp);
-    add_func(*this, "type", {ArgType(any_type)}, type_imp);
+    add_func(*this, "is?", Func::Pure,
+	     {ArgType(any_type), ArgType(meta_type)},
+	     is_imp);
+    add_func(*this, "type", Func::Pure, {ArgType(any_type)}, type_imp);
+    add_func(*this, "safe", Func::Safe, {}, safe_imp);
 
-    add_func(*this, "=", {ArgType(any_type), ArgType(0)}, eq_imp);
-    add_func(*this, "==", {ArgType(any_type), ArgType(0)}, equal_imp);
+    add_func(*this, "=", Func::Pure, {ArgType(any_type), ArgType(0)}, eq_imp);
+    add_func(*this, "==", Func::Pure, {ArgType(any_type), ArgType(0)}, equal_imp);
     
-    add_func(*this, "lt?", {ArgType(ordered_type), ArgType(0)}, lt_imp);
-    add_func(*this, "lte?", {ArgType(ordered_type), ArgType(0)}, lte_imp);
-    add_func(*this, "gt?", {ArgType(ordered_type), ArgType(0)}, gt_imp);
-    add_func(*this, "gte?", {ArgType(ordered_type), ArgType(0)}, gte_imp);
+    add_func(*this, "lt?", Func::Pure, {ArgType(ordered_type), ArgType(0)}, lt_imp);
+    add_func(*this, "lte?", Func::Pure, {ArgType(ordered_type), ArgType(0)}, lte_imp);
+    add_func(*this, "gt?", Func::Pure, {ArgType(ordered_type), ArgType(0)}, gt_imp);
+    add_func(*this, "gte?", Func::Pure, {ArgType(ordered_type), ArgType(0)}, gte_imp);
 
-    add_func(*this, "when", {ArgType(bool_type), ArgType(any_type)}, when_imp);
+    add_func(*this, "when", Func::Pure,
+	     {ArgType(bool_type), ArgType(any_type)},
+	     when_imp);
 
-    add_func(*this, "unless",
+    add_func(*this, "unless", Func::Pure,
 	     {ArgType(bool_type), ArgType(any_type)},
 	     unless_imp);
 
-    add_func(*this, "if",
+    add_func(*this, "if", Func::Pure,
 	     {ArgType(bool_type), ArgType(any_type), ArgType(any_type)},
 	     if_imp);
 
-    add_func(*this, "cond",
+    add_func(*this, "cond", Func::Pure,
 	     {ArgType(get_iterable_type(*this, pair_type))},
 	     cond_imp);
 
-    add_func(*this, "z?", {ArgType(i64_type)}, zero_i64_imp);
-    add_func(*this, "+?", {ArgType(i64_type)}, pos_i64_imp);
-    add_func(*this, "++", {ArgType(i64_type)}, inc_i64_imp);
-    add_func(*this, "--", {ArgType(i64_type)}, dec_i64_imp);
+    add_func(*this, "z?", Func::Pure, {ArgType(i64_type)}, zero_i64_imp);
+    add_func(*this, "+?", Func::Pure, {ArgType(i64_type)}, pos_i64_imp);
+    add_func(*this, "++", Func::Pure, {ArgType(i64_type)}, inc_i64_imp);
+    add_func(*this, "--", Func::Pure, {ArgType(i64_type)}, dec_i64_imp);
 
-    add_func(*this, "+", {ArgType(i64_type), ArgType(i64_type)}, add_i64_imp);
-    add_func(*this, "-", {ArgType(i64_type), ArgType(i64_type)}, sub_i64_imp);
-    add_func(*this, "*", {ArgType(i64_type), ArgType(i64_type)}, mul_i64_imp);
-    add_func(*this, "/", {ArgType(i64_type), ArgType(i64_type)}, div_i64_imp);
-    add_func(*this, "%", {ArgType(i64_type), ArgType(i64_type)}, mod_i64_imp);
+    add_func(*this, "+", Func::Pure,
+	     {ArgType(i64_type), ArgType(i64_type)},
+	     add_i64_imp);
+    
+    add_func(*this, "-", Func::Pure,
+	     {ArgType(i64_type), ArgType(i64_type)},
+	     sub_i64_imp);
 
-    add_func(*this, "trunc", {ArgType(rat_type)}, trunc_imp);
-    add_func(*this, "frac", {ArgType(rat_type)}, frac_imp);
-    add_func(*this, "+", {ArgType(rat_type), ArgType(rat_type)}, add_rat_imp);
-    add_func(*this, "-", {ArgType(rat_type), ArgType(rat_type)}, sub_rat_imp);
-    add_func(*this, "*", {ArgType(rat_type), ArgType(rat_type)}, mul_rat_imp);
-    add_func(*this, "/", {ArgType(rat_type), ArgType(rat_type)}, div_rat_imp);
+    add_func(*this, "*", Func::Pure,
+	     {ArgType(i64_type), ArgType(i64_type)},
+	     mul_i64_imp);
+    
+    add_func(*this, "/", Func::Pure,
+	     {ArgType(i64_type), ArgType(i64_type)},
+	     div_i64_imp);
+    
+    add_func(*this, "%", Func::Pure,
+	     {ArgType(i64_type), ArgType(i64_type)},
+	     mod_i64_imp);
 
-    add_func(*this, "bytes", {ArgType(i64_type)}, bytes_imp);
-    add_func(*this, "z?", {ArgType(bin_type)}, bin_zero_imp);
-    add_func(*this, "+?", {ArgType(bin_type)}, bin_pos_imp);
-    add_func(*this, "len", {ArgType(bin_type)}, bin_len_imp);
-    add_func(*this, "append", {ArgType(bin_type), ArgType(bin_type)}, bin_append_imp);
+    add_func(*this, "trunc", Func::Pure, {ArgType(rat_type)}, trunc_imp);
+    add_func(*this, "frac", Func::Pure, {ArgType(rat_type)}, frac_imp);
 
-    add_func(*this, "uid", {}, uid_imp);
+    add_func(*this, "+", Func::Pure,
+	     {ArgType(rat_type), ArgType(rat_type)},
+	     add_rat_imp);
 
-    add_func(*this, "iter", {ArgType(iterable_type)}, iter_imp);
+    add_func(*this, "-", Func::Pure,
+	     {ArgType(rat_type), ArgType(rat_type)},
+	     sub_rat_imp);
+    
+    add_func(*this, "*", Func::Pure,
+	     {ArgType(rat_type), ArgType(rat_type)},
+	     mul_rat_imp);
+    
+    add_func(*this, "/", Func::Pure,
+	     {ArgType(rat_type), ArgType(rat_type)},
+	     div_rat_imp);
 
-    add_func(*this, "filter",
+    add_func(*this, "bytes", Func::Pure, {ArgType(i64_type)}, bytes_imp);
+    add_func(*this, "z?", Func::Pure, {ArgType(bin_type)}, bin_zero_imp);
+    add_func(*this, "+?", Func::Pure, {ArgType(bin_type)}, bin_pos_imp);
+    add_func(*this, "len", Func::Pure, {ArgType(bin_type)}, bin_len_imp);
+    add_func(*this, "append", Func::Safe,
+	     {ArgType(bin_type), ArgType(bin_type)},
+	     bin_append_imp);
+
+    add_func(*this, "uid", Func::Const, {}, uid_imp);
+
+    add_func(*this, "iter", Func::Const, {ArgType(iterable_type)}, iter_imp);
+
+    add_func(*this, "filter", Func::Const, 
 	     {ArgType(iterable_type), ArgType(callable_type)},
 	     iterable_filter_imp);
 
-    add_func(*this, "map",
+    add_func(*this, "map", Func::Const,
 	     {ArgType(iterable_type), ArgType(callable_type)},
 	     iterable_map_imp);
         
-    add_func(*this, "random", {ArgType(i64_type)}, random_imp);
-    add_func(*this, "pop", {ArgType(random_type)}, random_pop_imp);
+    add_func(*this, "random", Func::Const, {ArgType(i64_type)}, random_imp);
+    add_func(*this, "pop", Func::Safe, {ArgType(random_type)}, random_pop_imp);
 
     add_macro(*this, "{", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Lambda());
@@ -850,7 +888,11 @@ namespace snabel {
     return t;
   }
       
-  FuncImp &add_func(Exec &exe, const Sym &n, const ArgTypes &args, FuncImp::Imp imp) {
+  FuncImp &add_func(Exec &exe,
+		    const Sym &n,
+		    int sec,
+		    const ArgTypes &args,
+		    FuncImp::Imp imp) {
     auto fnd(exe.funcs.find(n));
 
     if (fnd == exe.funcs.end()) {
@@ -858,14 +900,18 @@ namespace snabel {
 				  std::forward_as_tuple(n),
 				  std::forward_as_tuple(n)).first->second);
       put_env(exe.main_scope, n, Box(exe.func_type, &fn));
-      return add_imp(fn, args, imp);
+      return add_imp(fn, sec, args, imp);
     }
     
-    return add_imp(fnd->second, args, imp);
+    return add_imp(fnd->second, sec, args, imp);
   }
 
-  FuncImp &add_func(Exec &exe, const str &n, const ArgTypes &args, FuncImp::Imp imp) {
-    return add_func(exe, get_sym(exe, n), args, imp);
+  FuncImp &add_func(Exec &exe,
+		    const str &n,
+		    int sec,
+		    const ArgTypes &args,
+		    FuncImp::Imp imp) {
+    return add_func(exe, get_sym(exe, n), sec, args, imp);
   }
   
   Label &add_label(Exec &exe, const Sym &tag, bool pmt) {

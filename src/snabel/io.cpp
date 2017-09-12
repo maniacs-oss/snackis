@@ -282,29 +282,29 @@ namespace snabel {
 	return true;
       });
 
-    add_func(exe, "stdin", {}, stdin_imp);
-    add_func(exe, "stdout", {}, stdout_imp);
+    add_func(exe, "stdin", Func::Unsafe, {}, stdin_imp);
+    add_func(exe, "stdout", Func::Unsafe, {}, stdout_imp);
 
-    add_func(exe, "rfile", {ArgType(exe.path_type)}, rfile_imp);
-    add_func(exe, "rwfile", {ArgType(exe.path_type)}, rwfile_imp);
-    add_func(exe, "unblock", {ArgType(exe.file_type)}, unblock_imp);
-    add_func(exe, "file?", {ArgType(exe.path_type)}, file_p_imp);
-    add_func(exe, "read", {ArgType(exe.readable_type)}, read_imp);
+    add_func(exe, "rfile", Func::Unsafe, {ArgType(exe.path_type)}, rfile_imp);
+    add_func(exe, "rwfile", Func::Unsafe, {ArgType(exe.path_type)}, rwfile_imp);
+    add_func(exe, "unblock", Func::Unsafe, {ArgType(exe.file_type)}, unblock_imp);
+    add_func(exe, "file?", Func::Unsafe, {ArgType(exe.path_type)}, file_p_imp);
+    add_func(exe, "read", Func::Unsafe, {ArgType(exe.readable_type)}, read_imp);
 
-    add_func(exe, "write",
+    add_func(exe, "write", Func::Unsafe, 
 	     {ArgType(get_iterable_type(exe, exe.bin_type)),
 		 ArgType(exe.writeable_type)},
 	     write_imp);
 
-    add_func(exe, "write",
+    add_func(exe, "write", Func::Unsafe, 
 	     {ArgType(get_iterable_type(exe, get_opt_type(exe, exe.bin_type))),
 		 ArgType(exe.writeable_type)},
 	     write_imp);
     
-    add_func(exe, "close", {ArgType(exe.file_type)}, close_imp);
+    add_func(exe, "close", Func::Unsafe, {ArgType(exe.file_type)}, close_imp);
 
-    add_func(exe, "ls", {ArgType(exe.path_type)}, ls_imp);    
-    add_func(exe, "ls-r", {ArgType(exe.path_type)}, ls_r_imp);    
-    add_func(exe, "idle", {}, idle_imp);    
+    add_func(exe, "ls", Func::Unsafe, {ArgType(exe.path_type)}, ls_imp);    
+    add_func(exe, "ls-r", Func::Unsafe, {ArgType(exe.path_type)}, ls_r_imp);    
+    add_func(exe, "idle", Func::Unsafe, {}, idle_imp);    
   }
 }

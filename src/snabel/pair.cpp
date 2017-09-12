@@ -59,23 +59,23 @@ namespace snabel {
       return *get<PairRef>(x) < *get<PairRef>(y); 
     };
 
-    add_func(exe, ".",
+    add_func(exe, ".", Func::Const,
 	     {ArgType(exe.any_type), ArgType(exe.any_type)},
 	     zip_imp);
     
-    add_func(exe, "zip",
+    add_func(exe, "zip", Func::Const,
 	     {ArgType(exe.iterable_type), ArgType(exe.iterable_type)},
 	     iterable_zip_imp);
 
-    add_func(exe, "left",
+    add_func(exe, "left", Func::Pure,
 	     {ArgType(exe.pair_type)},
 	     left_imp);
 
-    add_func(exe, "right",
+    add_func(exe, "right", Func::Pure,
 	     {ArgType(exe.pair_type)},
 	     right_imp);
 
-    add_func(exe, "unzip",
+    add_func(exe, "unzip", Func::Pure,
 	     {ArgType(exe.pair_type)},
 	     unzip_imp);
   }

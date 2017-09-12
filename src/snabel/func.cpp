@@ -8,11 +8,13 @@
 #include "snabel/type.hpp"
 
 namespace snabel {
+  const int Func::Pure(0), Func::Const(1), Func::Safe(2), Func::Unsafe(3);
+
   FuncImp::FuncImp(Func &fn,
+		   int sec,
 		   const ArgTypes &args,
-		   Imp imp,
-		   bool pure):
-    func(fn), args(args), imp(imp), pure(pure)
+		   Imp imp):
+    func(fn), sec(sec), args(args), imp(imp)
   { }
   
   void FuncImp::operator ()(Scope &scp, const Args &args) {
@@ -64,9 +66,10 @@ namespace snabel {
   }
 
   FuncImp &add_imp(Func &fn,
+		   int sec,
 		   const ArgTypes &args,
 		   FuncImp::Imp imp) {
-    return fn.imps.emplace_front(fn, args, imp);
+    return fn.imps.emplace_front(fn, sec, args, imp);
   }
 
   opt<Args> match(const FuncImp &imp, Thread &thd, bool conv_args) {

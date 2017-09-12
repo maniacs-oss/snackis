@@ -345,6 +345,19 @@ namespace snabel {
     return snabel::name(fn.name);
   }
 
+  bool Funcall::refresh(Scope &scp) {
+    if (scp.safe_level &&
+	std::find_if(fn.imps.begin(), fn.imps.end(), [](auto &i) {
+	    return i.sec != Func::Unsafe;
+	  }) == fn.imps.end()) {
+      ERROR(Snabel, fmt("Unsafe function call not allowed: %0",
+			snabel::name(fn.name)));
+      return false;
+    }
+
+    return false;
+  }
+  
   bool Funcall::run(Scope &scp) {
     auto &thd(scp.thread);
     
@@ -366,6 +379,12 @@ namespace snabel {
     }
 
     imp = m->first;
+    if (scp.safe_level && imp->sec >= Func::Unsafe) {
+      ERROR(Snabel, fmt("Unsafe function call not allowed: %0",
+			snabel::name(fn.name)));
+      return false;
+    }
+     
     (*imp)(scp, m->second);
     return true;
   }

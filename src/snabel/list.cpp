@@ -174,35 +174,37 @@ namespace snabel {
       return true;
     };
 
-    add_func(exe, "list", {ArgType(exe.iterable_type)}, iterable_list_imp);
+    add_func(exe, "list", Func::Safe,
+	     {ArgType(exe.iterable_type)},
+	     iterable_list_imp);
 
-    add_func(exe, "nlist",
+    add_func(exe, "nlist", Func::Safe, 
 	     {ArgType(exe.iterable_type), ArgType(exe.i64_type)},
 	     iterable_nlist_imp);
 
-    add_func(exe, "list", {ArgType(exe.meta_type)}, list_imp);
-    add_func(exe, "z?", {ArgType(exe.list_type)}, zero_imp);
-    add_func(exe, "+?", {ArgType(exe.list_type)}, pos_imp);
-    add_func(exe, "len", {ArgType(exe.list_type)}, len_imp);
+    add_func(exe, "list", Func::Const, {ArgType(exe.meta_type)}, list_imp);
+    add_func(exe, "z?", Func::Const, {ArgType(exe.list_type)}, zero_imp);
+    add_func(exe, "+?", Func::Const, {ArgType(exe.list_type)}, pos_imp);
+    add_func(exe, "len", Func::Const, {ArgType(exe.list_type)}, len_imp);
 
-    add_func(exe, "push",
+    add_func(exe, "push", Func::Safe, 
 	     {ArgType(exe.list_type), ArgType(0, 0)},
 	     push_imp);
     
-    add_func(exe, "pop", {ArgType(exe.list_type)}, pop_imp);
-    add_func(exe, "reverse", {ArgType(exe.list_type)}, reverse_imp);
+    add_func(exe, "pop", Func::Safe, {ArgType(exe.list_type)}, pop_imp);
+    add_func(exe, "reverse", Func::Safe, {ArgType(exe.list_type)}, reverse_imp);
 
-    add_func(exe, "sort",
+    add_func(exe, "sort", Func::Safe, 
 	     {ArgType(exe.list_type), ArgType(exe.callable_type)},
 	     sort_imp);
 
-    add_func(exe, "clear", {ArgType(exe.list_type)}, clear_imp);
+    add_func(exe, "clear", Func::Safe, {ArgType(exe.list_type)}, clear_imp);
 
-    add_func(exe, "unzip",
+    add_func(exe, "unzip", Func::Const, 
 	     {ArgType(get_list_type(exe, exe.pair_type))},
 	     unzip_imp);
 
-    add_func(exe, "fifo", {ArgType(exe.list_type)}, fifo_imp);
+    add_func(exe, "fifo", Func::Const, {ArgType(exe.list_type)}, fifo_imp);
   }
   
   Type &get_list_type(Exec &exe, Type &elt) {    

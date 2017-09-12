@@ -64,7 +64,7 @@ namespace snabel {
     };
     
     auto &meta(get_meta_type(exe, exe.struct_type));
-    add_func(exe, "new", {ArgType(meta)}, new_imp);
+    add_func(exe, "new", Func::Const, {ArgType(meta)}, new_imp);
     
     add_macro(exe, "struct:", [&exe](auto pos, auto &in, auto &out) {
 	if (in.empty()) {
@@ -117,25 +117,27 @@ namespace snabel {
 
 	    auto &ft(*pft);
 
-	    add_func(exe, fns, {ArgType(t)}, [n, &fns, &ft](auto &scp, auto &args) {
-		auto &thd(scp.thread);
-		auto &self(args.at(0));
-		auto &fs(get<StructRef>(self)->fields);
-		auto fnd(fs.find(fns));
-		push(thd, self);
-		
-		if (fnd == fs.end()) {
-		  ERROR(Snabel, 
-			snackis::fmt("Reading uninitialized struct field: %0.%1",
-				     n, name(fns)));
-		  
-		  push(thd, get_opt_type(scp.exec, ft), nil);
-		} else {
-		  push(thd, fnd->second);
-		}
-	      });
+	    add_func(exe, fns, Func::Const,
+		     {ArgType(t)},
+		     [n, &fns, &ft](auto &scp, auto &args) {
+		       auto &thd(scp.thread);
+		       auto &self(args.at(0));
+		       auto &fs(get<StructRef>(self)->fields);
+		       auto fnd(fs.find(fns));
+		       push(thd, self);
+		       
+		       if (fnd == fs.end()) {
+			 ERROR(Snabel, 
+			       snackis::fmt("Reading uninitialized field: %0.%1",
+					    n, name(fns)));
+			 
+			 push(thd, get_opt_type(scp.exec, ft), nil);
+		       } else {
+			 push(thd, fnd->second);
+		       }
+		     });
 	    
-	    add_func(exe, snackis::fmt("set-%0", fn),
+	    add_func(exe, snackis::fmt("set-%0", fn), Func::Safe,
 		     {ArgType(t), ArgType(ft)},
 		     [&fns](auto &scp, auto &args) {
 		       auto &self(args.at(0));

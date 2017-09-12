@@ -26,9 +26,9 @@ namespace snabel {
 
     Label *target;
     CoroRef coro;
-    int64_t stack_depth, return_pc, recall_pc, break_pc;
+    int64_t stack_depth, safe_level, return_pc, recall_pc, break_pc;
     bool push_result;
-
+    
     std::map<int64_t, OpState> op_state;
     Env env;
     

@@ -37,21 +37,26 @@ namespace snabel {
 
   struct FuncImp {
     using Imp = func<void (Scope &, const Args &)>;
-
+    
     Func &func;
+    const int sec;
     ArgTypes args;
     Imp imp;
-    bool pure;
     
     FuncImp(Func &fn,
+	    int sec,
 	    const ArgTypes &args,
-	    Imp imp,
-	    bool pure=true);
+	    Imp imp);
     void operator ()(Scope &scp, const Args &args);
     void operator ()(Scope &scp);
   };
 
   struct Func {
+    static const int Pure;
+    static const int Const;
+    static const int Safe;
+    static const int Unsafe;
+
     const Sym name;
     std::deque<FuncImp> imps;
     Func(const Sym &n);
@@ -59,6 +64,7 @@ namespace snabel {
 
   Type *get_type(const FuncImp &imp, const ArgType &arg_type, const Args &args);
   FuncImp &add_imp(Func &fn,
+		   int sec,
 		   const ArgTypes &args,
 		   FuncImp::Imp imp);
   opt<Args> match(const FuncImp &imp, Thread &thd, bool conv_args);

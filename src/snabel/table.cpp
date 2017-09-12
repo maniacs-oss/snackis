@@ -150,39 +150,39 @@ namespace snabel {
       return true;
     };
 
-    add_func(exe, "table",
+    add_func(exe, "table", Func::Const,
 	     {ArgType(exe.meta_type), ArgType(exe.meta_type)},
 	     table_imp);
     
-    add_func(exe, "table",
+    add_func(exe, "table", Func::Safe,
 	     {ArgType(get_iterable_type(exe, exe.pair_type))},
 	     iter_table_imp);
 
-    add_func(exe, "len",
+    add_func(exe, "len", Func::Const,
 	     {ArgType(exe.table_type)},
 	     len_imp);
 
-    add_func(exe, "z?",
+    add_func(exe, "z?", Func::Const,
 	     {ArgType(exe.table_type)},
 	     zero_imp);
     
-    add_func(exe, "+?",
+    add_func(exe, "+?", Func::Const,
 	     {ArgType(exe.table_type)},
 	     pos_imp);
     
-    add_func(exe, "get",
+    add_func(exe, "get", Func::Const,
 	     {ArgType(exe.table_type), ArgType(0, 0)},
 	     get_imp);
 
-    add_func(exe, "put",
+    add_func(exe, "put", Func::Safe,
 	     {ArgType(exe.table_type), ArgType(0, 0), ArgType(0, 1)},
 	     put_imp);
 
-    add_func(exe, "del",
+    add_func(exe, "del", Func::Safe,
 	     {ArgType(exe.table_type), ArgType(0, 0)},
 	     del_imp);
 
-    add_func(exe, "upsert",
+    add_func(exe, "upsert", Func::Safe,
 	     {ArgType(exe.table_type), ArgType(0, 0), ArgType(0, 1),
 		 ArgType(exe.callable_type)},
 	     upsert_imp);

@@ -106,32 +106,32 @@ namespace snabel {
       return x.type->equal(x, y);
     };
 
-    add_func(exe, "opt",
+    add_func(exe, "opt", Func::Const, 
 	     {ArgType(exe.any_type)},
 	     opt_imp);
 
-    add_func(exe, "when",
+    add_func(exe, "when", Func::Pure,
 	     {ArgType(exe.opt_type), ArgType(exe.any_type)},
 	     when_imp);
 
-    add_func(exe, "unless",
+    add_func(exe, "unless", Func::Pure,
 	     {ArgType(exe.opt_type), ArgType(exe.any_type)},
 	     unless_imp);
 
-    add_func(exe, "if",
+    add_func(exe, "if", Func::Pure,
 	     {ArgType(exe.opt_type), ArgType(exe.any_type), ArgType(exe.any_type)},
 	     if_imp);
 
-    add_func(exe, "or",
+    add_func(exe, "or", Func::Pure,
 	     {ArgType(exe.opt_type),
 		 ArgType([](auto &args) { return args.at(0).type->args.at(0); })},
 	     or_imp);
 
-    add_func(exe, "or",
+    add_func(exe, "or", Func::Pure,
 	     {ArgType(exe.opt_type), ArgType(0)},
 	     or_opt_imp);
 
-    add_func(exe, "unopt",
+    add_func(exe, "unopt", Func::Const,
 	     {ArgType(get_iterable_type(exe, exe.opt_type))},
 	     unopt_iterable_imp);
 
