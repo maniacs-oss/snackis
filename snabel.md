@@ -400,7 +400,7 @@ S: struct: Foo
      c I64;
    make-foo 42 set-c
    
-SnabelError: Function not applicable: set-c
+Error: Function not applicable: set-c
 [Foo(a 0. b ''.)]
 
 S: Foo new 42 set-c
@@ -653,11 +653,11 @@ nil
 Random numbers are supported through ranged generators that may be treated as infinite iterators.
 
 ```
-> 100 random $ pop $1 pop $1 $list
+S: 100 random $ pop $1 pop $1 $list
 
 [61 23]
 
-> 100 random 3 nlist
+S: 100 random 3 nlist
 
 [18 29 63]
 ```
@@ -666,9 +666,26 @@ Random numbers are supported through ranged generators that may be treated as in
 Starting a new thread copies program, stack and environment to a separate structure to minimize locking; sets the program counter after the last instruction, and calls the specified target. The target is only a starting point, threads are free to go wherever they want; a thread is finished once the program counter passes the last instruction. Anything remaining on the thread stack is pushed on the calling stack in ```join```
 
 ```
-> 7 {35 +} thread join
+S: 7 {35 +} thread join
 
 42
+```
+
+### Sandboxing
+Functions defined via the host api may be tagged as safe or unsafe. Safe functions are guaranteed to not cause effects visible from the outside; most of the functionality in Snabel's IO, network and thread vocabularies is unsafe. Calling ```safe``` increases the safety level for the current scope; there is no way of decreasing it short of closing the scope; and the level is inherited by sub scopes. Environment lookups are limited to the same safety level, and any executable definitions inherit the current safety level on compilation.
+
+```
+S: {safe let: foo 42; {@foo 'hello $0' _} call} call
+
+'hello 42'
+
+S: {let: foo 42; {safe @foo 'hello $0' _} call} call
+
+Error: Unknown identifier: @foo
+
+S: {safe func: foo 'hello' say 42; &foo} call call
+
+Error: Unsafe call not allowed: say
 ```
 
 ### Macros

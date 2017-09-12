@@ -8,7 +8,7 @@ namespace snabel {
   struct Proc;
   
   struct Coro {
-    int64_t pc;
+    int64_t pc, safe_level;
     std::deque<Stack> stacks;
     std::map<int64_t, OpState> op_state;
     Env env;

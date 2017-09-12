@@ -1,6 +1,7 @@
 #include <chrono>
 #include <iostream>
 
+#include "snabel/error.hpp"
 #include "snabel/exec.hpp"
 #include "snabel/list.hpp"
 #include "snabel/op.hpp"
@@ -102,9 +103,11 @@ namespace snabel {
 
   void run_test(Exec &exe, const str &in) {
     reset(exe);
-    compile(exe, in);
-    begin_scope(exe.main);
-    run(exe.main);
+
+    if (compile(exe, in)) {
+      begin_scope(exe.main);
+      run(exe.main);
+    }
   }
 
   static void parens_tests() {
@@ -577,6 +580,21 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
+  static void safe_tests() {
+    TRY(try_test);    
+
+    run_test(exe, "{safe let: foo 42; {@foo 'hello $0'} call} call");
+    CHECK(*get<StrRef>(pop(exe.main)) == "hello 42", _);
+    
+    run_test(exe, "{let: foo 42; {safe @foo 'hello $0'} call} call");
+    CATCH(try_test, UnknownId, e) { }
+    CHECK(!try_pop(exe.main), _);
+
+    run_test(exe, "{safe func: foo 'hello' say 42; &foo} call call");
+    CATCH(try_test, UnsafeCall, e) { }
+    CHECK(try_pop(exe.main), _);
+  }
+
   static void io_tests() {
     TRY(try_test);    
 
@@ -646,12 +664,19 @@ namespace snabel {
     loop_tests();
     rat_tests();
     opt_tests();
+    safe_tests();
     io_tests();
     proc_tests();
     //thread_tests();
   }
 
+  static void say_imp(Scope &scp, const Args &args) {
+    std::cout << *get<StrRef>(args.at(0)) << std::endl;
+  }
+  
   void all_tests() {
+    add_func(exe, "say", Func::Unsafe, {ArgType(exe.str_type)}, say_imp);
+
     TRY(try_snabel);
     const int iters(100), warmups(10);
 

@@ -345,17 +345,16 @@ namespace snabel {
     return snabel::name(fn.name);
   }
 
-  bool Funcall::refresh(Scope &scp) {
+  bool Funcall::prepare(Scope &scp) {
     if (scp.safe_level &&
 	std::find_if(fn.imps.begin(), fn.imps.end(), [](auto &i) {
 	    return i.sec != Func::Unsafe;
 	  }) == fn.imps.end()) {
-      ERROR(Snabel, fmt("Unsafe function call not allowed: %0",
-			snabel::name(fn.name)));
+      ERROR(UnsafeCall, fn);
       return false;
     }
 
-    return false;
+    return true;
   }
   
   bool Funcall::run(Scope &scp) {
@@ -380,8 +379,7 @@ namespace snabel {
 
     imp = m->first;
     if (scp.safe_level && imp->sec >= Func::Unsafe) {
-      ERROR(Snabel, fmt("Unsafe function call not allowed: %0",
-			snabel::name(fn.name)));
+      ERROR(UnsafeCall, fn);
       return false;
     }
      
@@ -423,7 +421,7 @@ namespace snabel {
     auto fnd(find_env(scp, *id));
 
     if (!fnd) {
-      ERROR(Snabel, fmt("Unknown identifier: %0", snabel::name(*id)));
+      ERROR(UnknownId, *id);
       return false;
     }
     
@@ -466,6 +464,7 @@ namespace snabel {
     OpImp(OP_LAMBDA, "lambda"),
     enter_label(nullptr),
     skip_label(nullptr),
+    safe_level(-1),
     compiled(false)
   { }
 
@@ -484,6 +483,7 @@ namespace snabel {
   bool Lambda::refresh(Scope &scp) {
     auto &exe(scp.exec);
     exe.lambdas.push_back(this);
+    begin_scope(scp.thread, false);
     return false;
   }
 
@@ -501,16 +501,19 @@ namespace snabel {
     Scope &new_scp(begin_scope(thd, !(scp.coro && scp.coro->proc)));
     new_scp.target = enter_label;
     new_scp.recall_pc = thd.pc+1;
-
+    
     if (scp.coro) {
       auto &cor(scp.coro);
       thd.pc = cor->pc;
+      new_scp.safe_level = cor->safe_level;
       if (cor->proc) { new_scp.push_result = false; }
       std::copy(cor->stacks.begin(), cor->stacks.end(),
 		std::back_inserter(thd.stacks));
       std::copy(cor->op_state.begin(), cor->op_state.end(),
 		std::inserter(new_scp.op_state, new_scp.op_state.end()));
       new_scp.env.swap(cor->env);
+    } else {
+      new_scp.safe_level = safe_level;
     }
 
     return true;
@@ -706,6 +709,23 @@ namespace snabel {
     return _return(scp, depth);
   }
   
+  Safe::Safe():
+    OpImp(OP_SAFE, "safe")
+  { }
+
+  OpImp &Safe::get_imp(Op &op) const {
+    return std::get<Safe>(op.data);
+  }
+
+  bool Safe::refresh(Scope &scp) {
+    scp.safe_level++;
+    return false;
+  }
+
+  bool Safe::finalize(const Op &op, Scope &scp, OpSeq & out) {
+    return false;
+  }
+
   Stash::Stash():
     OpImp(OP_STASH, "stash")
   { }
@@ -792,7 +812,9 @@ namespace snabel {
     auto &l(*exe.lambdas.back());
     enter_label = l.enter_label;
     skip_label = l.skip_label;
+    l.safe_level = scp.safe_level;
     exe.lambdas.pop_back();
+    end_scope(scp.thread);
     return false;
   }
   

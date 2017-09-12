@@ -56,7 +56,10 @@ namespace snabel {
   Box *find_env(Scope &scp, const Sym &key) {
     auto fnd(scp.env.find(key));
     if (fnd != scp.env.end()) { return &fnd->second; }
-    return scp.parent ? find_env(*scp.parent, key) : nullptr;
+
+    return (scp.parent && scp.parent->safe_level == scp.safe_level)
+      ? find_env(*scp.parent, key)
+      : nullptr;
   }
 
   Box *find_env(Scope &scp, const str &key) {

@@ -226,9 +226,10 @@ namespace snabel {
     while (thd.pc < thd.ops.size() && thd.pc != break_pc) {
       auto &op(thd.ops[thd.pc]);
       auto prev_pc(thd.pc);
-
+      
       if (!run(op, curr_scope(thd))) {
 	while (thd.scopes.size() > scope_depth) { end_scope(thd); }
+	curr_scope(thd).return_pc = -1;
 	return false;
       }
       

@@ -23,7 +23,7 @@ namespace snabel {
   enum OpCode { OP_BACKUP, OP_BREAK, OP_CALL, OP_DEREF, OP_DROP, OP_DUP,
 		OP_FMT, OP_FOR, OP_FUNCALL, OP_GETENV, OP_JUMP, OP_LAMBDA, OP_LOOP,
 		OP_PUSH, OP_PUTENV, OP_RECALL, OP_RESET, OP_RESTORE,
-		OP_RETURN, OP_STASH, OP_SWAP, OP_TARGET, OP_UNLAMBDA,
+		OP_RETURN, OP_SAFE, OP_STASH, OP_SWAP, OP_TARGET, OP_UNLAMBDA,
 	        OP_YIELD };
 
   using OpSeq = std::deque<Op>;
@@ -128,7 +128,7 @@ namespace snabel {
     Funcall(Func &fn);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
-    bool refresh(Scope &scp) override;
+    bool prepare(Scope &scp) override;
     bool run(Scope &scp) override;
   };
 
@@ -156,6 +156,7 @@ namespace snabel {
   struct Lambda: OpImp {
     Uid tag;
     Label *enter_label, *skip_label;
+    int64_t safe_level;
     bool compiled;
     
     Lambda();
@@ -233,6 +234,13 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
   
+  struct Safe: OpImp {
+    Safe();
+    OpImp &get_imp(Op &op) const override;
+    bool refresh(Scope &scp) override;
+    bool finalize(const Op &op, Scope &scp, OpSeq & out) override;
+  };
+
   struct Stash: OpImp {
     Stash();
     OpImp &get_imp(Op &op) const override;
@@ -279,8 +287,8 @@ namespace snabel {
 
   using OpData = std::variant<Backup, Break, Call, Deref, Drop, Dup, Fmt, For,
 			      Funcall, Getenv, Jump, Lambda, Loop, Push,
-			      Putenv, Recall, Reset, Restore, Return, Stash, Swap,
-			      Target, Unlambda, Yield>;
+			      Putenv, Recall, Reset, Restore, Return, Safe, Stash,
+			      Swap, Target, Unlambda, Yield>;
 
   using OpState = std::variant<For::State, Loop::State>;
 

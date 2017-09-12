@@ -61,7 +61,6 @@ int main(int argc, char** argv) {
 
     if (line.empty()) {
       TRY(try_run);
-      
       run(exe, in.str());
       in.str("");
       auto res(try_pop(exe.main));

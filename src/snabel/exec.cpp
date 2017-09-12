@@ -31,11 +31,6 @@ namespace snabel {
     push(scp.thread, get_meta_type(scp.exec, *v.type), v.type);
   }
 
-  static void safe_imp(Scope &scp, const Args &args) {
-    scp.safe_level++;
-    std::cout << "safe" << std::endl;
-  }
-
   static void eq_imp(Scope &scp, const Args &args) {
     auto &x(args.at(0)), &y(args.at(1));
     push(scp.thread, scp.exec.bool_type, x.type->eq(x, y));
@@ -570,7 +565,6 @@ namespace snabel {
 	     {ArgType(any_type), ArgType(meta_type)},
 	     is_imp);
     add_func(*this, "type", Func::Pure, {ArgType(any_type)}, type_imp);
-    add_func(*this, "safe", Func::Safe, {}, safe_imp);
 
     add_func(*this, "=", Func::Pure, {ArgType(any_type), ArgType(0)}, eq_imp);
     add_func(*this, "==", Func::Pure, {ArgType(any_type), ArgType(0)}, equal_imp);
@@ -756,6 +750,10 @@ namespace snabel {
 
     add_macro(*this, "call", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Call());
+      });
+
+    add_macro(*this, "safe", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(Safe());
       });
 
     add_macro(*this, "for", [](auto pos, auto &in, auto &out) {
@@ -1194,7 +1192,7 @@ namespace snabel {
 	done = true;
 	
 	for (auto &op: in_ops) {
-	  if (refresh(op, exe.main_scope)) { done = false; }
+	  if (refresh(op, curr_scope(exe.main))) { done = false; }
 	  exe.main.pc++;
 	}
       }
@@ -1234,7 +1232,6 @@ namespace snabel {
   }
   
   bool run(Exec &exe, const str &in) {
-    compile(exe, in);
-    return run(exe.main);
+    return compile(exe, in) && run(exe.main);
   }
 }

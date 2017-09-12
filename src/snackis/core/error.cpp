@@ -14,6 +14,9 @@ namespace snackis {
     what(stack_trace() + what)
   { }
 
+  Error::~Error()
+  { }
+
   CoreError::CoreError(const str &what):
     Error(fmt("CoreError: %0", what)) { }
 

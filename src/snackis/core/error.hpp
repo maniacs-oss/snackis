@@ -23,15 +23,16 @@
 #define TRY(id)					\
   Try id(#id, __FILE__, __LINE__)		\
 
-#define CATCH(t, etype, var)			\
-  for (auto var(catch_error<etype>(t));		\
-       var;					\
-       delete var, var = catch_error<etype>(t))	\
+#define CATCH(t, etype, var)					\
+  for (auto var(catch_error<CONCAT(etype, Error)>(t));		\
+       var;							\
+       delete var, var = catch_error<CONCAT(etype, Error)>(t))	\
 
 namespace snackis {  
   struct Error {
     const str what;
     Error(const str &what);
+    virtual ~Error();
   };
 
   struct CoreError: Error {
