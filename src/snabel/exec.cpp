@@ -434,7 +434,7 @@ namespace snabel {
     func_type.call = [](auto &scp, auto &v, bool now) {
       auto &thd(scp.thread);
       auto &fn(*get<Func *>(v));
-      auto m(match(fn, thd));
+      auto m(match(fn, scp));
       
       if (!m) {
 	ERROR(Snabel, fmt("Function not applicable: %0\n%1", 

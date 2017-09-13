@@ -518,7 +518,7 @@ namespace snabel {
     auto &thd(scp.thread);
     
     if (imp) {
-      auto m(match(*imp, thd, true));
+      auto m(match(*imp, scp, true));
 
       if (m) {
 	(*imp)(scp, *m);
@@ -526,7 +526,7 @@ namespace snabel {
       }
     }
 
-    auto m(match(fn, thd));
+    auto m(match(fn, scp));
     
     if (!m) {
       ERROR(Snabel, fmt("Function not applicable: %0\n%1", 

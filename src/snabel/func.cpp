@@ -72,8 +72,9 @@ namespace snabel {
     return fn.imps.emplace_front(fn, sec, args, imp);
   }
 
-  opt<Args> match(const FuncImp &imp, Thread &thd, bool conv_args) {
-    auto &exe(thd.exec);
+  opt<Args> match(const FuncImp &imp, Scope &scp, bool conv_args) {
+    auto &exe(scp.exec);
+    auto &thd(scp.thread);
     auto &s(curr_stack(thd));
     if (s.size() < imp.args.size()) { return nullopt; }
     Args as(std::next(s.begin(), s.size()-imp.args.size()), s.end());
@@ -85,7 +86,9 @@ namespace snabel {
       auto &a(*i);
       auto t(get_type(imp, *j, as));
   
-      if (!t || (!isa(thd, a, *t) && (!conv_args || !conv(exe, a, *t)))) {
+      if (!t ||
+	  a.safe_level != scp.safe_level ||
+	  (!isa(thd, a, *t) && (!conv_args || !conv(exe, a, *t)))) {
 	return nullopt;
       }
       
@@ -96,12 +99,12 @@ namespace snabel {
     return as;
   }
   
-  opt<std::pair<FuncImp *, Args>> match(Func &fn, Thread &thd, bool conv_args) {
+  opt<std::pair<FuncImp *, Args>> match(Func &fn, Scope &scp, bool conv_args) {
     for (auto &imp: fn.imps) {
-      auto args(match(imp, thd, conv_args));
+      auto args(match(imp, scp, conv_args));
       if (args) { return std::make_pair(&imp, *args); }
     }
 
-    return conv_args ? nullopt : match(fn, thd, true);
+    return conv_args ? nullopt : match(fn, scp, true);
   }
 }
