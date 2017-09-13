@@ -59,14 +59,21 @@ namespace snabel {
 
   Box *find_env(Scope &scp, const Sym &key) {
     auto fnd(scp.env.find(key));
-
-    if (fnd != scp.env.end() && fnd->second.safe_level == scp.safe_level) {
+    
+    if (fnd != scp.env.end() &&
+	(&scp == &scp.exec.main_scope || fnd->second.safe_level == scp.safe_level)) {
       return &fnd->second;
     }
 
-    return (scp.parent && scp.parent->safe_level == scp.safe_level)
-      ? find_env(*scp.parent, key)
-      : nullptr;
+    if (scp.parent) {
+      if (scp.parent->safe_level == scp.safe_level) {
+	return find_env(*scp.parent, key);
+      }
+
+      return find_env(scp.exec.main_scope, key);
+    }
+						  
+    return nullptr;
   }
 
   Box *find_env(Scope &scp, const str &key) {

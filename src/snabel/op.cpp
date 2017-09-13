@@ -379,13 +379,21 @@ namespace snabel {
 	auto i(s.second.at(1) - '0');
 	
 	if (i >= stack.size()) {
-	  ERROR(Snabel, fmt("Format failed: %0\n%1",
+	  ERROR(Snabel, fmt("Format failed, not enough values on stack: %0\n%1",
 			    in.substr(s.first+offs),
 			    stack));
 	  return false;
 	}
 	
 	auto &v(stack.at(stack.size()-i-1));
+
+	if (v.safe_level != scp.safe_level) {
+	  ERROR(Snabel, fmt("Format failed, unsafe stack access: %0\n%1",
+			    in.substr(s.first+offs),
+			    stack));
+	  return false;
+	}
+
 	auto vs(v.type->fmt(v));
 	out.replace(s.first+offs, s.second.size(), vs);
 	offs += vs.size() - s.second.size();
@@ -581,7 +589,7 @@ namespace snabel {
       ERROR(UnknownId, *id);
       return false;
     }
-    
+
     push(thd, *fnd);
     return true;
   }

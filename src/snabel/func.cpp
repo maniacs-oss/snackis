@@ -84,11 +84,15 @@ namespace snabel {
     
     while (i != as.rend() && j != imp.args.rend()) {
       auto &a(*i);
+
+      if (a.safe_level != scp.safe_level) {
+	ERROR(UnsafeCall, imp.func);
+	return nullopt;
+      }
+
       auto t(get_type(imp, *j, as));
-  
-      if (!t ||
-	  a.safe_level != scp.safe_level ||
-	  (!isa(thd, a, *t) && (!conv_args || !conv(exe, a, *t)))) {
+      
+      if (!t || (!isa(thd, a, *t) && (!conv_args || !conv(exe, a, *t)))) {
 	return nullopt;
       }
       

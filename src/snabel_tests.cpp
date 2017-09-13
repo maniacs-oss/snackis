@@ -103,11 +103,8 @@ namespace snabel {
 
   void run_test(Exec &exe, const str &in) {
     reset(exe);
-
-    if (compile(exe, in)) {
-      begin_scope(exe.main);
-      run(exe.main);
-    }
+    begin_scope(exe.main);
+    if (compile(exe, in)) { run(exe.main); }
   }
 
   static void parens_tests() {
@@ -136,6 +133,17 @@ namespace snabel {
     Scope &scp(curr_scope(exe.main));
     CHECK(get<int64_t>(*find_env(scp, "@foo")) == 35, _);
     CHECK(get<int64_t>(*find_env(scp, "@bar")) == 42, _);
+  }
+
+  static void eval_tests() {
+    TRY(try_test);    
+    Exec exe;
+
+    run_test(exe, "'7 35' eval +");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+
+    run_test(exe, "{safe '{\\'invalid\\' rfile}' eval} call call");
+    CATCH(try_test, UnsafeCall, e) { }
   }
 
   static void func_tests() {
@@ -592,16 +600,16 @@ namespace snabel {
   static void safe_tests() {
     TRY(try_test);    
 
-    run_test(exe, "{safe let: foo 42; {@foo 'hello $0'} call} call");
+    run_test(exe, "{safe let: foo 42; {'hello @foo'} call} call");
     CHECK(*get<StrRef>(pop(exe.main)) == "hello 42", _);
     
-    run_test(exe, "{let: foo 42; {safe @foo 'hello $0'} call} call");
+    run_test(exe, "{let: foo 42; {safe 'hello @foo'} call} call");
     CATCH(try_test, UnknownId, e) { }
     CHECK(!try_pop(exe.main), _);
 
-    run_test(exe, "{safe func: foo 'hello' say 42; &foo} call call");
+    run_test(exe, "{safe func: foo 'invalid' rfile 42; &foo} call call");
     CATCH(try_test, UnsafeCall, e) { }
-    CHECK(try_pop(exe.main), _);
+    CHECK(*get<StrRef>(pop(exe.main)) == "invalid", _);
   }
 
   static void io_tests() {
@@ -642,17 +650,18 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 21, _);
   }
 
-  /*static void thread_tests() {
+  static void thread_tests() {
     TRY(try_test);    
     Exec exe;
     run_test(exe, "7 {35 +} thread join");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
-    }*/
+  }
   
   static void loop() {
     parse_tests();
     parens_tests();
     compile_tests();
+    eval_tests();
     func_tests();
     type_tests();
     stack_tests();
@@ -676,16 +685,10 @@ namespace snabel {
     safe_tests();
     io_tests();
     proc_tests();
-    //thread_tests();
+    thread_tests();
   }
 
-  static void say_imp(Scope &scp, const Args &args) {
-    std::cout << *get<StrRef>(args.at(0)) << std::endl;
-  }
-  
   void all_tests() {
-    add_func(exe, "say", Func::Unsafe, {ArgType(exe.str_type)}, say_imp);
-
     TRY(try_snabel);
     const int iters(100), warmups(10);
 

@@ -22,6 +22,13 @@
 #include "snabel/type.hpp"
 
 namespace snabel {
+  static void eval_imp(Scope &scp, const Args &args) {
+    auto pc(scp.thread.pc);
+    compile(scp.exec, *get<StrRef>(args.at(0)), true);
+    run(scp.thread);
+    scp.thread.pc = pc;
+  }
+
   static void is_imp(Scope &scp, const Args &args) {
     auto &v(args.at(0)), &t(args.at(1));
     push(scp, scp.exec.bool_type, isa(scp.thread, v, *get<Type *>(t)));
@@ -561,6 +568,8 @@ namespace snabel {
 	v.val = Rat(abs(n), 1, n < 0);
 	return true;
       });
+    
+    add_func(*this, "eval", Func::Safe, {ArgType(str_type)}, eval_imp);
     
     add_func(*this, "is?", Func::Pure,
 	     {ArgType(any_type), ArgType(meta_type)},
@@ -1192,19 +1201,26 @@ namespace snabel {
     return try_compile.errors.empty();
   }
 
-  bool compile(Exec &exe, const str &in) {
+  bool compile(Exec &exe, const str &in, bool skip) {
     Exec::Lock lock(exe.mutex);
 
     TokSeq toks;
     parse_expr(in, 0, toks);
-    
+
     auto start_pc(exe.main.ops.size());
+    Label *skip_label(nullptr);
     OpSeq in_ops;
+
+    if (skip) {
+      skip_label = &add_label(exe, fmt("_skip%0", uid(exe)));
+      in_ops.emplace_back(Jump(*skip_label));
+    }
+    
     if (!compile(exe, toks, in_ops)) { return false; }
+    if (skip) { in_ops.emplace_back(Target(*skip_label)); }
     TRY(try_compile);
     
     while (true) {
-      exe.lambdas.clear();
       exe.main.pc = start_pc;
       
       for (auto &op: in_ops) {
@@ -1228,7 +1244,7 @@ namespace snabel {
       done = true;
 
       for (auto &op: in_ops) {
-	if (compile(op, exe.main_scope, out_ops)) { done = false; }
+	if (compile(op, curr_scope(exe.main), out_ops)) { done = false; }
       }
 
       if (done) { break; }      
@@ -1254,6 +1270,7 @@ namespace snabel {
     }
   exit:
     exe.main.pc = start_pc;
+    if (skip) { exe.main.pc++; }
     std::copy(in_ops.begin(), in_ops.end(), std::back_inserter(exe.main.ops));
     return true;
   }

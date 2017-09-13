@@ -689,8 +689,7 @@ S: { let: foo 42;
 Error: Unknown identifier: @foo
 
 S: { safe
-     func: foo 'bar' say;
-     &foo
+     '{\'hello\' say}' eval
    } call call
 
 Error: Unsafe call not allowed: say

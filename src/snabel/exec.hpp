@@ -91,7 +91,7 @@ namespace snabel {
   void reset(Exec &exe);  
   void rewind(Exec &exe);  
   bool compile(Exec &exe, TokSeq in, OpSeq &out);
-  bool compile(Exec &exe, const str &in);
+  bool compile(Exec &exe, const str &in, bool skip=false);
   bool run(Exec &exe, const str &in);
 
   constexpr Type *get_super(Exec &exe, Type &x, Type &y) {
