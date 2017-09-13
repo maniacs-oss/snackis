@@ -269,8 +269,7 @@ namespace snabel {
 	auto v(find_env(scp, s.second));
 	
 	if (!v) {
-	  ERROR(Snabel, fmt("Unknown format identifier: %0",
-			    in.substr(s.first+offs)));
+	  ERROR(UnknownId, get_sym(scp.exec, s.second));
 	  return false;
 	}
 
