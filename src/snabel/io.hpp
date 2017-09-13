@@ -51,7 +51,7 @@ namespace snabel {
   struct WriteIter: Iter {
     IterRef in;
     BinRef in_buf;
-    Box out, result;
+    Box out;
     int64_t wpos;
     
     WriteIter(Exec &exe, const IterRef &in, const Box &out);
@@ -86,7 +86,7 @@ namespace snabel {
     }
 	
     if (in == snackis::end(in)) { return nullopt; }
-    Box res(exec.path_type, *in);
+    Box res(scp, exec.path_type, *in);
     in++;
     return res;
   }

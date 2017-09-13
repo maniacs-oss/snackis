@@ -5,6 +5,7 @@
 #include "snabel/error.hpp"
 #include "snabel/exec.hpp"
 #include "snabel/func.hpp"
+#include "snabel/lambda.hpp"
 #include "snabel/list.hpp"
 #include "snabel/op.hpp"
 #include "snabel/proc.hpp"
@@ -54,6 +55,77 @@ namespace snabel {
     return true;
   }
 
+  Begin::Begin():
+    OpImp(OP_BEGIN, "begin"),
+    enter_label(nullptr),
+    skip_label(nullptr),
+    safe_level(-1),
+    compiled(false)
+  { }
+
+  OpImp &Begin::get_imp(Op &op) const {
+    return std::get<Begin>(op.data);
+  }
+
+  bool Begin::prepare(Scope &scp) {
+    auto &exe(scp.exec);
+    tag = uid(exe);
+    enter_label = &add_label(exe, fmt("_enter%0", tag));
+    skip_label = &add_label(exe, fmt("_skip%0", tag));
+    return true;
+  }
+
+  bool Begin::refresh(Scope &scp) {
+    auto &exe(scp.exec);
+    exe.lambdas.push_back(this);
+    begin_scope(scp.thread);
+    return false;
+  }
+
+  bool Begin::compile(const Op &op, Scope &scp, OpSeq &out) {
+    if (compiled) { return false; }
+    compiled = true;
+    out.emplace_back(Jump(*skip_label));
+    out.emplace_back(Target(*enter_label));
+    out.push_back(op);
+    return true;
+  }
+
+  bool Begin::run(Scope &scp) {
+    auto &thd(scp.thread);
+
+    Scope &new_scp(begin_scope(thd));
+    new_scp.target = enter_label;
+    new_scp.recall_pc = thd.pc+1;
+    
+    if (scp.coro) {
+      auto &cor(scp.coro);
+      thd.pc = cor->pc;
+      new_scp.safe_level = cor->safe_level;
+      if (cor->proc) { new_scp.push_result = false; }
+      std::copy(cor->stacks.begin(), cor->stacks.end(),
+		std::back_inserter(thd.stacks));
+      std::copy(cor->op_state.begin(), cor->op_state.end(),
+		std::inserter(new_scp.op_state, new_scp.op_state.end()));
+      std::copy(cor->env.begin(), cor->env.end(),
+		std::inserter(new_scp.env, new_scp.env.end()));
+    } else {
+      new_scp.safe_level = safe_level;
+
+      if (!thd.lambda) {
+	ERROR(Snabel, "Missing lambda");
+	return false;
+      }
+      
+      auto &lmb(*thd.lambda);
+	       
+      std::copy(lmb.env.begin(), lmb.env.end(),
+		std::inserter(scp.env, scp.env.end()));
+    }
+
+    return true;
+  }
+
   Break::Break(int64_t dep):
     OpImp(OP_BREAK, "break"), depth(dep)
   { }
@@ -85,6 +157,19 @@ namespace snabel {
     
     bool ok(tgt->type->call(scp, *tgt, false));
     return ok;
+  }
+
+  Capture::Capture(Label &tgt):
+    OpImp(OP_CAPTURE, "capture"), target(tgt)
+  { }
+
+  OpImp &Capture::get_imp(Op &op) const {
+    return std::get<Capture>(op.data);
+  }
+
+  bool Capture::run(Scope &scp) {
+    push(scp, scp.exec.lambda_type, std::make_shared<Lambda>(target, scp));
+    return true;
   }
 
   Deref::Deref(const Sym &name):
@@ -210,6 +295,47 @@ namespace snabel {
     return true;
   }
 
+  End::End():
+    OpImp(OP_END, "end"),
+    enter_label(nullptr), skip_label(nullptr),
+    compiled(false)
+  { }
+
+  OpImp &End::get_imp(Op &op) const {
+    return std::get<End>(op.data);
+  }
+
+  bool End::refresh(Scope &scp) {
+    Exec &exe(scp.exec);
+    
+    if (exe.lambdas.empty()) {
+      ERROR(Snabel, "Missing lambda");
+      return false;
+    }
+
+    auto &l(*exe.lambdas.back());
+    enter_label = l.enter_label;
+    skip_label = l.skip_label;
+    l.safe_level = scp.safe_level;
+    exe.lambdas.pop_back();
+    end_scope(scp.thread);
+    return false;
+  }
+  
+  bool End::compile(const Op &op, Scope &scp, OpSeq &out) {
+    if (compiled) { return false; }  
+    
+    compiled = true;
+    out.push_back(op);
+    out.emplace_back(Target(*skip_label));
+    out.emplace_back(Capture(*enter_label));
+    return true;
+  }
+
+  bool End::run(Scope &scp) {
+    return _return(scp, 1);
+  }
+
   Fmt::Fmt(const str &in):
     OpImp(OP_FMT, "fmt"), in(in)
   {
@@ -284,7 +410,7 @@ namespace snabel {
       }
     }
     
-    push(scp.thread, scp.exec.str_type, std::make_shared<str>(out));
+    push(scp, scp.exec.str_type, std::make_shared<str>(out));
     return true;
   }
 
@@ -491,65 +617,6 @@ namespace snabel {
     return true;
   }
   
-  Lambda::Lambda():
-    OpImp(OP_LAMBDA, "lambda"),
-    enter_label(nullptr),
-    skip_label(nullptr),
-    safe_level(-1),
-    compiled(false)
-  { }
-
-  OpImp &Lambda::get_imp(Op &op) const {
-    return std::get<Lambda>(op.data);
-  }
-
-  bool Lambda::prepare(Scope &scp) {
-    auto &exe(scp.exec);
-    tag = uid(exe);
-    enter_label = &add_label(exe, fmt("_enter%0", tag));
-    skip_label = &add_label(exe, fmt("_skip%0", tag));
-    return true;
-  }
-
-  bool Lambda::refresh(Scope &scp) {
-    auto &exe(scp.exec);
-    exe.lambdas.push_back(this);
-    begin_scope(scp.thread, false);
-    return false;
-  }
-
-  bool Lambda::compile(const Op &op, Scope &scp, OpSeq &out) {
-    if (compiled) { return false; }
-    compiled = true;
-    out.emplace_back(Jump(*skip_label));
-    out.emplace_back(Target(*enter_label));
-    out.push_back(op);
-    return true;
-  }
-
-  bool Lambda::run(Scope &scp) {
-    auto &thd(scp.thread);
-    Scope &new_scp(begin_scope(thd, !(scp.coro && scp.coro->proc)));
-    new_scp.target = enter_label;
-    new_scp.recall_pc = thd.pc+1;
-    
-    if (scp.coro) {
-      auto &cor(scp.coro);
-      thd.pc = cor->pc;
-      new_scp.safe_level = cor->safe_level;
-      if (cor->proc) { new_scp.push_result = false; }
-      std::copy(cor->stacks.begin(), cor->stacks.end(),
-		std::back_inserter(thd.stacks));
-      std::copy(cor->op_state.begin(), cor->op_state.end(),
-		std::inserter(new_scp.op_state, new_scp.op_state.end()));
-      new_scp.env.swap(cor->env);
-    } else {
-      new_scp.safe_level = safe_level;
-    }
-
-    return true;
-  }
-
   Loop::Loop():
     OpImp(OP_LOOP, "loop"), compiled(false)
   { }
@@ -635,7 +702,7 @@ namespace snabel {
 
   Push::Push(const Stack &vals):
     OpImp(OP_PUSH, "push"), vals(vals)
-  { }
+    { }
   
   OpImp &Push::get_imp(Op &op) const {
     return std::get<Push>(op.data);
@@ -661,6 +728,7 @@ namespace snabel {
   }
   
   bool Push::run(Scope &scp) {
+    for (auto &v: vals) { v.safe_level = scp.safe_level; }
     push(scp.thread, vals);
     return true;
   }
@@ -779,7 +847,7 @@ namespace snabel {
       }
     }
     
-    push(thd, Box(get_list_type(exe, elt ? *elt : exe.any_type), lst));
+    push(scp, get_list_type(exe, elt ? *elt : exe.any_type), lst);
     return true;
   }
 
@@ -820,47 +888,6 @@ namespace snabel {
   bool Target::finalize(const Op &op, Scope &scp, OpSeq & out) {
     label.pc = scp.thread.pc;    
     return true;
-  }
-
-  Unlambda::Unlambda():
-    OpImp(OP_UNLAMBDA, "unlambda"),
-    enter_label(nullptr), skip_label(nullptr),
-    compiled(false)
-  { }
-
-  OpImp &Unlambda::get_imp(Op &op) const {
-    return std::get<Unlambda>(op.data);
-  }
-
-  bool Unlambda::refresh(Scope &scp) {
-    Exec &exe(scp.exec);
-    
-    if (exe.lambdas.empty()) {
-      ERROR(Snabel, "Missing lambda");
-      return false;
-    }
-
-    auto &l(*exe.lambdas.back());
-    enter_label = l.enter_label;
-    skip_label = l.skip_label;
-    l.safe_level = scp.safe_level;
-    exe.lambdas.pop_back();
-    end_scope(scp.thread);
-    return false;
-  }
-  
-  bool Unlambda::compile(const Op &op, Scope &scp, OpSeq &out) {
-    if (compiled) { return false; }  
-    
-    compiled = true;
-    out.push_back(op);
-    out.emplace_back(Target(*skip_label));
-    out.emplace_back(Push(Box(scp.exec.lambda_type, enter_label)));
-    return true;
-  }
-
-  bool Unlambda::run(Scope &scp) {
-    return _return(scp, 1);
   }
   
   Yield::Yield(int64_t depth):

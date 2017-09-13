@@ -5,8 +5,8 @@
 namespace snabel {
   Nil nil;
 
-  Box::Box(Type &t, const Val &v):
-    type(&t), val(v)
+  Box::Box(Scope &scp, Type &t, const Val &v):
+    type(&t), val(v), safe_level(scp.safe_level)
   { }
 
   bool operator ==(const Box &x, const Box &y) {

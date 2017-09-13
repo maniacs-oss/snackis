@@ -15,7 +15,7 @@ namespace snabel {
 	break; 
       }
 
-      if (!empty(*nxt)) { return Box(*nxt->type->args.at(0), nxt->val); }
+      if (!empty(*nxt)) { return Box(scp, *nxt->type->args.at(0), nxt->val); }
     }
 
     return nullopt;
@@ -23,14 +23,14 @@ namespace snabel {
 
   static void opt_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
-    push(scp.thread, get_opt_type(scp.exec, *in.type), in.val);
+    push(scp, get_opt_type(scp.exec, *in.type), in.val);
   }
 
   static void when_imp(Scope &scp, const Args &args) {
     auto &cnd(args.at(0)), &tgt(args.at(1));
     
     if (!empty(cnd)) { 
-      push(scp.thread, *cnd.type->args.at(0), cnd.val);
+      push(scp, *cnd.type->args.at(0), cnd.val);
       tgt.type->call(scp, tgt, false); 
     }
   }
@@ -46,7 +46,7 @@ namespace snabel {
     if (empty(cnd)) {
       right.type->call(scp, right, false);       
     } else { 
-      push(scp.thread, *cnd.type->args.at(0), cnd.val);
+      push(scp, *cnd.type->args.at(0), cnd.val);
       left.type->call(scp, left, false); 
     }
   }
@@ -58,7 +58,7 @@ namespace snabel {
     if (empty(in)) {
       push(scp.thread, alt);
     } else {
-      push(scp.thread, *in.type->args.at(0), in.val);
+      push(scp, *in.type->args.at(0), in.val);
     }
   }
 
@@ -74,7 +74,7 @@ namespace snabel {
     auto it((*in.type->iter)(in));
     auto &elt(*it->type.args.at(0)->args.at(0));
     
-    push(scp.thread,
+    push(scp,
 	 get_iter_type(exe, elt),
 	 IterRef(new OptIter(exe, elt, it)));
   }
@@ -136,7 +136,7 @@ namespace snabel {
 	     unopt_iterable_imp);
 
     add_macro(exe, "nil", [&exe](auto pos, auto &in, auto &out) {
-	out.emplace_back(Push(Box(exe.opt_type, nil)));
+	out.emplace_back(Push(Box(exe.main_scope, exe.opt_type, nil)));
       });    
   }
 

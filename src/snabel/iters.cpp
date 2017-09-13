@@ -43,7 +43,7 @@ namespace snabel {
   { }
   
   opt<Box> SplitIter::next(Scope &scp) {
-    Box out(*type.args.at(0), nil);
+    Box out(scp, *type.args.at(0), nil);
     
     while (true) {
       if (in && (!in_buf || in_pos == in_buf->end())) {
@@ -110,12 +110,11 @@ namespace snabel {
 
   RandomIter::RandomIter(Exec &exe, const RandomRef &in):
     Iter(exe, get_iter_type(exe, exe.i64_type)),
-    in(in), out(exec.i64_type, (int64_t)0)
+    in(in)
   { }
   
   opt<Box> RandomIter::next(Scope &scp) {
-    get<int64_t>(out) = (*in)(scp.thread.random);
-    return out;		
+    return Box(scp, exec.i64_type, (*in)(scp.thread.random));
   }
 
   ZipIter::ZipIter(Exec &exe, const IterRef &xin, const IterRef &yin):
@@ -128,7 +127,8 @@ namespace snabel {
   opt<Box> ZipIter::next(Scope &scp) {
     auto x(xin->next(scp)), y(yin->next(scp));
     if (!x || !y) { return nullopt; }
-    return Box(get_pair_type(exec, *x->type, *y->type),
+    return Box(scp,
+	       get_pair_type(exec, *x->type, *y->type),
 	       std::make_shared<Pair>(*x, *y));
   }
 }

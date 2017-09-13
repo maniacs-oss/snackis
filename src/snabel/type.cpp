@@ -55,7 +55,7 @@ namespace snabel {
 	    return;
 	  }
 
-	  put_env(exe.main_scope, n, Box(get_meta_type(exe, *t), t));
+	  put_env(exe.main_scope, n, Box(exe.main_scope, get_meta_type(exe, *t), t));
 	  in.pop_front();
 	}
       });

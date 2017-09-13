@@ -7,7 +7,7 @@ namespace snabel {
   static void zip_imp(Scope &scp, const Args &args) {
     auto &l(args.at(0)), &r(args.at(1));
     
-    push(scp.thread,
+    push(scp,
 	 get_pair_type(scp.exec, *l.type, *r.type),
 	 std::make_shared<Pair>(l, r));    
   }
@@ -17,7 +17,7 @@ namespace snabel {
     auto &x(args.at(0)), &y(args.at(1));
     auto xi((*x.type->iter)(x)), yi((*y.type->iter)(y));
     
-    push(scp.thread,
+    push(scp,
 	 get_iter_type(exe, get_pair_type(exe,
 					  *xi->type.args.at(0),
 					  *yi->type.args.at(0))),

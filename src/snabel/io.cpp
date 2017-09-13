@@ -33,7 +33,7 @@ namespace snabel {
   { }
   
   opt<Box> ReadIter::next(Scope &scp) {
-    if (!out) { out.emplace(elt, std::make_shared<Bin>(READ_BUF_SIZE)); }
+    if (!out) { out.emplace(scp, elt, std::make_shared<Bin>(READ_BUF_SIZE)); }
     auto &buf(*get<BinRef>(*out));
     auto res((*in.type->read)(scp, in, buf));
     
@@ -45,7 +45,7 @@ namespace snabel {
       return res;
     }
     case READ_AGAIN:
-      return Box(elt, nil);  
+      return Box(scp, elt, nil);  
     case READ_EOF:
     case READ_ERROR:
       return nullopt;
@@ -58,21 +58,16 @@ namespace snabel {
 
   WriteIter::WriteIter(Exec &exe, const IterRef &in, const Box &out):
     Iter(exe, get_iter_type(exe, exe.i64_type)),
-    in(in), out(out), result(exe.i64_type, (int64_t)-1), wpos(0)
+    in(in), out(out), wpos(0)
   { }
   
   opt<Box> WriteIter::next(Scope &scp){
-    auto &res(get<int64_t>(result));
-
+    int64_t res(-1);
+    
     if (!in_buf) {
       auto nxt(in->next(scp));
       if (!nxt) { return nullopt; }
-
-      if (empty(*nxt)) {
-	res = 0;
-	return result;
-      }
-      
+      if (empty(*nxt)) { return Box(scp, exec.i64_type, (int64_t)0); }
       in_buf = get<BinRef>(*nxt);
     }
 
@@ -87,7 +82,7 @@ namespace snabel {
       wpos = 0;
     }
     
-    return result;
+    return Box(scp, exec.i64_type, res);
   }
 
   void unblock(File &f) {
@@ -124,21 +119,21 @@ namespace snabel {
   }
 
   static void stdin_imp(Scope &scp, const Args &args) {
-    push(scp.thread, scp.exec.rfile_type, scp.thread._stdin);
+    push(scp, scp.exec.rfile_type, scp.thread._stdin);
   }
   
   static void stdout_imp(Scope &scp, const Args &args) {
-    push(scp.thread, scp.exec.wfile_type, scp.thread._stdout);
+    push(scp, scp.exec.wfile_type, scp.thread._stdout);
   }
 
   static void rfile_imp(Scope &scp, const Args &args) {
-    push(scp.thread,
+    push(scp,
 	 scp.exec.rfile_type,
 	 std::make_shared<File>(scp.thread, get<Path>(args.at(0)), O_RDONLY));
   }
 
   static void rwfile_imp(Scope &scp, const Args &args) {
-    push(scp.thread,
+    push(scp,
 	 scp.exec.rwfile_type,
 	 std::make_shared<File>(scp.thread,
 				get<Path>(args.at(0)),
@@ -150,14 +145,14 @@ namespace snabel {
   }
   
   static void file_p_imp(Scope &scp, const Args &args) {
-    push(scp.thread, scp.exec.bool_type, is_file(get<Path>(args.at(0))));
+    push(scp, scp.exec.bool_type, is_file(get<Path>(args.at(0))));
   }
 
   static void read_imp(Scope &scp, const Args &args) {
     Exec &exe(scp.exec);
     auto &elt(get_opt_type(exe, exe.bin_type));
     
-    push(scp.thread,
+    push(scp,
 	 get_iter_type(exe, elt),
 	 IterRef(new ReadIter(exe, elt, args.at(0))));
   }
@@ -167,7 +162,7 @@ namespace snabel {
     auto &in(args.at(0));
     auto &out(args.at(1));
 
-    push(scp.thread,
+    push(scp,
 	 get_iter_type(exe, exe.i64_type),
 	 IterRef(new WriteIter(exe, (*in.type->iter)(in), out)));
   }
@@ -180,7 +175,7 @@ namespace snabel {
     Exec &exe(scp.exec);
     auto &in(get<Path>(args.at(0)));
 
-    push(scp.thread,
+    push(scp,
 	 get_iter_type(exe, exe.path_type),
 	 IterRef(new DirIter<false>(exe, in)));
   }
@@ -189,7 +184,7 @@ namespace snabel {
     Exec &exe(scp.exec);
     auto &in(get<Path>(args.at(0)));
 
-    push(scp.thread,
+    push(scp,
 	 get_iter_type(exe, exe.path_type),
 	 IterRef(new DirIter<true>(exe, in)));
   }

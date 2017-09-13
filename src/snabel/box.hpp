@@ -27,6 +27,7 @@ namespace snabel {
   struct IOBuf;
   struct IOQueue;
   struct Label;
+  struct Lambda;
   struct Scope;
   struct Struct;
   struct Thread;
@@ -36,6 +37,7 @@ namespace snabel {
   using FileRef = std::shared_ptr<File>;
   using IOBufRef = std::shared_ptr<IOBuf>;
   using IOQueueRef = std::shared_ptr<IOQueue>;
+  using LambdaRef = std::shared_ptr<Lambda>;
   using List = std::deque<Box>;
   using ListRef = std::shared_ptr<List>;
   using Pair = std::pair<Box, Box>;
@@ -52,15 +54,16 @@ namespace snabel {
   
   using Val = std::variant<Nil, bool, Byte, char, int64_t, Path, Rat, uchar, Uid,
 			   BinRef, CoroRef, FileRef, IterRef, IOBufRef, IOQueueRef,
-			   ListRef, PairRef, ProcRef, RandomRef, StrRef, StructRef, 
-			   TableRef, UStrRef,
+			   LambdaRef, ListRef, PairRef, ProcRef, RandomRef, StrRef,
+			   StructRef, TableRef, UStrRef,
 			   Func *, Label *, Sym, Thread *, Type *>;
   
   struct Box {
     Type *type;
     Val val;
-
-    Box(Type &t, const Val &v);
+    int64_t safe_level;
+    
+    Box(Scope &scp, Type &t, const Val &v);
   };
 
   using Stack = std::deque<Box>;

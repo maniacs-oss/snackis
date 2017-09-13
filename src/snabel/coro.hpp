@@ -13,7 +13,7 @@ namespace snabel {
     std::map<int64_t, OpState> op_state;
     Env env;
 
-    Label &target;
+    LambdaRef target;
     ProcRef proc;
     bool done;
     

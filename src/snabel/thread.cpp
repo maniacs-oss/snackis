@@ -27,7 +27,7 @@ namespace snabel {
 
   static void thread_imp(Scope &scp, const Args &args) {
     auto &t(start_thread(scp, args.at(0)));
-    push(scp.thread, scp.exec.thread_type, &t);
+    push(scp, scp.exec.thread_type, &t);
   }
 
   static void join_imp(Scope &scp, const Args &args) {
@@ -78,10 +78,6 @@ namespace snabel {
     curr_stack(thd).push_back(val);
   }
 
-  void push(Thread &thd, Type &typ, const Val &val) {
-    curr_stack(thd).emplace_back(typ, val);
-  }
-
   void push(Thread &thd, const Stack &vals) {
     std::copy(vals.begin(), vals.end(), std::back_inserter(curr_stack(thd)));
   }
@@ -122,7 +118,7 @@ namespace snabel {
     }
   }
 
-  Scope &begin_scope(Thread &thd, bool copy_stack) {
+  Scope &begin_scope(Thread &thd) {
     return thd.scopes.emplace_back(thd.scopes.back());
   }
   

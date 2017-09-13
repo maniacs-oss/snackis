@@ -8,11 +8,11 @@ namespace snabel {
   { }
 
   static void sym_imp(Scope &scp, const Args &args) {
-    push(scp.thread, scp.exec.sym_type, get_sym(scp.exec, *get<StrRef>(args.at(0))));
+    push(scp, scp.exec.sym_type, get_sym(scp.exec, *get<StrRef>(args.at(0))));
   }
 
   static void str_imp(Scope &scp, const Args &args) {
-    push(scp.thread,
+    push(scp,
 	 scp.exec.str_type,
 	 std::make_shared<str>(name(get<Sym>(args.at(0)))));
   }

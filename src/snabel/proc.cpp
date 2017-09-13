@@ -3,13 +3,15 @@
 #include "snabel/exec.hpp"
 #include "snabel/proc.hpp"
 #include "snabel/label.hpp"
+#include "snabel/lambda.hpp"
 #include "snabel/list.hpp"
 #include "snabel/scope.hpp"
 #include "snabel/thread.hpp"
 
 namespace snabel {
   static void proc_imp(Scope &scp, const Args &args) {
-    push(scp.thread, scp.exec.proc_type,
+    push(scp,
+	 scp.exec.proc_type,
 	 std::make_shared<Proc>(get<CoroRef>(args.at(0))));
   }
 
@@ -65,7 +67,7 @@ namespace snabel {
   }
   
   Proc::Proc(const CoroRef &cor):
-    id(uid(cor->target.exec)), coro(cor)
+    id(uid(cor->target->label.exec)), coro(cor)
   { }
 
   bool call(const ProcRef &prc, Scope &scp, bool now) {

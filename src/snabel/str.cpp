@@ -11,7 +11,7 @@ namespace snabel {
     if (i == in->end()) { return nullopt; }
     auto res(*i);
     i++;
-    return Box(exec.char_type, res);
+    return Box(scp, exec.char_type, res);
   }
 
   UStrIter::UStrIter(Exec &exe, const UStrRef &in):
@@ -22,17 +22,17 @@ namespace snabel {
     if (i == in->end()) { return nullopt; }
     auto res(*i);
     i++;
-    return Box(exec.uchar_type, res);
+    return Box(scp, exec.uchar_type, res);
   }
 
   static void len_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
-    push(scp.thread, scp.exec.i64_type, (int64_t)get<StrRef>(in)->size());
+    push(scp, scp.exec.i64_type, (int64_t)get<StrRef>(in)->size());
   }
 
   static void suffix_imp(Scope &scp, const Args &args) {
     auto &in(*get<StrRef>(args.at(0))), &x(*get<StrRef>(args.at(1)));
-    push(scp.thread, scp.exec.bool_type, suffix(in, x));
+    push(scp, scp.exec.bool_type, suffix(in, x));
   }
 
   static void upcase_imp(Scope &scp, const Args &args) {
@@ -59,30 +59,30 @@ namespace snabel {
 
   static void str_bytes_imp(Scope &scp, const Args &args) {
     auto &in(get<StrRef>(args.at(0)));
-    push(scp.thread,
+    push(scp,
 	 scp.exec.bin_type,
 	 std::make_shared<Bin>(in->begin(), in->end()));
   }
 
   static void bin_str_imp(Scope &scp, const Args &args) {
     auto &in(*get<BinRef>(args.at(0)));
-    push(scp.thread, scp.exec.str_type, std::make_shared<str>(in.begin(), in.end()));
+    push(scp, scp.exec.str_type, std::make_shared<str>(in.begin(), in.end()));
   }
 
   static void str_ustr_imp(Scope &scp, const Args &args) {
-    push(scp.thread,
+    push(scp,
 	 scp.exec.ustr_type,
 	 std::make_shared<ustr>(uconv.from_bytes(*get<StrRef>(args.at(0)))));
   }
 
   static void ulen_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
-    push(scp.thread, scp.exec.i64_type, (int64_t)get<UStrRef>(in)->size());
+    push(scp, scp.exec.i64_type, (int64_t)get<UStrRef>(in)->size());
   }
 
   static void usuffix_imp(Scope &scp, const Args &args) {
     auto &in(*get<UStrRef>(args.at(0))), &x(*get<UStrRef>(args.at(1)));
-    push(scp.thread, scp.exec.bool_type, suffix(in, x));
+    push(scp, scp.exec.bool_type, suffix(in, x));
   }
 
   static void ureverse_imp(Scope &scp, const Args &args) {
@@ -101,28 +101,29 @@ namespace snabel {
 
   static void ustr_bytes_imp(Scope &scp, const Args &args) {
     auto in(uconv.to_bytes(*get<UStrRef>(args.at(0))));
-    push(scp.thread, scp.exec.bin_type, std::make_shared<Bin>(in.begin(), in.end()));
+    push(scp, scp.exec.bin_type, std::make_shared<Bin>(in.begin(), in.end()));
   }
 
   static void bin_ustr_imp(Scope &scp, const Args &args) {
     auto &in(*get<BinRef>(args.at(0)));
-    push(scp.thread, scp.exec.ustr_type,
+    push(scp, scp.exec.ustr_type,
 	 std::make_shared<ustr>(uconv.from_bytes(str(in.begin(), in.end()))));
   }
 
   static void ustr_str_imp(Scope &scp, const Args &args) {
-    push(scp.thread,
+    push(scp,
 	 scp.exec.ustr_type,
 	 std::make_shared<str>(uconv.to_bytes(*get<UStrRef>(args.at(0)))));
   }
 
   static void i64_str_imp(Scope &scp, const Args &args) {
-    push(scp.thread, scp.exec.str_type,
+    push(scp,
+	 scp.exec.str_type,
 	 std::make_shared<str>(std::to_string(get<int64_t>(args.at(0)))));
   }
 
   static void stoi64_imp(Scope &scp, const Args &args) {
-    push(scp.thread, scp.exec.i64_type, to_int64(*get<StrRef>(args.at(0))));
+    push(scp, scp.exec.i64_type, to_int64(*get<StrRef>(args.at(0))));
   }
 
   static void iterable_str_imp(Scope &scp, const Args &args) {    
@@ -136,7 +137,7 @@ namespace snabel {
       out.push_back(get<char>(*c));
     }
     
-    push(scp.thread, scp.exec.str_type, std::make_shared<str>(out)); 
+    push(scp, scp.exec.str_type, std::make_shared<str>(out)); 
   }
 
   static void iterable_join_str_imp(Scope &scp, const Args &args) {    
@@ -154,14 +155,14 @@ namespace snabel {
       first = false;
     }
     
-    push(scp.thread, scp.exec.str_type, std::make_shared<str>(out.str())); 
+    push(scp, scp.exec.str_type, std::make_shared<str>(out.str())); 
   }
 
   static void iterable_lines_imp(Scope &scp, const Args &args) {
     auto &exe(scp.exec);
     auto &in(args.at(0));
     
-    push(scp.thread,
+    push(scp,
 	 get_iter_type(exe, get_opt_type(exe, exe.str_type)),
 	 IterRef(new SplitIter(exe, (*in.type->iter)(in), [](auto &c) {
 	       return c == '\r' || c == '\n';
@@ -172,7 +173,7 @@ namespace snabel {
     auto &exe(scp.exec);
     auto &in(args.at(0));
     
-    push(scp.thread,
+    push(scp,
 	 get_iter_type(exe, get_opt_type(exe, exe.str_type)),
 	 IterRef(new SplitIter(exe, (*in.type->iter)(in), [](auto &c) {
 	       return c != '\'' && !isalpha(c);

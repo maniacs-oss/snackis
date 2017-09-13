@@ -10,6 +10,6 @@ namespace snabel {
     if (i == in->end()) { return nullopt; }
     auto res(*i);
     i++;
-    return Box(exec.byte_type, res);
+    return Box(scp, exec.byte_type, res);
   }
 }

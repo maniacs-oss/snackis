@@ -38,6 +38,8 @@ namespace snabel {
     const Scope &operator =(const Scope &) = delete;
   };
 
+  void push(Scope &scp, Type &typ, const Val &val);
+  
   void restore_stack(Scope &scp, size_t len=1);
   Box *find_env(Scope &scp, const Sym &key);
   Box *find_env(Scope &scp, const str &key);

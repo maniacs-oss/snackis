@@ -1,5 +1,6 @@
 #include <iostream>
 #include "snabel/coro.hpp"
+#include "snabel/lambda.hpp"
 #include "snabel/op.hpp"
 #include "snabel/proc.hpp"
 #include "snabel/scope.hpp"
@@ -7,7 +8,7 @@
 
 namespace snabel {
   Coro::Coro(Scope &scp):
-    pc(-1), safe_level(-1), target(*scp.target), proc(nullptr), done(false)
+    pc(-1), safe_level(-1), target(scp.thread.lambda), proc(nullptr), done(false)
   { }
 
   void refresh(Coro &cor, Scope &scp) {
@@ -24,7 +25,7 @@ namespace snabel {
   bool call(const CoroRef &cor, Scope &scp, bool now) {
     if (cor->done) { return false; };
     scp.coro = cor;
-    call(scp, cor->target, now);
+    call(cor->target, scp, now);
     return !cor->done;
   }
 }

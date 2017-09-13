@@ -29,12 +29,12 @@ namespace snabel {
 	ERROR(Snabel, fmt("Failed accepting client: %0", errno));
       }
 
-      return Box(*type.args.at(0), nil);
+      return Box(scp, *type.args.at(0), nil);
     }
 
     auto f(std::make_shared<File>(scp.thread, fd));
     poll(*f);
-    return Box(*type.args.at(0), f);
+    return Box(scp, *type.args.at(0), f);
   }
   
   static void tcp_socket_imp(Scope &scp, const Args &args) {
@@ -46,7 +46,7 @@ namespace snabel {
 
     int so(1);
     setsockopt(fd, IPPROTO_TCP, TCP_QUICKACK, &so, sizeof(so));
-    push(scp.thread,
+    push(scp,
 	 scp.exec.tcp_socket_type,
 	 std::make_shared<File>(scp.thread, fd));
   }
@@ -69,7 +69,7 @@ namespace snabel {
     }
 
     poll(*f);
-    push(scp.thread, scp.exec.tcp_stream_type, f);  
+    push(scp, scp.exec.tcp_stream_type, f);  
   }
 
   static void tcp_bind_imp(Scope &scp, const Args &args) {
@@ -91,7 +91,7 @@ namespace snabel {
       ERROR(Snabel, fmt("Failed binding socket: %0", errno));    
     }
 
-    push(scp.thread, scp.exec.tcp_server_type, f);  
+    push(scp, scp.exec.tcp_server_type, f);  
   }
 
   static void tcp_accept_imp(Scope &scp, const Args &args) {
@@ -103,7 +103,7 @@ namespace snabel {
       ERROR(Snabel, fmt("Failed listening on socket: %0", errno));    
     }
 
-    push(scp.thread,
+    push(scp,
 	 get_iter_type(exe, get_opt_type(exe, exe.tcp_stream_type)),
 	 IterRef(new AcceptIter(scp.thread, f)));
   }

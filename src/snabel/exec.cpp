@@ -8,6 +8,7 @@
 #include "snabel/io.hpp"
 #include "snabel/iter.hpp"
 #include "snabel/iters.hpp"
+#include "snabel/lambda.hpp"
 #include "snabel/list.hpp"
 #include "snabel/net.hpp"
 #include "snabel/opt.hpp"
@@ -23,44 +24,44 @@
 namespace snabel {
   static void is_imp(Scope &scp, const Args &args) {
     auto &v(args.at(0)), &t(args.at(1));
-    push(scp.thread, scp.exec.bool_type, isa(scp.thread, v, *get<Type *>(t)));
+    push(scp, scp.exec.bool_type, isa(scp.thread, v, *get<Type *>(t)));
   }
 
   static void type_imp(Scope &scp, const Args &args) {
     auto &v(args.at(0));
-    push(scp.thread, get_meta_type(scp.exec, *v.type), v.type);
+    push(scp, get_meta_type(scp.exec, *v.type), v.type);
   }
 
   static void eq_imp(Scope &scp, const Args &args) {
     auto &x(args.at(0)), &y(args.at(1));
-    push(scp.thread, scp.exec.bool_type, x.type->eq(x, y));
+    push(scp, scp.exec.bool_type, x.type->eq(x, y));
   }
 
   static void equal_imp(Scope &scp, const Args &args) {
     auto &x(args.at(0)), &y(args.at(1));
-    push(scp.thread, scp.exec.bool_type, x.type->equal(x, y));
+    push(scp, scp.exec.bool_type, x.type->equal(x, y));
   }
 
   static void lt_imp(Scope &scp, const Args &args) {
     auto &x(args.at(0)), &y(args.at(1));
-    push(scp.thread, scp.exec.bool_type, x.type->lt(x, y));
+    push(scp, scp.exec.bool_type, x.type->lt(x, y));
   }
 
   static void lte_imp(Scope &scp, const Args &args) {
     auto &x(args.at(0)), &y(args.at(1));
-    push(scp.thread, scp.exec.bool_type,
+    push(scp, scp.exec.bool_type,
 	 x.type->lt(x, y) ||
 	 x.type->eq(x, y));
   }
 
   static void gt_imp(Scope &scp, const Args &args) {
     auto &x(args.at(0)), &y(args.at(1));
-    push(scp.thread, scp.exec.bool_type, x.type->gt(x, y));
+    push(scp, scp.exec.bool_type, x.type->gt(x, y));
   }
 
   static void gte_imp(Scope &scp, const Args &args) {
     auto &x(args.at(0)), &y(args.at(1));
-    push(scp.thread, scp.exec.bool_type,
+    push(scp, scp.exec.bool_type,
 	 x.type->gt(x, y) ||
 	 x.type->eq(x, y));
   }
@@ -108,96 +109,96 @@ namespace snabel {
   
   static void zero_i64_imp(Scope &scp, const Args &args) {
     bool res(get<int64_t>(args.at(0)) == 0);
-    push(scp.thread, scp.exec.bool_type, res);
+    push(scp, scp.exec.bool_type, res);
   }
 
   static void pos_i64_imp(Scope &scp, const Args &args) {
     bool res(get<int64_t>(args.at(0)) > 0);
-    push(scp.thread, scp.exec.bool_type, res);
+    push(scp, scp.exec.bool_type, res);
   }
 
   static void inc_i64_imp(Scope &scp, const Args &args) {
     auto &in(get<int64_t>(args.at(0)));
-    push(scp.thread, scp.exec.i64_type, in+1);
+    push(scp, scp.exec.i64_type, in+1);
   }
 
   static void dec_i64_imp(Scope &scp, const Args &args) {
     auto &in(get<int64_t>(args.at(0)));
-    push(scp.thread, scp.exec.i64_type, in-1);
+    push(scp, scp.exec.i64_type, in-1);
   }
 
   static void add_i64_imp(Scope &scp, const Args &args) {
     auto &x(get<int64_t>(args.at(0))), &y(get<int64_t>(args.at(1)));
-    push(scp.thread, scp.exec.i64_type, x+y);
+    push(scp, scp.exec.i64_type, x+y);
   }
 
   static void sub_i64_imp(Scope &scp, const Args &args) {
     auto &x(get<int64_t>(args.at(0))), &y(get<int64_t>(args.at(1)));
-    push(scp.thread, scp.exec.i64_type, x-y);
+    push(scp, scp.exec.i64_type, x-y);
   }
 
   static void mul_i64_imp(Scope &scp, const Args &args) {
     auto &x(get<int64_t>(args.at(0))), &y(get<int64_t>(args.at(1)));
-    push(scp.thread, scp.exec.i64_type, x*y);
+    push(scp, scp.exec.i64_type, x*y);
   }
 
   static void div_i64_imp(Scope &scp, const Args &args) {
     auto &num(get<int64_t>(args.at(0)));
     auto &div(get<int64_t>(args.at(1)));
     bool neg = (num < 0 && div > 0) || (div < 0 && num >= 0);
-    push(scp.thread, scp.exec.rat_type, Rat(abs(num), abs(div), neg));
+    push(scp, scp.exec.rat_type, Rat(abs(num), abs(div), neg));
   }
 
   static void mod_i64_imp(Scope &scp, const Args &args) {
     auto &x(get<int64_t>(args.at(0))), &y(get<int64_t>(args.at(1)));
-    push(scp.thread, scp.exec.i64_type, x%y);
+    push(scp, scp.exec.i64_type, x%y);
   }
 
   static void trunc_imp(Scope &scp, const Args &args) {
-    push(scp.thread, scp.exec.i64_type, trunc(get<Rat>(args.at(0))));
+    push(scp, scp.exec.i64_type, trunc(get<Rat>(args.at(0))));
   }
 
   static void frac_imp(Scope &scp, const Args &args) {
-    push(scp.thread, scp.exec.rat_type, frac(get<Rat>(args.at(0))));
+    push(scp, scp.exec.rat_type, frac(get<Rat>(args.at(0))));
   }
 
   static void add_rat_imp(Scope &scp, const Args &args) {
     auto &x(get<Rat>(args.at(0)));
     auto &y(get<Rat>(args.at(1)));
-    push(scp.thread, scp.exec.rat_type, x+y);
+    push(scp, scp.exec.rat_type, x+y);
   }
 
   static void sub_rat_imp(Scope &scp, const Args &args) {
     auto &x(get<Rat>(args.at(0)));
     auto &y(get<Rat>(args.at(1)));
-    push(scp.thread, scp.exec.rat_type, x-y);
+    push(scp, scp.exec.rat_type, x-y);
   }
 
   static void mul_rat_imp(Scope &scp, const Args &args) {
     auto &x(get<Rat>(args.at(0)));
     auto &y(get<Rat>(args.at(1)));
-    push(scp.thread, scp.exec.rat_type, x*y);
+    push(scp, scp.exec.rat_type, x*y);
   }
 
   static void div_rat_imp(Scope &scp, const Args &args) {
     auto &x(get<Rat>(args.at(0)));
     auto &y(get<Rat>(args.at(1)));
-    push(scp.thread, scp.exec.rat_type, x/y);
+    push(scp, scp.exec.rat_type, x/y);
   }
 
   static void bin_zero_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
-    push(scp.thread, scp.exec.bool_type, get<BinRef>(in)->empty());
+    push(scp, scp.exec.bool_type, get<BinRef>(in)->empty());
   }
 
   static void bin_pos_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
-    push(scp.thread, scp.exec.bool_type, !get<BinRef>(in)->empty());
+    push(scp, scp.exec.bool_type, !get<BinRef>(in)->empty());
   }
 
   static void bin_len_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
-    push(scp.thread, scp.exec.i64_type, (int64_t)get<BinRef>(in)->size());
+    push(scp, scp.exec.i64_type, (int64_t)get<BinRef>(in)->size());
   } 
 
   static void bin_append_imp(Scope &scp, const Args &args) {
@@ -211,7 +212,7 @@ namespace snabel {
   static void iter_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
     auto it((*in.type->iter)(in));
-    push(scp.thread, it->type, it);
+    push(scp, it->type, it);
   }
   
   static void iterable_filter_imp(Scope &scp, const Args &args) {
@@ -220,7 +221,7 @@ namespace snabel {
     auto it((*in.type->iter)(in));
     auto &elt(*it->type.args.at(0));
     
-    push(scp.thread,
+    push(scp,
 	 get_iter_type(exe, elt),
 	 IterRef(new FilterIter(exe, it, elt, tgt)));
   }
@@ -231,30 +232,30 @@ namespace snabel {
     auto it((*in.type->iter)(in));
     auto &elt(*it->type.args.at(0));
     
-    push(scp.thread,
+    push(scp,
 	 get_iter_type(exe, elt),
 	 IterRef(new MapIter(exe, it, tgt)));
   }
   
   static void bytes_imp(Scope &scp, const Args &args) {
-    push(scp.thread,
+    push(scp,
 	 scp.exec.bin_type,
 	 std::make_shared<Bin>(get<int64_t>(args.at(0))));
   }
 
   static void uid_imp(Scope &scp, const Args &args) {
-    push(scp.thread, scp.exec.uid_type, uid(scp.exec)); 
+    push(scp, scp.exec.uid_type, uid(scp.exec)); 
   }  
 
   static void random_imp(Scope &scp, const Args &args) {
-    push(scp.thread,
+    push(scp,
 	 scp.exec.random_type,
 	 std::make_shared<Random>(0, get<int64_t>(args.at(0))));
   }
 
   static void random_pop_imp(Scope &scp, const Args &args) {
     auto &r(args.at(0));
-    push(scp.thread,
+    push(scp,
 	 scp.exec.i64_type,
 	 (*get<RandomRef>(r))(scp.thread.random));
   }
@@ -418,8 +419,8 @@ namespace snabel {
     bool_type.supers.push_back(&any_type);
     bool_type.fmt = [](auto &v) { return get<bool>(v) ? "true" : "false"; };
     bool_type.eq = [](auto &x, auto &y) { return get<bool>(x) == get<bool>(y); };
-    put_env(main_scope, "true", Box(bool_type, true));
-    put_env(main_scope, "false", Box(bool_type, false));
+    put_env(main_scope, "true", Box(main_scope, bool_type, true));
+    put_env(main_scope, "false", Box(main_scope, bool_type, false));
 
     func_type.supers.push_back(&any_type);
     func_type.supers.push_back(&callable_type);
@@ -476,16 +477,16 @@ namespace snabel {
     lambda_type.supers.push_back(&callable_type);
 
     lambda_type.fmt = [](auto &v) {
-      auto &l(*get<Label *>(v));
+      auto &l(get<LambdaRef>(v)->label);
       return fmt("Lambda(%0:%1)", name(l.tag), l.pc);
     };
     
     lambda_type.eq = [](auto &x, auto &y) {
-      return get<Label *>(x) == get<Label *>(y);
+      return get<LambdaRef>(x) == get<LambdaRef>(y);
     };
 
     lambda_type.call = [](auto &scp, auto &v, bool now) {
-      call(scp, *get<Label *>(v), now);
+      call(get<LambdaRef>(v), scp, now);
       return true;
     };
 
@@ -493,8 +494,8 @@ namespace snabel {
     coro_type.supers.push_back(&callable_type);
 
     coro_type.fmt = [](auto &v) {
-      auto &c(*get<CoroRef>(v));
-      return fmt("Coro(%0:%1)", name(c.target.tag), c.target.pc);
+      auto &l(get<CoroRef>(v)->target->label);
+      return fmt("Coro(%0:%1)", name(l.tag), l.pc);
     };
     
     coro_type.eq = [](auto &x, auto &y) {
@@ -658,11 +659,11 @@ namespace snabel {
     add_func(*this, "pop", Func::Safe, {ArgType(random_type)}, random_pop_imp);
 
     add_macro(*this, "{", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(Lambda());
+	out.emplace_back(Begin());
       });
 
     add_macro(*this, "}", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(Unlambda());
+	out.emplace_back(End());
       });
 
     add_macro(*this, "(", [](auto pos, auto &in, auto &out) {
@@ -699,14 +700,14 @@ namespace snabel {
 	  ERROR(Snabel, fmt("Malformed func on row %0, col %1",
 			    pos.row, pos.col));
 	} else {
-	  out.emplace_back(Lambda());
+	  out.emplace_back(Begin());
 	  const str n(in.at(0).text);
 	  auto start(std::next(in.begin()));
 	  auto end(find_end(start, in.end()));
 	  compile(*this, TokSeq(start, end), out);
 	  if (end != in.end()) { end++; }
 	  in.erase(in.begin(), end);
-	  out.emplace_back(Unlambda());
+	  out.emplace_back(End());
 	  out.emplace_back(Putenv(get_sym(*this, n)));
 	}
       });
@@ -798,7 +799,7 @@ namespace snabel {
       fnd->type = &mt;
       fnd->val = &t;
     } else {
-      put_env(exe.main_scope, n, Box(mt, &t));
+      put_env(exe.main_scope, n, Box(exe.main_scope, mt, &t));
     }
     
     return t;
@@ -897,7 +898,7 @@ namespace snabel {
       auto &fn(exe.funcs.emplace(std::piecewise_construct,
 				  std::forward_as_tuple(n),
 				  std::forward_as_tuple(n)).first->second);
-      put_env(exe.main_scope, n, Box(exe.func_type, &fn));
+      put_env(exe.main_scope, n, Box(exe.main_scope, exe.func_type, &fn));
       return add_imp(fn, sec, args, imp);
     }
     
@@ -967,8 +968,8 @@ namespace snabel {
 
   Box make_opt(Exec &exe, opt<Box> in) {
     return in
-      ? Box(get_opt_type(exe, *in->type), in->val)
-      : Box(exe.opt_type, nil);
+      ? Box(exe.main_scope, get_opt_type(exe, *in->type), in->val)
+      : Box(exe.main_scope, exe.opt_type, nil);
   }
 
   void reset(Exec &exe) {
@@ -1007,59 +1008,77 @@ namespace snabel {
 	  (tok.text.at(1) == '*' || tok.text.at(1) == '/')) {
 	// Skip comments
       } else if (tok.text.at(0) == '#') {
-	out.emplace_back(Push(Box(exe.sym_type, get_sym(exe, tok.text.substr(1)))));
+	out.emplace_back(Push(Box(exe.main_scope,
+				  exe.sym_type,
+				  get_sym(exe, tok.text.substr(1)))));
       } else if (tok.text == "&_") {
-	out.emplace_back(Push(Box(exe.drop_type, nil)));
+	out.emplace_back(Push(Box(exe.main_scope, exe.drop_type, nil)));
       } else if (tok.text == "&nop") {
-	out.emplace_back(Push(Box(exe.nop_type, nil)));    
+	out.emplace_back(Push(Box(exe.main_scope, exe.nop_type, nil)));    
       } else if (tok.text.substr(0, 6) == "return" &&
 		 tok.text.size() == 7 &&
 		 isdigit(tok.text.at(6))) {
 	auto i(tok.text.at(6) - '0');
 	out.emplace_back(Return(i+1));
       } else if (tok.text == "&return") {
-	out.emplace_back(Push(Box(exe.label_type, exe.return_target[0])));
+	out.emplace_back(Push(Box(exe.main_scope,
+				  exe.label_type,
+				  exe.return_target[0])));
       } else if (tok.text.substr(0, 7) == "&return" &&
 		 tok.text.size() == 8 &&
 		 isdigit(tok.text.at(7))) {
 	auto i(tok.text.at(7) - '0');
-	out.emplace_back(Push(Box(exe.label_type, exe.return_target[i])));
+	out.emplace_back(Push(Box(exe.main_scope,
+				  exe.label_type,
+				  exe.return_target[i])));
       } else if (tok.text.substr(0, 6) == "recall" &&
 		 tok.text.size() == 7 &&
 		 isdigit(tok.text.at(6))) {
 	auto i(tok.text.at(6) - '0');
 	out.emplace_back(Recall(i+1));
       } else if (tok.text == "&recall") {
-	out.emplace_back(Push(Box(exe.label_type, exe.recall_target[0])));
+	out.emplace_back(Push(Box(exe.main_scope,
+				  exe.label_type,
+				  exe.recall_target[0])));
       } else if (tok.text.substr(0, 7) == "&recall" &&
 		 tok.text.size() == 8 &&
 		 isdigit(tok.text.at(7))) {
 	auto i(tok.text.at(7) - '0');
-	out.emplace_back(Push(Box(exe.label_type, exe.recall_target[i])));
+	out.emplace_back(Push(Box(exe.main_scope,
+				  exe.label_type,
+				  exe.recall_target[i])));
       } else if (tok.text.substr(0, 5) == "yield" &&
 		 tok.text.size() == 6 &&
 		 isdigit(tok.text.at(5))) {
 	auto i(tok.text.at(5) - '0');
 	out.emplace_back(Yield(i+1));
       } else if (tok.text == "&yield") {
-	out.emplace_back(Push(Box(exe.label_type, exe.yield_target[0])));
+	out.emplace_back(Push(Box(exe.main_scope,
+				  exe.label_type,
+				  exe.yield_target[0])));
       } else if (tok.text.substr(0, 6) == "&yield" &&
 		 tok.text.size() == 7 &&
 		 isdigit(tok.text.at(6))) {
 	auto i(tok.text.at(6) - '0');
-	out.emplace_back(Push(Box(exe.label_type, exe.yield_target[i])));
+	out.emplace_back(Push(Box(exe.main_scope,
+				  exe.label_type,
+				  exe.yield_target[i])));
       } else if (tok.text.substr(0, 5) == "break" &&
 		 tok.text.size() == 6 &&
 		 isdigit(tok.text.at(5))) {
 	auto i(tok.text.at(5) - '0');
 	out.emplace_back(Break(i+1));
       } else if (tok.text == "&break") {
-	out.emplace_back(Push(Box(exe.label_type, exe.break_target[0])));
+	out.emplace_back(Push(Box(exe.main_scope,
+				  exe.label_type,
+				  exe.break_target[0])));
       } else if (tok.text.substr(0, 6) == "&break" &&
 		 tok.text.size() == 7 &&
 		 isdigit(tok.text.at(6))) {
 	auto i(tok.text.at(6) - '0');
-	out.emplace_back(Push(Box(exe.label_type, exe.break_target[i])));
+	out.emplace_back(Push(Box(exe.main_scope,
+				  exe.label_type,
+				  exe.break_target[i])));
       } else if (tok.text.at(0) == '&') {
 	out.emplace_back(Getenv(get_sym(exe, tok.text.substr(1))));
       } else if (tok.text.at(0) == '@') {
@@ -1092,7 +1111,9 @@ namespace snabel {
 	if (fmt) {
 	  out.emplace_back(Fmt(s));
 	} else {
-	  out.emplace_back(Push(Box(exe.str_type, std::make_shared<str>(s))));
+	  out.emplace_back(Push(Box(exe.main_scope,
+				    exe.str_type,
+				    std::make_shared<str>(s))));
 	}
       } else if (tok.text.at(0) == '"') {
 	auto s(uconv.from_bytes(tok.text.substr(1, tok.text.size()-2)));
@@ -1101,7 +1122,8 @@ namespace snabel {
 	replace<ustr>(s, u"\\t", u"\t");
 	replace<ustr>(s, u"\\\"", u"\"");
 
-	out.emplace_back(Push(Box(exe.ustr_type,
+	out.emplace_back(Push(Box(exe.main_scope,
+				  exe.ustr_type,
 				  std::make_shared<ustr>(s))));
       } else if (tok.text.at(0) == '\\' && tok.text.at(1) == '\\') {
 	if (tok.text.size() < 3) {
@@ -1122,7 +1144,7 @@ namespace snabel {
 	  c = uconv.from_bytes(str(1, tok.text[2])).at(0);
 	}
       
-	out.emplace_back(Push(Box(exe.uchar_type, c)));
+	out.emplace_back(Push(Box(exe.main_scope, exe.uchar_type, c)));
       } else if (tok.text.at(0) == '\\') {
 	if (tok.text.size() < 2) {
 	  ERROR(Snabel, fmt("Invalid char literal on row %0, col %1: %2",
@@ -1142,15 +1164,20 @@ namespace snabel {
 	  c = tok.text[1];
 	}
       
-	out.emplace_back(Push(Box(exe.char_type, c)));
+	out.emplace_back(Push(Box(exe.main_scope, exe.char_type, c)));
       } else if (isupper(tok.text[0])) {
 	auto t(parse_type(exe, tok.text, 0).first);
-	if (t) { out.emplace_back(Push(Box(get_meta_type(exe, *t), t))); }
+
+	if (t) {
+	  out.emplace_back(Push(Box(exe.main_scope,
+				    get_meta_type(exe, *t),
+				    t)));
+	}
       } else if (isdigit(tok.text[0]) || 
 		 (tok.text.size() > 1 &&
 		  tok.text[0] == '-' &&
 		  isdigit(tok.text[1]))) {
-	out.emplace_back(Push(Box(exe.i64_type, to_int64(tok.text))));
+	out.emplace_back(Push(Box(exe.main_scope, exe.i64_type, to_int64(tok.text))));
       } else {
 	auto fnd(exe.macros.find(get_sym(exe, tok.text)));
       

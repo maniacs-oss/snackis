@@ -27,7 +27,7 @@ namespace snabel {
     std::map<std::pair<Type *, Type *>, Conv> convs;
     std::map<Sym, Func> funcs;
     std::map<Sym, Label> labels;
-    std::deque<Lambda *> lambdas;
+    std::deque<Begin *> lambdas;
     std::map<Thread::Id, Thread> threads;
     SymTable syms;
       

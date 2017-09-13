@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
 
   if (argc > 1) {
     for (int i=2; i < argc; i++) {
-      push(exe.main, exe.str_type, std::make_shared<str>(argv[i]));
+      push(exe.main_scope, exe.str_type, std::make_shared<str>(argv[i]));
     }
     
     auto in(slurp(argv[1]));

@@ -19,8 +19,9 @@ namespace snabel {
     auto res(*it);
     it++;
 
-    return Box(get_pair_type(exec, exec.sym_type, *res.second.type), 
-	       std::make_shared<Pair>(Box(exec.sym_type, res.first),
+    return Box(scp,
+	       get_pair_type(exec, exec.sym_type, *res.second.type), 
+	       std::make_shared<Pair>(Box(scp, exec.sym_type, res.first),
 				      res.second));
   }
 
@@ -39,7 +40,7 @@ namespace snabel {
   
   static void new_imp(Scope &scp, const Args &args) {
     auto &t(*get<Type *>(args.at(0)));
-    push(scp.thread, t, std::make_shared<Struct>(t));
+    push(scp, t, std::make_shared<Struct>(t));
   }
   
   void init_structs(Exec &exe) {
@@ -131,7 +132,7 @@ namespace snabel {
 			       snackis::fmt("Reading uninitialized field: %0.%1",
 					    n, name(fns)));
 			 
-			 push(thd, get_opt_type(scp.exec, ft), nil);
+			 push(scp, get_opt_type(scp.exec, ft), nil);
 		       } else {
 			 push(thd, fnd->second);
 		       }

@@ -20,10 +20,11 @@ namespace snabel {
   struct Scope;
   struct Op;
   
-  enum OpCode { OP_BACKUP, OP_BREAK, OP_CALL, OP_DEREF, OP_DROP, OP_DUP,
-		OP_FMT, OP_FOR, OP_FUNCALL, OP_GETENV, OP_JUMP, OP_LAMBDA, OP_LOOP,
+  enum OpCode { OP_BACKUP, OP_BEGIN, OP_BREAK, OP_CALL, OP_CAPTURE, OP_DEREF,
+		OP_DROP, OP_DUP,
+		OP_END, OP_FMT, OP_FOR, OP_FUNCALL, OP_GETENV, OP_JUMP, OP_LOOP,
 		OP_PUSH, OP_PUTENV, OP_RECALL, OP_RESET, OP_RESTORE,
-		OP_RETURN, OP_SAFE, OP_STASH, OP_SWAP, OP_TARGET, OP_UNLAMBDA,
+		OP_RETURN, OP_SAFE, OP_STASH, OP_SWAP, OP_TARGET,
 	        OP_YIELD };
 
   using OpSeq = std::deque<Op>;
@@ -52,6 +53,20 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
 
+  struct Begin: OpImp {
+    Uid tag;
+    Label *enter_label, *skip_label;
+    int64_t safe_level;
+    bool compiled;
+    
+    Begin();
+    OpImp &get_imp(Op &op) const override;
+    bool prepare(Scope &scp) override;
+    bool refresh(Scope &scp) override;
+    bool compile(const Op &op, Scope &scp, OpSeq & out) override;
+    bool run(Scope &scp) override;
+  };
+
   struct Break: OpImp {
     int64_t depth;
     
@@ -64,6 +79,14 @@ namespace snabel {
     opt<Box> target;
     
     Call(opt<Box> target=nullopt);
+    OpImp &get_imp(Op &op) const override;
+    bool run(Scope &scp) override;
+  };
+
+  struct Capture: OpImp {
+    Label &target;
+    
+    Capture(Label &tgt);
     OpImp &get_imp(Op &op) const override;
     bool run(Scope &scp) override;
   };
@@ -92,6 +115,17 @@ namespace snabel {
   struct Dup: OpImp {
     Dup();
     OpImp &get_imp(Op &op) const override;
+    bool run(Scope &scp) override;
+  };
+
+  struct End: OpImp {
+    Label *enter_label, *skip_label;
+    bool compiled;
+
+    End();
+    OpImp &get_imp(Op &op) const override;
+    bool refresh(Scope &scp) override;
+    bool compile(const Op &op, Scope &scp, OpSeq & out) override;
     bool run(Scope &scp) override;
   };
 
@@ -150,20 +184,6 @@ namespace snabel {
     OpImp &get_imp(Op &op) const override;
     str info() const override;
     bool refresh(Scope &scp) override;
-    bool run(Scope &scp) override;
-  };
-
-  struct Lambda: OpImp {
-    Uid tag;
-    Label *enter_label, *skip_label;
-    int64_t safe_level;
-    bool compiled;
-    
-    Lambda();
-    OpImp &get_imp(Op &op) const override;
-    bool prepare(Scope &scp) override;
-    bool refresh(Scope &scp) override;
-    bool compile(const Op &op, Scope &scp, OpSeq & out) override;
     bool run(Scope &scp) override;
   };
 
@@ -265,17 +285,6 @@ namespace snabel {
     bool finalize(const Op &op, Scope &scp, OpSeq & out) override;
   };
 
-  struct Unlambda: OpImp {
-    Label *enter_label, *skip_label;
-    bool compiled;
-
-    Unlambda();
-    OpImp &get_imp(Op &op) const override;
-    bool refresh(Scope &scp) override;
-    bool compile(const Op &op, Scope &scp, OpSeq & out) override;
-    bool run(Scope &scp) override;
-  };
-
   struct Yield: OpImp {
     int64_t depth;
     
@@ -285,10 +294,10 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
 
-  using OpData = std::variant<Backup, Break, Call, Deref, Drop, Dup, Fmt, For,
-			      Funcall, Getenv, Jump, Lambda, Loop, Push,
+  using OpData = std::variant<Backup, Begin, Break, Call, Capture, Deref, Drop, Dup,
+			      End, Fmt, For, Funcall, Getenv, Jump, Loop, Push,
 			      Putenv, Recall, Reset, Restore, Return, Safe, Stash,
-			      Swap, Target, Unlambda, Yield>;
+			      Swap, Target, Yield>;
 
   using OpState = std::variant<For::State, Loop::State>;
 

@@ -15,6 +15,6 @@ namespace snabel {
     if (in.beg == in.end) { return nullopt; }
     auto res(in.beg);
     in.beg++;
-    return Box(exec.i64_type, res);		
+    return Box(scp, exec.i64_type, res);		
   }
 }

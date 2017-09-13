@@ -36,7 +36,11 @@ namespace snabel {
   Scope::~Scope() {
     reset_stack(*this);
   }
-  
+
+  void push(Scope &scp, Type &typ, const Val &val) {
+    curr_stack(scp.thread).emplace_back(scp, typ, val);
+  }
+
   void restore_stack(Scope &scp, size_t len) {
     auto &thd(scp.thread);
     CHECK(!thd.stacks.empty(), _);
@@ -55,7 +59,10 @@ namespace snabel {
 
   Box *find_env(Scope &scp, const Sym &key) {
     auto fnd(scp.env.find(key));
-    if (fnd != scp.env.end()) { return &fnd->second; }
+
+    if (fnd != scp.env.end() && fnd->second.safe_level == scp.safe_level) {
+      return &fnd->second;
+    }
 
     return (scp.parent && scp.parent->safe_level == scp.safe_level)
       ? find_env(*scp.parent, key)
@@ -167,7 +174,7 @@ namespace snabel {
       prev_scp.return_pc = -1;
       prev_scp.coro.reset();
       if (!end_scope(thd)) { return false; }
-      if (new_cor) { push(thd, thd.exec.coro_type, cor); }
+      if (new_cor) { push(prev_scp, thd.exec.coro_type, cor); }
     }
     
     return true;

@@ -27,7 +27,8 @@ namespace snabel {
     std::deque<Scope> scopes;
     std::deque<Stack> stacks;
     Scope &main;
-
+    LambdaRef lambda;
+    
     FileRef _stdin, _stdout;
     size_t io_counter;
     std::default_random_engine random;
@@ -42,9 +43,7 @@ namespace snabel {
   Stack &curr_stack(Thread &thd);
 
   void push(Thread &thd, const Box &val);
-  void push(Thread &thd, Type &typ, const Val &val);
   void push(Thread &thd, const Stack &vals);
-  
   Box *peek(Thread &thd);
   opt<Box> try_pop(Thread &thd);
   Box pop(Thread &thd);
@@ -52,7 +51,7 @@ namespace snabel {
   Stack &backup_stack(Thread &thd, bool copy=false);
   void reset_stack(Thread &thd, int64_t depth, bool push_result);
   
-  Scope &begin_scope(Thread &thd, bool copy_stack=false);
+  Scope &begin_scope(Thread &thd);
   bool end_scope(Thread &thd);
 
   int64_t find_break_pc(Thread &thd);

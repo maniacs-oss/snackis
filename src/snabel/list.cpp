@@ -20,10 +20,10 @@ namespace snabel {
   { }
   
   opt<Box> FifoIter::next(Scope &scp) {
-    if (in->empty()) { return Box(*type.args.at(0), nil); }
+    if (in->empty()) { return Box(scp, *type.args.at(0), nil); }
     auto res(in->front());
     in->pop_front();
-    return Box(*type.args.at(0), res.val);
+    return Box(scp, *type.args.at(0), res.val);
   }
 
   static void iterable_list_imp(Scope &scp, const Args &args) {
@@ -39,7 +39,7 @@ namespace snabel {
       elt = elt ? get_super(scp.exec, *elt, *v->type) : v->type;
     }
     
-    push(scp.thread, get_list_type(scp.exec, *elt), out); 
+    push(scp, get_list_type(scp.exec, *elt), out); 
   }
 
   static void iterable_nlist_imp(Scope &scp, const Args &args) {
@@ -53,29 +53,29 @@ namespace snabel {
       out->push_back(*v);
     }
     
-    push(scp.thread, get_list_type(scp.exec, *it->type.args.at(0)), out); 
+    push(scp, get_list_type(scp.exec, *it->type.args.at(0)), out); 
   }
 
   static void list_imp(Scope &scp, const Args &args) {
     auto &elt(args.at(0));
-    push(scp.thread,
+    push(scp,
 	 get_list_type(scp.exec, *get<Type *>(elt)),
 	 std::make_shared<List>());    
   }
 
   static void zero_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
-    push(scp.thread, scp.exec.bool_type, get<ListRef>(in)->empty());
+    push(scp, scp.exec.bool_type, get<ListRef>(in)->empty());
   }
 
   static void pos_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
-    push(scp.thread, scp.exec.bool_type, !get<ListRef>(in)->empty());
+    push(scp, scp.exec.bool_type, !get<ListRef>(in)->empty());
   }
 
   static void len_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
-    push(scp.thread, scp.exec.i64_type, (int64_t)get<ListRef>(in)->size());
+    push(scp, scp.exec.i64_type, (int64_t)get<ListRef>(in)->size());
   }
 
   static void push_imp(Scope &scp, const Args &args) {
@@ -124,14 +124,14 @@ namespace snabel {
     auto &in(args.at(0));
 
     auto &yt(*in.type->args.at(0)->args.at(0));
-    push(scp.thread,
+    push(scp,
 	 get_iter_type(exe, yt),
 	 IterRef(new ListIter(exe, yt, get<ListRef>(in), [](auto &el) {
 	       return get<PairRef>(el)->first;
 	     })));
 
     auto &xt(*in.type->args.at(0)->args.at(1));
-    push(scp.thread,
+    push(scp,
 	 get_iter_type(exe, xt),
 	 IterRef(new ListIter(exe, xt, get<ListRef>(in), [](auto &el) {
 	       return get<PairRef>(el)->second;
@@ -143,7 +143,7 @@ namespace snabel {
     auto &in(args.at(0));
     auto &elt(get_opt_type(exe, *in.type->args.at(0)));
     
-    push(scp.thread,
+    push(scp,
 	 get_iter_type(exe, elt),
 	 IterRef(new FifoIter(exe, elt, get<ListRef>(in))));
   }

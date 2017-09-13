@@ -45,7 +45,6 @@ namespace snabel {
 
   struct RandomIter: Iter {
     RandomRef in;
-    Box out;
     
     RandomIter(Exec &exe, const RandomRef &in);
     opt<Box> next(Scope &scp) override;

@@ -12,14 +12,14 @@ namespace snabel {
     if (it == in->end()) { return nullopt; }
     auto res(*it);
     it++;
-    return Box(elt, std::make_shared<Pair>(res.first, res.second));
+    return Box(scp, elt, std::make_shared<Pair>(res.first, res.second));
   }
 
   static void table_imp(Scope &scp, const Args &args) {
     auto &key(args.at(0));
     auto &val(args.at(1));
     
-    push(scp.thread,
+    push(scp,
 	 get_table_type(scp.exec, *get<Type *>(key), *get<Type *>(val)),
 	 std::make_shared<Table>());    
   }
@@ -37,38 +37,37 @@ namespace snabel {
       out->insert(*get<PairRef>(*nxt));
     }
     
-    push(scp.thread,
+    push(scp,
 	 get_table_type(exe, *elt.args.at(0), *elt.args.at(1)),
 	 out);
   }
 
   static void len_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
-    push(scp.thread, scp.exec.i64_type, (int64_t)get<TableRef>(in)->size());
+    push(scp, scp.exec.i64_type, (int64_t)get<TableRef>(in)->size());
   } 
 
   static void zero_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
-    push(scp.thread, scp.exec.bool_type, get<TableRef>(in)->empty());
+    push(scp, scp.exec.bool_type, get<TableRef>(in)->empty());
   }
 
   static void pos_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
-    push(scp.thread, scp.exec.bool_type, !get<TableRef>(in)->empty());
+    push(scp, scp.exec.bool_type, !get<TableRef>(in)->empty());
   }
   
   static void get_imp(Scope &scp, const Args &args) {
     auto &exe(scp.exec);
-    auto &thd(scp.thread);
     auto &tbl_arg(args.at(0));
     auto &tbl(*get<TableRef>(tbl_arg));
     auto &key(args.at(1));
     auto fnd(tbl.find(key));
     
     if (fnd == tbl.end()) {
-      push(thd, get_opt_type(exe, *tbl_arg.type->args.at(1)), nil);
+      push(scp, get_opt_type(exe, *tbl_arg.type->args.at(1)), nil);
     } else {
-      push(thd, get_opt_type(exe, *fnd->second.type), fnd->second.val);
+      push(scp, get_opt_type(exe, *fnd->second.type), fnd->second.val);
     }
   }
 

@@ -234,6 +234,9 @@ namespace snabel {
 
     run_test(exe, "42 {-- $ z? &return when recall} call");
     CHECK(get<int64_t>(pop(exe.main)) == 0, _);
+
+    run_test(exe, "{let: foo 35; {@foo 7 +}} call call");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
   static void coro_tests() {
