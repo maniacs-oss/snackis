@@ -626,21 +626,24 @@ S: ['foo' bytes]
    
 3
 
-S: func: copy-file (
+S: func: do-copy (
      let: q Bin list;
      let: wq @q fifo;
      let: w rwfile @wq $1 write; _
-     let: r rfile read; _
-     |yield
-     
+     let: r rfile read;
+     |_yield
+  
      @r {{
        @q $1 push
-       @w &break _for
-     } when yield1} for
+       @w &break _for} &_ if
+       
+       _yield1
+     } for
+
      @q +? {@w &_ for} when
    );
 
-S: 'in' 'out' copy-file run
+   'in' 'out' do-copy run
 nil
 ```
 
