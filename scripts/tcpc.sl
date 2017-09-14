@@ -16,16 +16,16 @@ let: in Bin list;
 let: out Bin list;
 
 func: do-send (
-  |yield
-  @in fifo @server write &yield _for
+  |_yield
+  @in fifo @server write &_yield _for
 );
 
 func: do-recv (
-  |yield
+  |_yield
 
   @server read {
     {@out $1 push} when
-    yield1
+    _yield1
   } for
 
   @server close
@@ -35,24 +35,24 @@ func: do-recv (
 );
 
 func: do-in (
-  |yield
+  |_yield
 
   stdin read {
     {@in $1 push} when
-    yield1
+    _yield1
     idle
   } for
 );
 
 
 func: do-out (
-  |yield
-  @out fifo stdout write &yield _for
+  |_yield
+  @out fifo stdout write &_yield _for
 );
 
-let: do-send do-send proc;
-let: do-in do-in proc;
-let: do-out do-out proc;
+let: do-send do-send;
+let: do-in do-in;
+let: do-out do-out;
 
 stdin unblock
-[@do-send do-recv proc @do-in @do-out] run
+[@do-send do-recv @do-in @do-out] run

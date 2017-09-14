@@ -8,7 +8,6 @@
 #include "snabel/lambda.hpp"
 #include "snabel/list.hpp"
 #include "snabel/op.hpp"
-#include "snabel/proc.hpp"
 #include "snackis/core/defer.hpp"
 
 namespace snabel {
@@ -102,7 +101,6 @@ namespace snabel {
       auto &cor(scp.coro);
       thd.pc = cor->pc;
       new_scp.safe_level = cor->safe_level;
-      if (cor->proc) { new_scp.push_result = false; }
       std::copy(cor->stacks.begin(), cor->stacks.end(),
 		std::back_inserter(thd.stacks));
       std::copy(cor->op_state.begin(), cor->op_state.end(),
@@ -333,7 +331,7 @@ namespace snabel {
   }
 
   bool End::run(Scope &scp) {
-    return _return(scp, 1);
+    return _return(scp, 1, scp.push_result);
   }
 
   Fmt::Fmt(const str &in):
@@ -791,8 +789,8 @@ namespace snabel {
     return true;
   }
 
-  Return::Return(int64_t dep):
-    OpImp(OP_RETURN, "return"), target(nullptr), depth(dep)
+  Return::Return(int64_t dep, bool push_result):
+    OpImp(OP_RETURN, "return"), target(nullptr), depth(dep), push_result(push_result)
   { }
 
   OpImp &Return::get_imp(Op &op) const {
@@ -813,7 +811,7 @@ namespace snabel {
   }
 
   bool Return::run(Scope &scp) {
-    return _return(scp, depth);
+    return _return(scp, depth, push_result);
   }
   
   Safe::Safe():
@@ -898,8 +896,8 @@ namespace snabel {
     return true;
   }
   
-  Yield::Yield(int64_t depth):
-    OpImp(OP_YIELD, "yield"), depth(depth)
+  Yield::Yield(int64_t depth, bool push_result):
+    OpImp(OP_YIELD, "yield"), depth(depth), push_result(push_result)
   { }
 
   OpImp &Yield::get_imp(Op &op) const {
@@ -909,7 +907,7 @@ namespace snabel {
   str Yield::info() const { return fmt_arg(depth); }
 
   bool Yield::run(Scope &scp) {
-    return yield(scp, depth);
+    return yield(scp, depth, push_result);
   }
 
   Op::Op(const Op &src):

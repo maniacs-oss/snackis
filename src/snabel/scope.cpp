@@ -112,11 +112,11 @@ namespace snabel {
 
   void jump(Scope &scp, const Label &lbl) {
     if (lbl.return_depth) {
-      _return(scp, lbl.return_depth);
+      _return(scp, lbl.return_depth, lbl.push_result);
     } else if (lbl.recall_depth) {
       recall(scp, lbl.recall_depth);
     } else if (lbl.yield_depth) {
-      yield(scp, lbl.yield_depth);      
+      yield(scp, lbl.yield_depth, lbl.push_result);      
     } else if (lbl.break_depth) {
       _break(scp.thread, lbl.break_depth);
     } else {
@@ -139,12 +139,13 @@ namespace snabel {
     }
   }
 
-  bool yield(Scope &scp, int64_t depth) {
+  bool yield(Scope &scp, int64_t depth, bool push_result) {
     Thread &thd(scp.thread);
     bool dec_pc(false);
 
     while (depth && thd.scopes.size() > 1) {
       depth--;
+      thd.scopes.back().push_result = push_result;
       auto &prev_scp(*std::next(thd.scopes.rbegin()));
       CoroRef cor;
       bool new_cor(false);
@@ -160,7 +161,6 @@ namespace snabel {
 	cor = prev_scp.coro;
 	
 	if (cor) {
-	  cor->proc.reset();
 	  prev_scp.coro = nullptr;
 	} else {
 	  cor = std::make_shared<Coro>(curr_scp);
@@ -187,14 +187,15 @@ namespace snabel {
     return true;
   }
 
-  bool _return(Scope &scp, int64_t depth) {
+  bool _return(Scope &scp, int64_t depth, bool push_result) {
     auto &thd(scp.thread);
     
     while (thd.scopes.size() > 1 && depth) {
       depth--;
-
+      thd.scopes.back().push_result = push_result;
+      
       if (!depth) {
-	auto &ps(*std::next(thd.scopes.rbegin()));	  
+	auto &ps(*std::next(thd.scopes.rbegin()));
 	
 	if (ps.return_pc == -1) {
 	  ERROR(Snabel, "Missing return pc");

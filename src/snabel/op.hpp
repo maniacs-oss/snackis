@@ -247,8 +247,9 @@ namespace snabel {
   struct Return: OpImp {
     Label *target;
     int64_t depth;
+    bool push_result;
     
-    Return(int64_t dep);
+    Return(int64_t dep, bool push_result);
     OpImp &get_imp(Op &op) const override;
     bool refresh(Scope &scp) override;
     bool run(Scope &scp) override;
@@ -287,8 +288,9 @@ namespace snabel {
 
   struct Yield: OpImp {
     int64_t depth;
+    bool push_result;
     
-    Yield(int64_t depth);
+    Yield(int64_t depth, bool push_result);
     OpImp &get_imp(Op &op) const override;
     str info() const override;    
     bool run(Scope &scp) override;

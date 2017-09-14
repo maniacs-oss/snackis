@@ -22,7 +22,6 @@ namespace snabel {
     Thread &thread;
     Exec &exec;
     Scope *parent;
-    opt<Proc *> proc;
 
     Label *target;
     CoroRef coro;
@@ -50,10 +49,10 @@ namespace snabel {
   void reset_stack(Scope &scp);
   void jump(Scope &scp, const Label &lbl);
   void call(Scope &scp, const Label &lbl, bool now=false);
-  bool _return(Scope &scp, int64_t depth);
+  bool _return(Scope &scp, int64_t depth, bool push_result);
   bool recall(Scope &scp, int64_t depth);
   void recall_return(Scope &scp);
-  bool yield(Scope &scp, int64_t depth);
+  bool yield(Scope &scp, int64_t depth, bool push_result);
 
   Thread &start_thread(Scope &scp, const Box &init);
 }

@@ -5,8 +5,6 @@
 #include "snabel/op.hpp"
 
 namespace snabel {
-  struct Proc;
-  
   struct Coro {
     int64_t pc, safe_level;
     std::deque<Stack> stacks;
@@ -14,7 +12,6 @@ namespace snabel {
     Env env;
 
     LambdaRef target;
-    ProcRef proc;
     bool done;
     
     Coro(Scope &scp);
@@ -22,6 +19,7 @@ namespace snabel {
     const Coro &operator =(const Coro &) = delete;
   };
   
+  void init_coros(Exec &exe);
   void refresh(Coro &cor, Scope &scp);
   bool call(const CoroRef &cor, Scope &scp, bool now);
 }

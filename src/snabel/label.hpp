@@ -12,7 +12,7 @@ namespace snabel {
   struct Label {
     Exec &exec;
     const Sym tag;
-    bool permanent;
+    bool permanent, push_result;
     int64_t pc, return_depth, recall_depth, yield_depth, break_depth;
     
     Label(Exec &exe, const Sym &tag, bool pmt);

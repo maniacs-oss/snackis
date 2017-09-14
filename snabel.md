@@ -577,18 +577,13 @@ S: func: foo |yield (7 yield 28 +);
    foo $ call $1 call +
 
 42
-```
 
-### Procs
-Procs allow interleaving multiple independent flows of control in the same thread. Each proc takes a coroutine as input; when called through a proc, coroutines don't copy arguments or return values.
-
-```
 S: let: acc Str list;
    func: do-ping
      (|yield 3 {@acc 'ping' push yield1} for);
    func: do-pong
      (|yield 3 {@acc 'pong' push yield1} for);
-   [do-ping proc do-pong proc] run
+   [do-ping do-pong] run
    @acc
 
 ['ping' 'pong' 'ping' 'pong 'ping' 'pong']
@@ -645,7 +640,7 @@ S: func: copy-file (
      @q +? {@w &_ for} when
    );
 
-S: 'in' 'out' copy-file proc run
+S: 'in' 'out' copy-file run
 nil
 ```
 

@@ -13,7 +13,6 @@
 #include "snabel/net.hpp"
 #include "snabel/opt.hpp"
 #include "snabel/pair.hpp"
-#include "snabel/proc.hpp"
 #include "snabel/range.hpp"
 #include "snabel/str.hpp"
 #include "snabel/struct.hpp"
@@ -302,7 +301,6 @@ namespace snabel {
     ordered_type(add_type(*this, "Ordered")),
     pair_type(add_type(*this, "Pair")),
     path_type(add_type(*this, "Path")),
-    proc_type(add_type(*this, "Proc")),    
     readable_type(add_type(*this, "Readable")),
     rfile_type(add_type(*this, "RFile")),
     random_type(add_type(*this, "Random")),
@@ -328,6 +326,12 @@ namespace snabel {
       &add_label(*this, "_return4", true), &add_label(*this, "_return5", true),
       &add_label(*this, "_return6", true), &add_label(*this, "_return7", true),
       &add_label(*this, "_return8", true), &add_label(*this, "_return9", true)},
+    _return_target {
+    &add_label(*this, "__return", true), &add_label(*this, "__return1", true),
+      &add_label(*this, "__return2", true), &add_label(*this, "__return3", true),
+      &add_label(*this, "__return4", true), &add_label(*this, "__return5", true),
+      &add_label(*this, "__return6", true), &add_label(*this, "__return7", true),
+      &add_label(*this, "__return8", true), &add_label(*this, "__return9", true)},
     recall_target {
     &add_label(*this, "_recall", true), &add_label(*this, "_recall1", true),
       &add_label(*this, "_recall2", true), &add_label(*this, "_recall3", true),
@@ -340,6 +344,12 @@ namespace snabel {
       &add_label(*this, "_yield4", true), &add_label(*this, "_yield5", true),
       &add_label(*this, "_yield6", true), &add_label(*this, "_yield7", true),
       &add_label(*this, "_yield8", true), &add_label(*this, "_yield9", true)},
+    _yield_target {
+    &add_label(*this, "__yield", true), &add_label(*this, "__yield1", true),
+      &add_label(*this, "__yield2", true), &add_label(*this, "__yield3", true),
+      &add_label(*this, "__yield4", true), &add_label(*this, "__yield5", true),
+      &add_label(*this, "__yield6", true), &add_label(*this, "__yield7", true),
+      &add_label(*this, "__yield8", true), &add_label(*this, "__yield9", true)},
     break_target {
       &add_label(*this, "_break", true), &add_label(*this, "_break1", true),
 	&add_label(*this, "_break2", true), &add_label(*this, "_break3", true),
@@ -496,23 +506,6 @@ namespace snabel {
       call(get<LambdaRef>(v), scp, now);
       return true;
     };
-
-    coro_type.supers.push_back(&any_type);
-    coro_type.supers.push_back(&callable_type);
-
-    coro_type.fmt = [](auto &v) {
-      auto &l(get<CoroRef>(v)->target->label);
-      return fmt("Coro(%0:%1)", name(l.tag), l.pc);
-    };
-    
-    coro_type.eq = [](auto &x, auto &y) {
-      return get<CoroRef>(x) == get<CoroRef>(y);
-    };
-
-    coro_type.call = [](auto &scp, auto &v, bool now) {
-      call(get<CoroRef>(v), scp, now);
-      return true;
-    };
         
     rat_type.supers.push_back(&any_type);
     rat_type.supers.push_back(&ordered_type);
@@ -544,8 +537,12 @@ namespace snabel {
 
     for (int i(0); i < MAX_TARGET; i++) {
       return_target[i]->return_depth = i+1;
+      _return_target[i]->return_depth = i+1;
+      _return_target[i]->push_result = false;
       recall_target[i]->recall_depth = i+1;
       yield_target[i]->yield_depth = i+1;
+      _yield_target[i]->yield_depth = i+1;
+      _yield_target[i]->push_result = false;
       break_target[i]->break_depth = i+1;
     }
 
@@ -557,7 +554,7 @@ namespace snabel {
     init_lists(*this);
     init_tables(*this);
     init_structs(*this);
-    init_procs(*this);
+    init_coros(*this);
     init_io(*this);
     init_net(*this);
     init_threads(*this);
@@ -747,11 +744,19 @@ namespace snabel {
       });
 
     add_macro(*this, "return", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(Return(1));
+	out.emplace_back(Return(1, true));
+      });
+
+    add_macro(*this, "_return", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(Return(1, false));
       });
 
     add_macro(*this, "yield", [this](auto pos, auto &in, auto &out) {
-	out.emplace_back(Yield(1));
+	out.emplace_back(Yield(1, true));
+      });
+
+    add_macro(*this, "_yield", [this](auto pos, auto &in, auto &out) {
+	out.emplace_back(Yield(1, false));
       });
 
     add_macro(*this, "break", [](auto pos, auto &in, auto &out) {
@@ -1028,11 +1033,20 @@ namespace snabel {
 		 tok.text.size() == 7 &&
 		 isdigit(tok.text.at(6))) {
 	auto i(tok.text.at(6) - '0');
-	out.emplace_back(Return(i+1));
+	out.emplace_back(Return(i+1, true));
+      } else if (tok.text.substr(0, 7) == "_return" &&
+		 tok.text.size() == 8 &&
+		 isdigit(tok.text.at(7))) {
+	auto i(tok.text.at(7) - '0');
+	out.emplace_back(Return(i+1, false));
       } else if (tok.text == "&return") {
 	out.emplace_back(Push(Box(exe.main_scope,
 				  exe.label_type,
 				  exe.return_target[0])));
+      } else if (tok.text == "&_return") {
+	out.emplace_back(Push(Box(exe.main_scope,
+				  exe.label_type,
+				  exe._return_target[0])));
       } else if (tok.text.substr(0, 7) == "&return" &&
 		 tok.text.size() == 8 &&
 		 isdigit(tok.text.at(7))) {
@@ -1040,6 +1054,13 @@ namespace snabel {
 	out.emplace_back(Push(Box(exe.main_scope,
 				  exe.label_type,
 				  exe.return_target[i])));
+      } else if (tok.text.substr(0, 8) == "&_return" &&
+		 tok.text.size() == 9 &&
+		 isdigit(tok.text.at(8))) {
+	auto i(tok.text.at(8) - '0');
+	out.emplace_back(Push(Box(exe.main_scope,
+				  exe.label_type,
+				  exe._return_target[i])));
       } else if (tok.text.substr(0, 6) == "recall" &&
 		 tok.text.size() == 7 &&
 		 isdigit(tok.text.at(6))) {
@@ -1060,11 +1081,20 @@ namespace snabel {
 		 tok.text.size() == 6 &&
 		 isdigit(tok.text.at(5))) {
 	auto i(tok.text.at(5) - '0');
-	out.emplace_back(Yield(i+1));
+	out.emplace_back(Yield(i+1, true));
+      } else if (tok.text.substr(0, 6) == "_yield" &&
+		 tok.text.size() == 7 &&
+		 isdigit(tok.text.at(6))) {
+	auto i(tok.text.at(6) - '0');
+	out.emplace_back(Yield(i+1, false));
       } else if (tok.text == "&yield") {
 	out.emplace_back(Push(Box(exe.main_scope,
 				  exe.label_type,
 				  exe.yield_target[0])));
+      } else if (tok.text == "&_yield") {
+	out.emplace_back(Push(Box(exe.main_scope,
+				  exe.label_type,
+				  exe._yield_target[0])));
       } else if (tok.text.substr(0, 6) == "&yield" &&
 		 tok.text.size() == 7 &&
 		 isdigit(tok.text.at(6))) {
@@ -1072,6 +1102,13 @@ namespace snabel {
 	out.emplace_back(Push(Box(exe.main_scope,
 				  exe.label_type,
 				  exe.yield_target[i])));
+      } else if (tok.text.substr(0, 7) == "&_yield" &&
+		 tok.text.size() == 8 &&
+		 isdigit(tok.text.at(7))) {
+	auto i(tok.text.at(7) - '0');
+	out.emplace_back(Push(Box(exe.main_scope,
+				  exe.label_type,
+				  exe._yield_target[i])));
       } else if (tok.text.substr(0, 5) == "break" &&
 		 tok.text.size() == 6 &&
 		 isdigit(tok.text.at(5))) {

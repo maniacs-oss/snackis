@@ -23,14 +23,14 @@ let: server tcp-socket
 func: do-send (
   let: q; _
   let: c;
-  |yield
+  |_yield
 
-  @q fifo @c write &yield _for
+  @q fifo @c write &_yield _for
 );
 
 func: do-recv (
   let: in;
-  |yield
+  |_yield
 
   @in read {
     { let: data; _
@@ -42,7 +42,7 @@ func: do-recv (
       @out @data push
     } when
 
-    yield1
+    _yield1
   } for
 
   @clients @in del
@@ -51,26 +51,25 @@ func: do-recv (
 );
 
 func: do-server (
-  |yield
+  |_yield
 
   @server {
     { 'connect' say
-      do-recv proc @procs $1 push
+      do-recv @procs $1 push
       Bin list
-      do-send proc @procs $1 push
+      do-send @procs $1 push
       @clients $2 $2 put
     } when
 
-    yield1
+    _yield1
     idle
   } for
 );
 
 func: do-out (
-  |yield
-  @out fifo stdout write &yield _for
+  |_yield
+  @out fifo stdout write &_yield _for
 );
 
-let: procs [do-server proc
-            do-out proc];
+let: procs [do-server do-out];
 @procs run
