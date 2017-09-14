@@ -40,7 +40,7 @@ namespace snabel {
       &iter_type,
       &iterable_type, &label_type, &lambda_type, &list_type, &nop_type, &opt_type,
       &ordered_type, &pair_type,
-      &path_type, &readable_type, &rfile_type, &random_type, &rat_type,
+      &path_type, &quote_type, &readable_type, &rfile_type, &random_type, &rat_type,
       &rwfile_type, &str_type, &struct_type, &sym_type, &table_type, &tcp_server_type,
       &tcp_socket_type, &tcp_stream_type, &thread_type,
       &uchar_type, &uid_type, &ustr_type, &void_type, &wfile_type, &writeable_type;
@@ -56,6 +56,7 @@ namespace snabel {
   };
 
   Macro &add_macro(Exec &exe, const str &n, Macro::Imp imp);
+  Macro &add_macro(Exec &exe, const str &n, const LambdaRef &lmb);
 
   Type &get_meta_type(Exec &exe, Type &t);
   Type &add_type(Exec &exe, const Sym &n, bool meta=false);
@@ -93,6 +94,7 @@ namespace snabel {
   void reset(Exec &exe);  
   void rewind(Exec &exe);  
   bool compile(Exec &exe, TokSeq in, OpSeq &out);
+  bool compile(Exec &exe, OpSeq &in);
   bool compile(Exec &exe, const str &in, bool skip=false);
   bool run(Exec &exe, const str &in);
 

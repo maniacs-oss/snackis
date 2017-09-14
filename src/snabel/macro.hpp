@@ -11,6 +11,7 @@ namespace snabel {
     Imp imp;
     
     Macro(Imp imp);
+    Macro(Exec &exe, const LambdaRef &lmb);
     void operator ()(Pos pos, TokSeq &in, OpSeq &out) const;
   };
 }

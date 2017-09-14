@@ -55,12 +55,11 @@ namespace snabel {
 
   struct Begin: OpImp {
     Uid tag;
-    Label *enter_label, *skip_label;
+    Label &enter_label, &skip_label;
     bool compiled;
     
-    Begin();
+    Begin(Exec &exe);
     OpImp &get_imp(Op &op) const override;
-    bool prepare(Scope &scp) override;
     bool refresh(Scope &scp) override;
     bool compile(const Op &op, Scope &scp, OpSeq & out) override;
     bool run(Scope &scp) override;

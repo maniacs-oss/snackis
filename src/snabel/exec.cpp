@@ -271,6 +271,7 @@ namespace snabel {
     ordered_type(add_type(*this, "Ordered")),
     pair_type(add_type(*this, "Pair")),
     path_type(add_type(*this, "Path")),
+    quote_type(add_type(*this, "Quote")),
     readable_type(add_type(*this, "Readable")),
     rfile_type(add_type(*this, "RFile")),
     random_type(add_type(*this, "Random")),
@@ -604,8 +605,74 @@ namespace snabel {
     add_func(*this, "random", Func::Const, {ArgType(i64_type)}, random_imp);
     add_func(*this, "pop", Func::Safe, {ArgType(random_type)}, random_pop_imp);
 
-    add_macro(*this, "{", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(Begin());
+    add_macro(*this, "macro:", [this](auto pos, auto &in, auto &out) {
+	if (in.empty()) {
+	  ERROR(Snabel, fmt("Malformed macro definition on row %0, col %1",
+			    pos.row, pos.col));
+	  return;
+	} else {
+	  auto &n(in.at(0).text);
+	  in.pop_front();
+	  auto end(find_end(in.begin(), in.end()));
+	  OpSeq imp;
+	  imp.emplace_back(Begin(*this));
+	  compile(*this, TokSeq(in.begin(), end), imp);
+	  in.erase(in.begin(), std::next(end));
+	  imp.emplace_back(End());
+	  auto pc(main.pc);
+	  if (!compile(*this, imp)) { return; }
+	  run(main);
+	  main.pc = pc;
+	  auto lmb(try_pop(main));
+
+	  if (!lmb) {
+	    ERROR(Snabel, "Missing macro lambda");
+	    return;
+	  }
+	  
+	  add_macro(*this, n, get<LambdaRef>(*lmb));
+	}
+      });
+
+    add_macro(*this, "`", [this](auto pos, auto &in, auto &out) {
+	static const std::map<str, str> delims {
+	  std::make_pair("(", ")"),
+	    std::make_pair("{", "}"),
+	    std::make_pair("[", "]") };
+
+	OutStream buf;
+	auto &tok(in.front());
+	buf << tok.text;
+	in.pop_front();
+	auto fnd(delims.find(tok.text));
+	
+	if (fnd != delims.end()) {
+	  str beg(fnd->first), end(fnd->second);
+	  int depth(1);
+	  str sep("");
+	  
+	  while (depth) {
+	    auto &tok(in.front());
+	    
+	    if (tok.text == beg) {
+	      depth++;
+	    } else if (tok.text == end) {
+	      depth--;
+	    }
+ 
+	    buf << sep << tok.text;
+	    in.pop_front();
+	    sep = " ";
+	  }
+	}
+
+	out.emplace_back(Push(Box(main_scope,
+				  quote_type,
+				  std::make_shared<str>(buf.str()))));
+      });
+    
+    add_macro(*this, "{", [this](auto pos, auto &in, auto &out) {
+	out.emplace_back(Begin(*this));
       });
 
     add_macro(*this, "}", [](auto pos, auto &in, auto &out) {
@@ -646,7 +713,7 @@ namespace snabel {
 	  ERROR(Snabel, fmt("Malformed func on row %0, col %1",
 			    pos.row, pos.col));
 	} else {
-	  out.emplace_back(Begin());
+	  out.emplace_back(Begin(*this));
 	  const str n(in.at(0).text);
 	  auto start(std::next(in.begin()));
 	  auto end(find_end(start, in.end()));
@@ -725,7 +792,21 @@ namespace snabel {
 			      std::forward_as_tuple(get_sym(exe, n)),
 			      std::forward_as_tuple(imp)).first->second; 
   }
-  
+
+  Macro &add_macro(Exec &exe, const str &n, const LambdaRef &lmb) {
+    auto &ns(get_sym(exe, n));
+    auto fnd(exe.macros.find(ns));
+    
+    if (fnd != exe.macros.end()) {
+      ERROR(Snabel, fmt("Redefining macro: %0", n));
+      exe.macros.erase(fnd);
+    }
+    
+    return exe.macros.emplace(std::piecewise_construct,
+			      std::forward_as_tuple(ns),
+			      std::forward_as_tuple(exe, lmb)).first->second; 
+  }
+
   Type &get_meta_type(Exec &exe, Type &t) {    
     auto &n(get_sym(exe, fmt("Type<%0>", name(t.name))));
     auto fnd(find_type(exe, n));
@@ -1179,8 +1260,6 @@ namespace snabel {
 
     TokSeq toks;
     parse_expr(in, 0, toks);
-
-    auto start_pc(exe.main.ops.size());
     Label *skip_label(nullptr);
     OpSeq in_ops;
 
@@ -1188,15 +1267,22 @@ namespace snabel {
       skip_label = &add_label(exe, fmt("_skip%0", uid(exe)));
       in_ops.emplace_back(Jump(*skip_label));
     }
-    
+
     if (!compile(exe, toks, in_ops)) { return false; }
     if (skip) { in_ops.emplace_back(Target(*skip_label)); }
+    if (!compile(exe, in_ops)) { return false; }
+    if (skip) { exe.main.pc++; }
+    return true;
+  }
+
+  bool compile(Exec &exe, OpSeq &in) {
+    auto start_pc(exe.main.ops.size());
     TRY(try_compile);
     
     while (true) {
       exe.main.pc = start_pc;
       
-      for (auto &op: in_ops) {
+      for (auto &op: in) {
 	if (!op.prepared && !prepare(op, exe.main_scope)) { goto exit; }
 	exe.main.pc++;
       }
@@ -1207,7 +1293,7 @@ namespace snabel {
       while (!done) {
 	done = true;
 	
-	for (auto &op: in_ops) {
+	for (auto &op: in) {
 	  if (refresh(op, curr_scope(exe.main))) { done = false; }
 	  exe.main.pc++;
 	}
@@ -1216,13 +1302,13 @@ namespace snabel {
       OpSeq out_ops;
       done = true;
 
-      for (auto &op: in_ops) {
+      for (auto &op: in) {
 	if (compile(op, curr_scope(exe.main), out_ops)) { done = false; }
       }
 
       if (done) { break; }      
-      in_ops.clear();
-      in_ops.swap(out_ops);
+      in.clear();
+      in.swap(out_ops);
       try_compile.errors.clear();
     }
 
@@ -1230,7 +1316,7 @@ namespace snabel {
       OpSeq out_ops;
       exe.main.pc = start_pc;
       
-      for (auto &op: in_ops) {
+      for (auto &op: in) {
 	if (!finalize(op, exe.main_scope, out_ops)) {
 	  exe.main.pc++;
 	}
@@ -1238,14 +1324,13 @@ namespace snabel {
 	if (!try_compile.errors.empty()) { goto exit; }
       }
       
-      in_ops.clear();
-      in_ops.swap(out_ops);
+      in.clear();
+      in.swap(out_ops);
     }
   exit:
     exe.main.pc = start_pc;
-    if (skip) { exe.main.pc++; }
-    std::copy(in_ops.begin(), in_ops.end(), std::back_inserter(exe.main.ops));
-    return true;
+    std::copy(in.begin(), in.end(), std::back_inserter(exe.main.ops));
+    return try_compile.errors.empty();
   }
   
   bool run(Exec &exe, const str &in) {

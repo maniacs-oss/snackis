@@ -30,6 +30,12 @@ namespace snabel {
       return get<Sym>(x) < get<Sym>(y);
     };
 
+    exe.quote_type.supers.push_back(&exe.any_type);
+    exe.quote_type.supers.push_back(&exe.ordered_type);
+    exe.quote_type.fmt = [&exe](auto &v) { return fmt("´%0", *get<StrRef>(v)); };
+    exe.quote_type.eq = exe.str_type.eq;
+    exe.quote_type.lt = exe.str_type.lt;
+    
     add_func(exe, "sym", Func::Const, {ArgType(exe.str_type)}, sym_imp);
     add_func(exe, "str", Func::Const, {ArgType(exe.sym_type)}, str_imp);
   }

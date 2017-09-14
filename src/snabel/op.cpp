@@ -54,23 +54,16 @@ namespace snabel {
     return true;
   }
 
-  Begin::Begin():
+  Begin::Begin(Exec &exe):
     OpImp(OP_BEGIN, "begin"),
-    enter_label(nullptr),
-    skip_label(nullptr),
+    tag(uid(exe)),
+    enter_label(add_label(exe, fmt("_enter%0", tag))),
+    skip_label(add_label(exe, fmt("_skip%0", tag))),
     compiled(false)
   { }
 
   OpImp &Begin::get_imp(Op &op) const {
     return std::get<Begin>(op.data);
-  }
-
-  bool Begin::prepare(Scope &scp) {
-    auto &exe(scp.exec);
-    tag = uid(exe);
-    enter_label = &add_label(exe, fmt("_enter%0", tag));
-    skip_label = &add_label(exe, fmt("_skip%0", tag));
-    return true;
   }
 
   bool Begin::refresh(Scope &scp) {
@@ -82,8 +75,8 @@ namespace snabel {
   bool Begin::compile(const Op &op, Scope &scp, OpSeq &out) {
     if (compiled) { return false; }
     compiled = true;
-    out.emplace_back(Jump(*skip_label));
-    out.emplace_back(Target(*enter_label));
+    out.emplace_back(Jump(skip_label));
+    out.emplace_back(Target(enter_label));
     out.push_back(op);
     return true;
   }
@@ -92,7 +85,7 @@ namespace snabel {
     auto &thd(scp.thread);
 
     Scope &new_scp(begin_scope(thd));
-    new_scp.target = enter_label;
+    new_scp.target = &enter_label;
     new_scp.recall_pc = thd.pc+1;
     
     if (scp.coro) {
@@ -309,8 +302,8 @@ namespace snabel {
     }
 
     auto &l(*exe.lambdas.back());
-    enter_label = l.enter_label;
-    skip_label = l.skip_label;
+    enter_label = &l.enter_label;
+    skip_label = &l.skip_label;
     exe.lambdas.pop_back();
     return false;
   }
@@ -801,7 +794,7 @@ namespace snabel {
     }
     
     auto l(exe.lambdas.back());
-    target = l->enter_label;
+    target = &l->enter_label;
     return false;
   }
 
