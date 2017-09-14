@@ -1,3 +1,5 @@
+![logo](images/logo.png?raw=true)
+
 # Snabel
 #### a decently typed Forth with a touch of Perl
 
@@ -690,26 +692,34 @@ Error: Unsafe call not allowed: rfile
 ```
 
 ### Macros
-Macros allow sidestepping ordinary rules of evaluation and generating custom code at compile time. Except for a core of fundamental functionality, much of Snabel itself is implemented as macros. Any number of tokens may be returned, use backquote (```````) to prevent evaluation of the following expression.
+Macros allow generating custom code at compile time and sidestepping the rules of evaluation. Except for a core of fundamental functionality, much of Snabel itself is implemented as macros. Any number of tokens may be returned, use backquote (`) to prevent evaluation of the following expression.
 
 ```
-S: macro: foo 35 7 +; foo
+S: macro: foo 35 7 +;
+   foo
 
 42
 
-S: macro: foo 7 `+; 35 foo
+S: macro: foo 7 `+;
+   35 foo
 
 42
 
-S: macro: foo `(7 + 2 *); 14 foo
+S: macro: foo `(7 + 2 *);
+   14 foo
 
 42
 
-S: macro: foo let: bar 42; `{@bar};
+S: macro: foo
+     let: bar 42;
+     `@bar;
+   foo
 
 Error: Unknown identifier: @bar
 
-S: let: bar 42; macro: foo `@bar; foo
+S: let: bar 42;
+   macro: foo `@bar;
+   foo
 
 42
 ```

@@ -159,7 +159,7 @@ namespace snabel {
     run_test(exe, "macro: foo `(7 + 2 *); 14 foo");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run_test(exe, "macro: foo let: bar 42; `{@bar};");
+    run_test(exe, "macro: foo let: bar 42; `@bar; foo");
     CATCH(try_test, UnknownId, _) { }
     CHECK(!try_pop(exe.main), _);
 
