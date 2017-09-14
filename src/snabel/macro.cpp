@@ -16,7 +16,7 @@ namespace snabel {
 			 OpSeq &out) {
     auto &s(curr_stack(exe.main));
     s.clear();
-    call(lmb, exe.main_scope, true);
+    call(lmb, curr_scope(exe.main), true);
     
     for (auto v: s) {
       if (v.type == &exe.quote_type) {

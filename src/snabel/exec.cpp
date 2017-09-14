@@ -651,7 +651,7 @@ namespace snabel {
 	  int depth(1);
 	  str sep("");
 	  
-	  while (depth) {
+	  while (!in.empty() && depth) {
 	    auto &tok(in.front());
 	    
 	    if (tok.text == beg) {
@@ -663,6 +663,11 @@ namespace snabel {
 	    buf << sep << tok.text;
 	    in.pop_front();
 	    sep = " ";
+	  }
+
+	  if (depth) {
+	    ERROR(Snabel, fmt("Missing %0 at row %1, col %2", end, pos.row, pos.col));
+	    return;
 	  }
 	}
 
