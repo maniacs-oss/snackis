@@ -58,7 +58,6 @@ namespace snabel {
     OpImp(OP_BEGIN, "begin"),
     enter_label(nullptr),
     skip_label(nullptr),
-    safe_level(-1),
     compiled(false)
   { }
 
@@ -77,7 +76,6 @@ namespace snabel {
   bool Begin::refresh(Scope &scp) {
     auto &exe(scp.exec);
     exe.lambdas.push_back(this);
-    begin_scope(scp.thread);
     return false;
   }
 
@@ -108,14 +106,13 @@ namespace snabel {
       std::copy(cor->env.begin(), cor->env.end(),
 		std::inserter(new_scp.env, new_scp.env.end()));
     } else {
-      new_scp.safe_level = safe_level;
-
       if (!thd.lambda) {
 	ERROR(Snabel, "Missing lambda");
 	return false;
       }
       
       auto &lmb(*thd.lambda);
+      new_scp.safe_level = lmb.safe_level;
 	       
       std::copy(lmb.env.begin(), lmb.env.end(),
 		std::inserter(scp.env, scp.env.end()));
@@ -314,9 +311,7 @@ namespace snabel {
     auto &l(*exe.lambdas.back());
     enter_label = l.enter_label;
     skip_label = l.skip_label;
-    l.safe_level = scp.safe_level;
     exe.lambdas.pop_back();
-    end_scope(scp.thread);
     return false;
   }
   
@@ -386,9 +381,7 @@ namespace snabel {
 	auto &v(stack.at(stack.size()-i-1));
 
 	if (v.safe_level != scp.safe_level) {
-	  ERROR(Snabel, fmt("Format failed, unsafe stack access: %0\n%1",
-			    in.substr(s.first+offs),
-			    stack));
+	  ERROR(UnsafeStack);
 	  return false;
 	}
 
@@ -521,6 +514,7 @@ namespace snabel {
   }
   
   bool Funcall::run(Scope &scp) {
+    TRY(try_funcall);
     auto &thd(scp.thread);
     
     if (imp) {
@@ -545,7 +539,8 @@ namespace snabel {
       ERROR(UnsafeCall, fn);
       return false;
     }
-     
+
+    if (!try_funcall.errors.empty()) { return false; }
     (*imp)(scp, m->second);
     return true;
   }
@@ -814,23 +809,6 @@ namespace snabel {
     return _return(scp, depth, push_result);
   }
   
-  Safe::Safe():
-    OpImp(OP_SAFE, "safe")
-  { }
-
-  OpImp &Safe::get_imp(Op &op) const {
-    return std::get<Safe>(op.data);
-  }
-
-  bool Safe::refresh(Scope &scp) {
-    scp.safe_level++;
-    return false;
-  }
-
-  bool Safe::finalize(const Op &op, Scope &scp, OpSeq & out) {
-    return false;
-  }
-
   Stash::Stash():
     OpImp(OP_STASH, "stash")
   { }

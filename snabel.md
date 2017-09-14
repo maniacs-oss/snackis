@@ -670,12 +670,8 @@ S: 7 {35 +} thread join
 Functions defined via the host api may be tagged as safe or unsafe. Safe functions are not allowed to cause external effects; most of the functionality in Snabel's IO, network and thread vocabularies is tagged as unsafe. Calling ```safe``` increases the safety level for the current scope; there is no way of decreasing it short of closing the scope; and the level is inherited by sub scopes. Environment lookups are limited to the same safety level, stack access is only allowed within the same level, and executable definitions inherit the current level on compilation. 
 
 ```
-S: { safe
-     let: foo 42;
-     '@foo;bar'
-   } call
-
-'42bar'
+S: {35 7 safe +} call
+Error: Unsafe stack access
 
 S: { let: foo 42;
      {safe '@foo;bar'} call
@@ -684,10 +680,10 @@ S: { let: foo 42;
 Error: Unknown identifier: @foo
 
 S: { safe
-     '{\'hello\' say}' eval
+     '{\'~/.bash_history\' rfile}' eval
    } call call
 
-Error: Unsafe call not allowed: say
+Error: Unsafe call not allowed: rfile
 ```
 
 ### Macros

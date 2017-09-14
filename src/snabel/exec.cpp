@@ -14,6 +14,7 @@
 #include "snabel/opt.hpp"
 #include "snabel/pair.hpp"
 #include "snabel/range.hpp"
+#include "snabel/rat.hpp"
 #include "snabel/str.hpp"
 #include "snabel/struct.hpp"
 #include "snabel/sym.hpp"
@@ -26,6 +27,10 @@ namespace snabel {
     compile(scp.exec, *get<StrRef>(args.at(0)), true);
     run(scp.thread);
     scp.thread.pc = pc;
+  }
+
+  static void safe_imp(Scope &scp, const Args &args) {
+    scp.safe_level++;
   }
 
   static void is_imp(Scope &scp, const Args &args) {
@@ -148,13 +153,6 @@ namespace snabel {
     push(scp, scp.exec.i64_type, x*y);
   }
 
-  static void div_i64_imp(Scope &scp, const Args &args) {
-    auto &num(get<int64_t>(args.at(0)));
-    auto &div(get<int64_t>(args.at(1)));
-    bool neg = (num < 0 && div > 0) || (div < 0 && num >= 0);
-    push(scp, scp.exec.rat_type, Rat(abs(num), abs(div), neg));
-  }
-
   static void mod_i64_imp(Scope &scp, const Args &args) {
     auto &x(get<int64_t>(args.at(0))), &y(get<int64_t>(args.at(1)));
     push(scp, scp.exec.i64_type, x%y);
@@ -162,34 +160,6 @@ namespace snabel {
 
   static void trunc_imp(Scope &scp, const Args &args) {
     push(scp, scp.exec.i64_type, trunc(get<Rat>(args.at(0))));
-  }
-
-  static void frac_imp(Scope &scp, const Args &args) {
-    push(scp, scp.exec.rat_type, frac(get<Rat>(args.at(0))));
-  }
-
-  static void add_rat_imp(Scope &scp, const Args &args) {
-    auto &x(get<Rat>(args.at(0)));
-    auto &y(get<Rat>(args.at(1)));
-    push(scp, scp.exec.rat_type, x+y);
-  }
-
-  static void sub_rat_imp(Scope &scp, const Args &args) {
-    auto &x(get<Rat>(args.at(0)));
-    auto &y(get<Rat>(args.at(1)));
-    push(scp, scp.exec.rat_type, x-y);
-  }
-
-  static void mul_rat_imp(Scope &scp, const Args &args) {
-    auto &x(get<Rat>(args.at(0)));
-    auto &y(get<Rat>(args.at(1)));
-    push(scp, scp.exec.rat_type, x*y);
-  }
-
-  static void div_rat_imp(Scope &scp, const Args &args) {
-    auto &x(get<Rat>(args.at(0)));
-    auto &y(get<Rat>(args.at(1)));
-    push(scp, scp.exec.rat_type, x/y);
   }
 
   static void bin_zero_imp(Scope &scp, const Args &args) {
@@ -449,6 +419,7 @@ namespace snabel {
     func_type.eq = [](auto &x, auto &y) { return get<Func *>(x) == get<Func *>(y); };
     
     func_type.call = [](auto &scp, auto &v, bool now) {
+      TRY(try_call);
       auto &thd(scp.thread);
       auto &fn(*get<Func *>(v));
       auto m(match(fn, scp));
@@ -458,7 +429,8 @@ namespace snabel {
 			  name(fn.name), curr_stack(thd)));
 	return false;
       }
-      
+
+      if (!try_call.errors.empty()) { return false; }
       (*m->first)(scp, m->second);
       return true;
     };
@@ -507,12 +479,6 @@ namespace snabel {
       return true;
     };
         
-    rat_type.supers.push_back(&any_type);
-    rat_type.supers.push_back(&ordered_type);
-    rat_type.fmt = [](auto &v) { return fmt_arg(get<Rat>(v)); };
-    rat_type.eq = [](auto &x, auto &y) { return get<Rat>(x) == get<Rat>(y); };
-    rat_type.lt = [](auto &x, auto &y) { return get<Rat>(x) < get<Rat>(y); };
-
     uid_type.supers.push_back(&any_type);
     uid_type.supers.push_back(&ordered_type);
     uid_type.fmt = [](auto &v) { return fmt("Uid(%0)", get<Uid>(v)); };
@@ -551,6 +517,7 @@ namespace snabel {
     init_strs(*this);
     init_syms(*this);
     init_pairs(*this);
+    init_rats(*this);
     init_lists(*this);
     init_tables(*this);
     init_structs(*this);
@@ -558,15 +525,9 @@ namespace snabel {
     init_io(*this);
     init_net(*this);
     init_threads(*this);
-    
-    add_conv(*this, i64_type, rat_type, [this](auto &v) {	
-	v.type = &rat_type;
-	auto n(get<int64_t>(v));
-	v.val = Rat(abs(n), 1, n < 0);
-	return true;
-      });
-    
+        
     add_func(*this, "eval", Func::Safe, {ArgType(str_type)}, eval_imp);
+    add_func(*this, "safe", Func::Safe, {}, safe_imp);
     
     add_func(*this, "is?", Func::Pure,
 	     {ArgType(any_type), ArgType(meta_type)},
@@ -613,33 +574,12 @@ namespace snabel {
     add_func(*this, "*", Func::Pure,
 	     {ArgType(i64_type), ArgType(i64_type)},
 	     mul_i64_imp);
-    
-    add_func(*this, "/", Func::Pure,
-	     {ArgType(i64_type), ArgType(i64_type)},
-	     div_i64_imp);
-    
+        
     add_func(*this, "%", Func::Pure,
 	     {ArgType(i64_type), ArgType(i64_type)},
 	     mod_i64_imp);
 
     add_func(*this, "trunc", Func::Pure, {ArgType(rat_type)}, trunc_imp);
-    add_func(*this, "frac", Func::Pure, {ArgType(rat_type)}, frac_imp);
-
-    add_func(*this, "+", Func::Pure,
-	     {ArgType(rat_type), ArgType(rat_type)},
-	     add_rat_imp);
-
-    add_func(*this, "-", Func::Pure,
-	     {ArgType(rat_type), ArgType(rat_type)},
-	     sub_rat_imp);
-    
-    add_func(*this, "*", Func::Pure,
-	     {ArgType(rat_type), ArgType(rat_type)},
-	     mul_rat_imp);
-    
-    add_func(*this, "/", Func::Pure,
-	     {ArgType(rat_type), ArgType(rat_type)},
-	     div_rat_imp);
 
     add_func(*this, "bytes", Func::Pure, {ArgType(i64_type)}, bytes_imp);
     add_func(*this, "z?", Func::Pure, {ArgType(bin_type)}, bin_zero_imp);
@@ -765,10 +705,6 @@ namespace snabel {
 
     add_macro(*this, "call", [](auto pos, auto &in, auto &out) {
 	out.emplace_back(Call());
-      });
-
-    add_macro(*this, "safe", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(Safe());
       });
 
     add_macro(*this, "for", [](auto pos, auto &in, auto &out) {

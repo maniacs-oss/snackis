@@ -5,7 +5,7 @@
 
 namespace snabel {
   Lambda::Lambda(Label &lbl, Scope &scp):
-    label(lbl)
+    label(lbl), safe_level(scp.safe_level)
   {
     for (auto s(scp.thread.scopes.rbegin());
 	 s != std::prev(scp.thread.scopes.rend()) &&

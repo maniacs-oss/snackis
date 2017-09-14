@@ -13,4 +13,8 @@ namespace snabel {
   UnsafeCallError::UnsafeCallError(const Func &fn):
     SnabelError(fmt("Unsafe call not allowed: %0", name(fn.name)))
   { }
+
+  UnsafeStackError::UnsafeStackError():
+    SnabelError(fmt("Unsafe stack access"))
+  { }
 }

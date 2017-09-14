@@ -24,7 +24,7 @@ namespace snabel {
 		OP_DROP, OP_DUP,
 		OP_END, OP_FMT, OP_FOR, OP_FUNCALL, OP_GETENV, OP_JUMP, OP_LOOP,
 		OP_PUSH, OP_PUTENV, OP_RECALL, OP_RESET, OP_RESTORE,
-		OP_RETURN, OP_SAFE, OP_STASH, OP_SWAP, OP_TARGET,
+		OP_RETURN, OP_STASH, OP_SWAP, OP_TARGET,
 	        OP_YIELD };
 
   using OpSeq = std::deque<Op>;
@@ -56,7 +56,6 @@ namespace snabel {
   struct Begin: OpImp {
     Uid tag;
     Label *enter_label, *skip_label;
-    int64_t safe_level;
     bool compiled;
     
     Begin();
@@ -255,13 +254,6 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
   
-  struct Safe: OpImp {
-    Safe();
-    OpImp &get_imp(Op &op) const override;
-    bool refresh(Scope &scp) override;
-    bool finalize(const Op &op, Scope &scp, OpSeq & out) override;
-  };
-
   struct Stash: OpImp {
     Stash();
     OpImp &get_imp(Op &op) const override;
@@ -298,7 +290,7 @@ namespace snabel {
 
   using OpData = std::variant<Backup, Begin, Break, Call, Capture, Deref, Drop, Dup,
 			      End, Fmt, For, Funcall, Getenv, Jump, Loop, Push,
-			      Putenv, Recall, Reset, Restore, Return, Safe, Stash,
+			      Putenv, Recall, Reset, Restore, Return, Stash,
 			      Swap, Target, Yield>;
 
   using OpState = std::variant<For::State, Loop::State>;

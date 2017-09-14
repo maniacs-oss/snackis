@@ -276,6 +276,30 @@ namespace snabel {
 	"7 @bar for "
 	"0 @acc &+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 21, _);
+
+    run_test(exe,
+	"func: foo _yield (_yield 35 push) _;"
+	"let: bar foo; "
+	"0 [7] @bar call @bar call &+ for");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+
+    run_test(exe,
+	"let: acc Str list; "
+	"func: do-ping (|_yield 3 {@acc 'ping' push _yield1} for); "
+	"func: do-pong (|_yield 3 {@acc 'pong' push _yield1} for); "
+	"[do-ping do-pong] run");
+    CHECK(get<ListRef>(*find_env(curr_scope(exe.main), "@acc"))->size() == 6, _);
+  
+    run_test(exe,
+	"let: acc I64 list; "
+
+	"let: foo {|_yield ( "
+	"  7 {@acc $1 push _yield1} for "
+	")} call; "
+
+	"@foo run "
+	"0 @acc &+ for");
+    CHECK(get<int64_t>(pop(exe.main)) == 21, _);
   }
   
   static void cond_tests() {
@@ -610,6 +634,10 @@ namespace snabel {
     run_test(exe, "{safe func: foo 'invalid' rfile 42; &foo} call call");
     CATCH(try_test, UnsafeCall, e) { }
     CHECK(*get<StrRef>(pop(exe.main)) == "invalid", _);
+
+    run_test(exe, "{35 safe 7 +} call");
+    CATCH(try_test, UnsafeStack, e) { }
+    CHECK(get<int64_t>(pop(exe.main)) == 7, _);
   }
 
   static void io_tests() {
@@ -622,34 +650,6 @@ namespace snabel {
     CHECK(get<int64_t>(pop(exe.main)) == 3, _);
   }
   
-  static void proc_tests() {
-    TRY(try_test);    
-    
-    run_test(exe,
-	"func: foo _yield (_yield 35 push) _;"
-	"let: bar foo; "
-	"0 [7] @bar call @bar call &+ for");
-    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
-
-    run_test(exe,
-	"let: acc Str list; "
-	"func: do-ping (|_yield 3 {@acc 'ping' push _yield1} for); "
-	"func: do-pong (|_yield 3 {@acc 'pong' push _yield1} for); "
-	"[do-ping do-pong] run");
-    CHECK(get<ListRef>(*find_env(curr_scope(exe.main), "@acc"))->size() == 6, _);
-  
-    run_test(exe,
-	"let: acc I64 list; "
-
-	"let: foo {|_yield ( "
-	"  7 {@acc $1 push _yield1} for "
-	")} call; "
-
-	"@foo run "
-	"0 @acc &+ for");
-    CHECK(get<int64_t>(pop(exe.main)) == 21, _);
-  }
-
   static void thread_tests() {
     TRY(try_test);    
     Exec exe;
@@ -684,7 +684,6 @@ namespace snabel {
     opt_tests();
     safe_tests();
     io_tests();
-    proc_tests();
     thread_tests();
   }
 

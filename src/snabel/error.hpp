@@ -20,6 +20,10 @@ namespace snabel {
   struct UnsafeCallError: SnabelError {
     UnsafeCallError(const Func &fn);
   };
+
+  struct UnsafeStackError: SnabelError {
+    UnsafeStackError();
+  };
 }
 
 #endif

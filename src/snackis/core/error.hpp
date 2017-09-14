@@ -9,10 +9,10 @@
 #include "snackis/core/macros.hpp"
 #include "snackis/core/trace.hpp"
 
-#define ERROR(type, what) {			\
-    TRACE("Error thrown");			\
-    throw_error(new CONCAT(type, Error)(what));	\
-  }						\
+#define ERROR(type, ...) {				\
+    TRACE("Error thrown");				\
+    throw_error(new CONCAT(type, Error)(__VA_ARGS__));	\
+  }							\
 
 #define CHECK(expr, cond) {			\
     auto _(expr);				\
