@@ -690,7 +690,32 @@ Error: Unsafe call not allowed: rfile
 ```
 
 ### Macros
-Besides a tiny core of fundamental functionality, the rest of Snabel is implemented as macros. A macro takes an incoming sequence of tokens and an outgoing sequence of VM-operations as parameters, both lists may be modified from within the macro.
+Macros allow sidestepping ordinary rules of evaluation and generating custom code at compile time. Except for a core of fundamental functionality, much of Snabel itself is implemented as macros. Any number of tokens may be returned, use backquote (```````) to prevent evaluation of the following expression.
+
+```
+S: macro: foo 35 7 +; foo
+
+42
+
+S: macro: foo 7 `+; 35 foo
+
+42
+
+S: macro: foo `(7 + 2 *); 14 foo
+
+42
+
+S: macro: foo let: bar 42; `{@bar};
+
+Error: Unknown identifier: @bar
+
+S: let: bar 42; macro: foo `@bar; foo
+
+42
+```
+
+#### C++
+A C++ macro takes an incoming sequence of tokens and an outgoing sequence of VM-operations as parameters, both lists may be modified from within the macro.
 
 ```
 add_macro(*this, "let:", [this](auto pos, auto &in, auto &out) {
