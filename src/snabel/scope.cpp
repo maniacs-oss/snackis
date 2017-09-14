@@ -88,7 +88,7 @@ namespace snabel {
 		      std::forward_as_tuple(key),
 		      std::forward_as_tuple(val));
     } else {
-      ERROR(Snabel, fmt("Rebinding name: %0", name(key)));
+      ERROR(Redefine, fmt("Rebinding name: %0", name(key)));
       fnd->second = val;
     }
   }

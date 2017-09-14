@@ -6,6 +6,10 @@ namespace snabel {
     Error(str("Error: ") + msg)
   { }
 
+  RedefineError::RedefineError(const str &msg):
+    SnabelError(msg)
+  { }
+  
   UnknownIdError::UnknownIdError(const Sym &id):
     SnabelError(fmt("Unknown identifier: %0", name(id)))
   { }

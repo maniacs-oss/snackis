@@ -619,10 +619,8 @@ namespace snabel {
 	  compile(*this, TokSeq(in.begin(), end), imp);
 	  in.erase(in.begin(), std::next(end));
 	  imp.emplace_back(End());
-	  auto pc(main.pc);
 	  if (!compile(*this, imp)) { return; }
 	  run(main);
-	  main.pc = pc;
 	  auto lmb(try_pop(main));
 
 	  if (!lmb) {
@@ -803,7 +801,7 @@ namespace snabel {
     auto fnd(exe.macros.find(ns));
     
     if (fnd != exe.macros.end()) {
-      ERROR(Snabel, fmt("Redefining macro: %0", n));
+      ERROR(Redefine, fmt("Redefining macro: %0", n));
       exe.macros.erase(fnd);
     }
     
@@ -831,7 +829,7 @@ namespace snabel {
     auto &mt(meta ? exe.meta_type : get_meta_type(exe, t));
     
     if (fnd) {
-      ERROR(Snabel, fmt("Redefining type: %0", name(n)));
+      ERROR(Redefine, fmt("Redefining type: %0", name(n)));
       fnd->type = &mt;
       fnd->val = &t;
     } else {
@@ -1035,7 +1033,7 @@ namespace snabel {
   bool compile(Exec &exe, TokSeq in, OpSeq &out) {
     TRY(try_compile);
 
-    while (!in.empty() && try_compile.errors.empty()) {
+    while (!in.empty()) {
      Tok tok(in.at(0));
       in.pop_front();
     
@@ -1255,9 +1253,13 @@ namespace snabel {
 	  fnd->second(tok.pos, in, out);
 	}
       }
+
+      for (auto e: try_compile.errors) {
+	if (!dynamic_cast<RedefineError *>(e)) { return false; }
+      }
     }
 
-    return try_compile.errors.empty();
+    return true;
   }
 
   bool compile(Exec &exe, const str &in, bool skip) {
@@ -1326,7 +1328,9 @@ namespace snabel {
 	  exe.main.pc++;
 	}
 	
-	if (!try_compile.errors.empty()) { goto exit; }
+	for (auto e: try_compile.errors) {
+	  if (!dynamic_cast<RedefineError *>(e)) { goto exit; }
+	}
       }
       
       in.clear();
@@ -1335,7 +1339,12 @@ namespace snabel {
   exit:
     exe.main.pc = start_pc;
     std::copy(in.begin(), in.end(), std::back_inserter(exe.main.ops));
-    return try_compile.errors.empty();
+
+    for (auto e: try_compile.errors) {
+      if (!dynamic_cast<RedefineError *>(e)) { return false; }
+    }
+    
+    return true;
   }
   
   bool run(Exec &exe, const str &in) {

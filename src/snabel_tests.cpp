@@ -146,6 +146,27 @@ namespace snabel {
     CATCH(try_test, UnsafeCall, e) { }
   }
 
+  static void macro_tests() {
+    TRY(try_test);    
+    Exec exe;
+
+    run_test(exe, "macro: foo 35 7 +; foo");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+
+    run_test(exe, "macro: foo 7 `+; 35 foo");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+
+    run_test(exe, "macro: foo `(7 + 2 *); 14 foo");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+
+    run_test(exe, "macro: foo let: bar 42; `{@bar};");
+    CATCH(try_test, UnknownId, _) { }
+    CHECK(!try_pop(exe.main), _);
+
+    run_test(exe, "let: bar 42; macro: foo `@bar; foo");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+  }
+
   static void func_tests() {
     TRY(try_test);
     run_test(exe, "func: foo 35 +; 7 foo");
@@ -662,6 +683,7 @@ namespace snabel {
     parens_tests();
     compile_tests();
     eval_tests();
+    macro_tests();
     func_tests();
     type_tests();
     stack_tests();
@@ -700,6 +722,7 @@ namespace snabel {
       if (i < iters-1) { try_snabel.errors.clear(); }
     }
     
+    CATCH(try_snabel, Redefine, _) { }
     std::cout << "Snabel: " << usecs(pnow()-started) / iters << "us" << std::endl;
   }
 }

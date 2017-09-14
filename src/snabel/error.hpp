@@ -13,6 +13,10 @@ namespace snabel {
     SnabelError(const str &msg);
   };
 
+  struct RedefineError: SnabelError {
+    RedefineError(const str &msg);
+  };
+
   struct UnknownIdError: SnabelError {
     UnknownIdError(const Sym &id);
   };
