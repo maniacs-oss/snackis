@@ -692,7 +692,7 @@ Error: Unsafe call not allowed: rfile
 ```
 
 ### Macros
-Macros allow generating custom code at compile time and sidestepping the rules of evaluation. Except for a core of fundamental functionality, much of Snabel itself is implemented as macros. Any number of tokens may be returned; symbols are automatically quoted, use backquote (`) to prevent evaluation of any other expression. Many systems these days spend a lot of energy on macro hygiene; while I'm all for simplifying the task of writing correct code, I'm not prepared to sacrifice intentional capture on the altar of purity; Snabel doesn't mind capturing names from the calling environment.
+Macros allow generating custom code at compile time and sidestepping the rules of evaluation. Except for a core of fundamental functionality, much of Snabel itself is implemented as macros. Macros are lexically scoped; any number of tokens may be returned; symbols are automatically quoted, use backquote (`) to prevent evaluation of any other expression. Many systems these days spend a lot of energy on macro hygiene; while I'm all for simplifying the task of writing correct code, I'm not prepared to sacrifice intentional capture on the altar of purity; Snabel doesn't mind capturing names from the calling environment.
 
 ```
 S: macro: foo 35 7 +;

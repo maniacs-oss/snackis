@@ -38,8 +38,8 @@ namespace snabel {
     Type &any_type, &bin_type, &bool_type, &byte_type, &callable_type,
       &char_type, &coro_type, &drop_type, &file_type, &func_type, &i64_type,
       &iter_type,
-      &iterable_type, &label_type, &lambda_type, &list_type, &nop_type, &opt_type,
-      &ordered_type, &pair_type,
+      &iterable_type, &label_type, &lambda_type, &list_type, &macro_type, &nop_type,
+      &opt_type, &ordered_type, &pair_type,
       &path_type, &quote_type, &readable_type, &rfile_type, &random_type, &rat_type,
       &rwfile_type, &str_type, &struct_type, &sym_type, &table_type, &tcp_server_type,
       &tcp_socket_type, &tcp_stream_type, &thread_type,
@@ -56,7 +56,9 @@ namespace snabel {
     const Exec &operator =(const Exec &) = delete;
   };
 
+  Macro &add_macro(Scope &scp, const str &n, Macro::Imp imp);
   Macro &add_macro(Exec &exe, const str &n, Macro::Imp imp);
+  Macro &add_macro(Scope &scp, const str &n, const LambdaRef &lmb);
   Macro &add_macro(Exec &exe, const str &n, const LambdaRef &lmb);
 
   Type &get_meta_type(Exec &exe, Type &t);

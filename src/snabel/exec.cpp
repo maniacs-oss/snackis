@@ -266,6 +266,7 @@ namespace snabel {
     label_type(add_type(*this, "Label")),
     lambda_type(add_type(*this, "Lambda")),
     list_type(add_type(*this, "List")),
+    macro_type(add_type(*this, "Macro")),
     nop_type(add_type(*this, "Nop")),
     opt_type(add_type(*this, "Opt")),
     ordered_type(add_type(*this, "Ordered")),
@@ -409,6 +410,16 @@ namespace snabel {
     bool_type.eq = [](auto &x, auto &y) { return get<bool>(x) == get<bool>(y); };
     put_env(main_scope, "true", Box(main_scope, bool_type, true));
     put_env(main_scope, "false", Box(main_scope, bool_type, false));
+
+    macro_type.supers.push_back(&any_type);
+
+    macro_type.fmt = [](auto &v) {
+      return fmt("Macro(%0)", name(get<Macro *>(v)->name));
+    };
+
+    macro_type.eq = [](auto &x, auto &y) {
+      return get<Macro *>(x) == get<Macro *>(y);
+    };
 
     func_type.supers.push_back(&any_type);
     func_type.supers.push_back(&callable_type);
@@ -618,7 +629,7 @@ namespace snabel {
 	  imp.emplace_back(Begin(*this));
 	  compile(*this, TokSeq(in.begin(), end), imp);
 	  in.erase(in.begin(), std::next(end));
-	  imp.emplace_back(End());
+	  imp.emplace_back(End(*this));
 	  if (!compile(*this, imp)) { return; }
 	  run(main);
 	  auto lmb(try_pop(main));
@@ -678,8 +689,8 @@ namespace snabel {
 	out.emplace_back(Begin(*this));
       });
 
-    add_macro(*this, "}", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(End());
+    add_macro(*this, "}", [this](auto pos, auto &in, auto &out) {
+	out.emplace_back(End(*this));
       });
 
     add_macro(*this, "(", [](auto pos, auto &in, auto &out) {
@@ -723,7 +734,7 @@ namespace snabel {
 	  compile(*this, TokSeq(start, end), out);
 	  if (end != in.end()) { end++; }
 	  in.erase(in.begin(), end);
-	  out.emplace_back(End());
+	  out.emplace_back(End(*this));
 	  out.emplace_back(Putenv(get_sym(*this, n)));
 	}
       });
@@ -794,13 +805,22 @@ namespace snabel {
     for (auto &s: syms) { delete s.second.pos; }
   }
   
-  Macro &add_macro(Exec &exe, const str &n, Macro::Imp imp) {
-    return exe.macros.emplace(std::piecewise_construct,
-			      std::forward_as_tuple(get_sym(exe, n)),
-			      std::forward_as_tuple(imp)).first->second; 
+  Macro &add_macro(Scope &scp, const str &n, Macro::Imp imp) {
+    auto &exe(scp.exec);
+    auto &ns(get_sym(exe, n));
+    auto &m(exe.macros.emplace(std::piecewise_construct,
+			       std::forward_as_tuple(ns),
+			       std::forward_as_tuple(ns, imp)).first->second);
+    put_env(scp, ns, Box(scp, exe.macro_type, &m));
+    return m;
   }
 
-  Macro &add_macro(Exec &exe, const str &n, const LambdaRef &lmb) {
+  Macro &add_macro(Exec &exe, const str &n, Macro::Imp imp) {
+    return add_macro(curr_scope(exe.main), n, imp);
+  }
+  
+  Macro &add_macro(Scope &scp, const str &n, const LambdaRef &lmb) {
+    auto &exe(scp.exec);
     auto &ns(get_sym(exe, n));
     auto fnd(exe.macros.find(ns));
     
@@ -809,9 +829,15 @@ namespace snabel {
       exe.macros.erase(fnd);
     }
     
-    return exe.macros.emplace(std::piecewise_construct,
-			      std::forward_as_tuple(ns),
-			      std::forward_as_tuple(exe, lmb)).first->second; 
+    auto &m(exe.macros.emplace(std::piecewise_construct,
+			       std::forward_as_tuple(ns),
+			       std::forward_as_tuple(exe, ns, lmb)).first->second); 
+    put_env(scp, ns, Box(scp, exe.macro_type, &m));
+    return m;
+  }
+
+  Macro &add_macro(Exec &exe, const str &n, const LambdaRef &lmb) {
+    return add_macro(curr_scope(exe.main), n, lmb);
   }
 
   Type &get_meta_type(Exec &exe, Type &t) {    
@@ -1249,12 +1275,13 @@ namespace snabel {
 		  isdigit(tok.text[1]))) {
 	out.emplace_back(Push(Box(exe.main_scope, exe.i64_type, to_int64(tok.text))));
       } else {
-	auto fnd(exe.macros.find(get_sym(exe, tok.text)));
+	auto ts(get_sym(exe, tok.text));
+	auto fnd(find_env(curr_scope(exe.main), ts));
       
-	if (fnd == exe.macros.end()) {
-	  out.emplace_back(Deref(get_sym(exe, tok.text)));
+	if (fnd && fnd->type == &exe.macro_type) {
+	  (*get<Macro *>(*fnd))(tok.pos, in, out);
 	} else {
-	  fnd->second(tok.pos, in, out);
+	  out.emplace_back(Deref(ts));
 	}
       }
 

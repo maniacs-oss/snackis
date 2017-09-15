@@ -60,7 +60,9 @@ namespace snabel {
     enter_label(add_label(exe, fmt("_enter%0", tag))),
     skip_label(add_label(exe, fmt("_skip%0", tag))),
     compiled(false)
-  { }
+  {
+    begin_scope(exe.main);
+  }
 
   OpImp &Begin::get_imp(Op &op) const {
     return std::get<Begin>(op.data);
@@ -283,11 +285,13 @@ namespace snabel {
     return true;
   }
 
-  End::End():
+  End::End(Exec &exe):
     OpImp(OP_END, "end"),
     enter_label(nullptr), skip_label(nullptr),
     compiled(false)
-  { }
+  {
+    end_scope(exe.main);
+  }
 
   OpImp &End::get_imp(Op &op) const {
     return std::get<End>(op.data);

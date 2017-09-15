@@ -5,8 +5,8 @@
 #include "snabel/macro.hpp"
 
 namespace snabel {
-  Macro::Macro(Imp imp):
-    imp(imp)
+  Macro::Macro(Sym name, Imp imp):
+    name(name), imp(imp)
   { }
 
   static void target_imp(Exec &exe,
@@ -33,8 +33,8 @@ namespace snabel {
     s.clear();
   }
   
-  Macro::Macro(Exec &exe, const LambdaRef &lmb):
-    imp([&exe, lmb](auto pos, auto &in, auto &out) {
+  Macro::Macro(Exec &exe, Sym name, const LambdaRef &lmb):
+    name(name), imp([&exe, lmb](auto pos, auto &in, auto &out) {
 	target_imp(exe, lmb, pos, in, out);
       })
   { }

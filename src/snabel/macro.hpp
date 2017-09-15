@@ -8,10 +8,12 @@
 namespace snabel {
   struct Macro {
     using Imp = func<void (Pos, TokSeq &, OpSeq &)>;
+
+    Sym name;
     Imp imp;
     
-    Macro(Imp imp);
-    Macro(Exec &exe, const LambdaRef &lmb);
+    Macro(Sym name, Imp imp);
+    Macro(Exec &exe, Sym name, const LambdaRef &lmb);
     void operator ()(Pos pos, TokSeq &in, OpSeq &out) const;
   };
 }
