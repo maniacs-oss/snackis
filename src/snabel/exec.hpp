@@ -2,7 +2,7 @@
 #define SNABEL_EXEC_HPP
 
 #include <atomic>
-#include <list>
+#include <deque>
 #include <mutex>
 #include <map>
 
@@ -23,7 +23,7 @@ namespace snabel {
     using Lock = std::unique_lock<std::mutex>;
     
     std::map<Sym, Macro> macros;
-    std::list<Type> types;
+    std::deque<Type> types;
     std::map<std::pair<Type *, Type *>, Conv> convs;
     std::map<Sym, Func> funcs;
     std::map<Sym, Label> labels;
