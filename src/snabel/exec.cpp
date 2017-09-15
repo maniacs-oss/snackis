@@ -808,9 +808,7 @@ namespace snabel {
   Macro &add_macro(Scope &scp, const str &n, Macro::Imp imp) {
     auto &exe(scp.exec);
     auto &ns(get_sym(exe, n));
-    auto &m(exe.macros.emplace(std::piecewise_construct,
-			       std::forward_as_tuple(ns),
-			       std::forward_as_tuple(ns, imp)).first->second);
+    auto &m(exe.macros.emplace_back(ns, imp));
     put_env(scp, ns, Box(scp, exe.macro_type, &m));
     return m;
   }
@@ -822,16 +820,7 @@ namespace snabel {
   Macro &add_macro(Scope &scp, const str &n, const LambdaRef &lmb) {
     auto &exe(scp.exec);
     auto &ns(get_sym(exe, n));
-    auto fnd(exe.macros.find(ns));
-    
-    if (fnd != exe.macros.end()) {
-      ERROR(Redefine, fmt("Redefining macro: %0", n));
-      exe.macros.erase(fnd);
-    }
-    
-    auto &m(exe.macros.emplace(std::piecewise_construct,
-			       std::forward_as_tuple(ns),
-			       std::forward_as_tuple(exe, ns, lmb)).first->second); 
+    auto &m(exe.macros.emplace_back(exe, ns, lmb)); 
     put_env(scp, ns, Box(scp, exe.macro_type, &m));
     return m;
   }

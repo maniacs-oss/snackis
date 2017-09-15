@@ -22,7 +22,7 @@ namespace snabel {
   struct Exec {
     using Lock = std::unique_lock<std::mutex>;
     
-    std::map<Sym, Macro> macros;
+    std::deque<Macro> macros;
     std::deque<Type> types;
     std::map<std::pair<Type *, Type *>, Conv> convs;
     std::map<Sym, Func> funcs;
