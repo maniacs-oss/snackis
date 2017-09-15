@@ -13,7 +13,7 @@ namespace snabel {
     Imp imp;
     
     Macro(Sym name, Imp imp);
-    Macro(Exec &exe, Sym name, const LambdaRef &lmb);
+    Macro(Exec &exe, Sym name, const ArgNames &args, const LambdaRef &lmb);
     void operator ()(Pos pos, TokSeq &in, OpSeq &out) const;
   };
 }

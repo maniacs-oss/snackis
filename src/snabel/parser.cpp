@@ -154,6 +154,24 @@ namespace snabel {
     return i;
   }
 
+  void parse_args(Exec &exe, TokSeq &in, ArgNames &out) {
+    in.pop_front();
+    
+    while (!in.empty()) {
+      auto &a(in.front());
+
+      if (a.text == ")") {
+	in.pop_front();
+	return;
+      }
+      
+      out.push_back(get_sym(exe, fmt("@%0", a.text)));
+      in.pop_front();
+    }
+
+    ERROR(Snabel, "Unterminated argument list");
+  }
+  
   std::pair<Type *, size_t> parse_type(Exec &exe, const str &in, size_t i) {
     while (in[i] == ' ') { i++; }
 

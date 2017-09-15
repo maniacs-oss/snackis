@@ -22,6 +22,7 @@ namespace snabel {
     Tok(const str &text, Pos pos=Pos(-1,-1));
   };
 
+  using ArgNames = std::vector<Sym>;
   using StrSeq = std::deque<str>;
   using TokSeq = std::deque<Tok>;
 
@@ -29,6 +30,7 @@ namespace snabel {
   TokSeq parse_expr(const str &in, size_t lnr=0);
   TokSeq::iterator find_end(TokSeq::iterator i,
 			    const TokSeq::const_iterator &end);
+  void parse_args(Exec &exe, TokSeq &in, ArgNames &out);
   std::pair<Type *, size_t> parse_type(Exec &exe, const str &in, size_t i);
 }
 

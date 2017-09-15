@@ -12,6 +12,8 @@
 #include "snackis/core/time.hpp"
 
 namespace snabel {
+  Exec exe;
+
   static void parse_comment_tests() {
     TRY(try_test);    
     auto ts(parse_expr("#!/usr/local/bin/snabel\nfoo /* foo\nbar */ 42 //bar \nbaz"));
@@ -87,6 +89,28 @@ namespace snabel {
     CHECK(ts[3].text == "]", _);
   }
 
+  static void parse_args_tests() {
+    ArgNames as;
+    TokSeq ts;
+    
+    parse_expr("()", 0, ts);
+    parse_args(exe, ts, as);
+    CHECK(ts.empty(), _);
+    CHECK(as.empty(), _);
+
+    parse_expr("(foo)", 0, ts);
+    parse_args(exe, ts, as);
+    CHECK(ts.empty(), _);
+    CHECK(as.size() == 1, _);
+    CHECK(name(as.at(0)) == "@foo", _);
+
+    as.clear();
+    parse_expr("(foo bar baz)", 0, ts);
+    parse_args(exe, ts, as);
+    CHECK(ts.empty(), _);
+    CHECK(as.size() == 3, _);
+  }
+
   static void parse_tests() {
     auto ts(parse_expr("1"));	
     CHECK(ts.size() == 1, _);
@@ -97,9 +121,8 @@ namespace snabel {
     parse_braces_tests();
     parse_str_tests();
     parse_list_tests();
+    parse_args_tests();
   }
-
-  Exec exe;
 
   void run_test(Exec &exe, const str &in) {
     reset(exe);
@@ -310,8 +333,8 @@ namespace snabel {
 
     run_test(exe,
 	"let: acc Str list; "
-	"func: do-ping (|_yield 3 {@acc 'ping' push _yield1} for); "
-	"func: do-pong (|_yield 3 {@acc 'pong' push _yield1} for); "
+	"func: do-ping () (|_yield 3 {@acc 'ping' push _yield1} for); "
+	"func: do-pong () (|_yield 3 {@acc 'pong' push _yield1} for); "
 	"[do-ping do-pong] run");
     CHECK(get<ListRef>(*find_env(curr_scope(exe.main), "@acc"))->size() == 6, _);
   

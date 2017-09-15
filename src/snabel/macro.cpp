@@ -33,7 +33,7 @@ namespace snabel {
     s.clear();
   }
   
-  Macro::Macro(Exec &exe, Sym name, const LambdaRef &lmb):
+  Macro::Macro(Exec &exe, Sym name, const ArgNames &args, const LambdaRef &lmb):
     name(name), imp([&exe, lmb](auto pos, auto &in, auto &out) {
 	target_imp(exe, lmb, pos, in, out);
       })

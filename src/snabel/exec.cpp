@@ -633,6 +633,8 @@ namespace snabel {
 	  auto end(find_end(in.begin(), in.end()));
 	  OpSeq imp;
 	  imp.emplace_back(Begin(*this));
+	  ArgNames args;
+	  if (in.front().text == "(") { parse_args(*this, in, args); }
 	  compile(*this, TokSeq(in.begin(), end), imp);
 	  in.erase(in.begin(), std::next(end));
 	  imp.emplace_back(End(*this));
@@ -646,7 +648,7 @@ namespace snabel {
 	    return;
 	  }
 	  
-	  add_macro(*this, n, get<LambdaRef>(*lmb));
+	  add_macro(*this, n, args, get<LambdaRef>(*lmb));
 	}
       });
 
@@ -738,9 +740,16 @@ namespace snabel {
 	  const str n(in.at(0).text);
 	  auto start(std::next(in.begin()));
 	  auto end(find_end(start, in.end()));
-	  compile(*this, TokSeq(start, end), out);
-	  if (end != in.end()) { end++; }
-	  in.erase(in.begin(), end);
+	  in.pop_front();
+
+	  ArgNames args;
+	  if (in.front().text == "(") { parse_args(*this, in, args); }
+	  for (auto a(args.rbegin()); a != args.rend(); a++) {
+	    out.emplace_back(Putenv(*a));
+	  }
+	  
+	  compile(*this, TokSeq(in.begin(), end), out);
+	  in.erase(in.begin(), std::next(end));
 	  out.emplace_back(End(*this));
 	  out.emplace_back(Putenv(get_sym(*this, n)));
 	}
@@ -824,16 +833,22 @@ namespace snabel {
     return add_macro(curr_scope(curr_thread(exe)), n, imp);
   }
   
-  Macro &add_macro(Scope &scp, const str &n, const LambdaRef &lmb) {
+  Macro &add_macro(Scope &scp,
+		   const str &n,
+		   const ArgNames &args,
+		   const LambdaRef &lmb) {
     auto &exe(scp.exec);
     auto &ns(get_sym(exe, n));
-    auto &m(exe.macros.emplace_back(exe, ns, lmb)); 
+    auto &m(exe.macros.emplace_back(exe, ns, args, lmb)); 
     put_env(scp, ns, Box(scp, exe.macro_type, &m));
     return m;
   }
 
-  Macro &add_macro(Exec &exe, const str &n, const LambdaRef &lmb) {
-    return add_macro(curr_scope(curr_thread(exe)), n, lmb);
+  Macro &add_macro(Exec &exe,
+		   const str &n,
+		   const ArgNames &args,
+		   const LambdaRef &lmb) {
+    return add_macro(curr_scope(curr_thread(exe)), n, args, lmb);
   }
 
   Type &get_meta_type(Exec &exe, Type &t) {    
