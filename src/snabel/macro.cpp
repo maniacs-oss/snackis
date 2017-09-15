@@ -23,6 +23,8 @@ namespace snabel {
 	TokSeq toks;
 	parse_expr(*get<StrRef>(v), 0, toks);
 	compile(exe, toks, out);
+      } else if (v.type == &exe.sym_type) {
+	out.emplace_back(Deref(get<Sym>(v)));
       } else {
 	out.emplace_back(Push(v));
       }

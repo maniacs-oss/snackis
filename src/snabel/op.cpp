@@ -191,7 +191,7 @@ namespace snabel {
     auto fnd(find_env(scp, name));
     
     if (!fnd) {
-      ERROR(Snabel, fmt("Unknown identifier: %0", snabel::name(name)));
+      ERROR(UnknownId, name);
       return false;
     }
 

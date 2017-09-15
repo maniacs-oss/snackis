@@ -153,17 +153,17 @@ namespace snabel {
     run_test(exe, "macro: foo 35 7 +; foo");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run_test(exe, "macro: foo 7 `+; 35 foo");
+    run_test(exe, "macro: foo 7 #+; 35 foo");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run_test(exe, "macro: foo `(7 + 2 *); 14 foo");
-    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
-
-    run_test(exe, "macro: foo let: bar 42; `@bar; foo");
+    run_test(exe, "macro: foo let: bar 42; #@bar; foo");
     CATCH(try_test, UnknownId, _) { }
     CHECK(!try_pop(exe.main), _);
 
-    run_test(exe, "let: bar 42; macro: foo `@bar; foo");
+    run_test(exe, "let: bar 42; macro: foo #@bar; foo");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+
+    run_test(exe, "macro: foo `(7 + 2 *); 14 foo");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
