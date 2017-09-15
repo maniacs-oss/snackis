@@ -290,6 +290,7 @@ namespace snabel {
     tcp_socket_type(add_type(*this, "TCPSocket")),
     tcp_stream_type(add_type(*this, "TCPStream")),
     thread_type(add_type(*this, "Thread")),
+    tok_type(add_type(*this, "Tok")),
     uchar_type(add_type(*this, "UChar")),
     uid_type(add_type(*this, "Uid")),
     ustr_type(add_type(*this, "UStr")),
@@ -635,6 +636,11 @@ namespace snabel {
 	  imp.emplace_back(Begin(*this));
 	  ArgNames args;
 	  if (in.front().text == "(") { parse_args(*this, in, args); }
+
+	  for (auto a(args.rbegin()); a != args.rend(); a++) {
+	    imp.emplace_back(Putenv(*a));
+	  }
+
 	  compile(*this, TokSeq(in.begin(), end), imp);
 	  in.erase(in.begin(), (end == in.end()) ? end : std::next(end));
 	  imp.emplace_back(End(*this));
@@ -648,7 +654,7 @@ namespace snabel {
 	    return;
 	  }
 	  
-	  add_macro(*this, n, args, get<LambdaRef>(*lmb));
+	  add_macro(*this, n, args.size(), get<LambdaRef>(*lmb));
 	}
       });
 
@@ -740,9 +746,9 @@ namespace snabel {
 	  const str n(in.at(0).text);
 	  in.pop_front();
 	  auto end(find_end(in.begin(), in.end()));
-
 	  ArgNames args;
 	  if (in.front().text == "(") { parse_args(*this, in, args); }
+
 	  for (auto a(args.rbegin()); a != args.rend(); a++) {
 	    out.emplace_back(Putenv(*a));
 	  }
@@ -833,20 +839,20 @@ namespace snabel {
   
   Macro &add_macro(Scope &scp,
 		   const str &n,
-		   const ArgNames &args,
+		   int nargs,
 		   const LambdaRef &lmb) {
     auto &exe(scp.exec);
     auto &ns(get_sym(exe, n));
-    auto &m(exe.macros.emplace_back(exe, ns, args, lmb)); 
+    auto &m(exe.macros.emplace_back(exe, ns, nargs, lmb)); 
     put_env(scp, ns, Box(scp, exe.macro_type, &m));
     return m;
   }
 
   Macro &add_macro(Exec &exe,
 		   const str &n,
-		   const ArgNames &args,
+		   int nargs,
 		   const LambdaRef &lmb) {
-    return add_macro(curr_scope(curr_thread(exe)), n, args, lmb);
+    return add_macro(curr_scope(curr_thread(exe)), n, nargs, lmb);
   }
 
   Type &get_meta_type(Exec &exe, Type &t) {    
@@ -1084,9 +1090,27 @@ namespace snabel {
     TRY(try_compile);
     
     while (!in.empty()) {
+      auto &scp(curr_scope(exe));
+      int i(1);
+      
+      for (auto mt(std::next(in.begin()));
+	   mt != in.end() && i < MAX_MACRO_ARGS;
+	   mt++, i++) {
+	auto fnd(find_env(scp, mt->text));
+      
+	if (fnd && fnd->type == &exe.macro_type) {
+	  auto &m(*get<Macro *>(*fnd));
+	  if (m.nargs == i) {
+	    (m)(mt->pos, in, out);
+	    break;
+	  }
+	}	
+      }
+
+      if (in.empty()) { break; }
+
       Tok tok(in.at(0));
       in.pop_front();
-      auto &scp(curr_scope(exe));
 
       if (tok.text.size() > 1 &&
 	  tok.text.at(0) == '/' &&

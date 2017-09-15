@@ -14,6 +14,14 @@ namespace snabel {
     text(text), pos(pos)
   { }
 
+  bool operator ==(const Pos &x, const Pos &y) {
+    return x.row == y.row && x.col == y.col;
+  }
+  
+  bool operator <(const Pos &x, const Pos &y) {
+    return x.row < y.row || (x.row == y.row && x.col < y.col);
+  }
+
   static void parse_str(const str &in,
 			size_t &lnr,
 			size_t &i,

@@ -43,7 +43,7 @@ namespace snabel {
       &opt_type, &ordered_type, &pair_type,
       &path_type, &quote_type, &readable_type, &rfile_type, &random_type, &rat_type,
       &rwfile_type, &str_type, &struct_type, &sym_type, &table_type, &tcp_server_type,
-      &tcp_socket_type, &tcp_stream_type, &thread_type,
+      &tcp_socket_type, &tcp_stream_type, &thread_type, &tok_type,
       &uchar_type, &uid_type, &ustr_type, &void_type, &wfile_type, &writeable_type;
     Label *return_target[MAX_TARGET], *_return_target[MAX_TARGET],
       *recall_target[MAX_TARGET],
@@ -61,11 +61,11 @@ namespace snabel {
   Macro &add_macro(Exec &exe, const str &n, Macro::Imp imp);
   Macro &add_macro(Scope &scp,
 		   const str &n,
-		   const ArgNames &in,
+		   int nargs,
 		   const LambdaRef &lmb);
   Macro &add_macro(Exec &exe,
 		   const str &n,
-		   const ArgNames &in,
+		   int nargs,
 		   const LambdaRef &lmb);
 
   Type &get_meta_type(Exec &exe, Type &t);

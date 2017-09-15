@@ -192,6 +192,9 @@ namespace snabel {
 
     run_test(exe, "macro: foo `(7 + 2 *); 14 foo");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+
+    run_test(exe, "macro: foo(x y) @y @x #-; 7 42 foo");
+    CHECK(get<int64_t>(pop(exe.main)) == 35, _);
   }
 
   static void func_tests() {

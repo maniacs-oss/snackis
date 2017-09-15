@@ -26,6 +26,9 @@ namespace snabel {
   using StrSeq = std::deque<str>;
   using TokSeq = std::deque<Tok>;
 
+  bool operator ==(const Pos &x, const Pos &y);
+  bool operator <(const Pos &x, const Pos &y);
+
   void parse_expr(const str &in, size_t lnr, TokSeq &out);
   TokSeq parse_expr(const str &in, size_t lnr=0);
   TokSeq::iterator find_end(TokSeq::iterator i,

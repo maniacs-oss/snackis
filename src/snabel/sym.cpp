@@ -18,6 +18,24 @@ namespace snabel {
   }
 
   void init_syms(Exec &exe) {
+    exe.tok_type.supers.push_back(&exe.any_type);
+    exe.tok_type.supers.push_back(&exe.ordered_type);
+
+    exe.tok_type.fmt = [&exe](auto &v) {
+      auto &t(get<Tok>(v));
+      return fmt("Tok('%0' %1 %2)", t.text, t.pos.row, t.pos.col);
+    };
+
+    exe.tok_type.eq = [](auto &x, auto &y) {
+      auto &xt(get<Tok>(x)), &yt(get<Tok>(y));
+      return xt.pos == yt.pos && xt.text == yt.text;
+    };
+
+    exe.tok_type.lt = [](auto &x, auto &y) {
+      auto &xt(get<Tok>(x)), &yt(get<Tok>(y));
+      return xt.pos < yt.pos || (xt.pos == yt.pos && xt.text < yt.text);
+    };
+
     exe.sym_type.supers.push_back(&exe.any_type);
     exe.sym_type.supers.push_back(&exe.ordered_type);
     exe.sym_type.fmt = [&exe](auto &v) { return fmt("#%0", name(get<Sym>(v))); };
