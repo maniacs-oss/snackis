@@ -58,7 +58,7 @@ namespace snabel {
   }
 
   static void str_bytes_imp(Scope &scp, const Args &args) {
-    auto in(get<StrRef>(args.at(0)));
+    auto &in(get<StrRef>(args.at(0)));
     push(scp,
 	 scp.exec.bin_type,
 	 std::make_shared<Bin>(in->begin(), in->end()));

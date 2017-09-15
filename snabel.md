@@ -30,7 +30,7 @@ words unopt
 ```
 
 ### Status
-Snabel still has quite some way to go before claiming general purpose; it's evolution is currently mostly driven by my own needs and interests. I have yet to do any serious comparisons, or optimization; but its more than fast enough for scripting.
+Snabel still has quite some way to go before claiming general purpose; it's evolution is still mostly driven by my own needs and interests. I have yet to do any serious comparisons, or optimization; but its more than fast enough for scripting.
 
 ### Dependencies
 Snabel requires a ```C++1z```-capable compiler and standard library to build, and defaults to using clang with ```libc++```. This unfortunately still often means downloading and manually installing [clang](http://releases.llvm.org/download.html#4.0.0) to even run Snabel, but will improve over time. Snabel further depends on ```libpthread```, ```libsodium``` and ```libuuid```.

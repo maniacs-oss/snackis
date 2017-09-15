@@ -183,7 +183,8 @@ namespace snabel {
       dec_pc = true;
       thd.pc = prev_scp.return_pc;
       prev_scp.return_pc = -1;
-      prev_scp.coro.reset();
+      prev_scp.coro = nullptr;
+      thd.lambda = nullptr;
       if (!end_scope(thd)) { return false; }
       if (new_cor) { push(prev_scp, thd.exec.coro_type, cor); }
     }
@@ -210,7 +211,8 @@ namespace snabel {
 	thd.pc = ps.return_pc;
 	ps.return_pc = -1;
 	if (ps.coro) { ps.coro->done = true; }
-	ps.coro.reset();
+	ps.coro = nullptr;
+	thd.lambda = nullptr;
 	break;
       }
       

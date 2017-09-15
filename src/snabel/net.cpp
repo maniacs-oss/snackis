@@ -52,9 +52,9 @@ namespace snabel {
   }
 
   static void tcp_connect_imp(Scope &scp, const Args &args) {
-    auto f(get<FileRef>(args.at(0)));
+    auto &f(get<FileRef>(args.at(0)));
     auto &a(*get<StrRef>(args.at(1)));
-    auto p(get<int64_t>(args.at(2)));
+    auto &p(get<int64_t>(args.at(2)));
     
     struct sockaddr_in addr;
     bzero((char *)&addr, sizeof(addr));
@@ -73,7 +73,7 @@ namespace snabel {
   }
 
   static void tcp_bind_imp(Scope &scp, const Args &args) {
-    auto f(get<FileRef>(args.at(0)));
+    auto &f(get<FileRef>(args.at(0)));
     auto &a(*get<StrRef>(args.at(1)));
 
     int so=1;
@@ -96,8 +96,8 @@ namespace snabel {
 
   static void tcp_accept_imp(Scope &scp, const Args &args) {
     auto &exe(scp.exec);
-    auto f(get<FileRef>(args.at(0)));
-    auto backlog(get<int64_t>(args.at(1)));
+    auto &f(get<FileRef>(args.at(0)));
+    auto &backlog(get<int64_t>(args.at(1)));
 
     if (listen(f->fd, backlog) == -1) {
       ERROR(Snabel, fmt("Failed listening on socket: %0", errno));    

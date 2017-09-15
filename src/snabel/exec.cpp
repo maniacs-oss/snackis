@@ -88,7 +88,7 @@ namespace snabel {
   }
 
   static void if_imp(Scope &scp, const Args &args) {
-    auto cnd(get<bool>(args.at(0)));
+    auto &cnd(get<bool>(args.at(0)));
     auto &tgt(args.at(cnd ? 1 : 2));
     tgt.type->call(scp, tgt, false);
   }
@@ -129,32 +129,32 @@ namespace snabel {
   }
 
   static void inc_i64_imp(Scope &scp, const Args &args) {
-    auto in(get<int64_t>(args.at(0)));
+    auto &in(get<int64_t>(args.at(0)));
     push(scp, scp.exec.i64_type, in+1);
   }
 
   static void dec_i64_imp(Scope &scp, const Args &args) {
-    auto in(get<int64_t>(args.at(0)));
+    auto &in(get<int64_t>(args.at(0)));
     push(scp, scp.exec.i64_type, in-1);
   }
 
   static void add_i64_imp(Scope &scp, const Args &args) {
-    auto x(get<int64_t>(args.at(0))), y(get<int64_t>(args.at(1)));
+    auto &x(get<int64_t>(args.at(0))), &y(get<int64_t>(args.at(1)));
     push(scp, scp.exec.i64_type, x+y);
   }
 
   static void sub_i64_imp(Scope &scp, const Args &args) {
-    auto x(get<int64_t>(args.at(0))), y(get<int64_t>(args.at(1)));
+    auto &x(get<int64_t>(args.at(0))), &y(get<int64_t>(args.at(1)));
     push(scp, scp.exec.i64_type, x-y);
   }
 
   static void mul_i64_imp(Scope &scp, const Args &args) {
-    auto x(get<int64_t>(args.at(0))), y(get<int64_t>(args.at(1)));
+    auto &x(get<int64_t>(args.at(0))), &y(get<int64_t>(args.at(1)));
     push(scp, scp.exec.i64_type, x*y);
   }
 
   static void mod_i64_imp(Scope &scp, const Args &args) {
-    auto x(get<int64_t>(args.at(0))), y(get<int64_t>(args.at(1)));
+    auto &x(get<int64_t>(args.at(0))), &y(get<int64_t>(args.at(1)));
     push(scp, scp.exec.i64_type, x%y);
   }
 

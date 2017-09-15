@@ -173,7 +173,7 @@ namespace snabel {
 
   static void ls_imp(Scope &scp, const Args &args) {
     Exec &exe(scp.exec);
-    auto in(get<Path>(args.at(0)));
+    auto &in(get<Path>(args.at(0)));
 
     push(scp,
 	 get_iter_type(exe, exe.path_type),
@@ -182,7 +182,7 @@ namespace snabel {
 
   static void ls_r_imp(Scope &scp, const Args &args) {
     Exec &exe(scp.exec);
-    auto in(get<Path>(args.at(0)));
+    auto &in(get<Path>(args.at(0)));
 
     push(scp,
 	 get_iter_type(exe, exe.path_type),
