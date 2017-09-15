@@ -88,7 +88,7 @@ namespace snabel {
   }
 
   static void if_imp(Scope &scp, const Args &args) {
-    auto &cnd(get<bool>(args.at(0)));
+    auto cnd(get<bool>(args.at(0)));
     auto &tgt(args.at(cnd ? 1 : 2));
     tgt.type->call(scp, tgt, false);
   }
@@ -129,32 +129,32 @@ namespace snabel {
   }
 
   static void inc_i64_imp(Scope &scp, const Args &args) {
-    auto &in(get<int64_t>(args.at(0)));
+    auto in(get<int64_t>(args.at(0)));
     push(scp, scp.exec.i64_type, in+1);
   }
 
   static void dec_i64_imp(Scope &scp, const Args &args) {
-    auto &in(get<int64_t>(args.at(0)));
+    auto in(get<int64_t>(args.at(0)));
     push(scp, scp.exec.i64_type, in-1);
   }
 
   static void add_i64_imp(Scope &scp, const Args &args) {
-    auto &x(get<int64_t>(args.at(0))), &y(get<int64_t>(args.at(1)));
+    auto x(get<int64_t>(args.at(0))), y(get<int64_t>(args.at(1)));
     push(scp, scp.exec.i64_type, x+y);
   }
 
   static void sub_i64_imp(Scope &scp, const Args &args) {
-    auto &x(get<int64_t>(args.at(0))), &y(get<int64_t>(args.at(1)));
+    auto x(get<int64_t>(args.at(0))), y(get<int64_t>(args.at(1)));
     push(scp, scp.exec.i64_type, x-y);
   }
 
   static void mul_i64_imp(Scope &scp, const Args &args) {
-    auto &x(get<int64_t>(args.at(0))), &y(get<int64_t>(args.at(1)));
+    auto x(get<int64_t>(args.at(0))), y(get<int64_t>(args.at(1)));
     push(scp, scp.exec.i64_type, x*y);
   }
 
   static void mod_i64_imp(Scope &scp, const Args &args) {
-    auto &x(get<int64_t>(args.at(0))), &y(get<int64_t>(args.at(1)));
+    auto x(get<int64_t>(args.at(0))), y(get<int64_t>(args.at(1)));
     push(scp, scp.exec.i64_type, x%y);
   }
 
@@ -1003,7 +1003,7 @@ namespace snabel {
   Box make_opt(Exec &exe, opt<Box> in) {
     return in
       ? Box(exe.main_scope, get_opt_type(exe, *in->type), in->val)
-      : Box(exe.main_scope, exe.opt_type, nil);
+      : Box(exe.main_scope, exe.any_type);
   }
 
   void reset(Exec &exe) {
@@ -1046,9 +1046,9 @@ namespace snabel {
 				  exe.sym_type,
 				  get_sym(exe, tok.text.substr(1)))));
       } else if (tok.text == "&_") {
-	out.emplace_back(Push(Box(exe.main_scope, exe.drop_type, nil)));
+	out.emplace_back(Push(Box(exe.main_scope, exe.drop_type, nullptr)));
       } else if (tok.text == "&nop") {
-	out.emplace_back(Push(Box(exe.main_scope, exe.nop_type, nil)));    
+	out.emplace_back(Push(Box(exe.main_scope, exe.nop_type, nullptr)));    
       } else if (tok.text.substr(0, 6) == "return" &&
 		 tok.text.size() == 7 &&
 		 isdigit(tok.text.at(6))) {

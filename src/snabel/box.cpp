@@ -3,10 +3,12 @@
 #include "snabel/exec.hpp"
 
 namespace snabel {
-  Nil nil;
-
   Box::Box(Scope &scp, Type &t, const Val &v):
     type(&t), val(v), safe_level(scp.safe_level)
+  { }
+
+  Box::Box(Scope &scp, Type &t):
+    type(&get_opt_type(scp.exec, t)), safe_level(scp.safe_level)
   { }
 
   bool operator ==(const Box &x, const Box &y) {
@@ -112,8 +114,8 @@ namespace snabel {
     return fmt("%0 %1.", l.type->fmt(l), r.type->fmt(r));
   }
 
-  bool empty(const Box &b) {
-    return std::holds_alternative<Nil>(b.val);
+  bool nil(const Box &b) {
+    return !b.val.has_value();
   }
 }
 

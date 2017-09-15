@@ -19,7 +19,7 @@ namespace snabel {
   }
 
   static void list_run_imp(Scope &scp, const Args &args) {
-    auto &ps(get<ListRef>(args.at(0)));
+    auto ps(get<ListRef>(args.at(0)));
     bool done(false);
     
     while (!done) {

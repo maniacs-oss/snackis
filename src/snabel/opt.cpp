@@ -15,7 +15,7 @@ namespace snabel {
 	break; 
       }
 
-      if (!empty(*nxt)) { return Box(scp, *nxt->type->args.at(0), nxt->val); }
+      if (!nil(*nxt)) { return Box(scp, *nxt->type->args.at(0), nxt->val); }
     }
 
     return nullopt;
@@ -29,7 +29,7 @@ namespace snabel {
   static void when_imp(Scope &scp, const Args &args) {
     auto &cnd(args.at(0)), &tgt(args.at(1));
     
-    if (!empty(cnd)) { 
+    if (!nil(cnd)) { 
       push(scp, *cnd.type->args.at(0), cnd.val);
       tgt.type->call(scp, tgt, false); 
     }
@@ -37,13 +37,13 @@ namespace snabel {
   
   static void unless_imp(Scope &scp, const Args &args) {
     auto &cnd(args.at(0)), &tgt(args.at(1));
-    if (empty(cnd)) { tgt.type->call(scp, tgt, false); }
+    if (nil(cnd)) { tgt.type->call(scp, tgt, false); }
   }
 
   static void if_imp(Scope &scp, const Args &args) {
     auto &cnd(args.at(0)), &left(args.at(1)), &right(args.at(2));
     
-    if (empty(cnd)) {
+    if (nil(cnd)) {
       right.type->call(scp, right, false);       
     } else { 
       push(scp, *cnd.type->args.at(0), cnd.val);
@@ -55,7 +55,7 @@ namespace snabel {
     auto &in(args.at(0));
     auto &alt(args.at(1));
 
-    if (empty(in)) {
+    if (nil(in)) {
       push(scp.thread, alt);
     } else {
       push(scp, *in.type->args.at(0), in.val);
@@ -65,7 +65,7 @@ namespace snabel {
   static void or_opt_imp(Scope &scp, const Args &args) {
     auto &in(args.at(0));
     auto &alt(args.at(1));
-    push(scp.thread, empty(in) ? alt : in);
+    push(scp.thread, nil(in) ? alt : in);
   }
 
   static void unopt_iterable_imp(Scope &scp, const Args &args) {
@@ -85,24 +85,24 @@ namespace snabel {
     exe.opt_type.args.push_back(&exe.any_type);
 
     exe.opt_type.dump = [](auto &v) -> str {
-      if (empty(v)) { return "nil"; }
+      if (nil(v)) { return "nil"; }
       return fmt("Opt(%0)", v.type->args.at(0)->dump(v));
     };
     
     exe.opt_type.fmt = [](auto &v) -> str {
-      if (empty(v)) { return "nil"; }
+      if (nil(v)) { return "nil"; }
       return fmt("Opt(%0)", v.type->args.at(0)->fmt(v));
     };
 
     exe.opt_type.eq = [](auto &x, auto &y) {
-      if (empty(x) && !empty(y)) { return true; }
-      if (!empty(x) || !empty(y)) { return false; }
+      if (nil(x) && !nil(y)) { return true; }
+      if (!nil(x) || !nil(y)) { return false; }
       return x.type->eq(x, y);
     };
 
     exe.opt_type.equal = [](auto &x, auto &y) {
-      if (empty(x) && !empty(y)) { return true; }
-      if (!empty(x) || !empty(y)) { return false; }
+      if (nil(x) && !nil(y)) { return true; }
+      if (!nil(x) || !nil(y)) { return false; }
       return x.type->equal(x, y);
     };
 
@@ -136,7 +136,7 @@ namespace snabel {
 	     unopt_iterable_imp);
 
     add_macro(exe, "nil", [&exe](auto pos, auto &in, auto &out) {
-	out.emplace_back(Push(Box(exe.main_scope, exe.opt_type, nil)));
+	out.emplace_back(Push(Box(exe.main_scope, exe.any_type)));
       });    
   }
 

@@ -4,8 +4,8 @@
 
 namespace snabel {
   static void div_i64_imp(Scope &scp, const Args &args) {
-    auto &num(get<int64_t>(args.at(0)));
-    auto &div(get<int64_t>(args.at(1)));
+    auto num(get<int64_t>(args.at(0)));
+    auto div(get<int64_t>(args.at(1)));
     bool neg = (num < 0 && div > 0) || (div < 0 && num >= 0);
     push(scp, scp.exec.rat_type, Rat(abs(num), abs(div), neg));
   }
@@ -15,26 +15,26 @@ namespace snabel {
   }
 
   static void add_rat_imp(Scope &scp, const Args &args) {
-    auto &x(get<Rat>(args.at(0)));
-    auto &y(get<Rat>(args.at(1)));
+    auto x(get<Rat>(args.at(0)));
+    auto y(get<Rat>(args.at(1)));
     push(scp, scp.exec.rat_type, x+y);
   }
 
   static void sub_rat_imp(Scope &scp, const Args &args) {
-    auto &x(get<Rat>(args.at(0)));
-    auto &y(get<Rat>(args.at(1)));
+    auto x(get<Rat>(args.at(0)));
+    auto y(get<Rat>(args.at(1)));
     push(scp, scp.exec.rat_type, x-y);
   }
 
   static void mul_rat_imp(Scope &scp, const Args &args) {
-    auto &x(get<Rat>(args.at(0)));
-    auto &y(get<Rat>(args.at(1)));
+    auto x(get<Rat>(args.at(0)));
+    auto y(get<Rat>(args.at(1)));
     push(scp, scp.exec.rat_type, x*y);
   }
 
   static void div_rat_imp(Scope &scp, const Args &args) {
-    auto &x(get<Rat>(args.at(0)));
-    auto &y(get<Rat>(args.at(1)));
+    auto x(get<Rat>(args.at(0)));
+    auto y(get<Rat>(args.at(1)));
     push(scp, scp.exec.rat_type, x/y);
   }
 

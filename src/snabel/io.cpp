@@ -45,7 +45,7 @@ namespace snabel {
       return res;
     }
     case READ_AGAIN:
-      return Box(scp, elt, nil);  
+      return Box(scp, *elt.args.at(0));  
     case READ_EOF:
     case READ_ERROR:
       return nullopt;
@@ -67,7 +67,7 @@ namespace snabel {
     if (!in_buf) {
       auto nxt(in->next(scp));
       if (!nxt) { return nullopt; }
-      if (empty(*nxt)) { return Box(scp, exec.i64_type, (int64_t)0); }
+      if (nil(*nxt)) { return Box(scp, exec.i64_type, (int64_t)0); }
       in_buf = get<BinRef>(*nxt);
     }
 
@@ -173,7 +173,7 @@ namespace snabel {
 
   static void ls_imp(Scope &scp, const Args &args) {
     Exec &exe(scp.exec);
-    auto &in(get<Path>(args.at(0)));
+    auto in(get<Path>(args.at(0)));
 
     push(scp,
 	 get_iter_type(exe, exe.path_type),
@@ -182,7 +182,7 @@ namespace snabel {
 
   static void ls_r_imp(Scope &scp, const Args &args) {
     Exec &exe(scp.exec);
-    auto &in(get<Path>(args.at(0)));
+    auto in(get<Path>(args.at(0)));
 
     push(scp,
 	 get_iter_type(exe, exe.path_type),

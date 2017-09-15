@@ -20,7 +20,7 @@ namespace snabel {
   { }
   
   opt<Box> FifoIter::next(Scope &scp) {
-    if (in->empty()) { return Box(scp, *type.args.at(0), nil); }
+    if (in->empty()) { return Box(scp, *type.args.at(0)->args.at(0)); }
     auto res(in->front());
     in->pop_front();
     return Box(scp, *type.args.at(0), res.val);

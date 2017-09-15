@@ -41,6 +41,10 @@ namespace snabel {
     curr_stack(scp.thread).emplace_back(scp, typ, val);
   }
 
+  void push(Scope &scp, Type &typ) {
+    curr_stack(scp.thread).emplace_back(scp, typ);
+  }
+
   void restore_stack(Scope &scp, size_t len) {
     auto &thd(scp.thread);
     CHECK(!thd.stacks.empty(), _);

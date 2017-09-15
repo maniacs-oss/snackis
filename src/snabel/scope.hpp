@@ -38,6 +38,7 @@ namespace snabel {
   };
 
   void push(Scope &scp, Type &typ, const Val &val);
+  void push(Scope &scp, Type &typ);
   
   void restore_stack(Scope &scp, size_t len=1);
   Box *find_env(Scope &scp, const Sym &key);

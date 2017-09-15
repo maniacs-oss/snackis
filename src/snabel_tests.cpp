@@ -380,7 +380,7 @@ namespace snabel {
 	"['foo\\r\\n\\r\\nbar\\r\\n\\r\\nbaz' bytes]"
 	"lines unopt \\, join");	
     CHECK(*get<StrRef>(pop(exe.main)) == "foo,bar,baz", _);
-
+    
     run_test(exe, "'foo' $ reverse");
     CHECK(*get<StrRef>(pop(exe.main)) == "oof", _);
 

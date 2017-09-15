@@ -132,7 +132,7 @@ namespace snabel {
 			       snackis::fmt("Reading uninitialized field: %0.%1",
 					    n, name(fns)));
 			 
-			 push(scp, get_opt_type(scp.exec, ft), nil);
+			 push(scp, ft);
 		       } else {
 			 push(thd, fnd->second);
 		       }

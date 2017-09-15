@@ -43,7 +43,7 @@ namespace snabel {
   { }
   
   opt<Box> SplitIter::next(Scope &scp) {
-    Box out(scp, *type.args.at(0), nil);
+    Box out(scp, *type.args.at(0)->args.at(0));
     
     while (true) {
       if (in && (!in_buf || in_pos == in_buf->end())) {

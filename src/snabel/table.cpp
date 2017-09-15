@@ -65,7 +65,7 @@ namespace snabel {
     auto fnd(tbl.find(key));
     
     if (fnd == tbl.end()) {
-      push(scp, get_opt_type(exe, *tbl_arg.type->args.at(1)), nil);
+      push(scp, *tbl_arg.type->args.at(1));
     } else {
       push(scp, get_opt_type(exe, *fnd->second.type), fnd->second.val);
     }
