@@ -61,7 +61,7 @@ namespace snabel {
     skip_label(add_label(exe, fmt("_skip%0", tag))),
     compiled(false)
   {
-    begin_scope(exe.main);
+    begin_scope(curr_thread(exe));
   }
 
   OpImp &Begin::get_imp(Op &op) const {
@@ -290,7 +290,7 @@ namespace snabel {
     enter_label(nullptr), skip_label(nullptr),
     compiled(false)
   {
-    end_scope(exe.main);
+    end_scope(curr_thread(exe));
   }
 
   OpImp &End::get_imp(Op &op) const {
@@ -537,8 +537,16 @@ namespace snabel {
       return false;
     }
 
-    if (!try_funcall.errors.empty()) { return false; }
+    for (auto e: try_funcall.errors) {
+      if (!dynamic_cast<RedefineError *>(e)) { return false; }
+    }
+
     (*imp)(scp, m->second);
+
+    for (auto e: try_funcall.errors) {
+      if (!dynamic_cast<RedefineError *>(e)) { return false; }
+    }
+
     return true;
   }
   

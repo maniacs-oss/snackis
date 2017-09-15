@@ -14,9 +14,9 @@ namespace snabel {
 			 Pos pos,
 			 TokSeq &in,
 			 OpSeq &out) {
-    auto &s(curr_stack(exe.main));
+    auto &s(curr_stack(curr_thread(exe)));
     s.clear();
-    call(lmb, curr_scope(exe.main), true);
+    call(lmb, curr_scope(curr_thread(exe)), true);
     
     for (auto v: s) {
       if (v.type == &exe.quote_type) {

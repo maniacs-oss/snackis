@@ -85,7 +85,8 @@ namespace snabel {
 
 	  in.pop_front();
 	  auto end(find_end(in.begin(), in.end()));
-
+	  auto &thd(curr_thread(exe));
+	  
 	  while (in.begin() != end) {
 	    auto fn(in.front().text);
 	    auto &fns(get_sym(exe, in.front().text));
@@ -95,7 +96,7 @@ namespace snabel {
 	      auto st(parse_type(exe, fn, 0).first);
 	      if (!st) { break; }
 
-	      if (!isa(exe.main, *st, exe.struct_type)) {
+	      if (!isa(thd, *st, exe.struct_type)) {
 		ERROR(Snabel, fmt("Invalid super struct: %0", name(st->name)));
 		break;
 	      }

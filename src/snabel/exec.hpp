@@ -93,14 +93,18 @@ namespace snabel {
   bool conv(Exec &exe, Box &val, Type &type);
 
   Thread &curr_thread(Exec &exe);
+  Scope &curr_scope(Exec &exe);
   Uid uid(Exec &exe);
   Box make_opt(Exec &exe, opt<Box> in);
 
   void reset(Exec &exe);  
   void rewind(Exec &exe);  
   bool compile(Exec &exe, TokSeq in, OpSeq &out);
+  bool compile(Thread &thd, OpSeq &in);
   bool compile(Exec &exe, OpSeq &in);
+  bool compile(Thread &thd, const str &in, bool skip=false);
   bool compile(Exec &exe, const str &in, bool skip=false);
+  bool run(Thread &thd, const str &in);
   bool run(Exec &exe, const str &in);
 
   constexpr Type *get_super(Exec &exe, Type &x, Type &y) {

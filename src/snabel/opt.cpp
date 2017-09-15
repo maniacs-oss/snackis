@@ -136,7 +136,7 @@ namespace snabel {
 	     unopt_iterable_imp);
 
     add_macro(exe, "nil", [&exe](auto pos, auto &in, auto &out) {
-	out.emplace_back(Push(Box(exe.main_scope, exe.any_type)));
+	out.emplace_back(Push(Box(curr_scope(exe), exe.any_type)));
       });    
   }
 

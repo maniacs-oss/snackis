@@ -24,8 +24,7 @@
 namespace snabel {
   static void eval_imp(Scope &scp, const Args &args) {
     auto pc(scp.thread.pc);
-    compile(scp.exec, *get<StrRef>(args.at(0)), true);
-    run(scp.thread);
+    if (compile(scp.exec, *get<StrRef>(args.at(0)), true)) { run(scp.thread); }
     scp.thread.pc = pc;
   }
 
@@ -247,6 +246,7 @@ namespace snabel {
   static Thread &make_main(Exec &exe) {
     auto &t(exe.threads.emplace_back(exe, std::this_thread::get_id()));
     t.iter = std::prev(exe.threads.end());
+    exe.thread_lookup.insert(std::make_pair(*t.id, &t));
     return t;
   }
   
@@ -334,7 +334,7 @@ namespace snabel {
 	&add_label(*this, "_break8", true), &add_label(*this, "_break9", true)},
     next_uid(1)
   {    
-    thread_lookup.insert(std::make_pair(*main.id, &main));
+    auto &scp(main_scope);
     
     any_type.fmt = [](auto &v) { return "Any"; };
     any_type.eq = [](auto &x, auto &y) { return false; };
@@ -414,8 +414,8 @@ namespace snabel {
     bool_type.supers.push_back(&any_type);
     bool_type.fmt = [](auto &v) { return get<bool>(v) ? "true" : "false"; };
     bool_type.eq = [](auto &x, auto &y) { return get<bool>(x) == get<bool>(y); };
-    put_env(main_scope, "true", Box(main_scope, bool_type, true));
-    put_env(main_scope, "false", Box(main_scope, bool_type, false));
+    put_env(scp, "true", Box(scp, bool_type, true));
+    put_env(scp, "false", Box(scp, bool_type, false));
 
     macro_type.supers.push_back(&any_type);
 
@@ -637,8 +637,9 @@ namespace snabel {
 	  in.erase(in.begin(), std::next(end));
 	  imp.emplace_back(End(*this));
 	  if (!compile(*this, imp)) { return; }
-	  run(main);
-	  auto lmb(try_pop(main));
+	  auto &thd(curr_thread(*this));
+	  run(thd);
+	  auto lmb(try_pop(thd));
 
 	  if (!lmb) {
 	    ERROR(Snabel, "Missing macro lambda");
@@ -649,7 +650,7 @@ namespace snabel {
 	}
       });
 
-    add_macro(*this, "`", [this](auto pos, auto &in, auto &out) {
+    add_macro(*this, "`", [this, &scp](auto pos, auto &in, auto &out) {
 	static const std::map<str, str> delims {
 	  std::make_pair("(", ")"),
 	    std::make_pair("{", "}"),
@@ -686,7 +687,7 @@ namespace snabel {
 	  }
 	}
 
-	out.emplace_back(Push(Box(main_scope,
+	out.emplace_back(Push(Box(scp,
 				  quote_type,
 				  std::make_shared<str>(buf.str()))));
       });
@@ -849,7 +850,8 @@ namespace snabel {
   }
 
   Type &add_type(Exec &exe, const Sym &n, bool meta) {
-    auto fnd(find_env(exe.main_scope, n));
+    auto &scp(curr_scope(exe));
+    auto fnd(find_env(scp, n));
     auto &t(exe.types.emplace_back(n));
     auto &mt(meta ? exe.meta_type : get_meta_type(exe, t));
     
@@ -858,7 +860,7 @@ namespace snabel {
       fnd->type = &mt;
       fnd->val = &t;
     } else {
-      put_env(exe.main_scope, n, Box(exe.main_scope, mt, &t));
+      put_env(scp, n, Box(scp, mt, &t));
     }
     
     return t;
@@ -869,7 +871,7 @@ namespace snabel {
   }
 
   Type *find_type(Exec &exe, const Sym &n) {
-    auto fnd(find_env(exe.main_scope, n));
+    auto fnd(find_env(curr_scope(exe), n));
     if (!fnd) { return nullptr; }
     return get<Type *>(*fnd);
   }
@@ -952,13 +954,18 @@ namespace snabel {
 		    const ArgTypes &args,
 		    FuncImp::Imp imp) {
     auto fnd(exe.funcs.find(n));
+    auto &scp(curr_scope(exe));
 
     if (fnd == exe.funcs.end()) {
       auto &fn(exe.funcs.emplace(std::piecewise_construct,
 				  std::forward_as_tuple(n),
 				  std::forward_as_tuple(n)).first->second);
-      put_env(exe.main_scope, n, Box(exe.main_scope, exe.func_type, &fn));
+      put_env(scp, n, Box(scp, exe.func_type, &fn));
       return add_imp(fn, sec, args, imp);
+    }
+
+    if (!find_env(scp, n)) {
+      put_env(scp, n, Box(scp, exe.func_type, &fnd->second));
     }
     
     return add_imp(fnd->second, sec, args, imp);
@@ -1025,22 +1032,29 @@ namespace snabel {
     return *exe.thread_lookup.at(std::this_thread::get_id());
   }
 
+  Scope &curr_scope(Exec &exe) {
+    return curr_scope(curr_thread(exe));
+  }
+
   Uid uid(Exec &exe) {
     return exe.next_uid.fetch_add(1);
   }
 
   Box make_opt(Exec &exe, opt<Box> in) {
+    auto &scp(curr_scope(exe));
+    
     return in
-      ? Box(exe.main_scope, get_opt_type(exe, *in->type), in->val)
-      : Box(exe.main_scope, exe.any_type);
+      ? Box(scp, get_opt_type(exe, *in->type), in->val)
+      : Box(scp, exe.any_type);
   }
-
+  
   void reset(Exec &exe) {
     clear_labels(exe);
+    rewind(exe);
+
     exe.next_uid.store(1);
     exe.main.ops.clear();
     exe.main.pc = 0;
-    rewind(exe);
   }
 
   void rewind(Exec &exe) {
@@ -1055,23 +1069,24 @@ namespace snabel {
 
   bool compile(Exec &exe, TokSeq in, OpSeq &out) {
     TRY(try_compile);
-
-    while (!in.empty()) {
-     Tok tok(in.at(0));
-      in.pop_front();
     
+    while (!in.empty()) {
+      Tok tok(in.at(0));
+      in.pop_front();
+      auto &scp(curr_scope(exe));
+      
       if (tok.text.size() > 1 &&
 	  tok.text.at(0) == '/' &&
 	  (tok.text.at(1) == '*' || tok.text.at(1) == '/')) {
 	// Skip comments
       } else if (tok.text.at(0) == '#') {
-	out.emplace_back(Push(Box(exe.main_scope,
+	out.emplace_back(Push(Box(scp,
 				  exe.sym_type,
 				  get_sym(exe, tok.text.substr(1)))));
       } else if (tok.text == "&_") {
-	out.emplace_back(Push(Box(exe.main_scope, exe.drop_type, nullptr)));
+	out.emplace_back(Push(Box(scp, exe.drop_type, nullptr)));
       } else if (tok.text == "&nop") {
-	out.emplace_back(Push(Box(exe.main_scope, exe.nop_type, nullptr)));    
+	out.emplace_back(Push(Box(scp, exe.nop_type, nullptr)));    
       } else if (tok.text.substr(0, 6) == "return" &&
 		 tok.text.size() == 7 &&
 		 isdigit(tok.text.at(6))) {
@@ -1083,25 +1098,25 @@ namespace snabel {
 	auto i(tok.text.at(7) - '0');
 	out.emplace_back(Return(i+1, false));
       } else if (tok.text == "&return") {
-	out.emplace_back(Push(Box(exe.main_scope,
+	out.emplace_back(Push(Box(scp,
 				  exe.label_type,
 				  exe.return_target[0])));
       } else if (tok.text == "&_return") {
-	out.emplace_back(Push(Box(exe.main_scope,
+	out.emplace_back(Push(Box(scp,
 				  exe.label_type,
 				  exe._return_target[0])));
       } else if (tok.text.substr(0, 7) == "&return" &&
 		 tok.text.size() == 8 &&
 		 isdigit(tok.text.at(7))) {
 	auto i(tok.text.at(7) - '0');
-	out.emplace_back(Push(Box(exe.main_scope,
+	out.emplace_back(Push(Box(scp,
 				  exe.label_type,
 				  exe.return_target[i])));
       } else if (tok.text.substr(0, 8) == "&_return" &&
 		 tok.text.size() == 9 &&
 		 isdigit(tok.text.at(8))) {
 	auto i(tok.text.at(8) - '0');
-	out.emplace_back(Push(Box(exe.main_scope,
+	out.emplace_back(Push(Box(scp,
 				  exe.label_type,
 				  exe._return_target[i])));
       } else if (tok.text.substr(0, 6) == "recall" &&
@@ -1110,14 +1125,14 @@ namespace snabel {
 	auto i(tok.text.at(6) - '0');
 	out.emplace_back(Recall(i+1));
       } else if (tok.text == "&recall") {
-	out.emplace_back(Push(Box(exe.main_scope,
+	out.emplace_back(Push(Box(scp,
 				  exe.label_type,
 				  exe.recall_target[0])));
       } else if (tok.text.substr(0, 7) == "&recall" &&
 		 tok.text.size() == 8 &&
 		 isdigit(tok.text.at(7))) {
 	auto i(tok.text.at(7) - '0');
-	out.emplace_back(Push(Box(exe.main_scope,
+	out.emplace_back(Push(Box(scp,
 				  exe.label_type,
 				  exe.recall_target[i])));
       } else if (tok.text.substr(0, 5) == "yield" &&
@@ -1131,25 +1146,25 @@ namespace snabel {
 	auto i(tok.text.at(6) - '0');
 	out.emplace_back(Yield(i+1, false));
       } else if (tok.text == "&yield") {
-	out.emplace_back(Push(Box(exe.main_scope,
+	out.emplace_back(Push(Box(scp,
 				  exe.label_type,
 				  exe.yield_target[0])));
       } else if (tok.text == "&_yield") {
-	out.emplace_back(Push(Box(exe.main_scope,
+	out.emplace_back(Push(Box(scp,
 				  exe.label_type,
 				  exe._yield_target[0])));
       } else if (tok.text.substr(0, 6) == "&yield" &&
 		 tok.text.size() == 7 &&
 		 isdigit(tok.text.at(6))) {
 	auto i(tok.text.at(6) - '0');
-	out.emplace_back(Push(Box(exe.main_scope,
+	out.emplace_back(Push(Box(scp,
 				  exe.label_type,
 				  exe.yield_target[i])));
       } else if (tok.text.substr(0, 7) == "&_yield" &&
 		 tok.text.size() == 8 &&
 		 isdigit(tok.text.at(7))) {
 	auto i(tok.text.at(7) - '0');
-	out.emplace_back(Push(Box(exe.main_scope,
+	out.emplace_back(Push(Box(scp,
 				  exe.label_type,
 				  exe._yield_target[i])));
       } else if (tok.text.substr(0, 5) == "break" &&
@@ -1158,14 +1173,14 @@ namespace snabel {
 	auto i(tok.text.at(5) - '0');
 	out.emplace_back(Break(i+1));
       } else if (tok.text == "&break") {
-	out.emplace_back(Push(Box(exe.main_scope,
+	out.emplace_back(Push(Box(scp,
 				  exe.label_type,
 				  exe.break_target[0])));
       } else if (tok.text.substr(0, 6) == "&break" &&
 		 tok.text.size() == 7 &&
 		 isdigit(tok.text.at(6))) {
 	auto i(tok.text.at(6) - '0');
-	out.emplace_back(Push(Box(exe.main_scope,
+	out.emplace_back(Push(Box(scp,
 				  exe.label_type,
 				  exe.break_target[i])));
       } else if (tok.text.at(0) == '&') {
@@ -1200,7 +1215,7 @@ namespace snabel {
 	if (fmt) {
 	  out.emplace_back(Fmt(s));
 	} else {
-	  out.emplace_back(Push(Box(exe.main_scope,
+	  out.emplace_back(Push(Box(scp,
 				    exe.str_type,
 				    std::make_shared<str>(s))));
 	}
@@ -1211,7 +1226,7 @@ namespace snabel {
 	replace<ustr>(s, u"\\t", u"\t");
 	replace<ustr>(s, u"\\\"", u"\"");
 
-	out.emplace_back(Push(Box(exe.main_scope,
+	out.emplace_back(Push(Box(scp,
 				  exe.ustr_type,
 				  std::make_shared<ustr>(s))));
       } else if (tok.text.at(0) == '\\' && tok.text.at(1) == '\\') {
@@ -1233,7 +1248,7 @@ namespace snabel {
 	  c = uconv.from_bytes(str(1, tok.text[2])).at(0);
 	}
       
-	out.emplace_back(Push(Box(exe.main_scope, exe.uchar_type, c)));
+	out.emplace_back(Push(Box(scp, exe.uchar_type, c)));
       } else if (tok.text.at(0) == '\\') {
 	if (tok.text.size() < 2) {
 	  ERROR(Snabel, fmt("Invalid char literal on row %0, col %1: %2",
@@ -1253,12 +1268,12 @@ namespace snabel {
 	  c = tok.text[1];
 	}
       
-	out.emplace_back(Push(Box(exe.main_scope, exe.char_type, c)));
+	out.emplace_back(Push(Box(scp, exe.char_type, c)));
       } else if (isupper(tok.text[0])) {
 	auto t(parse_type(exe, tok.text, 0).first);
 
 	if (t) {
-	  out.emplace_back(Push(Box(exe.main_scope,
+	  out.emplace_back(Push(Box(scp,
 				    get_meta_type(exe, *t),
 				    t)));
 	}
@@ -1266,10 +1281,10 @@ namespace snabel {
 		 (tok.text.size() > 1 &&
 		  tok.text[0] == '-' &&
 		  isdigit(tok.text[1]))) {
-	out.emplace_back(Push(Box(exe.main_scope, exe.i64_type, to_int64(tok.text))));
+	out.emplace_back(Push(Box(scp, exe.i64_type, to_int64(tok.text))));
       } else {
 	auto ts(get_sym(exe, tok.text));
-	auto fnd(find_env(curr_scope(exe.main), ts));
+	auto fnd(find_env(curr_scope(exe), ts));
       
 	if (fnd && fnd->type == &exe.macro_type) {
 	  (*get<Macro *>(*fnd))(tok.pos, in, out);
@@ -1286,9 +1301,8 @@ namespace snabel {
     return true;
   }
 
-  bool compile(Exec &exe, const str &in, bool skip) {
-    Exec::Lock lock(exe.mutex);
-
+  bool compile(Thread &thd, const str &in, bool skip) {
+    auto &exe(thd.exec);
     TokSeq toks;
     parse_expr(in, 0, toks);
     Label *skip_label(nullptr);
@@ -1302,31 +1316,35 @@ namespace snabel {
     if (!compile(exe, toks, in_ops)) { return false; }
     if (skip) { in_ops.emplace_back(Target(*skip_label)); }
     if (!compile(exe, in_ops)) { return false; }
-    if (skip) { exe.main.pc++; }
+    if (skip) { thd.pc++; }
     return true;
   }
 
-  bool compile(Exec &exe, OpSeq &in) {
-    auto start_pc(exe.main.ops.size());
+  bool compile(Exec &exe, const str &in, bool skip) {
+    return compile(curr_thread(exe), in, skip);
+  }
+    
+  bool compile(Thread &thd, OpSeq &in) {
+    auto start_pc(thd.ops.size());
     TRY(try_compile);
     
     while (true) {
-      exe.main.pc = start_pc;
+      thd.pc = start_pc;
       
       for (auto &op: in) {
-	if (!op.prepared && !prepare(op, exe.main_scope)) { goto exit; }
-	exe.main.pc++;
+	if (!op.prepared && !prepare(op, curr_scope(thd))) { goto exit; }
+	thd.pc++;
       }
 
-      exe.main.pc = start_pc;
+      thd.pc = start_pc;
       bool done(false);
       
       while (!done) {
 	done = true;
 	
 	for (auto &op: in) {
-	  if (refresh(op, curr_scope(exe.main))) { done = false; }
-	  exe.main.pc++;
+	  if (refresh(op, curr_scope(thd))) { done = false; }
+	  thd.pc++;
 	}
       }
 
@@ -1334,7 +1352,7 @@ namespace snabel {
       done = true;
 
       for (auto &op: in) {
-	if (compile(op, curr_scope(exe.main), out_ops)) { done = false; }
+	if (compile(op, curr_scope(thd), out_ops)) { done = false; }
       }
 
       if (done) { break; }      
@@ -1345,12 +1363,10 @@ namespace snabel {
 
     {
       OpSeq out_ops;
-      exe.main.pc = start_pc;
+      thd.pc = start_pc;
       
       for (auto &op: in) {
-	if (!finalize(op, exe.main_scope, out_ops)) {
-	  exe.main.pc++;
-	}
+	if (!finalize(op, curr_scope(thd), out_ops)) { thd.pc++; }
 	
 	for (auto e: try_compile.errors) {
 	  if (!dynamic_cast<RedefineError *>(e)) { goto exit; }
@@ -1361,8 +1377,8 @@ namespace snabel {
       in.swap(out_ops);
     }
   exit:
-    exe.main.pc = start_pc;
-    std::copy(in.begin(), in.end(), std::back_inserter(exe.main.ops));
+    thd.pc = start_pc;
+    std::copy(in.begin(), in.end(), std::back_inserter(thd.ops));
 
     for (auto e: try_compile.errors) {
       if (!dynamic_cast<RedefineError *>(e)) { return false; }
@@ -1371,7 +1387,15 @@ namespace snabel {
     return true;
   }
   
+  bool compile(Exec &exe, OpSeq &in) {
+    return compile(curr_thread(exe), in);
+  }
+
+  bool run(Thread &thd, const str &in) {
+    return compile(thd, in) && run(thd);
+  }
+
   bool run(Exec &exe, const str &in) {
-    return compile(exe, in) && run(exe.main);
+    return run(curr_thread(exe), in);
   }
 }

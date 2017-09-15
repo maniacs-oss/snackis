@@ -77,7 +77,7 @@ namespace snabel {
   }
 
   Type &get_pair_type(Exec &exe, Type &lt, Type &rt) {
-    auto &thd(exe.main);
+    auto &thd(curr_thread(exe));
     auto &n(get_sym(exe, fmt("Pair<%0 %1>", name(lt.name), name(rt.name))));
     auto fnd(find_type(exe, n));
     if (fnd) { return *fnd; }
