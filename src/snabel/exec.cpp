@@ -790,6 +790,10 @@ namespace snabel {
       });
   }
 
+  Exec::~Exec() {
+    for (auto &s: syms) { delete s.second.pos; }
+  }
+  
   Macro &add_macro(Exec &exe, const str &n, Macro::Imp imp) {
     return exe.macros.emplace(std::piecewise_construct,
 			      std::forward_as_tuple(get_sym(exe, n)),

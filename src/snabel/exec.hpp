@@ -52,6 +52,7 @@ namespace snabel {
     
     Exec();
     Exec(const Exec &) = delete;
+    ~Exec();
     const Exec &operator =(const Exec &) = delete;
   };
 
