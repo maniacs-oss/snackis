@@ -560,6 +560,10 @@ namespace snabel {
 
     run_test(exe, "struct: Foo a I64; Foo new 42 set-a table len");
     CHECK(get<int64_t>(pop(exe.main)) == 1, _);
+
+    run_test(exe, "{struct: Foo a I64;} call Foo new");
+    CATCH(try_test, UnknownId, _) { }
+    CHECK(!try_pop(exe.main), _);
   }
   
   static void loop_tests() {

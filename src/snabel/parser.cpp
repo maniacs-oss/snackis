@@ -178,10 +178,11 @@ namespace snabel {
     }
 
     str n(in.substr(i, j-i));
-    auto fnd(find_type(exe, get_sym(exe, n)));
+    auto &ns(get_sym(exe, n));
+    auto fnd(find_type(exe, ns));
 
     if (!fnd) {
-      ERROR(Snabel, fmt("Type not found: %0", n));
+      ERROR(UnknownId, ns);
       return std::make_pair(nullptr, in.size());
     }
 

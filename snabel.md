@@ -374,7 +374,7 @@ S: let: acc Str I64 table;
 ```
 
 #### Structs
-Structs may be used to create custom composite data types. Constructors and typed field accessors are automatically created. All fields are expected to be initialized when read, reading uninitialized fields signals errors; use optional types for optional fields. An arbitrary number of super types may be listed after the struct name, fields with the same name share storage. Structs are iterable and produce a sequence of symbol/value-pairs. Struct definitions may appear anywhere in the code, types are defined once on compilation and and may be referenced from any scope after the point of definition. When redefining structs, fresh types are created each time; existing instances reference the previous type as do already compiled type literals.
+Structs may be used to create lexically scoped, composite data types. Constructors and typed field accessors are automatically created. All fields are expected to be initialized when read, reading uninitialized fields signals errors; use optional types for optional fields. An arbitrary number of super types may be listed after the struct name, fields with the same name share storage. Structs are iterable and produce a sequence of symbol/value-pairs. When redefining structs, fresh types are created each time; existing instances reference the previous type as do already compiled type literals.
 
 ```
 S: struct: Foo
