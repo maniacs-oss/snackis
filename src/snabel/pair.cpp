@@ -9,7 +9,7 @@ namespace snabel {
     
     push(scp,
 	 get_pair_type(scp.exec, *l.type, *r.type),
-	 std::make_shared<Pair>(l, r));    
+	 std::make_pair(l, r));    
   }
 
   static void iterable_zip_imp(Scope &scp, const Args &args) {
@@ -25,17 +25,17 @@ namespace snabel {
   }
 
   static void left_imp(Scope &scp, const Args &args) {
-    auto &p(*get<PairRef>(args.at(0)));   
+    auto &p(get<Pair>(args.at(0)));   
     push(scp.thread, p.first);
   }
 
   static void right_imp(Scope &scp, const Args &args) {
-    auto &p(*get<PairRef>(args.at(0)));   
+    auto &p(get<Pair>(args.at(0)));   
     push(scp.thread, p.second);
   }
 
   static void unzip_imp(Scope &scp, const Args &args) {
-    auto &p(*get<PairRef>(args.at(0)));   
+    auto &p(get<Pair>(args.at(0)));   
     push(scp.thread, p.first);
     push(scp.thread, p.second);
   }
@@ -44,19 +44,15 @@ namespace snabel {
     exe.pair_type.supers.push_back(&exe.any_type);
     exe.pair_type.args.push_back(&exe.any_type);
     exe.pair_type.args.push_back(&exe.any_type);
-    exe.pair_type.dump = [](auto &v) { return dump(*get<PairRef>(v)); };
-    exe.pair_type.fmt = [](auto &v) { return pair_fmt(*get<PairRef>(v)); };
+    exe.pair_type.dump = [](auto &v) { return dump(get<Pair>(v)); };
+    exe.pair_type.fmt = [](auto &v) { return pair_fmt(get<Pair>(v)); };
     
     exe.pair_type.eq = [](auto &x, auto &y) { 
-      return get<PairRef>(x) == get<PairRef>(y); 
-    };
-
-    exe.pair_type.equal = [](auto &x, auto &y) { 
-      return *get<PairRef>(x) == *get<PairRef>(y); 
+      return get<Pair>(x) == get<Pair>(y); 
     };
 
     exe.pair_type.lt = [](auto &x, auto &y) { 
-      return *get<PairRef>(x) < *get<PairRef>(y); 
+      return get<Pair>(x) < get<Pair>(y); 
     };
 
     add_func(exe, ".", Func::Const,
@@ -104,5 +100,15 @@ namespace snabel {
     t.equal = exe.pair_type.equal;
     t.lt = exe.pair_type.lt;
     return t;
+  }
+
+  str dump(const Pair &pr) {
+    auto &l(pr.first), &r(pr.second);
+    return fmt("%0 %1.", l.type->dump(l), r.type->dump(r));
+  }
+
+  str pair_fmt(const Pair &pr) {
+    auto &l(pr.first), &r(pr.second);
+    return fmt("%0 %1.", l.type->fmt(l), r.type->fmt(r));
   }
 }

@@ -2,6 +2,7 @@
 #include "snabel/error.hpp"
 #include "snabel/exec.hpp"
 #include "snabel/list.hpp"
+#include "snabel/pair.hpp"
 
 namespace snabel {
   ListIter::ListIter(Exec &exe, Type &elt, const ListRef &in, opt<Fn> fn):
@@ -127,14 +128,14 @@ namespace snabel {
     push(scp,
 	 get_iter_type(exe, yt),
 	 IterRef(new ListIter(exe, yt, get<ListRef>(in), [](auto &el) {
-	       return get<PairRef>(el)->first;
+	       return get<Pair>(el).first;
 	     })));
 
     auto &xt(*in.type->args.at(0)->args.at(1));
     push(scp,
 	 get_iter_type(exe, xt),
 	 IterRef(new ListIter(exe, xt, get<ListRef>(in), [](auto &el) {
-	       return get<PairRef>(el)->second;
+	       return get<Pair>(el).second;
 	     })));
   }
 

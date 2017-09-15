@@ -1,6 +1,7 @@
 #include "snabel/box.hpp"
 #include "snabel/error.hpp"
 #include "snabel/exec.hpp"
+#include "snabel/pair.hpp"
 
 namespace snabel {
   Box::Box(Scope &scp, Type &t, const Val &v):
@@ -104,16 +105,6 @@ namespace snabel {
     return buf.str();
   }
   
-  str dump(const Pair &pr) {
-    auto &l(pr.first), &r(pr.second);
-    return fmt("%0 %1.", l.type->dump(l), r.type->dump(r));
-  }
-
-  str pair_fmt(const Pair &pr) {
-    auto &l(pr.first), &r(pr.second);
-    return fmt("%0 %1.", l.type->fmt(l), r.type->fmt(r));
-  }
-
   bool nil(const Box &b) {
     return !b.val.has_value();
   }

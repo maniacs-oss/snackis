@@ -21,8 +21,8 @@ namespace snabel {
 
     return Box(scp,
 	       get_pair_type(exec, exec.sym_type, *res.second.type), 
-	       std::make_shared<Pair>(Box(scp, exec.sym_type, res.first),
-				      res.second));
+	       std::make_pair(Box(scp, exec.sym_type, res.first),
+			      res.second));
   }
 
   bool operator==(const Struct &x, const Struct &y) {

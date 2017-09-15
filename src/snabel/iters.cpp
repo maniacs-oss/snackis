@@ -129,6 +129,6 @@ namespace snabel {
     if (!x || !y) { return nullopt; }
     return Box(scp,
 	       get_pair_type(exec, *x->type, *y->type),
-	       std::make_shared<Pair>(*x, *y));
+	       std::make_pair(*x, *y));
   }
 }

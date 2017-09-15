@@ -39,8 +39,6 @@ namespace snabel {
   using LambdaRef = std::shared_ptr<Lambda>;
   using List = std::deque<Box>;
   using ListRef = std::shared_ptr<List>;
-  using Pair = std::pair<Box, Box>;
-  using PairRef = std::shared_ptr<Pair>;
   using StrRef = std::shared_ptr<str>;
   using StructRef = std::shared_ptr<Struct>;
   using Table = std::map<Box, Box>;
@@ -68,8 +66,6 @@ namespace snabel {
   str list_fmt(const List &lst);
   str dump(const Table &tbl);
   str table_fmt(const Table &tbl);
-  str dump(const Pair &pr);
-  str pair_fmt(const Pair &pr);
   bool nil(const Box &b);
   
   template <typename T>

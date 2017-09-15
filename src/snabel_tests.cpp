@@ -528,9 +528,9 @@ namespace snabel {
     TRY(try_test);    
 
     run_test(exe, "42 'foo'.");
-    auto p(get<PairRef>(pop(exe.main)));
-    CHECK(get<int64_t>(p->first) == 42, _);    
-    CHECK(*get<StrRef>(p->second) == "foo", _);    
+    auto p(get<Pair>(pop(exe.main)));
+    CHECK(get<int64_t>(p.first) == 42, _);    
+    CHECK(*get<StrRef>(p.second) == "foo", _);    
 
     run_test(exe, "'foo' 42. left");
     CHECK(*get<StrRef>(pop(exe.main)) == "foo", _);    

@@ -101,7 +101,7 @@ namespace snabel {
     while (true) {
       auto nxt(it->next(scp));
       if (!nxt) { break; }
-      auto &cs(*get<PairRef>(*nxt));
+      auto &cs(get<Pair>(*nxt));
       cs.first.type->call(scp, cs.first, true);
       auto res(try_pop(scp.thread));
       if (!res) { continue; }

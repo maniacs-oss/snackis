@@ -12,7 +12,7 @@ namespace snabel {
     if (it == in->end()) { return nullopt; }
     auto res(*it);
     it++;
-    return Box(scp, elt, std::make_shared<Pair>(res.first, res.second));
+    return Box(scp, elt, std::make_pair(res.first, res.second));
   }
 
   static void table_imp(Scope &scp, const Args &args) {
@@ -34,7 +34,7 @@ namespace snabel {
     while (true) {
       auto nxt(it->next(scp));
       if (!nxt) { break; }
-      out->insert(*get<PairRef>(*nxt));
+      out->insert(get<Pair>(*nxt));
     }
     
     push(scp,
