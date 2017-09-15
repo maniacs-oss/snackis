@@ -1,6 +1,7 @@
 #ifndef SNABEL_THREAD_HPP
 #define SNABEL_THREAD_HPP
 
+#include <list>
 #include <map>
 #include <random>
 #include <thread>
@@ -14,11 +15,14 @@
 namespace snabel {
   const int POLL_MAX_FDS(10);
 
+  using Threads = std::list<Thread>;
+
   struct Thread {
-    using Id = Uid;
+    using Id = std::thread::id;
   
     Exec &exec;
-    const Id id;
+    opt<Id> id;
+    Threads::iterator iter;
     std::thread imp;
     PollQueue poll_queue;
     OpSeq ops;
@@ -33,7 +37,7 @@ namespace snabel {
     size_t io_counter;
     std::default_random_engine random;
 
-    Thread(Exec &exe, Id id);
+    Thread(Exec &exe, opt<Id> id=nullopt);
   };
 
   void init_threads(Exec &exe);
@@ -77,5 +81,10 @@ namespace snabel {
     return isa(thd, *val.type, typ);
   }
 }
- 
+
+namespace snackis {
+  template <>
+  str fmt_arg(const std::thread::id &arg);
+}
+
 #endif

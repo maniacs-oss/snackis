@@ -8,10 +8,20 @@
 namespace snabel {
   static void do_run(Thread *thd) {
     TRY(try_thread);
+    thd->id = std::this_thread::get_id();
+
+    {
+      Exec::Lock lock(thd->exec.mutex);
+
+      thd->exec.thread_lookup.emplace(std::piecewise_construct,
+				      std::forward_as_tuple(*thd->id),
+				      std::forward_as_tuple(thd));
+    }
+    
     run(*thd, false);
   }
   
-  Thread::Thread(Exec &exe, Id id):
+  Thread::Thread(Exec &exe, opt<Id> id):
     exec(exe),
     id(id),
     pc(0),
@@ -46,7 +56,7 @@ namespace snabel {
     exe.thread_type.supers.push_back(&exe.any_type);
 
     exe.thread_type.fmt = [](auto &v) {
-      return fmt("thread_%0", get<Thread *>(v)->id);
+      return fmt("thread_%0", *get<Thread *>(v)->id);
     };
 
     exe.thread_type.eq = [](auto &x, auto &y) {
@@ -194,7 +204,8 @@ namespace snabel {
     auto &s(curr_stack(thd));
     if (!s.empty()) { push(scp.thread, s); }
     Exec::Lock lock(scp.exec.mutex);
-    thd.exec.threads.erase(thd.id);
+    thd.exec.thread_lookup.erase(*thd.id);
+    thd.exec.threads.erase(thd.iter);
   }
 
   bool _break(Thread &thd, int64_t depth) {
@@ -237,5 +248,14 @@ namespace snabel {
     }
 
     return true;
+  }
+}
+
+namespace snackis {
+  template <>
+  str fmt_arg(const std::thread::id &arg) {
+    OutStream buf;
+    buf << arg;
+    return buf.str();
   }
 }

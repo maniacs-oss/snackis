@@ -28,7 +28,8 @@ namespace snabel {
     std::map<Sym, Func> funcs;
     std::map<Sym, Label> labels;
     std::deque<Begin *> lambdas;
-    std::map<Thread::Id, Thread> threads;
+    Threads threads;
+    std::map<std::thread::id, Thread *> thread_lookup;
     SymTable syms;
       
     Thread &main;
@@ -91,6 +92,7 @@ namespace snabel {
   void add_conv(Exec &exe, Type &from, Type &to, Conv conv);
   bool conv(Exec &exe, Box &val, Type &type);
 
+  Thread &curr_thread(Exec &exe);
   Uid uid(Exec &exe);
   Box make_opt(Exec &exe, opt<Box> in);
 

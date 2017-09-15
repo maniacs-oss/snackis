@@ -243,11 +243,15 @@ namespace snabel {
   static bool meta_eq(const Box &x, const Box &y) {
     return get<Type *>(x) == get<Type *>(y);
   }
+
+  static Thread &make_main(Exec &exe) {
+    auto &t(exe.threads.emplace_back(exe, std::this_thread::get_id()));
+    t.iter = std::prev(exe.threads.end());
+    return t;
+  }
   
   Exec::Exec():
-    main(threads.emplace(std::piecewise_construct,
-				std::forward_as_tuple(0),
-				std::forward_as_tuple(*this, 0)).first->second),
+    main(make_main(*this)),
     main_scope(main.scopes.at(0)),
     meta_type(get_sym(*this, "Type<Any>")),
     any_type(add_type(*this, "Any")),
@@ -330,6 +334,8 @@ namespace snabel {
 	&add_label(*this, "_break8", true), &add_label(*this, "_break9", true)},
     next_uid(1)
   {    
+    thread_lookup.insert(std::make_pair(*main.id, &main));
+    
     any_type.fmt = [](auto &v) { return "Any"; };
     any_type.eq = [](auto &x, auto &y) { return false; };
 
@@ -814,7 +820,7 @@ namespace snabel {
   }
 
   Macro &add_macro(Exec &exe, const str &n, Macro::Imp imp) {
-    return add_macro(curr_scope(exe.main), n, imp);
+    return add_macro(curr_scope(curr_thread(exe)), n, imp);
   }
   
   Macro &add_macro(Scope &scp, const str &n, const LambdaRef &lmb) {
@@ -826,7 +832,7 @@ namespace snabel {
   }
 
   Macro &add_macro(Exec &exe, const str &n, const LambdaRef &lmb) {
-    return add_macro(curr_scope(exe.main), n, lmb);
+    return add_macro(curr_scope(curr_thread(exe)), n, lmb);
   }
 
   Type &get_meta_type(Exec &exe, Type &t) {    
@@ -1015,6 +1021,10 @@ namespace snabel {
     return fnd->second(val);
   }
 
+  Thread &curr_thread(Exec &exe) {
+    return *exe.thread_lookup.at(std::this_thread::get_id());
+  }
+
   Uid uid(Exec &exe) {
     return exe.next_uid.fetch_add(1);
   }
@@ -1034,13 +1044,7 @@ namespace snabel {
   }
 
   void rewind(Exec &exe) {
-    for (auto i(exe.threads.begin()); i != exe.threads.end();) {
-      if (i->first == exe.main.id) {
-	i++;
-      } else {
-	i = exe.threads.erase(i);
-      }
-    }
+    exe.threads.erase(std::next(exe.threads.begin()), exe.threads.end());
 
     auto &thd(exe.main);
     while (thd.scopes.size() > 1) { thd.scopes.pop_back(); }

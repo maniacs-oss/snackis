@@ -251,14 +251,12 @@ namespace snabel {
   Thread &start_thread(Scope &scp, const Box &init) {
     Thread &thd(scp.thread);
     Exec &exe(scp.exec);
-    Thread::Id id(uid(exe));
     Thread *t(nullptr);
 
     {
       Exec::Lock lock(exe.mutex);
-      t = &exe.threads.emplace(std::piecewise_construct,
-			       std::forward_as_tuple(id),
-			       std::forward_as_tuple(exe, id)).first->second;
+      t = &exe.threads.emplace_back(exe);
+      t->iter = std::prev(exe.threads.end());
     }
     
     auto &stk(curr_stack(thd));
