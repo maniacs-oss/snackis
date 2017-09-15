@@ -636,7 +636,7 @@ namespace snabel {
 	  ArgNames args;
 	  if (in.front().text == "(") { parse_args(*this, in, args); }
 	  compile(*this, TokSeq(in.begin(), end), imp);
-	  in.erase(in.begin(), std::next(end));
+	  in.erase(in.begin(), (end == in.end()) ? end : std::next(end));
 	  imp.emplace_back(End(*this));
 	  if (!compile(*this, imp)) { return; }
 	  auto &thd(curr_thread(*this));
@@ -738,9 +738,8 @@ namespace snabel {
 	} else {
 	  out.emplace_back(Begin(*this));
 	  const str n(in.at(0).text);
-	  auto start(std::next(in.begin()));
-	  auto end(find_end(start, in.end()));
 	  in.pop_front();
+	  auto end(find_end(in.begin(), in.end()));
 
 	  ArgNames args;
 	  if (in.front().text == "(") { parse_args(*this, in, args); }
@@ -749,7 +748,7 @@ namespace snabel {
 	  }
 	  
 	  compile(*this, TokSeq(in.begin(), end), out);
-	  in.erase(in.begin(), std::next(end));
+	  in.erase(in.begin(), (end == in.end()) ? end : std::next(end));
 	  out.emplace_back(End(*this));
 	  out.emplace_back(Putenv(get_sym(*this, n)));
 	}
@@ -765,8 +764,7 @@ namespace snabel {
 	  auto start(std::next(in.begin()));
 	  auto end(find_end(start, in.end()));
 	  compile(*this, TokSeq(start, end), out);
-	  if (end != in.end()) { end++; }
-	  in.erase(in.begin(), end);
+	  in.erase(in.begin(), (end == in.end()) ? end : std::next(end));
 	  out.emplace_back(Restore());
 	  out.emplace_back(Putenv(get_sym(*this, fmt("@%0", n))));
 	}
@@ -1089,7 +1087,7 @@ namespace snabel {
       Tok tok(in.at(0));
       in.pop_front();
       auto &scp(curr_scope(exe));
-      
+
       if (tok.text.size() > 1 &&
 	  tok.text.at(0) == '/' &&
 	  (tok.text.at(1) == '*' || tok.text.at(1) == '/')) {

@@ -199,6 +199,9 @@ namespace snabel {
     run_test(exe, "func: foo 35 +; 7 foo");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
+    run_test(exe, "func: foo(x y) @y @x -; 7 42 foo");
+    CHECK(get<int64_t>(pop(exe.main)) == 35, _);
+
     run_test(exe,
 	"func: foo\n"
         "35 +;\n"
@@ -333,8 +336,8 @@ namespace snabel {
 
     run_test(exe,
 	"let: acc Str list; "
-	"func: do-ping () (|_yield 3 {@acc 'ping' push _yield1} for); "
-	"func: do-pong () (|_yield 3 {@acc 'pong' push _yield1} for); "
+	"func: do-ping() (|_yield 3 {@acc 'ping' push _yield1} for); "
+	"func: do-pong() (|_yield 3 {@acc 'pong' push _yield1} for); "
 	"[do-ping do-pong] run");
     CHECK(get<ListRef>(*find_env(curr_scope(exe.main), "@acc"))->size() == 6, _);
   

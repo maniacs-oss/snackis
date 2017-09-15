@@ -466,9 +466,7 @@ S: false 42 nil if
 
 nil
 
-S: func: guess-pos
-     let: w; _
-  
+S: func: guess-pos(w)
      [{@w 'ed' suffix?}
         #VBD.
       {@w 'es' suffix?}
@@ -532,10 +530,14 @@ S: 0 {+1 $ 42 = &break when} loop
 ```
 
 ### Functions
-Each function name represents a set of implementations that are matched in reverse declared order when resolving function calls. Prefixing the name of a function with ```&``` pushes it on the stack for later use. Definitions require termination using ```;``` to separate them from surrounding code.
+Each function name represents a set of implementations that are matched in reverse declared order when resolving function calls. Prefixing the name of a function with ```&``` pushes it on the stack for later use. Functions support named arguments, which are popped of the stack and bound on entry; and require termination using ```;``` to separate them from surrounding code.
 
 ```
 S: func: foo 35 +; 7 foo
+
+42
+
+S: func: foo(x) @x 35 +; 7 foo
 
 42
 
@@ -581,9 +583,9 @@ S: func: foo |yield (7 yield 28 +);
 42
 
 S: let: acc Str list;
-   func: do-ping
+   func: do-ping()
      (|yield 3 {@acc 'ping' push yield1} for);
-   func: do-pong
+   func: do-pong()
      (|yield 3 {@acc 'pong' push yield1} for);
    [do-ping do-pong] run
    @acc
@@ -628,11 +630,11 @@ S: ['foo' bytes]
    
 3
 
-S: func: do-copy (
+S: func: do-copy(in out)
      let: q Bin list;
      let: wq @q fifo;
-     let: w rwfile @wq $1 write; _
-     let: r rfile read;
+     let: r @in rfile read;
+     let: w @wq @out rwfile write;
      |_yield
   
      @r {{
@@ -642,8 +644,7 @@ S: func: do-copy (
        _yield1
      } for
 
-     @q +? {@w &_ for} when
-   );
+     @q +? {@w &_ for} when;
 
    'in' 'out' do-copy run
 nil
