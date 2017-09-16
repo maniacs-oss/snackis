@@ -11,6 +11,7 @@ namespace snabel {
 
   void init_pairs(Exec &exe);
   Type &get_pair_type(Exec &exe, Type &lt, Type &rt);
+  void uneval(const Pair &pr, std::ostream &out);
   str dump(const Pair &pr);
   str pair_fmt(const Pair &pr);
 }

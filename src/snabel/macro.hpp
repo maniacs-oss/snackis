@@ -1,8 +1,10 @@
 #ifndef SNABEL_MACRO_HPP
 #define SNABEL_MACRO_HPP
 
+#include "snabel/lambda.hpp"
 #include "snabel/op.hpp"
 #include "snabel/parser.hpp"
+#include "snabel/uid.hpp"
 #include "snackis/core/func.hpp"
 
 namespace snabel {

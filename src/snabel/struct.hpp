@@ -15,6 +15,8 @@ namespace snabel {
     Struct(Type &t);
   };
 
+  using StructRef = std::shared_ptr<Struct>;
+
   struct StructIter: Iter {
     StructRef in;
     Struct::Fields::const_iterator it;

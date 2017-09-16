@@ -27,27 +27,28 @@ namespace snabel {
     }
     
     for (int i(0); i < nargs; i++) {
-      s.push_back(Box(scp, exe.tok_type, in.front()));
+      if (!in.front().text.empty()) {
+	auto t(in.front().text);
+	s.push_back(Box(scp,
+			exe.sym_type,
+			get_sym(exe, (t.front() == '#') ? t.substr(1) : t)));
+      }
+      
       in.pop_front();
     }
 
     if (nargs) { in.pop_front(); }
     call(lmb, curr_scope(curr_thread(exe)), true);
+    OutStream buf;
+    str sep("");
     
     for (auto v: s) {
-      if (v.type == &exe.tok_type) {
-	compile(exe, {get<Tok>(v)}, out);
-      } else if (v.type == &exe.quote_type) {
-	TokSeq toks;
-	parse_expr(*get<StrRef>(v), 0, toks);
-	compile(exe, toks, out);
-      } else if (v.type == &exe.sym_type) {
-	out.emplace_back(Deref(get<Sym>(v)));
-      } else {
-	out.emplace_back(Push(v));
-      }
+      buf << sep;
+      v.type->uneval(v, buf);
+      sep = " ";
     }
 
+    compile(exe, parse_expr(buf.str(), pos.row), out);
     s.clear();
   }
   

@@ -9,13 +9,13 @@
 #include "snabel/box.hpp"
 #include "snabel/label.hpp"
 #include "snabel/type.hpp"
+#include "snabel/uid.hpp"
 #include "snackis/core/func.hpp"
 #include "snackis/core/str.hpp"
 
 namespace snabel {
   using namespace snackis;
 
-  struct Box;
   struct Func;
   struct FuncImp;
   struct Scope;

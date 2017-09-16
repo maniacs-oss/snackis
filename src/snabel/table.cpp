@@ -119,6 +119,11 @@ namespace snabel {
   void init_tables(Exec &exe) {
     exe.table_type.supers.push_back(&exe.any_type);
     exe.table_type.args.push_back(&exe.any_type);
+
+    exe.table_type.uneval = [](auto &v, auto &out) {
+      uneval(*get<TableRef>(v), out);
+    };
+    
     exe.table_type.dump = [](auto &v) { return dump(*get<TableRef>(v)); };
     exe.table_type.fmt = [](auto &v) { return table_fmt(*get<TableRef>(v)); };
 
@@ -204,5 +209,59 @@ namespace snabel {
     t.equal = exe.table_type.equal;
     t.iter = exe.table_type.iter;
     return t;
+  }
+
+  void uneval(const Table &tbl, std::ostream &out) {
+    out << '[';
+    size_t i(0);
+    
+    for (auto it(tbl.begin()); it != tbl.end(); it++, i++) {
+      if (i > 0) { out << ' '; }
+      uneval(*it, out);
+    }
+    
+    out << ']';
+  }
+
+  str dump(const Table &tbl) {
+    OutStream buf;
+    buf << '[';
+    size_t i(0);
+    
+    for (auto it(tbl.begin()); it != tbl.end(); it++, i++) {
+      if (i > 0) { buf << ' '; }
+      buf << dump(*it);
+      
+      if (i == 100) {
+	buf << "..." << tbl.size();
+	break;
+      }
+    }
+    
+    buf << ']';
+    return buf.str();
+  }
+
+  str table_fmt(const Table &tbl) {
+    OutStream buf;
+    buf << '[';
+    size_t i(0);
+    
+    for (auto it(tbl.begin()); it != tbl.end(); it++, i++) {
+      if (i > 0) { buf << ' '; }
+      buf << pair_fmt(*it);
+      
+      if (i == 100) {
+	buf << "..." << tbl.size();
+	break;
+      }
+    }
+    
+    buf << ']';
+    return buf.str();
+  }
+  
+  bool nil(const Box &b) {
+    return !b.val.has_value();
   }
 }

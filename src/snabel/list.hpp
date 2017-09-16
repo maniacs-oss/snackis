@@ -6,6 +6,9 @@
 #include "snabel/iter.hpp"
 
 namespace snabel {
+  using List = std::deque<Box>;
+  using ListRef = std::shared_ptr<List>;
+
   struct ListIter: Iter {
     using Fn = func<Box (const Box &)>;
     
@@ -27,6 +30,9 @@ namespace snabel {
 
   void init_lists(Exec &exe);
   Type &get_list_type(Exec &exe, Type &elt);
+  void uneval(const List &lst, std::ostream &out);
+  str dump(const List &lst);
+  str list_fmt(const List &lst);
 }
 
 #endif

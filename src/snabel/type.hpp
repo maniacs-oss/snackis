@@ -3,6 +3,7 @@
 
 #include <vector>
 
+#include "snabel/bin.hpp"
 #include "snabel/box.hpp"
 #include "snabel/iter.hpp"
 #include "snackis/core/func.hpp"
@@ -28,6 +29,7 @@ namespace snabel {
     func<bool (const Box &, const Box &)> equal;
     func<bool (const Box &, const Box &)> lt;
     func<bool (const Box &, const Box &)> gt;
+    func<void (const Box &, std::ostream &out)> uneval;
     func<str (const Box &)> dump;
     func<str (const Box &)> fmt;
     func<bool (Scope &, const Box &, bool)> call;

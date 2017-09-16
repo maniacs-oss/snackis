@@ -18,27 +18,10 @@ namespace snabel {
   }
 
   void init_syms(Exec &exe) {
-    exe.tok_type.supers.push_back(&exe.any_type);
-    exe.tok_type.supers.push_back(&exe.ordered_type);
-
-    exe.tok_type.fmt = [&exe](auto &v) {
-      auto &t(get<Tok>(v));
-      return fmt("Tok('%0' %1 %2)", t.text, t.pos.row, t.pos.col);
-    };
-
-    exe.tok_type.eq = [](auto &x, auto &y) {
-      auto &xt(get<Tok>(x)), &yt(get<Tok>(y));
-      return xt.pos == yt.pos && xt.text == yt.text;
-    };
-
-    exe.tok_type.lt = [](auto &x, auto &y) {
-      auto &xt(get<Tok>(x)), &yt(get<Tok>(y));
-      return xt.pos < yt.pos || (xt.pos == yt.pos && xt.text < yt.text);
-    };
-
     exe.sym_type.supers.push_back(&exe.any_type);
     exe.sym_type.supers.push_back(&exe.ordered_type);
-    exe.sym_type.fmt = [&exe](auto &v) { return fmt("#%0", name(get<Sym>(v))); };
+    exe.sym_type.uneval = [](auto &v, auto &out) { out << name(get<Sym>(v)); };
+    exe.sym_type.fmt = [](auto &v) { return fmt("#%0", name(get<Sym>(v))); };
 
     exe.sym_type.eq = [](auto &x, auto &y) {
       return get<Sym>(x) == get<Sym>(y);
@@ -50,7 +33,8 @@ namespace snabel {
 
     exe.quote_type.supers.push_back(&exe.any_type);
     exe.quote_type.supers.push_back(&exe.ordered_type);
-    exe.quote_type.fmt = [&exe](auto &v) { return fmt("´%0", *get<StrRef>(v)); };
+    exe.quote_type.uneval = [](auto &v, auto &out) { out << *get<StrRef>(v); };
+    exe.quote_type.fmt = [](auto &v) { return fmt("´%0", *get<StrRef>(v)); };
     exe.quote_type.eq = exe.str_type.eq;
     exe.quote_type.lt = exe.str_type.lt;
     

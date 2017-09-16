@@ -28,6 +28,13 @@ namespace snabel {
     scp.thread.pc = pc;
   }
 
+  static void uneval_imp(Scope &scp, const Args &args) {
+    auto &a(args.at(0));
+    OutStream buf;
+    a.type->uneval(a, buf);
+    push(scp, scp.exec.str_type, std::make_shared<str>(buf.str()));
+  }
+
   static void safe_imp(Scope &scp, const Args &args) {
     scp.safe_level++;
   }
@@ -155,10 +162,6 @@ namespace snabel {
   static void mod_i64_imp(Scope &scp, const Args &args) {
     auto &x(get<int64_t>(args.at(0))), &y(get<int64_t>(args.at(1)));
     push(scp, scp.exec.i64_type, x%y);
-  }
-
-  static void trunc_imp(Scope &scp, const Args &args) {
-    push(scp, scp.exec.i64_type, trunc(get<Rat>(args.at(0))));
   }
 
   static void bin_zero_imp(Scope &scp, const Args &args) {
@@ -290,7 +293,6 @@ namespace snabel {
     tcp_socket_type(add_type(*this, "TCPSocket")),
     tcp_stream_type(add_type(*this, "TCPStream")),
     thread_type(add_type(*this, "Thread")),
-    tok_type(add_type(*this, "Tok")),
     uchar_type(add_type(*this, "UChar")),
     uid_type(add_type(*this, "Uid")),
     ustr_type(add_type(*this, "UStr")),
@@ -546,6 +548,7 @@ namespace snabel {
     init_threads(*this);
         
     add_func(*this, "eval", Func::Safe, {ArgType(str_type)}, eval_imp);
+    add_func(*this, "uneval", Func::Safe, {ArgType(any_type)}, uneval_imp);
     add_func(*this, "safe", Func::Safe, {}, safe_imp);
     
     add_func(*this, "is?", Func::Pure,
@@ -597,8 +600,6 @@ namespace snabel {
     add_func(*this, "%", Func::Pure,
 	     {ArgType(i64_type), ArgType(i64_type)},
 	     mod_i64_imp);
-
-    add_func(*this, "trunc", Func::Pure, {ArgType(rat_type)}, trunc_imp);
 
     add_func(*this, "bytes", Func::Pure, {ArgType(i64_type)}, bytes_imp);
     add_func(*this, "z?", Func::Pure, {ArgType(bin_type)}, bin_zero_imp);

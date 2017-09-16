@@ -2,6 +2,7 @@
 #define SNABEL_CORO_HPP
 
 #include "snabel/env.hpp"
+#include "snabel/lambda.hpp"
 #include "snabel/op.hpp"
 
 namespace snabel {
@@ -18,7 +19,9 @@ namespace snabel {
     Coro(const Coro &) = delete;
     const Coro &operator =(const Coro &) = delete;
   };
-  
+
+  using CoroRef = std::shared_ptr<Coro>;
+
   void init_coros(Exec &exe);
   void refresh(Coro &cor, Scope &scp);
   bool call(const CoroRef &cor, Scope &scp, bool now);

@@ -10,6 +10,7 @@
 
 #include "snabel/op.hpp"
 #include "snabel/poll.hpp"
+#include "snabel/refs.hpp"
 #include "snabel/scope.hpp"
 
 namespace snabel {

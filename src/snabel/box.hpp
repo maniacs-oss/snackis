@@ -2,49 +2,15 @@
 #define SNABEL_BOX_HPP
 
 #include <any>
-#include <deque>
-#include <map>
-
-#include "snabel/bin.hpp"
-#include "snabel/iter.hpp"
-#include "snabel/random.hpp"
-#include "snabel/sym.hpp"
-#include "snabel/uid.hpp"
 #include "snackis/core/error.hpp"
 #include "snackis/core/fmt.hpp"
-#include "snackis/core/path.hpp"
-#include "snackis/core/rat.hpp"
 
 namespace snabel {  
   using namespace snackis;
 
-  struct Box;
-  struct Coro;
-  struct Func;
-  struct Exec;
-  struct File;
-  struct IOBuf;
-  struct IOQueue;
-  struct Label;
-  struct Lambda;
   struct Scope;
-  struct Struct;
-  struct Thread;
   struct Type;
-
-  using CoroRef = std::shared_ptr<Coro>;
-  using FileRef = std::shared_ptr<File>;
-  using IOBufRef = std::shared_ptr<IOBuf>;
-  using IOQueueRef = std::shared_ptr<IOQueue>;
-  using LambdaRef = std::shared_ptr<Lambda>;
-  using List = std::deque<Box>;
-  using ListRef = std::shared_ptr<List>;
-  using StrRef = std::shared_ptr<str>;
-  using StructRef = std::shared_ptr<Struct>;
-  using Table = std::map<Box, Box>;
-  using TableRef = std::shared_ptr<Table>;
-  using UStrRef = std::shared_ptr<ustr>;
-    
+  
   using Val = std::any;
   
   struct Box {
@@ -62,10 +28,6 @@ namespace snabel {
   bool operator !=(const Box &x, const Box &y);
   bool operator <(const Box &x, const Box &y);  
 
-  str dump(const List &lst);
-  str list_fmt(const List &lst);
-  str dump(const Table &tbl);
-  str table_fmt(const Table &tbl);
   bool nil(const Box &b);
   
   template <typename T>

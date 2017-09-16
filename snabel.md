@@ -630,7 +630,7 @@ S: ['foo' bytes]
    
 3
 
-S: func: do-copy(in out)
+S: func: do-copy(in out) (
      let: q Bin list;
      let: wq @q fifo;
      let: r @in rfile read;
@@ -644,7 +644,7 @@ S: func: do-copy(in out)
        _yield1
      } for
 
-     @q +? {@w &_ for} when;
+     @q +? {@w &_ for} when);
 
    'in' 'out' do-copy run
 nil
@@ -729,6 +729,13 @@ S: macro: foo(x y)
    7 42 foo
 
 35
+
+S: macro: foo(x)
+     #let: @x 42 #;;
+   #bar foo
+   @bar
+
+42
 ```
 
 #### C++

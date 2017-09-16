@@ -5,6 +5,8 @@
 #include "snabel/env.hpp"
 
 namespace snabel {
+  struct Label;
+  
   struct Lambda {
     Label &label;
     Env env;
@@ -12,6 +14,8 @@ namespace snabel {
     
     Lambda(Label &lbl, Scope &scp);
   };
+
+  using LambdaRef = std::shared_ptr<Lambda>;
 
   void call(const LambdaRef &lmb, Scope &scp, bool now);
 }

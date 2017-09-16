@@ -124,7 +124,7 @@ namespace snabel {
 	parse_types(in, lnr, j);
 	push_id();
 	i++;
-      } else if (split.find(c) != split.end()) {
+      } else if (split.find(c) != split.end() && pc != '#') {
 	push_id();
 	out.emplace_back(in.substr(i, 1), Pos(lnr, i));
 	i++;
@@ -149,11 +149,12 @@ namespace snabel {
   TokSeq::iterator find_end(TokSeq::iterator i,
 			    const TokSeq::const_iterator &end) {
     int depth(1);
-    
+        
     for (; i != end; i++) {
+      if (i->text.front() == '#') { continue; }
       if (i->text.back() == ':') { depth++; }
       
-      if (i->text.front() == ';') {
+      if (i->text == ";") {
 	depth--;
 	if (!depth) { break; }
       }

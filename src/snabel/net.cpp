@@ -8,6 +8,7 @@
 #include "snabel/error.hpp"
 #include "snabel/io.hpp"
 #include "snabel/net.hpp"
+#include "snabel/refs.hpp"
 #include "snabel/thread.hpp"
 
 namespace snabel {

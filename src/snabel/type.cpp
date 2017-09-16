@@ -8,6 +8,7 @@ namespace snabel {
   Type::Type(const Sym &n):
     name(n), raw(this), conv(false)
   {
+    uneval = [](auto &v, auto &out) { out << v.type->dump(v); };
     dump = [](auto &v) { return v.type->fmt(v); };
     fmt = [](auto &v) { return snabel::name(v.type->name); };
     eq = [](auto &x, auto &y) { return false; };

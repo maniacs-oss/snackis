@@ -152,6 +152,7 @@ namespace snabel {
   void init_lists(Exec &exe) {
     exe.list_type.supers.push_back(&exe.any_type);
     exe.list_type.args.push_back(&exe.any_type);
+    exe.list_type.uneval = [](auto &v, auto &out) { uneval(*get<ListRef>(v), out); };
     exe.list_type.dump = [](auto &v) { return dump(*get<ListRef>(v)); };
     exe.list_type.fmt = [](auto &v) { return list_fmt(*get<ListRef>(v)); };
 
@@ -224,5 +225,55 @@ namespace snabel {
     t.equal = exe.list_type.equal;
     t.iter = exe.list_type.iter;
     return t;
+  }
+
+  void uneval(const List &lst, std::ostream &out) {
+    out << '[';
+    
+    for (size_t i(0); i < lst.size(); i++) {
+      if (i > 0) { out << ' '; }
+      auto &v(lst[i]);
+      v.type->uneval(v, out);
+    }
+    
+    out << ']';
+  }
+
+  str dump(const List &lst) {
+    OutStream buf;
+    buf << '[';
+    
+    for (size_t i(0); i < lst.size(); i++) {
+      if (i > 0) { buf << ' '; }
+      auto &v(lst[i]);
+      buf << v.type->dump(v);
+      
+      if (i == 100) {
+	buf << "..." << lst.size();
+	break;
+      }
+    }
+    
+    buf << ']';
+    return buf.str();
+  }
+
+  str list_fmt(const List &lst) {
+    OutStream buf;
+    buf << '[';
+    
+    for (size_t i(0); i < lst.size(); i++) {
+      if (i > 0) { buf << ' '; }
+      auto &v(lst[i]);
+      buf << v.type->fmt(v);
+      
+      if (i == 100) {
+	buf << "..." << lst.size();
+	break;
+      }
+    }
+    
+    buf << ']';
+    return buf.str();
   }
 }

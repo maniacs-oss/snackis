@@ -6,6 +6,9 @@
 #include "snabel/iter.hpp"
 
 namespace snabel {
+  using Table = std::map<Box, Box>;
+  using TableRef = std::shared_ptr<Table>;
+
   struct TableIter: Iter {
     Type &elt;
     TableRef in;
@@ -17,6 +20,9 @@ namespace snabel {
 
   void init_tables(Exec &exe);
   Type &get_table_type(Exec &exe, Type &key, Type &val);
+  void uneval(const Table &tbl, std::ostream &out);
+  str dump(const Table &tbl);
+  str table_fmt(const Table &tbl);
 }
 
 #endif

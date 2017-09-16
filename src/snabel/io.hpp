@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <type_traits>
 
+#include "snabel/bin.hpp"
 #include "snabel/box.hpp"
 #include "snabel/error.hpp"
 #include "snabel/iter.hpp"
@@ -57,7 +58,7 @@ namespace snabel {
     WriteIter(Exec &exe, const IterRef &in, const Box &out);
     opt<Box> next(Scope &scp) override;
   };
-
+  
   void init_io(Exec &exe);
   void unblock(File &f);
   void poll(File &f);

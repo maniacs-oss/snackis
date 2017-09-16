@@ -44,6 +44,7 @@ namespace snabel {
     exe.pair_type.supers.push_back(&exe.any_type);
     exe.pair_type.args.push_back(&exe.any_type);
     exe.pair_type.args.push_back(&exe.any_type);
+    exe.pair_type.uneval = [](auto &v, auto &out) { uneval(get<Pair>(v), out); };
     exe.pair_type.dump = [](auto &v) { return dump(get<Pair>(v)); };
     exe.pair_type.fmt = [](auto &v) { return pair_fmt(get<Pair>(v)); };
     
@@ -100,6 +101,14 @@ namespace snabel {
     t.equal = exe.pair_type.equal;
     t.lt = exe.pair_type.lt;
     return t;
+  }
+
+  void uneval(const Pair &pr, std::ostream &out) {
+    auto &l(pr.first), &r(pr.second);
+    l.type->uneval(l, out);
+    out << ' ';
+    r.type->uneval(r, out);
+    out << '.';
   }
 
   str dump(const Pair &pr) {

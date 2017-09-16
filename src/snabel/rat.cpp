@@ -10,6 +10,10 @@ namespace snabel {
     push(scp, scp.exec.rat_type, Rat(abs(num), abs(div), neg));
   }
 
+  static void trunc_imp(Scope &scp, const Args &args) {
+    push(scp, scp.exec.i64_type, trunc(get<Rat>(args.at(0))));
+  }
+
   static void frac_imp(Scope &scp, const Args &args) {
     push(scp, scp.exec.rat_type, frac(get<Rat>(args.at(0))));
   }
@@ -41,7 +45,17 @@ namespace snabel {
   void init_rats(Exec &exe) {
     exe.rat_type.supers.push_back(&exe.any_type);
     exe.rat_type.supers.push_back(&exe.ordered_type);
-    exe.rat_type.fmt = [](auto &v) { return fmt_arg(get<Rat>(v)); };
+
+    exe.rat_type.uneval = [](auto &v, auto &out) {
+      auto &r(get<Rat>(v));
+      out << fmt("%0%1 %2 /", r.neg ? "-" : "", r.num, r.div);
+    };
+
+    exe.rat_type.fmt = [](auto &v) {
+      auto &r(get<Rat>(v));
+      return fmt("%0%1/%2", r.neg ? "-" : "", r.num, r.div);
+    };
+    
     exe.rat_type.eq = [](auto &x, auto &y) { return get<Rat>(x) == get<Rat>(y); };
     exe.rat_type.lt = [](auto &x, auto &y) { return get<Rat>(x) < get<Rat>(y); };
 
@@ -55,7 +69,8 @@ namespace snabel {
     add_func(exe, "/", Func::Pure,
 	     {ArgType(exe.i64_type), ArgType(exe.i64_type)},
 	     div_i64_imp);
-    
+
+    add_func(exe, "trunc", Func::Pure, {ArgType(exe.rat_type)}, trunc_imp);
     add_func(exe, "frac", Func::Pure, {ArgType(exe.rat_type)}, frac_imp);
 
     add_func(exe, "+", Func::Pure,

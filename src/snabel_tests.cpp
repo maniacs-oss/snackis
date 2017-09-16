@@ -9,6 +9,7 @@
 #include "snabel/parser.hpp"
 #include "snabel/type.hpp"
 #include "snackis/core/error.hpp"
+#include "snackis/core/rat.hpp"
 #include "snackis/core/time.hpp"
 
 namespace snabel {
@@ -167,6 +168,9 @@ namespace snabel {
 
     run_test(exe, "{safe '{\\'invalid\\' rfile}' eval} call call");
     CATCH(try_test, UnsafeCall, e) { }
+ 
+    run_test(exe, "42 uneval eval");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
   static void macro_tests() {
@@ -195,6 +199,9 @@ namespace snabel {
 
     run_test(exe, "macro: foo(x y) @y @x #-; 7 42 foo");
     CHECK(get<int64_t>(pop(exe.main)) == 35, _);
+
+    run_test(exe, "macro: foo(x) #let: @x 42 #;; bar foo @bar");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
   static void func_tests() {
