@@ -169,7 +169,7 @@ namespace snabel {
     run_test(exe, "{safe '{\\'invalid\\' rfile}' eval} call call");
     CATCH(try_test, UnsafeCall, e) { }
  
-    run_test(exe, "42 uneval eval");
+    run_test(exe, "[42] uneval eval pop");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
