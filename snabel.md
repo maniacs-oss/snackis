@@ -693,53 +693,7 @@ Error: Unsafe call not allowed: rfile
 ```
 
 ### Macros
-Macros allow generating custom code at compile time and sidestepping the rules of evaluation. Many systems these days spend a lot of energy on macro hygiene; while I'm all for simplifying the task of writing correct code, I'm not prepared to sacrifice intentional capture on the altar of purity; Snabel doesn't mind capturing names from the calling environment. Except for a core of fundamental functionality, much of Snabel itself is implemented as macros. Macros are lexically scoped; may take any number of arguments and return any number of tokens; symbols are automatically quoted, use backquote (`) to prevent evaluation of any other expression.
-
-```
-S: macro: foo 35 7 +;
-   foo
-
-42
-
-S: macro: foo 7 #+;
-   35 foo
-
-42
-
-S: macro: foo
-     let: bar 42;
-     #@bar;
-   foo
-
-Error: Unknown identifier: @bar
-
-S: let: bar 42;
-   macro: foo #@bar;
-   foo
-
-42
-
-S: macro: foo `(7 + 2 *);
-   14 foo
-
-42
-
-S: macro: foo(x y)
-     @y @x #-;
-   7 42 foo
-
-35
-
-S: macro: foo(x)
-     #let: @x 42 #;;
-   #bar foo
-   @bar
-
-42
-```
-
-#### C++
-A C++ macro takes an incoming sequence of tokens and an outgoing sequence of VM-operations as parameters, both lists may be modified from within the macro.
+A macro takes an incoming sequence of tokens and an outgoing sequence of VM-operations as parameters, both lists may be modified from within the macro.
 
 ```
 add_macro(*this, "let:", [this](auto pos, auto &in, auto &out) {

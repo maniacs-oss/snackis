@@ -59,14 +59,6 @@ namespace snabel {
 
   Macro &add_macro(Scope &scp, const str &n, Macro::Imp imp);
   Macro &add_macro(Exec &exe, const str &n, Macro::Imp imp);
-  Macro &add_macro(Scope &scp,
-		   const str &n,
-		   int nargs,
-		   const LambdaRef &lmb);
-  Macro &add_macro(Exec &exe,
-		   const str &n,
-		   int nargs,
-		   const LambdaRef &lmb);
 
   Type &get_meta_type(Exec &exe, Type &t);
   Type &add_type(Exec &exe, const Sym &n, bool meta=false);

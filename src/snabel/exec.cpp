@@ -624,83 +624,6 @@ namespace snabel {
     add_func(*this, "random", Func::Const, {ArgType(i64_type)}, random_imp);
     add_func(*this, "pop", Func::Safe, {ArgType(random_type)}, random_pop_imp);
 
-    add_macro(*this, "macro:", [this](auto pos, auto &in, auto &out) {
-	if (in.empty()) {
-	  ERROR(Snabel, fmt("Malformed macro definition on row %0, col %1",
-			    pos.row, pos.col));
-	  return;
-	} else {
-	  auto &n(in.at(0).text);
-	  in.pop_front();
-	  auto end(find_end(in.begin(), in.end()));
-	  OpSeq imp;
-	  imp.emplace_back(Begin(*this));
-	  ArgNames args;
-	  if (in.front().text == "(") { parse_args(*this, in, args); }
-
-	  for (auto a(args.rbegin()); a != args.rend(); a++) {
-	    imp.emplace_back(Putenv(*a));
-	  }
-
-	  compile(*this, TokSeq(in.begin(), end), imp);
-	  in.erase(in.begin(), (end == in.end()) ? end : std::next(end));
-	  imp.emplace_back(End(*this));
-	  if (!compile(*this, imp)) { return; }
-	  auto &thd(curr_thread(*this));
-	  run(thd);
-	  auto lmb(try_pop(thd));
-
-	  if (!lmb) {
-	    ERROR(Snabel, "Missing macro lambda");
-	    return;
-	  }
-	  
-	  add_macro(*this, n, args.size(), get<LambdaRef>(*lmb));
-	}
-      });
-
-    add_macro(*this, "`", [this, &scp](auto pos, auto &in, auto &out) {
-	static const std::map<str, str> delims {
-	  std::make_pair("(", ")"),
-	    std::make_pair("{", "}"),
-	    std::make_pair("[", "]") };
-
-	OutStream buf;
-	auto &tok(in.front());
-	buf << tok.text;
-	in.pop_front();
-	auto fnd(delims.find(tok.text));
-	
-	if (fnd != delims.end()) {
-	  str beg(fnd->first), end(fnd->second);
-	  int depth(1);
-	  str sep("");
-	  
-	  while (!in.empty() && depth) {
-	    auto &tok(in.front());
-	    
-	    if (tok.text == beg) {
-	      depth++;
-	    } else if (tok.text == end) {
-	      depth--;
-	    }
- 
-	    buf << sep << tok.text;
-	    in.pop_front();
-	    sep = " ";
-	  }
-
-	  if (depth) {
-	    ERROR(Snabel, fmt("Missing %0 at row %1, col %2", end, pos.row, pos.col));
-	    return;
-	  }
-	}
-
-	out.emplace_back(Push(Box(scp,
-				  quote_type,
-				  std::make_shared<str>(buf.str()))));
-      });
-    
     add_macro(*this, "{", [this](auto pos, auto &in, auto &out) {
 	out.emplace_back(Begin(*this));
       });
@@ -838,24 +761,6 @@ namespace snabel {
     return add_macro(curr_scope(curr_thread(exe)), n, imp);
   }
   
-  Macro &add_macro(Scope &scp,
-		   const str &n,
-		   int nargs,
-		   const LambdaRef &lmb) {
-    auto &exe(scp.exec);
-    auto &ns(get_sym(exe, n));
-    auto &m(exe.macros.emplace_back(exe, ns, nargs, lmb)); 
-    put_env(scp, ns, Box(scp, exe.macro_type, &m));
-    return m;
-  }
-
-  Macro &add_macro(Exec &exe,
-		   const str &n,
-		   int nargs,
-		   const LambdaRef &lmb) {
-    return add_macro(curr_scope(curr_thread(exe)), n, nargs, lmb);
-  }
-
   Type &get_meta_type(Exec &exe, Type &t) {    
     auto &n(get_sym(exe, fmt("Type<%0>", name(t.name))));
     auto fnd(find_type(exe, n));
@@ -1092,24 +997,6 @@ namespace snabel {
     
     while (!in.empty()) {
       auto &scp(curr_scope(exe));
-      int i(1);
-      
-      for (auto mt(std::next(in.begin()));
-	   mt != in.end() && i < MAX_MACRO_ARGS;
-	   mt++, i++) {
-	auto fnd(find_env(scp, mt->text));
-      
-	if (fnd && fnd->type == &exe.macro_type) {
-	  auto &m(*get<Macro *>(*fnd));
-	  if (m.nargs == i) {
-	    (m)(mt->pos, in, out);
-	    break;
-	  }
-	}	
-      }
-
-      if (in.empty()) { break; }
-
       Tok tok(in.at(0));
       in.pop_front();
 

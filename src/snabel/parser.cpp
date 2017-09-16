@@ -70,7 +70,7 @@ namespace snabel {
 
   void parse_expr(const str &in, size_t lnr, TokSeq &out) {
     static const std::set<char> split {
-      '{', '}', '(', ')', '[', ']', '|', ';', '.', '`'};
+      '{', '}', '(', ')', '[', ']', '|', ';', '.'};
 
     size_t i(0), j(0);
     char pc(0);
