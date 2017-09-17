@@ -166,6 +166,14 @@ namespace snabel {
   bool parse_args(Exec &exe, TokSeq &in, ArgNames &as, ArgTypes &ats) {
     auto &scp(curr_scope(exe));
     in.pop_front();
+    bool ok(false);
+
+    std::vector<str> tns;
+    
+    auto add_type([&](Sym pn, str n) {
+	put_env(scp, n, *find_env(scp, pn));
+	tns.push_back(n);
+      });
     
     while (!in.empty()) {
       auto &a(in.front().text);
@@ -174,21 +182,20 @@ namespace snabel {
 	in.pop_front();
 	int cnt(as.size()-ats.size());
 	for (int i(0); i < cnt; i++) { ats.push_back(ArgType(exe.any_type)); }
-	return true;
+	ok = true;
+	break;
       }
-
+      
       if (isupper(a.at(0))) {
 	auto t(parse_type(exe, a, 0).first);
 	if (!t) { return false; }
 	int cnt(as.size()-ats.size());
 	for (int i(0); i < cnt; i++) {
 	  if (in.size() > 1) {
-	    put_env(scp, fmt("T%0", ats.size()), *find_env(scp, t->name));
+	    add_type(t->name, fmt("T%0", ats.size()));
 
 	    for (int j(0); j < t->args.size(); j++) {
-	      put_env(scp,
-		      fmt("T%0:%1", ats.size(), j),
-		      *find_env(scp, t->args.at(j)->name));
+	      add_type(t->args.at(j)->name, fmt("T%0:%1", ats.size(), j));
 	    }
 	  }
 	  
@@ -201,8 +208,9 @@ namespace snabel {
       in.pop_front();
     }
 
-    ERROR(Snabel, "Unterminated argument list");
-    return false;
+    for (auto &tn: tns) { rem_env(scp, tn); }
+    if (!ok) { ERROR(Snabel, "Unterminated argument list"); }
+    return ok;
   }
   
   std::pair<Type *, size_t> parse_type(Exec &exe, const str &in, size_t i) {
