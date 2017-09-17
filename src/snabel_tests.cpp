@@ -347,6 +347,12 @@ namespace snabel {
 
     run_test(exe, "7 false {35 +} unless");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+
+    run_test(exe, "42 [&z? #zero. true nil.] select");
+    CHECK(nil(pop(exe.main)), _);
+
+    run_test(exe, "0 [&z? #zero. true nil.] select");
+    CHECK(name(get<Sym>(pop(exe.main))) == "zero", _);
   }
 
   static void sym_tests() {

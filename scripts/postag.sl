@@ -39,7 +39,7 @@ func: guess-tag(w)
    {@w 's' suffix?}
      #NNS.
    {true}
-     #NN.] cond;
+     #NN.] select;
 
 func: get-tag(w)
   @lookup @w get

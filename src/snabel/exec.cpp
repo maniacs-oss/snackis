@@ -99,7 +99,7 @@ namespace snabel {
     tgt.type->call(scp, tgt, false);
   }
 
-  static void cond_imp(Scope &scp, const Args &args) {
+  static void select_imp(Scope &scp, const Args &args) {
     auto &exe(scp.exec);
     auto in(args.at(0));
     auto it((*in.type->iter)(in));
@@ -575,9 +575,9 @@ namespace snabel {
 	     {ArgType(bool_type), ArgType(any_type), ArgType(any_type)},
 	     if_imp);
 
-    add_func(*this, "cond", Func::Pure,
+    add_func(*this, "select", Func::Pure,
 	     {ArgType(get_iterable_type(*this, pair_type))},
-	     cond_imp);
+	     select_imp);
 
     add_func(*this, "z?", Func::Pure, {ArgType(i64_type)}, zero_i64_imp);
     add_func(*this, "+?", Func::Pure, {ArgType(i64_type)}, pos_i64_imp);
