@@ -19,6 +19,7 @@ namespace snabel {
   }
 
   static void list_run_imp(Scope &scp, const Args &args) {
+    TRY(try_run);
     auto &ps(get<ListRef>(args.at(0)));
     bool done(false);
     
@@ -33,6 +34,8 @@ namespace snabel {
 	  i = ps->erase(i);
 	}
       }
+
+      if (!try_run.errors.empty()) { break; }
     }
   }
 

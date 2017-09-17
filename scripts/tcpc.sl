@@ -15,12 +15,12 @@ let: server tcp-socket @addr @port connect;
 let: in Bin list;
 let: out Bin list;
 
-func: do-send (
+func: do-send() (
   |_yield
   @in fifo @server write &_yield _for
 );
 
-func: do-recv (
+func: do-recv() (
   |_yield
 
   @server read {
@@ -34,7 +34,7 @@ func: do-recv (
   @do-out stop
 );
 
-func: do-in (
+func: do-in() (
   |_yield
 
   stdin read {
@@ -44,8 +44,7 @@ func: do-in (
   } for
 );
 
-
-func: do-out (
+func: do-out() (
   |_yield
   @out fifo stdout write &_yield _for
 );

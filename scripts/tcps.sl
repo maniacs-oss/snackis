@@ -20,16 +20,12 @@ let: server tcp-socket
      @addr @port bind
      1 accept;
 
-func: do-send (
-  let: q; _
-  let: c;
+func: do-send(c q) (
   |_yield
-
   @q fifo @c write &_yield _for
 );
 
-func: do-recv (
-  let: in;
+func: do-recv(in) (
   |_yield
 
   @in read {
@@ -50,15 +46,17 @@ func: do-recv (
   'disconnect' say
 );
 
-func: do-server (
+func: do-server() (
   |_yield
 
   @server {
     { 'connect' say
-      do-recv @procs $1 push
-      Bin list
-      do-send @procs $1 push
-      @clients $2 $2 put
+      let: c; _
+      let: q Bin list;
+
+      @c do-recv @procs $1 push
+      @c @q do-send @procs $1 push
+      @clients @c @q put
     } when
 
     _yield1
@@ -66,7 +64,7 @@ func: do-server (
   } for
 );
 
-func: do-out (
+func: do-out() (
   |_yield
   @out fifo stdout write &_yield _for
 );

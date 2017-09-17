@@ -19,9 +19,7 @@ let: server tcp-socket
      @in-addr @in-port bind
      1 accept;
 
-func: do-send (
-  let: out; _
-  let: in;
+func: do-send(in out) (
   |_yield
   
   @out read @in write &_yield _for
@@ -30,9 +28,7 @@ func: do-send (
   @out close
 );
 
-func: do-recv (
-  let: out; _
-  let: in;
+func: do-recv(in out) (
   |_yield
   
   @in read @out write &_yield _for
@@ -42,7 +38,7 @@ func: do-recv (
   'disconnect' say
 );
 
-func: do-server (
+func: do-server() (
   |_yield
 
   @server {
