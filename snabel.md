@@ -374,7 +374,7 @@ S: let: acc Str I64 table;
 ```
 
 #### Structs
-Structs may be used to create lexically scoped, composite data types. Constructors and typed field accessors are automatically created. All fields are expected to be initialized when read, reading uninitialized fields signals errors; use optional types for optional fields. An arbitrary number of super types may be listed after the struct name, fields with the same name share storage. Structs are iterable and produce a sequence of symbol/value-pairs. When redefining structs, fresh types are created each time; existing instances reference the previous type as do already compiled type literals.
+Structs may be used to create lexically scoped, composite data types. Constructors and typed field accessors are automatically created. All fields are expected to be initialized when read, reading uninitialized fields signals errors; use optional types for optional fields. Any number of super types may be listed after the struct name, fields with the same name share storage. Structs are iterable and produce a sequence of symbol/value-pairs. When redefining structs, fresh types are created each time; existing instances reference the previous type as do already compiled type literals.
 
 ```
 S: struct: Foo
@@ -521,7 +521,7 @@ S: 0 {+1 $ 42 = &break when} loop
 ```
 
 ### Functions
-Each function name represents a set of implementations that are matched in reverse declared order when resolving function calls. Prefixing the name of a function with ```&``` pushes it on the stack for later use. Function definitions support optional arguments with optional types, and require termination using ```;``` to separate them from surrounding code.
+Each function name represents a set of implementations that are matched in reverse declared order when resolving function calls. Prefixing the name of a function with ```&``` pushes it on the stack for later use. Function definitions support optional arguments with optional types, types may refer to previous arguments and any type parameters they carry using ```TN[:N]```; and require termination using ```;``` to separate them from surrounding code.
 
 ```
 S: func: foo 35 +; 7 foo
