@@ -2,6 +2,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include "snackis/core/io.hpp"
+
 #include "snabel/box.hpp"
 #include "snabel/error.hpp"
 #include "snabel/exec.hpp"
@@ -33,6 +35,11 @@ namespace snabel {
     OutStream buf;
     a.type->uneval(a, buf);
     push(scp, scp.exec.str_type, std::make_shared<str>(buf.str()));
+  }
+
+  static void load_imp(Scope &scp, const Args &args) {
+    auto in(slurp(get<Path>(args.at(0))));
+    if (in) { run(scp.exec, *in); }
   }
 
   static void safe_imp(Scope &scp, const Args &args) {
@@ -275,6 +282,7 @@ namespace snabel {
     list_type(add_type(*this, "List")),
     macro_type(add_type(*this, "Macro")),
     nop_type(add_type(*this, "Nop")),
+    num_type(add_type(*this, "Num")),
     opt_type(add_type(*this, "Opt")),
     ordered_type(add_type(*this, "Ordered")),
     pair_type(add_type(*this, "Pair")),
@@ -443,7 +451,7 @@ namespace snabel {
       TRY(try_call);
       auto &thd(scp.thread);
       auto &fn(*get<Func *>(v));
-      auto m(match(fn, scp));
+      auto m(match(fn, {}, scp));
       
       if (!m) {
 	ERROR(FuncApp, fn, curr_stack(thd));
@@ -454,8 +462,9 @@ namespace snabel {
       return (*m->first)(scp, m->second);
     };
 
-    i64_type.supers.push_back(&any_type);
-    i64_type.supers.push_back(&ordered_type);
+    num_type.supers.push_back(&ordered_type);
+
+    i64_type.supers.push_back(&num_type);
     i64_type.supers.push_back(&get_iterable_type(*this, i64_type));
     i64_type.fmt = [](auto &v) { return fmt_arg(get<int64_t>(v)); };
     i64_type.eq = [](auto &x, auto &y) { return get<int64_t>(x) == get<int64_t>(y); };
@@ -547,6 +556,7 @@ namespace snabel {
         
     add_func(*this, "eval", Func::Safe, {ArgType(str_type)}, eval_imp);
     add_func(*this, "uneval", Func::Safe, {ArgType(any_type)}, uneval_imp);
+    add_func(*this, "load", Func::Unsafe, {ArgType(path_type)}, load_imp);
     add_func(*this, "safe", Func::Safe, {}, safe_imp);
     
     add_func(*this, "is?", Func::Pure,

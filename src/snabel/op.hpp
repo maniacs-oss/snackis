@@ -101,12 +101,14 @@ namespace snabel {
   };
 
   struct Deref: OpImp {
-    const Sym name;
+    Sym name;
+    Types args;
     bool compiled;
     
     Deref(const Sym &name);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
+    bool prepare(Scope &scp) override;
     bool compile(const Op &op, Scope &scp, OpSeq & out) override;
     bool run(Scope &scp) override;
   };
@@ -167,8 +169,9 @@ namespace snabel {
   struct Funcall: OpImp {
     Func &fn;
     FuncImp *imp;
+    Types args;
     
-    Funcall(Func &fn);
+    Funcall(Func &fn, const Types &args={});
     OpImp &get_imp(Op &op) const override;
     str info() const override;
     bool prepare(Scope &scp) override;

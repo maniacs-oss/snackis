@@ -40,7 +40,7 @@ namespace snabel {
       &char_type, &coro_type, &drop_type, &file_type, &func_type, &i64_type,
       &iter_type,
       &iterable_type, &label_type, &lambda_type, &list_type, &macro_type, &nop_type,
-      &opt_type, &ordered_type, &pair_type,
+      &num_type, &opt_type, &ordered_type, &pair_type,
       &path_type, &quote_type, &readable_type, &rfile_type, &random_type, &rat_type,
       &rwfile_type, &str_type, &struct_type, &sym_type, &table_type, &tcp_server_type,
       &tcp_socket_type, &tcp_stream_type, &thread_type,

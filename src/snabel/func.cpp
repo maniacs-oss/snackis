@@ -91,7 +91,10 @@ namespace snabel {
     return fn.imps.emplace_front(fn, sec, args, lmb);
   }
 
-  opt<Args> match(const FuncImp &imp, Scope &scp, bool conv_args) {
+  opt<Args> match(const FuncImp &imp,
+		  const Types &types,
+		  Scope &scp,
+		  bool conv_args) {
     auto &exe(scp.exec);
     auto &thd(scp.thread);
     auto &s(curr_stack(thd));
@@ -100,12 +103,19 @@ namespace snabel {
     if (imp.args.empty()) { return as; }
     auto i(as.rbegin());
     auto j(imp.args.rbegin());
+    auto ti(types.begin());
     
     while (i != as.rend() && j != imp.args.rend()) {
       auto &a(*i);
       if (a.safe_level != scp.safe_level) { ERROR(UnsafeStack); }
-      auto t(get_type(imp, *j, as));
       
+      auto t(get_type(imp, *j, as));
+
+      if (ti != types.end()) {
+	if (!j->type || !isa(thd, **ti, *j->type)) { return nullopt; }
+	ti++;
+      }
+
       if (!t || (!isa(thd, a, *t) && (!conv_args || !conv(exe, a, *t)))) {
 	return nullopt;
       }
@@ -117,12 +127,15 @@ namespace snabel {
     return as;
   }
   
-  opt<std::pair<FuncImp *, Args>> match(Func &fn, Scope &scp, bool conv_args) {
+  opt<std::pair<FuncImp *, Args>> match(Func &fn,
+					const Types &types,
+					Scope &scp,
+					bool conv_args) {
     for (auto &imp: fn.imps) {
-      auto args(match(imp, scp, conv_args));
+      auto args(match(imp, types, scp, conv_args));
       if (args) { return std::make_pair(&imp, *args); }
     }
 
-    return conv_args ? nullopt : match(fn, scp, true);
+    return conv_args ? nullopt : match(fn, types, scp, true);
   }
 }

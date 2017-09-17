@@ -205,7 +205,7 @@ namespace snabel {
     if (!ok) { ERROR(Snabel, "Unterminated argument list"); }
     return ok;
   }
-  
+
   std::pair<Type *, size_t> parse_type(Exec &exe, const str &in, size_t i) {
     while (in[i] == ' ') { i++; }
 

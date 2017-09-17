@@ -43,8 +43,7 @@ namespace snabel {
   }
 
   void init_rats(Exec &exe) {
-    exe.rat_type.supers.push_back(&exe.any_type);
-    exe.rat_type.supers.push_back(&exe.ordered_type);
+    exe.rat_type.supers.push_back(&exe.num_type);
 
     exe.rat_type.uneval = [](auto &v, auto &out) {
       auto &r(get<Rat>(v));

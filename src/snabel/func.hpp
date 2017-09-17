@@ -7,6 +7,7 @@
 #include "snabel/error.hpp"
 #include "snabel/refs.hpp"
 #include "snabel/sym.hpp"
+#include "snabel/type.hpp"
 #include "snackis/core/func.hpp"
 #include "snackis/core/opt.hpp"
 #include "snackis/core/uid.hpp"
@@ -79,8 +80,9 @@ namespace snabel {
 		   int sec,
 		   const ArgTypes &args,
 		   const LambdaRef &lmb);
-  opt<Args> match(const FuncImp &imp, Scope &scp, bool conv_args);
+  opt<Args> match(const FuncImp &imp, const Types &types, Scope &scp, bool conv_args);
   opt<std::pair<FuncImp *, Args>> match(Func &fn,
+					const Types &types,
 					Scope &scp,
 					bool conv_args=false);
 }

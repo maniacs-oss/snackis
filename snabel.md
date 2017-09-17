@@ -543,6 +543,16 @@ S: func: foo(x List<Any> y 0:0)
    pop
 
 14
+
+S: func: foo(x Num) @x 7 +;
+   func: foo(x I64) @x 14 +;
+   35 foo
+
+49
+
+S: 35 foo<Num>
+
+42
 ```
 
 #### C++

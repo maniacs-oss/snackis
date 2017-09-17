@@ -6,27 +6,13 @@
 #include "snabel/exec.hpp"
 #include "snabel/io.hpp"
 #include "snabel/snabel.hpp"
+#include "snackis/core/io.hpp"
 #include "snackis/core/opt.hpp"
 #include "snackis/core/str.hpp"
 #include "snackis/core/stream.hpp"
 
 using namespace snabel;
 using namespace snackis;
-
-static opt<str> slurp(const str &fn) {
-  std::ifstream f;
-  f.open(fn, std::ifstream::in);
-  
-  if (f.fail()) {
-    ERROR(Snabel, fmt("Failed opening file: %0", fn));
-    return nullopt;
-  }
-
-  OutStream buf;
-  buf << f.rdbuf();
-  f.close();
-  return buf.str();
-}
 
 static void say_imp(Scope &scp, const Args &args) {
   std::cout << *get<StrRef>(args.at(0)) << std::endl;

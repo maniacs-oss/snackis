@@ -194,16 +194,35 @@ namespace snabel {
 
   str Deref::info() const { return snabel::name(name); }
 
+  bool Deref::prepare(Scope &scp) {
+    auto &exe(scp.exec);
+    str in(snabel::name(name));
+    auto i(in.find('<'));
+
+    if (i != str::npos) {
+      name = get_sym(exe, in.substr(0, i));
+      i++;
+      
+      while (i < in.size()) {
+	auto res(parse_type(exe, in, i));
+	if (!res.first) { break; }
+	i = res.second;
+	args.push_back(res.first);
+      }
+    }
+
+    return true;
+  }
+  
   bool Deref::compile(const Op &op, Scope &scp, OpSeq &out) {
     if (compiled) { return false; }
-    
     compiled = true;
     auto &exe(scp.exec);
     auto fnd(find_env(scp, name));
     if (!fnd) { return false; }
 
     if (fnd->type == &exe.func_type) {
-      out.emplace_back(Funcall(*get<Func *>(*fnd)));
+      out.emplace_back(Funcall(*get<Func *>(*fnd), args));
     } else {
       return false;
     }
@@ -219,6 +238,20 @@ namespace snabel {
       return false;
     }
 
+    if (fnd->type == &scp.exec.func_type) {
+      TRY(try_call);
+      auto &fn(*get<Func *>(*fnd));
+      auto m(match(fn, args, scp));
+      
+      if (!m) {
+	ERROR(FuncApp, fn, curr_stack(scp.thread));
+	return false;
+      }
+
+      if (!try_call.errors.empty()) { return false; }
+      return (*m->first)(scp, m->second);
+    }
+    
     return fnd->type->call(scp, *fnd, false);
   }
 
@@ -508,8 +541,8 @@ namespace snabel {
     iter(itr), target(tgt)
   { }
 
-  Funcall::Funcall(Func &fn):
-    OpImp(OP_FUNCALL, "funcall"), fn(fn), imp(nullptr)
+  Funcall::Funcall(Func &fn, const Types &args):
+    OpImp(OP_FUNCALL, "funcall"), fn(fn), imp(nullptr), args(args)
   { }
 
   OpImp &Funcall::get_imp(Op &op) const {
@@ -537,7 +570,7 @@ namespace snabel {
     auto &thd(scp.thread);
     
     if (imp) {
-      auto m(match(*imp, scp, true));
+      auto m(match(*imp, args, scp, true));
 
       if (m) {
 	(*imp)(scp, *m);
@@ -545,7 +578,7 @@ namespace snabel {
       }
     }
 
-    auto m(match(fn, scp));
+    auto m(match(fn, args, scp));
     
     if (!m) {
       ERROR(FuncApp, fn, curr_stack(thd));
