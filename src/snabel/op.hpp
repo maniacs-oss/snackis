@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "snabel/box.hpp"
+#include "snabel/func.hpp"
 #include "snabel/label.hpp"
 #include "snabel/type.hpp"
 #include "snabel/uid.hpp"
@@ -21,11 +22,10 @@ namespace snabel {
   struct Scope;
   struct Op;
   
-  enum OpCode { OP_BACKUP, OP_BEGIN, OP_BREAK, OP_CALL, OP_CAPTURE, OP_DEREF,
-		OP_DROP, OP_DUP,
-		OP_END, OP_FMT, OP_FOR, OP_FUNCALL, OP_GETENV, OP_JUMP, OP_LOOP,
-		OP_PUSH, OP_PUTENV, OP_RECALL, OP_RESET, OP_RESTORE,
-		OP_RETURN, OP_STASH, OP_SWAP, OP_TARGET,
+  enum OpCode { OP_BACKUP, OP_BEGIN, OP_BREAK, OP_CALL, OP_CAPTURE, OP_DEFUNC,
+		OP_DEREF, OP_DROP, OP_DUP, OP_END, OP_FMT, OP_FOR, OP_FUNCALL, 
+		OP_GETENV, OP_JUMP, OP_LOOP, OP_PUSH, OP_PUTENV, OP_RECALL, 
+		OP_RESET, OP_RESTORE, OP_RETURN, OP_STASH, OP_SWAP, OP_TARGET,
 	        OP_YIELD };
 
   using OpSeq = std::deque<Op>;
@@ -90,13 +90,13 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
 
-  struct Drop: OpImp {
-    size_t count;
-
-    Drop(size_t count);
+  struct Defunc: OpImp {
+    Sym name;
+    ArgTypes args;
+    
+    Defunc(const Sym &name, const ArgTypes &args);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
-    bool compile(const Op &op, Scope &scp, OpSeq & out) override;
     bool run(Scope &scp) override;
   };
 
@@ -105,6 +105,16 @@ namespace snabel {
     bool compiled;
     
     Deref(const Sym &name);
+    OpImp &get_imp(Op &op) const override;
+    str info() const override;
+    bool compile(const Op &op, Scope &scp, OpSeq & out) override;
+    bool run(Scope &scp) override;
+  };
+
+  struct Drop: OpImp {
+    size_t count;
+
+    Drop(size_t count);
     OpImp &get_imp(Op &op) const override;
     str info() const override;
     bool compile(const Op &op, Scope &scp, OpSeq & out) override;
@@ -288,9 +298,9 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
 
-  using OpData = std::variant<Backup, Begin, Break, Call, Capture, Deref, Drop, Dup,
-			      End, Fmt, For, Funcall, Getenv, Jump, Loop, Push,
-			      Putenv, Recall, Reset, Restore, Return, Stash,
+  using OpData = std::variant<Backup, Begin, Break, Call, Capture, Defunc, Deref, 
+			      Drop, Dup, End, Fmt, For, Funcall, Getenv, Jump, Loop, 
+			      Push, Putenv, Recall, Reset, Restore, Return, Stash,
 			      Swap, Target, Yield>;
 
   using OpState = std::variant<For::State, Loop::State>;

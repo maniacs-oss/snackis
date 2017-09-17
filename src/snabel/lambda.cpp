@@ -15,8 +15,8 @@ namespace snabel {
     }
   }
 
-  void call(const LambdaRef &lmb, Scope &scp, bool now) {
+  bool call(const LambdaRef &lmb, Scope &scp, bool now) {
     scp.thread.lambda = lmb;
-    call(scp, lmb->label, now);
+    return call(scp, lmb->label, now);
   }
 }

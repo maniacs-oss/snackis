@@ -128,9 +128,10 @@ namespace snabel {
     }
   }
 
-  void call(Scope &scp, const Label &lbl, bool now) {
+  bool call(Scope &scp, const Label &lbl, bool now) {
     if (scp.return_pc != -1) {
       ERROR(Snabel, fmt("Overwriting return: ", scp.return_pc));
+      return false;
     }
     
     scp.return_pc = scp.thread.pc+1;
@@ -138,9 +139,12 @@ namespace snabel {
 
     if (now) {
       auto ret_pc(scp.return_pc);
-      run(scp.thread, scp.return_pc);
+      bool res(run(scp.thread, scp.return_pc));
       if (scp.thread.pc == ret_pc) { scp.thread.pc--; }
+      return res;
     }
+
+    return true;
   }
 
   bool yield(Scope &scp, int64_t depth, bool push_result) {

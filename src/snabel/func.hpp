@@ -4,6 +4,7 @@
 #include <deque>
 #include <vector>
 
+#include "snabel/refs.hpp"
 #include "snabel/sym.hpp"
 #include "snackis/core/func.hpp"
 #include "snackis/core/opt.hpp"
@@ -42,13 +43,19 @@ namespace snabel {
     const int sec;
     ArgTypes args;
     Imp imp;
+    LambdaRef lambda;
     
     FuncImp(Func &fn,
 	    int sec,
 	    const ArgTypes &args,
 	    Imp imp);
-    void operator ()(Scope &scp, const Args &args);
-    void operator ()(Scope &scp);
+    
+    FuncImp(Func &fn,
+	    int sec,
+	    const ArgTypes &args,
+	    const LambdaRef &lmb);
+
+    bool operator ()(Scope &scp, const Args &args);
   };
 
   struct Func {
@@ -67,6 +74,10 @@ namespace snabel {
 		   int sec,
 		   const ArgTypes &args,
 		   FuncImp::Imp imp);
+  FuncImp &add_imp(Func &fn,
+		   int sec,
+		   const ArgTypes &args,
+		   const LambdaRef &lmb);
   opt<Args> match(const FuncImp &imp, Scope &scp, bool conv_args);
   opt<std::pair<FuncImp *, Args>> match(Func &fn,
 					Scope &scp,

@@ -162,6 +162,28 @@ namespace snabel {
     return true;
   }
 
+  Defunc::Defunc(const Sym &name, const ArgTypes &args):
+    OpImp(OP_DEFUNC, "defunc"), name(name), args(args)
+  { }
+
+  OpImp &Defunc::get_imp(Op &op) const {
+    return std::get<Defunc>(op.data);
+  }
+
+  str Defunc::info() const { return snabel::name(name); }
+
+  bool Defunc::run(Scope &scp) {
+    auto lmb(try_pop(scp.thread));
+
+    if (!lmb) {
+      ERROR(Snabel, fmt("Missing function lamda: %0", snabel::name(name)));
+      return false;
+    }
+
+    add_func(scp.exec, name, Func::Safe, args, get<LambdaRef>(*lmb));
+    return true;
+  }
+
   Deref::Deref(const Sym &name):
     OpImp(OP_DEREF, "deref"), name(name), compiled(false)
   { }
@@ -541,13 +563,7 @@ namespace snabel {
       if (!dynamic_cast<RedefineError *>(e)) { return false; }
     }
 
-    (*imp)(scp, m->second);
-
-    for (auto e: try_funcall.errors) {
-      if (!dynamic_cast<RedefineError *>(e)) { return false; }
-    }
-
-    return true;
+    return(*imp)(scp, m->second);
   }
   
   Getenv::Getenv(opt<Sym> id):

@@ -16,11 +16,23 @@ namespace snabel {
 		   Imp imp):
     func(fn), sec(sec), args(args), imp(imp)
   { }
-  
-  void FuncImp::operator ()(Scope &scp, const Args &args) {
+
+  FuncImp::FuncImp(Func &fn,
+		   int sec,
+		   const ArgTypes &args,
+		   const LambdaRef &lmb):
+    func(fn), sec(sec), args(args), lambda(lmb)
+  { }
+
+  bool FuncImp::operator ()(Scope &scp, const Args &args) {
+    if (lambda) {
+      return call(lambda, scp, true);
+    }
+
     auto &s(curr_stack(scp.thread));
     s.erase(std::next(s.begin(), s.size()-args.size()), s.end());
     imp(scp, args);
+    return true;
   }
 
   Func::Func(const Sym &n):
@@ -70,6 +82,13 @@ namespace snabel {
 		   const ArgTypes &args,
 		   FuncImp::Imp imp) {
     return fn.imps.emplace_front(fn, sec, args, imp);
+  }
+
+  FuncImp &add_imp(Func &fn,
+		   int sec,
+		   const ArgTypes &args,
+		   const LambdaRef &lmb) {
+    return fn.imps.emplace_front(fn, sec, args, lmb);
   }
 
   opt<Args> match(const FuncImp &imp, Scope &scp, bool conv_args) {

@@ -49,7 +49,7 @@ namespace snabel {
   bool rem_env(Scope &scp, const str &key);
   void reset_stack(Scope &scp);
   void jump(Scope &scp, const Label &lbl);
-  void call(Scope &scp, const Label &lbl, bool now=false);
+  bool call(Scope &scp, const Label &lbl, bool now=false);
   bool _return(Scope &scp, int64_t depth, bool push_result);
   bool recall(Scope &scp, int64_t depth);
   void recall_return(Scope &scp);

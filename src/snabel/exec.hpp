@@ -69,12 +69,6 @@ namespace snabel {
   Type &get_opt_type(Exec &exe, Type &elt);
   Type &get_iter_type(Exec &exe, Type &elt);
   Type &get_iterable_type(Exec &exe, Type &elt);
-
-  FuncImp &add_func(Exec &exe,
-		    const Sym &n,
-		    int sec,
-		    const ArgTypes &args,
-		    FuncImp::Imp imp);
   
   FuncImp &add_func(Exec &exe,
 		    const str &n,
@@ -120,6 +114,30 @@ namespace snabel {
     }
 
     return nullptr;
+  }
+
+  template <typename T>
+  FuncImp &add_func(Exec &exe,
+		    const Sym &n,
+		    int sec,
+		    const ArgTypes &args,
+		    T imp) {
+    auto fnd(exe.funcs.find(n));
+    auto &scp(curr_scope(exe));
+
+    if (fnd == exe.funcs.end()) {
+      auto &fn(exe.funcs.emplace(std::piecewise_construct,
+				  std::forward_as_tuple(n),
+				  std::forward_as_tuple(n)).first->second);
+      put_env(scp, n, Box(scp, exe.func_type, &fn));
+      return add_imp(fn, sec, args, imp);
+    }
+
+    if (!find_env(scp, n)) {
+      put_env(scp, n, Box(scp, exe.func_type, &fnd->second));
+    }
+    
+    return add_imp(fnd->second, sec, args, imp);
   }
 }
 

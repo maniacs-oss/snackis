@@ -452,8 +452,7 @@ namespace snabel {
       }
 
       if (!try_call.errors.empty()) { return false; }
-      (*m->first)(scp, m->second);
-      return true;
+      return (*m->first)(scp, m->second);
     };
 
     i64_type.supers.push_back(&any_type);
@@ -670,17 +669,20 @@ namespace snabel {
 	  const str n(in.at(0).text);
 	  in.pop_front();
 	  auto end(find_end(in.begin(), in.end()));
-	  ArgNames args;
-	  if (in.front().text == "(") { parse_args(*this, in, args); }
+	  ArgNames as;
+	  ArgTypes ats;
+	  
+	  if (in.front().text == "(") { parse_args(*this, in, as); }
 
-	  for (auto a(args.rbegin()); a != args.rend(); a++) {
+	  for (auto a(as.rbegin()); a != as.rend(); a++) {
 	    out.emplace_back(Putenv(*a));
+	    ats.push_back(ArgType(any_type));
 	  }
 	  
 	  compile(*this, TokSeq(in.begin(), end), out);
 	  in.erase(in.begin(), (end == in.end()) ? end : std::next(end));
 	  out.emplace_back(End(*this));
-	  out.emplace_back(Putenv(get_sym(*this, n)));
+	  out.emplace_back(Defunc(get_sym(*this, n), ats));
 	}
       });
 
@@ -874,36 +876,13 @@ namespace snabel {
   }
       
   FuncImp &add_func(Exec &exe,
-		    const Sym &n,
-		    int sec,
-		    const ArgTypes &args,
-		    FuncImp::Imp imp) {
-    auto fnd(exe.funcs.find(n));
-    auto &scp(curr_scope(exe));
-
-    if (fnd == exe.funcs.end()) {
-      auto &fn(exe.funcs.emplace(std::piecewise_construct,
-				  std::forward_as_tuple(n),
-				  std::forward_as_tuple(n)).first->second);
-      put_env(scp, n, Box(scp, exe.func_type, &fn));
-      return add_imp(fn, sec, args, imp);
-    }
-
-    if (!find_env(scp, n)) {
-      put_env(scp, n, Box(scp, exe.func_type, &fnd->second));
-    }
-    
-    return add_imp(fnd->second, sec, args, imp);
-  }
-
-  FuncImp &add_func(Exec &exe,
 		    const str &n,
 		    int sec,
 		    const ArgTypes &args,
 		    FuncImp::Imp imp) {
     return add_func(exe, get_sym(exe, n), sec, args, imp);
   }
-  
+
   Label &add_label(Exec &exe, const Sym &tag, bool pmt) {
     auto res(exe.labels
 	     .emplace(std::piecewise_construct,
