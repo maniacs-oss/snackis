@@ -542,13 +542,14 @@ S: func: foo(x I64) 42; 'bar' foo
 
 Error: Function not applicable: foo
 
-S: func: foo(x I64 y List<T0> z T1:0)
-     @y pop;
+S: func: foo(x List<Any> y 0:0)
+     @x @y push;
 
-   7 [14] 21 foo
+   [7]
+   $ 14 foo
+   pop
 
 14
-
 ```
 
 #### C++

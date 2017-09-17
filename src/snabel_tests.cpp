@@ -122,14 +122,15 @@ namespace snabel {
 
     as.clear();
     ats.clear();
-    parse_expr("(foo I64 bar List<T0> baz T1:0)", 0, ts);
+    parse_expr("(x Str y List<I64> z 1:0)", 0, ts);
     parse_args(exe, ts, as, ats);
     CHECK(ts.empty(), _);
     CHECK(as.size() == 3, _);
     CHECK(ats.size() == 3, _);
-    CHECK(ats.at(0).type == &exe.i64_type, _);
+    CHECK(ats.at(0).type == &exe.str_type, _);
     CHECK(ats.at(1).type == &get_list_type(exe, exe.i64_type), _);
-    CHECK(ats.at(2).type == &exe.i64_type, _);
+    CHECK(*ats.at(2).arg_idx == 1, _);
+    CHECK(*ats.at(2).type_arg_idx == 0, _);
   }
 
   static void parse_tests() {
@@ -210,7 +211,7 @@ namespace snabel {
 	"7 @bar call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run_test(exe, "func: foo(x I64 y List<T0> z T1:0) @y pop; 7 [14] 21 foo");
+    run_test(exe, "func: foo(x List<Any> y 0:0) @x @y push; [7] $ 14 foo pop");
     CHECK(get<int64_t>(pop(exe.main)) == 14, _);
 
     run_test(exe, "func: foo(x I64) 42; 'bar' foo");

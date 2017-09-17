@@ -164,17 +164,9 @@ namespace snabel {
   }
 
   bool parse_args(Exec &exe, TokSeq &in, ArgNames &as, ArgTypes &ats) {
-    auto &scp(curr_scope(exe));
     in.pop_front();
     bool ok(false);
 
-    std::vector<str> tns;
-    
-    auto add_type([&](Sym pn, str n) {
-	put_env(scp, n, *find_env(scp, pn));
-	tns.push_back(n);
-      });
-    
     while (!in.empty()) {
       auto &a(in.front().text);
 
@@ -190,16 +182,18 @@ namespace snabel {
 	auto t(parse_type(exe, a, 0).first);
 	if (!t) { return false; }
 	int cnt(as.size()-ats.size());
-	for (int i(0); i < cnt; i++) {
-	  if (in.size() > 1) {
-	    add_type(t->name, fmt("T%0", ats.size()));
-
-	    for (int j(0); j < t->args.size(); j++) {
-	      add_type(t->args.at(j)->name, fmt("T%0:%1", ats.size(), j));
-	    }
-	  }
-	  
-	  ats.push_back(ArgType(*t));
+	for (int i(0); i < cnt; i++) { ats.push_back(ArgType(*t)); }
+      } else if (isdigit(a.at(0))) {
+	int cnt(as.size()-ats.size());
+	auto si(a.find(':'));
+	
+	if (si == str::npos) {
+	  auto i(to_int64(a));
+	  for (int j(0); j < cnt; j++) { ats.push_back(ArgType(i)); }
+	} else {
+	  auto i(to_int64(a.substr(0, si)));
+	  auto j(to_int64(a.substr(si+1)));
+	  for (int k(0); k < cnt; k++) { ats.push_back(ArgType(i, j)); }
 	}
       } else {
 	as.push_back(get_sym(exe, fmt("@%0", a)));
@@ -208,7 +202,6 @@ namespace snabel {
       in.pop_front();
     }
 
-    for (auto &tn: tns) { rem_env(scp, tn); }
     if (!ok) { ERROR(Snabel, "Unterminated argument list"); }
     return ok;
   }
