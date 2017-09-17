@@ -682,7 +682,12 @@ namespace snabel {
 	  compile(*this, TokSeq(in.begin(), end), out);
 	  in.erase(in.begin(), (end == in.end()) ? end : std::next(end));
 	  out.emplace_back(End(*this));
-	  out.emplace_back(Defunc(get_sym(*this, n), ats));
+	  
+	  if (as.empty()) {
+	    out.emplace_back(Putenv(get_sym(*this, n)));
+	  } else {
+	    out.emplace_back(Defunc(get_sym(*this, n), ats));
+	  }
 	}
       });
 
