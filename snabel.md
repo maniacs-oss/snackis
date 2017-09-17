@@ -514,7 +514,7 @@ S: 0 {+1 $ 42 = &break when} loop
 ```
 
 ### Functions
-Each function name represents a set of implementations that are matched in reverse declared order when resolving function calls. Prefixing the name of a function with ```&``` pushes it on the stack for later use. Function definitions support optional arguments with optional types, types may refer to previous arguments and any type parameters they carry using ```TN[:N]```; and require termination using ```;``` to separate them from surrounding code.
+Each function name represents a set of implementations that are matched in reverse declared order when resolving function calls. Prefixing the name of a function with ```&``` pushes it on the stack for later use. Functions support optional arguments with optional types, types may refer to other arguments and their type parameters using ```N[:N]```; and require termination using ```;``` to separate them from surrounding code.
 
 ```
 S: func: foo 35 +; 7 foo
