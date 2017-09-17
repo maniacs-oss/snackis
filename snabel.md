@@ -378,33 +378,26 @@ Structs may be used to create lexically scoped, composite data types. Constructo
 
 ```
 S: struct: Foo
-     a b I64
-     c   Str;
-     
+     a I64 b c;
+
    Foo new Foo is?
 
 true
 
-S: func: make-foo
-     Foo new
-     $ 7 set-a
-     $ 35 set-b
-     $ 'bar' set-c;
-     
-   make-foo
+S: Foo new
+   $ 7 set-a
+   $ 14 set-b
+   $ 'bar' set-c;
    
-Foo(a 7. b 35. c 'bar'.)
+Foo(a 7. b 14. c 'bar'.)
 
-S: make-foo $ 42 set-a
+S: Foo new $ 21 set-c list
 
-Foo(a 42. b ''.)
-
-S: make-foo $ 'bar' set-b list
-
-[#a 0. #b 'bar'.]
+[#c 21.]
 
 S: struct: Bar Foo
      d List<Str>;
+
    Bar new Foo is?
    
 true
