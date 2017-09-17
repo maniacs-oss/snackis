@@ -585,19 +585,19 @@ namespace snabel {
   static void struct_tests() {
     TRY(try_test);    
 
-    run_test(exe, "struct: Foo a I64; Foo new Foo is?");
+    run_test(exe, "struct: Foo a; Foo new Foo is?");
     CHECK(get<bool>(pop(exe.main)), _);
 
-    run_test(exe, "struct: Foo a I64; Foo new 42 set-a a");
+    run_test(exe, "struct: Foo a b I64 c Str; Foo new $ 42 set-b b");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run_test(exe, "struct: Foo a I64; struct: Bar Foo b Str; Bar new 42 set-a a");
+    run_test(exe, "struct: Foo a I64; struct: Bar Foo b Str; Bar new $ 42 set-a a");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run_test(exe, "struct: Foo a I64; Foo new 42 set-a list pop right");
+    run_test(exe, "struct: Foo a I64; Foo new $ 42 set-a list pop right");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
-    run_test(exe, "struct: Foo a I64; Foo new 42 set-a table len");
+    run_test(exe, "struct: Foo a I64; Foo new $ 42 set-a table len");
     CHECK(get<int64_t>(pop(exe.main)) == 1, _);
 
     run_test(exe, "{struct: Foo a I64;} call Foo new");

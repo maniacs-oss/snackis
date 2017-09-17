@@ -72,95 +72,99 @@ namespace snabel {
 	  ERROR(Snabel, fmt("Malformed struct definition on row %0, col %1",
 			    pos.row, pos.col));
 	  return;
-	} else {
-	  auto &n(in.at(0).text);
-	  
-	  if (!isupper(n.at(0))) {
-	    ERROR(Snabel, fmt("Struct name should be capitalized: %0", n));
-	    return;
-	  }
-	  
-	  auto &ns(get_sym(exe, n));
-	  auto &t(add_struct_type(exe, ns));
+	}
 
-	  in.pop_front();
-	  auto end(find_end(in.begin(), in.end()));
-	  auto &thd(curr_thread(exe));
+	auto &n(in.at(0).text);
 	  
-	  while (in.begin() != end) {
-	    auto fn(in.front().text);
-	    auto &fns(get_sym(exe, in.front().text));
-	    in.pop_front();
+	if (!isupper(n.at(0))) {
+	  ERROR(Snabel, fmt("Struct name should be capitalized: %0", n));
+	  return;
+	}
+	  
+	auto &ns(get_sym(exe, n));
+	auto &t(add_struct_type(exe, ns));
 
-	    if (isupper(fn.at(0))) {
-	      auto st(parse_type(exe, fn, 0).first);
-	      if (!st) { break; }
+	in.pop_front();
+	auto end(find_end(in.begin(), in.end()));
+	auto &thd(curr_thread(exe));
+	  
+	while (in.begin() != end) {
+	  auto tn(in.front().text);
+	  if (!isupper(tn.at(0))) { break; }
+	  in.pop_front();	    
 
-	      if (!isa(thd, *st, exe.struct_type)) {
-		ERROR(Snabel, fmt("Invalid super struct: %0", name(st->name)));
-		break;
-	      }
-	      
-	      t.supers.push_back(st);
-	      continue;
-	    }
+	  auto st(parse_type(exe, tn, 0).first);
+	  if (!st) { break; }
 	    
-	    if (in.begin() == end) {
-	      ERROR(Snabel, fmt("Malformed struct definition on row %0, col %1",
-				pos.row, pos.col));
-	      break;
-	    }
-       
-	    str ftn(in.front().text);
-	    in.pop_front();
-	    auto pft(parse_type(exe, ftn, 0).first);
+	  if (!isa(thd, *st, exe.struct_type)) {
+	    ERROR(Snabel, fmt("Invalid super struct: %0", name(st->name)));
+	    break;
+	  }
+	    
+	  t.supers.push_back(st);
+	  continue;
+	}
 
-	    if (!pft) { break; }
+	std::vector<str> field_names;
 
-	    auto &ft(*pft);
-
-	    add_func(exe, fns, Func::Const,
-		     {ArgType(t)},
-		     [n, &fns, &ft](auto &scp, auto &args) {
-		       auto &thd(scp.thread);
-		       auto &self(args.at(0));
-		       auto &fs(get<StructRef>(self)->fields);
-		       auto fnd(fs.find(fns));
-		       push(thd, self);
+	auto add_fields([&](auto &ft) {
+	    for (auto &fn: field_names) {
+	      auto fns(get_sym(exe, fn));
+		
+	      add_func(exe, fns, Func::Const,
+		       {ArgType(t)},
+		       [n, fn, fns, &ft](auto &scp, auto &args) {
+			 auto &thd(scp.thread);
+			 auto &self(args.at(0));
+			 auto &fs(get<StructRef>(self)->fields);
+			 auto fnd(fs.find(fns));
 		       
-		       if (fnd == fs.end()) {
-			 ERROR(Snabel, 
-			       snackis::fmt("Reading uninitialized field: %0.%1",
-					    n, name(fns)));
-			 
-			 push(scp, ft);
-		       } else {
-			 push(thd, fnd->second);
-		       }
-		     });
+			 if (fnd == fs.end()) {
+			   ERROR(Snabel, 
+				 snackis::fmt("Reading uninitialized field: %0.%1",
+					      n, fn));
+			 } else {
+			   push(thd, fnd->second);
+			 }
+		       });
 	    
-	    add_func(exe, snackis::fmt("set-%0", fn), Func::Safe,
-		     {ArgType(t), ArgType(ft)},
-		     [&fns](auto &scp, auto &args) {
-		       auto &self(args.at(0));
-		       auto &fs(get<StructRef>(self)->fields);
-		       auto &v(args.at(1));
-		       auto res(fs.emplace(std::piecewise_construct,
-					   std::forward_as_tuple(fns),
-					   std::forward_as_tuple(v)));
-		       if (!res.second) { res.first->second = v; }
-		       push(scp.thread, self);
-		     });
-	  }
-
-	  if (in.at(0).text != ";") {
-	    ERROR(Snabel, fmt("Malformed struct definition on row %0, col %1",
-			      pos.row, pos.col));
-	    return;
+	      add_func(exe, snackis::fmt("set-%0", fn), Func::Safe,
+		       {ArgType(t), ArgType(ft)},
+		       [fns](auto &scp, auto &args) {
+			 auto &self(args.at(0));
+			 auto &fs(get<StructRef>(self)->fields);
+			 auto &v(args.at(1));
+			 auto res(fs.emplace(std::piecewise_construct,
+					     std::forward_as_tuple(fns),
+					     std::forward_as_tuple(v)));
+			 if (!res.second) { res.first->second = v; }
+		       });		
+	    }
+	  });
+	  
+	while (in.begin() != end) {	           
+	  str &tok(in.front().text);
+	    
+	  if (isupper(tok.at(0))) {
+	    auto ft(parse_type(exe, tok, 0).first);
+	    if (!ft) { break; }
+	    add_fields(*ft);
+	  } else {
+	    field_names.push_back(tok);
 	  }
 
 	  in.pop_front();
 	}
+
+	if (!field_names.empty()) { add_fields(exe.any_type); }
+
+	if (in.at(0).text != ";") {
+	  ERROR(Snabel, fmt("Malformed struct definition on row %0, col %1",
+			    pos.row, pos.col));
+	  return;
+	}
+	
+	in.pop_front();
       });
   }
 
