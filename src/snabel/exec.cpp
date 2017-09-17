@@ -446,8 +446,7 @@ namespace snabel {
       auto m(match(fn, scp));
       
       if (!m) {
-	ERROR(Snabel, fmt("Function not applicable: %0\n%1", 
-			  name(fn.name), curr_stack(thd)));
+	ERROR(FuncApp, fn, curr_stack(thd));
 	return false;
       }
 
@@ -664,47 +663,43 @@ namespace snabel {
 	if (in.size() < 2) {
 	  ERROR(Snabel, fmt("Malformed func on row %0, col %1",
 			    pos.row, pos.col));
-	} else {
-	  out.emplace_back(Begin(*this));
-	  const str n(in.at(0).text);
-	  in.pop_front();
-	  auto end(find_end(in.begin(), in.end()));
-	  ArgNames as;
-	  ArgTypes ats;
-	  
-	  if (in.front().text == "(") { parse_args(*this, in, as); }
-
-	  for (auto a(as.rbegin()); a != as.rend(); a++) {
-	    out.emplace_back(Putenv(*a));
-	    ats.push_back(ArgType(any_type));
-	  }
-	  
-	  compile(*this, TokSeq(in.begin(), end), out);
-	  in.erase(in.begin(), (end == in.end()) ? end : std::next(end));
-	  out.emplace_back(End(*this));
-	  
-	  if (as.empty()) {
-	    out.emplace_back(Putenv(get_sym(*this, n)));
-	  } else {
-	    out.emplace_back(Defunc(get_sym(*this, n), ats));
-	  }
+	  return;
 	}
+
+	out.emplace_back(Begin(*this));
+	const str n(in.at(0).text);
+	in.pop_front();
+	auto end(find_end(in.begin(), in.end()));
+	ArgNames as;
+	ArgTypes ats;
+	  
+	if (in.front().text == "(" && !parse_args(*this, in, as, ats)) { return; }
+
+	for (auto a(as.rbegin()); a != as.rend(); a++) {
+	  out.emplace_back(Putenv(*a));
+	}
+	  
+	compile(*this, TokSeq(in.begin(), end), out);
+	in.erase(in.begin(), (end == in.end()) ? end : std::next(end));
+	out.emplace_back(End(*this));
+	out.emplace_back(Defunc(get_sym(*this, n), ats));
       });
 
     add_macro(*this, "let:", [this](auto pos, auto &in, auto &out) {
 	if (in.empty()) {
 	  ERROR(Snabel, fmt("Malformed let on row %0, col %1",
 			    pos.row, pos.col));
-	} else {
-	  out.emplace_back(Backup(true));
-	  const str n(in.at(0).text);
-	  auto start(std::next(in.begin()));
-	  auto end(find_end(start, in.end()));
-	  compile(*this, TokSeq(start, end), out);
-	  in.erase(in.begin(), (end == in.end()) ? end : std::next(end));
-	  out.emplace_back(Restore());
-	  out.emplace_back(Putenv(get_sym(*this, fmt("@%0", n))));
+	  return;
 	}
+
+	out.emplace_back(Backup(true));
+	const str n(in.at(0).text);
+	auto start(std::next(in.begin()));
+	auto end(find_end(start, in.end()));
+	compile(*this, TokSeq(start, end), out);
+	in.erase(in.begin(), (end == in.end()) ? end : std::next(end));
+	out.emplace_back(Restore());
+	out.emplace_back(Putenv(get_sym(*this, fmt("@%0", n))));
       });
     
     add_macro(*this, "$list", [](auto pos, auto &in, auto &out) {

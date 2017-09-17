@@ -163,22 +163,46 @@ namespace snabel {
     return i;
   }
 
-  void parse_args(Exec &exe, TokSeq &in, ArgNames &out) {
+  bool parse_args(Exec &exe, TokSeq &in, ArgNames &as, ArgTypes &ats) {
+    auto &scp(curr_scope(exe));
     in.pop_front();
     
     while (!in.empty()) {
-      auto &a(in.front());
+      auto &a(in.front().text);
 
-      if (a.text == ")") {
+      if (a == ")") {
 	in.pop_front();
-	return;
+	int cnt(as.size()-ats.size());
+	for (int i(0); i < cnt; i++) { ats.push_back(ArgType(exe.any_type)); }
+	return true;
+      }
+
+      if (isupper(a.at(0))) {
+	auto t(parse_type(exe, a, 0).first);
+	if (!t) { return false; }
+	int cnt(as.size()-ats.size());
+	for (int i(0); i < cnt; i++) {
+	  if (in.size() > 1) {
+	    put_env(scp, fmt("T%0", ats.size()), *find_env(scp, t->name));
+
+	    for (int j(0); j < t->args.size(); j++) {
+	      put_env(scp,
+		      fmt("T%0:%1", ats.size(), j),
+		      *find_env(scp, t->args.at(j)->name));
+	    }
+	  }
+	  
+	  ats.push_back(ArgType(*t));
+	}
+      } else {
+	as.push_back(get_sym(exe, fmt("@%0", a)));
       }
       
-      out.push_back(get_sym(exe, fmt("@%0", a.text)));
       in.pop_front();
     }
 
     ERROR(Snabel, "Unterminated argument list");
+    return false;
   }
   
   std::pair<Type *, size_t> parse_type(Exec &exe, const str &in, size_t i) {

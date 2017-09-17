@@ -548,8 +548,7 @@ namespace snabel {
     auto m(match(fn, scp));
     
     if (!m) {
-      ERROR(Snabel, fmt("Function not applicable: %0\n%1", 
-			snabel::name(fn.name), curr_stack(thd)));
+      ERROR(FuncApp, fn, curr_stack(thd));
       return false;
     }
 

@@ -530,7 +530,7 @@ S: 0 {+1 $ 42 = &break when} loop
 ```
 
 ### Functions
-Each function name represents a set of implementations that are matched in reverse declared order when resolving function calls. Prefixing the name of a function with ```&``` pushes it on the stack for later use. Functions support named arguments, which are popped of the stack and bound on entry; and require termination using ```;``` to separate them from surrounding code.
+Each function name represents a set of implementations that are matched in reverse declared order when resolving function calls. Prefixing the name of a function with ```&``` pushes it on the stack for later use. Function definitions support optional arguments with optional types, and require termination using ```;``` to separate them from surrounding code.
 
 ```
 S: func: foo 35 +; 7 foo
@@ -541,11 +541,23 @@ S: func: foo(x) @x 35 +; 7 foo
 
 42
 
-S: func: foo 35 +;
+S: func: foo(x) @x 35 +;
    let: bar &foo
    7 @bar call
 
 42
+
+S: func: foo(x I64) 42; 'bar' foo
+
+Error: Function not applicable: foo
+
+S: func: foo(x I64 y List<T0> z T1:0)
+     @y pop;
+
+   7 [14] 21 foo
+
+14
+
 ```
 
 #### C++

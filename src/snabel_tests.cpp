@@ -92,24 +92,44 @@ namespace snabel {
 
   static void parse_args_tests() {
     ArgNames as;
+    ArgTypes ats;
     TokSeq ts;
     
     parse_expr("()", 0, ts);
-    parse_args(exe, ts, as);
+    parse_args(exe, ts, as, ats);
     CHECK(ts.empty(), _);
     CHECK(as.empty(), _);
+    CHECK(ats.empty(), _);
 
     parse_expr("(foo)", 0, ts);
-    parse_args(exe, ts, as);
+    parse_args(exe, ts, as, ats);
     CHECK(ts.empty(), _);
     CHECK(as.size() == 1, _);
     CHECK(name(as.at(0)) == "@foo", _);
+    CHECK(ats.size() == 1, _);
+    CHECK(ats.at(0).type == &exe.any_type, _);
 
     as.clear();
-    parse_expr("(foo bar baz)", 0, ts);
-    parse_args(exe, ts, as);
+    ats.clear();
+    parse_expr("(foo bar I64 baz)", 0, ts);
+    parse_args(exe, ts, as, ats);
     CHECK(ts.empty(), _);
     CHECK(as.size() == 3, _);
+    CHECK(ats.size() == 3, _);
+    CHECK(ats.at(0).type == &exe.i64_type, _);
+    CHECK(ats.at(1).type == &exe.i64_type, _);
+    CHECK(ats.at(2).type == &exe.any_type, _);
+
+    as.clear();
+    ats.clear();
+    parse_expr("(foo I64 bar List<T0> baz T1:0)", 0, ts);
+    parse_args(exe, ts, as, ats);
+    CHECK(ts.empty(), _);
+    CHECK(as.size() == 3, _);
+    CHECK(ats.size() == 3, _);
+    CHECK(ats.at(0).type == &exe.i64_type, _);
+    CHECK(ats.at(1).type == &get_list_type(exe, exe.i64_type), _);
+    CHECK(ats.at(2).type == &exe.i64_type, _);
   }
 
   static void parse_tests() {
@@ -176,6 +196,7 @@ namespace snabel {
 
   static void func_tests() {
     TRY(try_test);
+
     run_test(exe, "func: foo 35 +; 7 foo");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
 
@@ -188,6 +209,12 @@ namespace snabel {
 	"let: bar &foo;\n"
 	"7 @bar call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+
+    run_test(exe, "func: foo(x I64 y List<T0> z T1:0) @y pop; 7 [14] 21 foo");
+    CHECK(get<int64_t>(pop(exe.main)) == 14, _);
+
+    run_test(exe, "func: foo(x I64) 42; 'bar' foo");
+    CATCH(try_test, FuncApp, _) { }
   }
 
   static void type_tests() {

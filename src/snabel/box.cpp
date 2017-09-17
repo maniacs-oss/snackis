@@ -12,6 +12,10 @@ namespace snabel {
     type(&get_opt_type(scp.exec, t)), safe_level(scp.safe_level)
   { }
 
+  FuncAppError::FuncAppError(const Func &fn, const Stack &s):
+    SnabelError(fmt("Function not applicable: %0\n%1", name(fn.name), s))
+  { }
+
   bool operator ==(const Box &x, const Box &y) {
     return x.type == y.type && x.type->eq(x, y);
   }

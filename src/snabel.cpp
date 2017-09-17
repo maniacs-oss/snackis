@@ -61,17 +61,19 @@ int main(int argc, char** argv) {
 
     if (line.empty()) {
       TRY(try_run);
-      run(exe, in.str());
-      in.str("");
-      auto res(try_pop(exe.main));
+
+      if (run(exe, in.str())) {
+	auto res(try_pop(exe.main));
       
-      if (res) {
-	std::cout << fmt("%0\n%1\n", res->type->dump(*res), name(res->type->name));
-      } else {
-	std::cout << "nil" << std::endl;
+	if (res) {
+	  std::cout << fmt("%0\n%1\n", res->type->dump(*res), name(res->type->name));
+	} else {
+	  std::cout << "nil" << std::endl;
+	}
       }
 
       std::cout << std::endl;
+      in.str("");
     } else {
       in << ' ' << line;
     }

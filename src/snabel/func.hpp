@@ -4,6 +4,7 @@
 #include <deque>
 #include <vector>
 
+#include "snabel/error.hpp"
 #include "snabel/refs.hpp"
 #include "snabel/sym.hpp"
 #include "snackis/core/func.hpp"

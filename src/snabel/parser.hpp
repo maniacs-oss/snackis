@@ -33,7 +33,7 @@ namespace snabel {
   TokSeq parse_expr(const str &in, size_t lnr=0);
   TokSeq::iterator find_end(TokSeq::iterator i,
 			    const TokSeq::const_iterator &end);
-  void parse_args(Exec &exe, TokSeq &in, ArgNames &out);
+  bool parse_args(Exec &exe, TokSeq &in, ArgNames &as, ArgTypes &ts);
   std::pair<Type *, size_t> parse_type(Exec &exe, const str &in, size_t i);
 }
 

@@ -5,7 +5,7 @@ namespace snabel {
   SnabelError::SnabelError(const str &msg):
     Error(str("Error: ") + msg)
   { }
-
+  
   RedefineError::RedefineError(const str &msg):
     SnabelError(msg)
   { }

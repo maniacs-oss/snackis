@@ -2,12 +2,14 @@
 #define SNABEL_BOX_HPP
 
 #include <any>
+#include "snabel/error.hpp"
 #include "snackis/core/error.hpp"
 #include "snackis/core/fmt.hpp"
 
 namespace snabel {  
   using namespace snackis;
 
+  struct Func;
   struct Scope;
   struct Type;
   
@@ -24,6 +26,10 @@ namespace snabel {
 
   using Stack = std::deque<Box>;
   
+  struct FuncAppError: SnabelError {
+    FuncAppError(const Func &fn, const Stack &s);
+  };
+
   bool operator ==(const Box &x, const Box &y);
   bool operator !=(const Box &x, const Box &y);
   bool operator <(const Box &x, const Box &y);  
