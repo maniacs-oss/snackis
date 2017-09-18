@@ -8,11 +8,11 @@ namespace snabel {
   Type::Type(const Sym &n):
     name(n), raw(this), conv(false)
   {
-    uneval = [](auto &v, auto &out) { out << v.type->dump(v); };
-    dump = [](auto &v) { return v.type->fmt(v); };
-    fmt = [](auto &v) { return snabel::name(v.type->name); };
+    uneval = [this](auto &v, auto &out) { out << dump(v); };
+    dump = [this](auto &v) { return fmt(v); };
+    fmt = [](auto &v) { return fmt_arg(v.type->name); };
     eq = [](auto &x, auto &y) { return false; };
-    equal = [](auto &x, auto &y) { return x.type->eq(x, y); };
+    equal = [this](auto &x, auto &y) { return eq(x, y); };
       
     gt = [](auto &x, auto &y) {
       auto &t(*x.type);
@@ -61,5 +61,12 @@ namespace snabel {
 	  in.pop_front();
 	}
       });
+  }
+}
+
+namespace snackis {
+  template <>
+  str fmt_arg(const snabel::Type &arg) {
+    return fmt_arg(arg.name);
   }
 }

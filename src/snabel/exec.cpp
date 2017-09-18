@@ -57,6 +57,17 @@ namespace snabel {
     push(scp, get_meta_type(scp.exec, *v.type), v.type);
   }
 
+  static void conv_imp(Scope &scp, const Args &args) {
+    auto v(args.at(0));
+    auto &t(*get<Type *>(args.at(1)));
+    
+    if (conv(scp, v, t)) {
+      push(scp, get_opt_type(scp.exec, *v.type), v.val);
+    } else {
+      push(scp, t);
+    }
+  }
+
   static void eq_imp(Scope &scp, const Args &args) {
     auto &x(args.at(0)), &y(args.at(1));
     push(scp, scp.exec.bool_type, x.type->eq(x, y));
@@ -359,7 +370,9 @@ namespace snabel {
     meta_type.args.push_back(&any_type);
     meta_type.fmt = meta_fmt;
     meta_type.eq = meta_eq;
-
+    
+    put_env(scp, "Type", Box(scp, meta_type, &meta_type));
+    
     void_type.fmt = [](auto &v) { return "Void"; };
     void_type.eq = [](auto &x, auto &y) { return true; };  
     
@@ -569,6 +582,9 @@ namespace snabel {
 	     {ArgType(any_type), ArgType(meta_type)},
 	     is_imp);
     add_func(*this, "type", Func::Pure, {ArgType(any_type)}, type_imp);
+    
+    add_func(*this, "conv", Func::Pure, {ArgType(any_type), ArgType(meta_type)},
+	     conv_imp);
 
     add_func(*this, "=", Func::Pure, {ArgType(any_type), ArgType(0)}, eq_imp);
     add_func(*this, "==", Func::Pure, {ArgType(any_type), ArgType(0)}, equal_imp);
@@ -702,6 +718,28 @@ namespace snabel {
 	out.emplace_back(Defunc(get_sym(*this, n), ats));
       });
 
+    add_macro(*this, "conv:", [this](auto pos, auto &in, auto &out) {
+	if (in.size() < 2) {
+	  ERROR(Snabel, fmt("Malformed conv on row %0, col %1",
+			    pos.row, pos.col));
+	  return;
+	}
+
+	auto xt(parse_type(*this, in.front().text, 0).first);
+	if (!xt) { return; }
+	in.pop_front();
+	auto yt(parse_type(*this, in.front().text, 0).first);
+	if (!yt) {return; }
+	in.pop_front();
+	
+	out.emplace_back(Begin(*this));
+	auto end(find_end(in.begin(), in.end()));
+	compile(*this, TokSeq(in.begin(), end), out);
+	in.erase(in.begin(), (end == in.end()) ? end : std::next(end));
+	out.emplace_back(End(*this));
+	out.emplace_back(Defconv(*xt, *yt));
+      });
+
     add_macro(*this, "let:", [this](auto pos, auto &in, auto &out) {
 	if (in.empty()) {
 	  ERROR(Snabel, fmt("Malformed let on row %0, col %1",
@@ -832,7 +870,9 @@ namespace snabel {
       args.push_back(raw.args.at(i));
     }
 		  
-    if (&raw == &exe.iter_type) {
+    if (&raw == &exe.meta_type) {
+      return get_meta_type(exe, *args.at(0));
+    } else if (&raw == &exe.iter_type) {
       return get_iter_type(exe, *args.at(0));
     } else if (&raw == &exe.iterable_type) {      
       return get_iterable_type(exe, *args.at(0));
@@ -846,7 +886,7 @@ namespace snabel {
       return get_pair_type(exe, *args.at(0), *args.at(1));
     }
 
-    ERROR(Snabel, fmt("Invalid type: %1", name(raw.name)));
+    ERROR(Snabel, fmt("Invalid type: %0", name(raw.name)));
     return raw;
   }
 
@@ -942,11 +982,12 @@ namespace snabel {
 		      std::forward_as_tuple(conv));
   }
   
-  bool conv(Exec &exe, Box &val, Type &type) {
+  bool conv(Scope &scp, Box &val, Type &type) {
+    auto &exe(scp.exec);
     if (!val.type->conv) { return false; }
     auto fnd(exe.convs.find(std::make_pair(val.type, &type)));
     if (fnd == exe.convs.end()) { return false; }
-    return fnd->second(val);
+    return fnd->second(val, scp);
   }
 
   Thread &curr_thread(Exec &exe) {

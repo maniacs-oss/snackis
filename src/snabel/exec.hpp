@@ -82,7 +82,7 @@ namespace snabel {
   void clear_labels(Exec &exe);
     
   void add_conv(Exec &exe, Type &from, Type &to, Conv conv);
-  bool conv(Exec &exe, Box &val, Type &type);
+  bool conv(Scope &scp, Box &val, Type &type);
 
   Thread &curr_thread(Exec &exe);
   Scope &curr_scope(Exec &exe);

@@ -2,6 +2,7 @@
 #define SNABEL_SYM_HPP
 
 #include <map>
+#include "snackis/core/fmt.hpp"
 #include "snackis/core/str.hpp"
 
 namespace snabel {
@@ -32,6 +33,11 @@ namespace snabel {
   constexpr bool operator <(const Sym &x, const Sym &y) {
     return *x.pos < *y.pos;
   }
+}
+
+namespace snackis {
+  template <>
+  str fmt_arg(const snabel::Sym &arg);
 }
 
 #endif

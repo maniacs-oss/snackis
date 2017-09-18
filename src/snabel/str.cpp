@@ -333,7 +333,7 @@ namespace snabel {
 	     {ArgType(get_iterable_type(exe, exe.bin_type))},
 	     iterable_words_imp);
 
-    add_conv(exe, exe.str_type, exe.ustr_type, [&exe](auto &v) {	
+    add_conv(exe, exe.str_type, exe.ustr_type, [&exe](auto &v, auto &scp) {	
 	v.type = &exe.ustr_type;
 	v.val = std::make_shared<ustr>(uconv.from_bytes(*get<StrRef>(v)));
 	return true;

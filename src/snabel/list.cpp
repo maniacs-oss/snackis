@@ -166,7 +166,6 @@ namespace snabel {
 
     exe.list_type.equal = [](auto &x, auto &y) {
       auto &xs(*get<ListRef>(x)), &ys(*get<ListRef>(y));
-      if (xs.size() != ys.size()) { return false; }
       auto xi(xs.begin()), yi(ys.begin());
 
       for (; xi != xs.end() && yi != ys.end(); xi++, yi++) {

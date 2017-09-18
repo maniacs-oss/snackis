@@ -60,3 +60,9 @@ namespace snabel {
   const str &name(const Sym &sym) { return sym.it->first; }
 }
 
+namespace snackis {
+  template <>
+  str fmt_arg(const snabel::Sym &arg) {
+    return snabel::name(arg);
+  }
+}

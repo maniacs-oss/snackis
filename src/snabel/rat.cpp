@@ -57,7 +57,7 @@ namespace snabel {
     exe.rat_type.eq = [](auto &x, auto &y) { return get<Rat>(x) == get<Rat>(y); };
     exe.rat_type.lt = [](auto &x, auto &y) { return get<Rat>(x) < get<Rat>(y); };
 
-    add_conv(exe, exe.i64_type, exe.rat_type, [&exe](auto &v) {	
+    add_conv(exe, exe.i64_type, exe.rat_type, [&exe](auto &v, auto &scp) {	
 	v.type = &exe.rat_type;
 	auto &n(get<int64_t>(v));
 	v.val = Rat(abs(n), 1, n < 0);

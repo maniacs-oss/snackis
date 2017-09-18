@@ -124,7 +124,7 @@ namespace snabel {
 	ti++;
       }
 
-      if (!t || (!isa(thd, a, *t) && (!conv_args || !conv(exe, a, *t)))) {
+      if (!t || (!isa(thd, a, *t) && (!conv_args || !conv(scp, a, *t)))) {
 	return nullopt;
       }
       

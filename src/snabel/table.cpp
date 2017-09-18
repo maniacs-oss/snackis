@@ -141,7 +141,6 @@ namespace snabel {
 
     exe.table_type.equal = [](auto &x, auto &y) {
       auto &xs(*get<TableRef>(x)), &ys(*get<TableRef>(y));
-      if (xs.size() != ys.size()) { return false; }
       auto xi(xs.begin()), yi(ys.begin());
 
       for (; xi != xs.end() && yi != ys.end(); xi++, yi++) {

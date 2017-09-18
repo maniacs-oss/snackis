@@ -162,6 +162,47 @@ namespace snabel {
     return true;
   }
 
+  Defconv::Defconv(Type &from, Type &to):
+    OpImp(OP_DEFCONV, "defconv"), from(from), to(to)
+  { }
+
+  OpImp &Defconv::get_imp(Op &op) const {
+    return std::get<Defconv>(op.data);
+  }
+
+  str Defconv::info() const { return fmt("%0->%1", from.name, to.name); }
+
+  bool Defconv::run(Scope &scp) {
+    auto &exe(scp.exec);
+    auto lmb(try_pop(scp.thread));
+
+    if (!lmb) {
+      ERROR(Snabel, fmt("Missing conv lamda: %0->%1", from.name, to.name));
+      return false;
+    }
+
+    auto lmbr(get<LambdaRef>(*lmb));
+    
+    add_conv(exe, from, to, [this, &exe, lmbr](auto &v, auto &scp) {
+	push(scp.thread, v);
+	call(lmbr, scp, true);
+	auto out(try_pop(scp.thread));
+	
+	if (!out) {
+	  ERROR(Snabel, fmt("Conversion failed for %0: %1->%2",
+			    v, from.name, to.name));
+	  return false;
+	}
+
+	if (nil(*out)) { return false; }
+	v = *out;
+	v.type = v.type->args.at(0);
+	return true;
+      });
+
+    return true;
+  }
+
   Defunc::Defunc(const Sym &name, const ArgTypes &args):
     OpImp(OP_DEFUNC, "defunc"), name(name), args(args)
   { }

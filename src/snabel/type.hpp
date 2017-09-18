@@ -15,7 +15,7 @@ namespace snabel {
   struct Scope;
 
   using Types = std::vector<Type *>;
-  using Conv = func<bool (Box &)>;
+  using Conv = func<bool (Box &, Scope &scp)>;
 
   enum ReadResult {READ_OK, READ_AGAIN, READ_EOF, READ_ERROR};
     
@@ -45,6 +45,11 @@ namespace snabel {
   
   bool operator <(const Type &x, const Type &y);
   void init_types(Exec &exe);
+}
+
+namespace snackis {
+  template <>
+  str fmt_arg(const snabel::Type &arg);
 }
 
 #endif

@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "snabel/exec.hpp"
 #include "snabel/opt.hpp"
 

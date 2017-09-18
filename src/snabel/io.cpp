@@ -266,13 +266,13 @@ namespace snabel {
     exe.rwfile_type.read = exe.rfile_type.read;
     exe.rwfile_type.write = exe.wfile_type.write;
 
-    add_conv(exe, exe.str_type, exe.path_type, [&exe](auto &v) {	
+    add_conv(exe, exe.str_type, exe.path_type, [&exe](auto &v, auto &scp) {	
 	v.type = &exe.path_type;
 	v.val = Path(*get<StrRef>(v));
 	return true;
       });
 
-    add_conv(exe, exe.rwfile_type, exe.rfile_type, [&exe](auto &v) {	
+    add_conv(exe, exe.rwfile_type, exe.rfile_type, [&exe](auto &v, auto &scp) {	
 	v.type = &exe.rfile_type;
 	return true;
       });

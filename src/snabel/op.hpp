@@ -22,11 +22,11 @@ namespace snabel {
   struct Scope;
   struct Op;
   
-  enum OpCode { OP_BACKUP, OP_BEGIN, OP_BREAK, OP_CALL, OP_CAPTURE, OP_DEFUNC,
-		OP_DEREF, OP_DROP, OP_DUP, OP_END, OP_FMT, OP_FOR, OP_FUNCALL, 
-		OP_GETENV, OP_JUMP, OP_LOOP, OP_PUSH, OP_PUTENV, OP_RECALL, 
-		OP_RESET, OP_RESTORE, OP_RETURN, OP_STASH, OP_SWAP, OP_TARGET,
-	        OP_TEST, OP_YIELD };
+  enum OpCode { OP_BACKUP, OP_BEGIN, OP_BREAK, OP_CALL, OP_CAPTURE, OP_DEFCONV,
+		OP_DEFUNC, OP_DEREF, OP_DROP, OP_DUP, OP_END, OP_FMT, OP_FOR,
+		OP_FUNCALL, OP_GETENV, OP_JUMP, OP_LOOP, OP_PUSH, OP_PUTENV,
+		OP_RECALL, OP_RESET, OP_RESTORE, OP_RETURN, OP_STASH, OP_SWAP,
+		OP_TARGET, OP_TEST, OP_YIELD };
 
   using OpSeq = std::deque<Op>;
 
@@ -87,6 +87,15 @@ namespace snabel {
     
     Capture(Label &tgt);
     OpImp &get_imp(Op &op) const override;
+    bool run(Scope &scp) override;
+  };
+
+  struct Defconv: OpImp {
+    Type &from, &to;
+    
+    Defconv(Type &from, Type &to);
+    OpImp &get_imp(Op &op) const override;
+    str info() const override;
     bool run(Scope &scp) override;
   };
 
@@ -309,10 +318,10 @@ namespace snabel {
     bool run(Scope &scp) override;
   };
 
-  using OpData = std::variant<Backup, Begin, Break, Call, Capture, Defunc, Deref, 
-			      Drop, Dup, End, Fmt, For, Funcall, Getenv, Jump, Loop, 
-			      Push, Putenv, Recall, Reset, Restore, Return, Stash,
-			      Swap, Target, Test, Yield>;
+  using OpData = std::variant<Backup, Begin, Break, Call, Capture, Defconv, Defunc,
+			      Deref, Drop, Dup, End, Fmt, For, Funcall, Getenv, Jump,
+			      Loop, Push, Putenv, Recall, Reset, Restore, Return,
+			      Stash, Swap, Target, Test, Yield>;
 
   using OpState = std::variant<For::State, Loop::State>;
 
