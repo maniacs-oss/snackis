@@ -218,15 +218,9 @@ namespace snabel {
     CATCH(try_test, FuncApp, _) { }
 
     run_test(exe,
-	     "func: foo(x Num) @x 7 +; "
-	     "func: foo(x I64) @x 14 +; "
-	     "35 foo");
-    CHECK(get<int64_t>(pop(exe.main)) == 49, _);
-    
-    run_test(exe,
-	     "func: foo(x Num) @x 7 +; "
-	     "func: foo(x I64) @x 14 +; "
-	     "35 foo<Num>");
+	     "func: foo(x Num y) @x 7 +; "
+	     "func: foo(x I64 y) @x 14 +; "
+	     "35 0 foo<Num>");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);    
   }
 

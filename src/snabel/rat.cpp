@@ -1,6 +1,5 @@
 #include "snabel/exec.hpp"
 #include "snabel/rat.hpp"
-#include "snackis/core/rat.hpp"
 
 namespace snabel {
   static void div_i64_imp(Scope &scp, const Args &args) {
@@ -87,5 +86,9 @@ namespace snabel {
     add_func(exe, "/", Func::Pure,
 	     {ArgType(exe.rat_type), ArgType(exe.rat_type)},
 	     div_rat_imp);	
+
+    add_func(exe, "^", Func::Pure,
+	     {ArgType(exe.i64_type), ArgType(exe.i64_type)},
+	     pow_imp);
   }
 }

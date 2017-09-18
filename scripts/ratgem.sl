@@ -1,12 +1,17 @@
 struct: Point
   x y Num;
 
-func: point(x y Num)
-  Point new $ @x @y init;
-
 func: init(p Point x y Num)
   @p @x set-x
   @p @y set-y;
+
+func: point(x y Num)
+  Point new $ @x @y init;
+
+func: quad(p1 p2 Point)
+  // Returns quadrance of @p1 and @p2.
+  @p2 x @p1 x - 2^
+  @p2 y @p1 y - 2^ -;
 
 struct: Line Point
   z Num;
@@ -18,5 +23,11 @@ func: init(l Line x y z Num)
 func: line(x y z Num)
   Line new $ @x @y @z init;
 
-func: tests
-  1 2 3 line;
+func: para(l1 l2 Line)
+  // Returns true when @l1 and @l2 are parallel.
+  @l1 x @l2 y *
+  @l1 y @l2 x * - z?;
+
+func: perp(l1 l2 Line)
+  // Returns true when @l1 and @l2 are perpendicular.
+  

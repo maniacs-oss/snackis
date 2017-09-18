@@ -37,12 +37,12 @@ namespace snabel {
   bool nil(const Box &b);
   
   template <typename T>
-  const T &get(const Box &b) {
+  constexpr const T &get(const Box &b) {
     return *std::any_cast<T>(&b.val);
   }
 
   template <typename T>
-  T &get(Box &b) {
+  constexpr T &get(Box &b) {
     return *std::any_cast<T>(&b.val);
   }
 }

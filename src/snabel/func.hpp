@@ -80,7 +80,7 @@ namespace snabel {
 		   int sec,
 		   const ArgTypes &args,
 		   const LambdaRef &lmb);
-  opt<Args> match(const FuncImp &imp, const Types &types, Scope &scp, bool conv_args);
+  opt<Args> match(const FuncImp &imp, Types types, Scope &scp, bool conv_args);
   opt<std::pair<FuncImp *, Args>> match(Func &fn,
 					const Types &types,
 					Scope &scp,

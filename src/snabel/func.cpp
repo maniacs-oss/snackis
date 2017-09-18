@@ -92,7 +92,7 @@ namespace snabel {
   }
 
   opt<Args> match(const FuncImp &imp,
-		  const Types &types,
+		  Types types,
 		  Scope &scp,
 		  bool conv_args) {
     auto &exe(scp.exec);
@@ -103,7 +103,12 @@ namespace snabel {
     if (imp.args.empty()) { return as; }
     auto i(as.rbegin());
     auto j(imp.args.rbegin());
-    auto ti(types.begin());
+    
+    for (int i(types.size()); i < imp.args.size(); i++) {
+      types.push_back(&exe.any_type);
+    }
+    
+    auto ti(types.rbegin());
     
     while (i != as.rend() && j != imp.args.rend()) {
       auto &a(*i);
@@ -111,8 +116,11 @@ namespace snabel {
       
       auto t(get_type(imp, *j, as));
 
-      if (ti != types.end()) {
-	if (!j->type || !isa(thd, **ti, *j->type)) { return nullopt; }
+      if (ti != types.rend()) {
+	if (*ti != &exe.any_type && (!j->type || !isa(thd, **ti, *j->type))) {
+	  return nullopt;
+	}
+
 	ti++;
       }
 
