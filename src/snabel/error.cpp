@@ -9,7 +9,11 @@ namespace snabel {
   RedefineError::RedefineError(const str &msg):
     SnabelError(msg)
   { }
-  
+
+  TestError::TestError(const str &msg):
+    SnabelError(msg)
+  { }
+
   UnknownIdError::UnknownIdError(const Sym &id):
     SnabelError(fmt("Unknown identifier: %0", name(id)))
   { }

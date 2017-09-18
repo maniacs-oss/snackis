@@ -21,6 +21,7 @@
 #include "snabel/struct.hpp"
 #include "snabel/sym.hpp"
 #include "snabel/table.hpp"
+#include "snabel/test.hpp"
 #include "snabel/type.hpp"
 
 namespace snabel {
@@ -64,6 +65,10 @@ namespace snabel {
   static void equal_imp(Scope &scp, const Args &args) {
     auto &x(args.at(0)), &y(args.at(1));
     push(scp, scp.exec.bool_type, x.type->equal(x, y));
+  }
+
+  static void not_imp(Scope &scp, const Args &args) {
+    push(scp, scp.exec.bool_type, !get<bool>(args.at(0)));
   }
 
   static void lt_imp(Scope &scp, const Args &args) {
@@ -553,7 +558,8 @@ namespace snabel {
     init_io(*this);
     init_net(*this);
     init_threads(*this);
-        
+    init_tests(*this);
+    
     add_func(*this, "eval", Func::Safe, {ArgType(str_type)}, eval_imp);
     add_func(*this, "uneval", Func::Safe, {ArgType(any_type)}, uneval_imp);
     add_func(*this, "load", Func::Unsafe, {ArgType(path_type)}, load_imp);
@@ -567,6 +573,7 @@ namespace snabel {
     add_func(*this, "=", Func::Pure, {ArgType(any_type), ArgType(0)}, eq_imp);
     add_func(*this, "==", Func::Pure, {ArgType(any_type), ArgType(0)}, equal_imp);
     
+    add_func(*this, "~", Func::Pure, {ArgType{bool_type}}, not_imp);
     add_func(*this, "lt?", Func::Pure, {ArgType(ordered_type), ArgType(0)}, lt_imp);
     add_func(*this, "lte?", Func::Pure, {ArgType(ordered_type), ArgType(0)}, lte_imp);
     add_func(*this, "gt?", Func::Pure, {ArgType(ordered_type), ArgType(0)}, gt_imp);

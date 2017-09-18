@@ -31,14 +31,17 @@ func: para(l1 l2 Line)
   @l1 x @l2 y *
   @l1 y @l2 x * - z?;
 
-'lines should be parallel to themselves'
-1 2 3 line 1 2 3 line para !
+test: 'lines should be parallel to themselves'
+1 2 3 line 1 2 3 line para;
 
-'lines should be parallel despite offset'
-1 2 3 line 1 2 4 line para !
+test: 'lines should be parallel to themselves'
+1 2 3 line 1 2 3 line para;
 
-'lines should not be parallel if x or y differs'
-1 2 3 line 2 3 4 line para !!
+test: 'lines should be parallel despite offset'
+1 2 3 line 1 2 4 line para;
+
+test: 'lines should not be parallel if x/y differs'
+1 2 3 line 2 3 4 line para~;
 
 
 func: perp(l1 l2 Line)
@@ -46,14 +49,14 @@ func: perp(l1 l2 Line)
   @l1 x @l1 x *
   @l2 y @l2 x * + z?;
 
-'lines should not be perpendicular to themselves'
-1 2 3 line 1 2 3 line perp !
+test: 'lines should not be perpendicular to themselves'
+1 2 3 line 1 2 3 line perp~;
 
-'lines should be perpendicular if reversed x/y'
-1 2 0 line 2 1 0 line perp !
+test: 'lines should be perpendicular if reversed x/y'
+0 1 0 line 1 0 0 line perp;
 
-'lines should be perpendicular despite offset'
-1 2 3 line 2 1 4 line perp !
+test: 'lines should be perpendicular despite offset'
+0 1 2 line 1 0 3 line perp;
 
-'lines should not be perpendicular unless x/y reversed'
-1 2 3 line 2 3 4 line perp !!
+test: 'lines should not be perpendicular unless reversed x/y'
+0 1 2 line 1 1 2 line perp~;

@@ -927,6 +927,30 @@ namespace snabel {
     return true;
   }
   
+  Test::Test(const str &msg):
+    OpImp(OP_TEST, "test"), msg(msg)
+  { }
+
+  OpImp &Test::get_imp(Op &op) const {
+    return std::get<Test>(op.data);
+  }
+
+  bool Test::run(Scope &scp) {
+    auto cnd(try_pop(scp.thread));
+    
+    if (!cnd) {
+      ERROR(Test, fmt("Missing test condition: %0", msg));
+      return false;
+    }
+
+    if (!get<bool>(*cnd)) {
+      ERROR(Test, fmt("Test failed: %0", msg));
+      return false;
+    }
+
+    return true;
+  }
+
   Yield::Yield(int64_t depth, bool push_result):
     OpImp(OP_YIELD, "yield"), depth(depth), push_result(push_result)
   { }
