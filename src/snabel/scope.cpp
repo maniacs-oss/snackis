@@ -18,7 +18,7 @@ namespace snabel {
     break_pc(-1),
     push_result(true)
   { }
-
+ 
   Scope::Scope(Scope &prt):
     thread(prt.thread),
     exec(prt.exec),
@@ -34,7 +34,6 @@ namespace snabel {
   {}
   
   Scope::~Scope() {
-    for (auto &f: on_exit) { f(*this); }
     reset_stack(*this);
   }
 

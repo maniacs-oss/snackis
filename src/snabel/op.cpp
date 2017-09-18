@@ -183,7 +183,7 @@ namespace snabel {
 
     auto lmbr(get<LambdaRef>(*lmb));
     
-    auto cnv(add_conv(exe, from, to, [this, &exe, lmbr](auto &v, auto &scp) {
+    add_conv(exe, from, to, [this, &exe, lmbr](auto &v, auto &scp) {
 	push(scp.thread, v);
 	call(lmbr, scp, true);
 	auto out(try_pop(scp.thread));
@@ -198,9 +198,8 @@ namespace snabel {
 	v = *out;
 	v.type = v.type->args.at(0);
 	return true;
-	}));
+	});
 
-    scp.on_exit.push_back([cnv](auto &scp) { rem_conv(scp.exec, cnv); });
     return true;
   }
 

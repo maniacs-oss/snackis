@@ -979,9 +979,17 @@ namespace snabel {
 
   ConvHandle add_conv(Exec &exe, Type &from, Type &to, Conv conv) {
     from.conv++;
-    return exe.convs.emplace(std::piecewise_construct,
-			     std::forward_as_tuple(&from, &to),
-			     std::forward_as_tuple(conv)).first;
+    auto key(std::make_pair(&from, &to));
+    auto fnd(exe.convs.find(key));
+
+    if (fnd == exe.convs.end()) {
+      return exe.convs.emplace(std::piecewise_construct,
+			       std::forward_as_tuple(&from, &to),
+			       std::forward_as_tuple(conv)).first;
+    }
+
+    fnd->second = conv;
+    return fnd;
   }
 
   void rem_conv(Exec &exe, ConvHandle hnd) {
