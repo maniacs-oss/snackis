@@ -14,7 +14,7 @@ namespace snabel {
 	
 	str msg(in.at(0).text);
 	in.pop_front();
-	out.emplace_back(Backup(true));
+	out.emplace_back(Backup(false));
 	auto end(find_end(in.begin(), in.end()));
 	compile(exe, TokSeq(in.begin(), end), out);
 	in.erase(in.begin(), (end == in.end()) ? end : std::next(end));
