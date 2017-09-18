@@ -25,9 +25,7 @@ namespace snabel {
 			      res.second));
   }
 
-  bool operator==(const Struct &x, const Struct &y) {
-    if (x.fields.size() != y.fields.size()) { return false; }
-    
+  bool operator ==(const Struct &x, const Struct &y) {
     for (auto xi(x.fields.begin()), yi(y.fields.begin());
 	 xi != x.fields.end() && yi != y.fields.end();
 	 xi++, yi++) {
@@ -173,6 +171,7 @@ namespace snabel {
     t.supers.push_back(&exe.struct_type);
     t.fmt = exe.struct_type.fmt;
     t.eq = exe.struct_type.eq;
+    t.equal = exe.struct_type.equal;
     t.iter = exe.struct_type.iter;
     return t;
   }
