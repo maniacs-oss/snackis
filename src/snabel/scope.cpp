@@ -34,6 +34,7 @@ namespace snabel {
   {}
   
   Scope::~Scope() {
+    for (auto &f: on_exit) { f(*this); }
     reset_stack(*this);
   }
 

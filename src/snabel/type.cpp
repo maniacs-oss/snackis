@@ -6,7 +6,7 @@
 
 namespace snabel {
   Type::Type(const Sym &n):
-    name(n), raw(this), conv(false)
+    name(n), raw(this), conv(0)
   {
     uneval = [this](auto &v, auto &out) { out << dump(v); };
     dump = [this](auto &v) { return fmt(v); };

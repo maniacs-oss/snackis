@@ -977,11 +977,15 @@ namespace snabel {
     return &fnd->second;
   }
 
-  void add_conv(Exec &exe, Type &from, Type &to, Conv conv) {
-    from.conv = true;
-    exe.convs.emplace(std::piecewise_construct,
-		      std::forward_as_tuple(&from, &to),
-		      std::forward_as_tuple(conv));
+  ConvHandle add_conv(Exec &exe, Type &from, Type &to, Conv conv) {
+    from.conv++;
+    return exe.convs.emplace(std::piecewise_construct,
+			     std::forward_as_tuple(&from, &to),
+			     std::forward_as_tuple(conv)).first;
+  }
+
+  void rem_conv(Exec &exe, ConvHandle hnd) {
+    exe.convs.erase(hnd);
   }
   
   bool conv(Scope &scp, Box &val, Type &type) {

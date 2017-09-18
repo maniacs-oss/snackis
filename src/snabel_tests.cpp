@@ -245,6 +245,13 @@ namespace snabel {
     run_test(exe, "Pair<I64 Str>");
     CHECK(get<Type *>(pop(exe.main)) ==
 	  &get_pair_type(exe, exe.i64_type, exe.str_type), _);
+
+    run_test(exe,
+	     "struct: Foo a; "
+	     "struct: Bar b; "
+	     "conv: Foo Bar Bar new $ 42 set-b opt; "
+	     "Foo new Bar conv &b when");
+    CHECK(get<int64_t>(pop(exe.main)) == 42, _);
   }
 
   static void stack_tests() {

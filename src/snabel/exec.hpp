@@ -17,6 +17,9 @@
 namespace snabel {
   struct Op;
 
+  using Convs = std::map<std::pair<Type *, Type *>, Conv>;
+  using ConvHandle = Convs::iterator;
+
   const int MAX_TARGET(10);
   
   struct Exec {
@@ -24,7 +27,7 @@ namespace snabel {
     
     std::deque<Macro> macros;
     std::deque<Type> types;
-    std::map<std::pair<Type *, Type *>, Conv> convs;
+    Convs convs;
     std::map<Sym, Func> funcs;
     std::map<Sym, Label> labels;
     std::deque<Begin *> lambdas;
@@ -81,7 +84,8 @@ namespace snabel {
   Label *find_label(Exec &exe, const Sym &tag);
   void clear_labels(Exec &exe);
     
-  void add_conv(Exec &exe, Type &from, Type &to, Conv conv);
+  ConvHandle add_conv(Exec &exe, Type &from, Type &to, Conv conv);
+  void rem_conv(Exec &exe, ConvHandle hnd);  
   bool conv(Scope &scp, Box &val, Type &type);
 
   Thread &curr_thread(Exec &exe);

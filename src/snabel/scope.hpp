@@ -19,6 +19,8 @@ namespace snabel {
   struct Thread;
   
   struct Scope {
+    using OnExit = func<void (Scope &)>;
+    
     Thread &thread;
     Exec &exec;
     Scope *parent;
@@ -30,6 +32,7 @@ namespace snabel {
     
     std::map<int64_t, OpState> op_state;
     Env env;
+    std::vector<OnExit> on_exit;
     
     Scope(Thread &thread);
     Scope(Scope &prt);
