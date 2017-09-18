@@ -988,6 +988,7 @@ namespace snabel {
 			       std::forward_as_tuple(conv)).first;
     }
 
+    ERROR(Redefine, fmt("Redefining conv: %0 -> %1", from.name, to.name));
     fnd->second = conv;
     return fnd;
   }
