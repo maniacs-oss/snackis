@@ -138,6 +138,9 @@ namespace snabel {
     CHECK(ts.size() == 1, _);
     CHECK(ts[0].text == "1", _);
 
+    ts = parse_expr("(foo bar List<I64>)");
+    CHECK(ts.size() == 5, _);
+
     parse_comment_tests();
     parse_semicolon_tests();
     parse_braces_tests();

@@ -706,7 +706,9 @@ namespace snabel {
 	ArgNames as;
 	ArgTypes ats;
 	  
-	if (in.front().text == "(" && !parse_args(*this, in, as, ats)) { return; }
+	if (in.front().text == "(") {
+	  if (!parse_args(*this, in, as, ats)) { return; }
+	}
 
 	for (auto a(as.rbegin()); a != as.rend(); a++) {
 	  out.emplace_back(Putenv(*a));

@@ -54,8 +54,8 @@ namespace snabel {
 
       if (c == '>') {
 	depth--;
+	
 	if (!depth) {
-	  i++;
 	  break;
 	}
       } else if (c == '<') {
@@ -122,8 +122,6 @@ namespace snabel {
 	i = j+1;
       } else if (c == '<') {
 	parse_types(in, lnr, j);
-	push_id();
-	i++;
       } else if (split.find(c) != split.end() && pc != '#') {
 	push_id();
 	out.emplace_back(in.substr(i, 1), Pos(lnr, i));
