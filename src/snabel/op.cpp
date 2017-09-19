@@ -221,7 +221,8 @@ namespace snabel {
       return false;
     }
 
-    add_func(scp.exec, name, Func::Safe, args, get<LambdaRef>(*lmb));
+    auto hnd(add_func(scp.exec, name, Func::Safe, args, get<LambdaRef>(*lmb)));
+    scp.on_return.push_back([hnd]() { rem_func(hnd); });
     return true;
   }
 

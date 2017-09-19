@@ -77,20 +77,6 @@ namespace snabel {
     return t;
   }
 
-  FuncImp &add_imp(Func &fn,
-		   int sec,
-		   const ArgTypes &args,
-		   FuncImp::Imp imp) {
-    return fn.imps.emplace_front(fn, sec, args, imp);
-  }
-
-  FuncImp &add_imp(Func &fn,
-		   int sec,
-		   const ArgTypes &args,
-		   const LambdaRef &lmb) {
-    return fn.imps.emplace_front(fn, sec, args, lmb);
-  }
-
   opt<Args> match(const FuncImp &imp,
 		  Types types,
 		  Scope &scp,

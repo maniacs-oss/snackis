@@ -710,7 +710,7 @@ namespace snabel {
     CATCH(try_test, UnknownId, e) { }
     CHECK(!try_pop(exe.main), _);
 
-    run_test(exe, "{safe func: foo 'invalid' rfile 42; &foo} call call");
+    run_test(exe, "{safe {'invalid' rfile 42}} call call");
     CATCH(try_test, UnsafeCall, e) { }
     CHECK(*get<StrRef>(pop(exe.main)) == "invalid", _);
 

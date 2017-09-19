@@ -201,7 +201,9 @@ namespace snabel {
     
     while (thd.scopes.size() > 1 && depth) {
       depth--;
-      thd.scopes.back().push_result = push_result;
+      auto &s(thd.scopes.back());
+      s.push_result = push_result;
+      for (auto f(s.on_return.rbegin()); f != s.on_return.rend(); f++) { (*f)(); }
       
       if (!depth) {
 	auto &ps(*std::next(thd.scopes.rbegin()));

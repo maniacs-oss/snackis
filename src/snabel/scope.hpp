@@ -19,6 +19,8 @@ namespace snabel {
   struct Thread;
   
   struct Scope {
+    using ReturnFunc = func<void ()>;
+    
     Thread &thread;
     Exec &exec;
     Scope *parent;
@@ -29,6 +31,7 @@ namespace snabel {
     bool push_result;
     
     std::map<int64_t, OpState> op_state;
+    std::vector<ReturnFunc> on_return;
     Env env;
     
     Scope(Thread &thread);

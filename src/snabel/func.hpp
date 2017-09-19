@@ -1,7 +1,7 @@
 #ifndef SNABEL_FUNC_HPP
 #define SNABEL_FUNC_HPP
 
-#include <deque>
+#include <list>
 #include <vector>
 
 #include "snabel/error.hpp"
@@ -61,30 +61,35 @@ namespace snabel {
   };
 
   struct Func {
+    using Imps = std::list<FuncImp>;
+    using ImpHandle = Imps::iterator;
+    
     static const int Pure;
     static const int Const;
     static const int Safe;
     static const int Unsafe;
 
     const Sym name;
-    std::deque<FuncImp> imps;
+    Imps imps;
     Func(const Sym &n);
   };
 
   Type *get_type(const FuncImp &imp, const ArgType &arg_type, const Args &args);
-  FuncImp &add_imp(Func &fn,
-		   int sec,
-		   const ArgTypes &args,
-		   FuncImp::Imp imp);
-  FuncImp &add_imp(Func &fn,
-		   int sec,
-		   const ArgTypes &args,
-		   const LambdaRef &lmb);
   opt<Args> match(const FuncImp &imp, Types types, Scope &scp, bool conv_args);
+
   opt<std::pair<FuncImp *, Args>> match(Func &fn,
 					const Types &types,
 					Scope &scp,
 					bool conv_args=false);
+
+  template <typename T>
+  Func::ImpHandle add_imp(Func &fn,
+			  int sec,
+			  const ArgTypes &args,
+			  T imp) {
+    fn.imps.emplace_front(fn, sec, args, imp);
+    return fn.imps.begin();
+  }
 }
 
 #endif

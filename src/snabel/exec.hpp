@@ -73,12 +73,14 @@ namespace snabel {
   Type &get_iter_type(Exec &exe, Type &elt);
   Type &get_iterable_type(Exec &exe, Type &elt);
   
-  FuncImp &add_func(Exec &exe,
-		    const str &n,
-		    int sec,
-		    const ArgTypes &args,
-		    FuncImp::Imp imp);
+  Func::ImpHandle add_func(Exec &exe,
+			   const str &n,
+			   int sec,
+			   const ArgTypes &args,
+			   FuncImp::Imp imp);
 
+  void rem_func(Func::ImpHandle hnd);
+  
   Label &add_label(Exec &exe, const Sym &tag, bool pmt=false);
   Label &add_label(Exec &exe, const str &tag, bool pmt=false);
   Label *find_label(Exec &exe, const Sym &tag);
@@ -121,11 +123,11 @@ namespace snabel {
   }
 
   template <typename T>
-  FuncImp &add_func(Exec &exe,
-		    const Sym &n,
-		    int sec,
-		    const ArgTypes &args,
-		    T imp) {
+  Func::ImpHandle add_func(Exec &exe,
+			   const Sym &n,
+			   int sec,
+			   const ArgTypes &args,
+			   T imp) {
     auto fnd(exe.funcs.find(n));
     auto &scp(curr_scope(exe));
 

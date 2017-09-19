@@ -934,14 +934,18 @@ namespace snabel {
     return t;
   }
       
-  FuncImp &add_func(Exec &exe,
-		    const str &n,
-		    int sec,
-		    const ArgTypes &args,
-		    FuncImp::Imp imp) {
+  Func::ImpHandle add_func(Exec &exe,
+			   const str &n,
+			   int sec,
+			   const ArgTypes &args,
+			   FuncImp::Imp imp) {
     return add_func(exe, get_sym(exe, n), sec, args, imp);
   }
 
+  void rem_func(Func::ImpHandle hnd) {
+    hnd->func.imps.erase(hnd);
+  }
+  
   Label &add_label(Exec &exe, const Sym &tag, bool pmt) {
     auto res(exe.labels
 	     .emplace(std::piecewise_construct,
