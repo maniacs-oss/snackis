@@ -11,7 +11,10 @@
 
 let: port stoi64; _
 let: addr; _
-let: server tcp-socket @addr @port connect;
+let: server
+     tcp-socket
+     @addr @port connect
+     {&_ unless} for;
 let: in Bin list;
 let: out Bin list;
 
