@@ -728,7 +728,7 @@ nil
 ```
 
 ### Networking
-Snabel supports basic asynchronous TCP/IP-networking, you may find more examples [here]().
+Snabel supports basic asynchronous TCP/IP-networking, you may find more examples [here](https://github.com/andreas-gone-wild/snackis/tree/master/dist).
 
 ```
 S: let: addr '127.0.0.1';
