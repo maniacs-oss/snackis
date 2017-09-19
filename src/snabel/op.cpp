@@ -664,15 +664,13 @@ namespace snabel {
     }
 
     imp = m->first;
+
     if (scp.safe_level && imp->sec >= Func::Unsafe) {
       ERROR(UnsafeCall, fn);
       return false;
     }
 
-    for (auto e: try_funcall.errors) {
-      if (!dynamic_cast<RedefineError *>(e)) { return false; }
-    }
-
+    if (!try_funcall.errors.empty()) { return false; }
     return(*imp)(scp, m->second);
   }
   

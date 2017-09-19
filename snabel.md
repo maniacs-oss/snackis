@@ -158,7 +158,7 @@ true
 ```
 
 ### Bindings
-The ```let:```-macro may be used to introduce named bindings. Bound names are prefixed with ```@```, lexically scoped and not allowed to change their value once bound in a specific scope. The bound expression is evaluated in a copy of the calling stack, which allows feeding values into a let statement but avoids unintended stack effects. Bindings require termination using ```;``` to separate them from surrounding code.
+The ```let:```-macro may be used to introduce named bindings. Bound names are prefixed with ```@```, lexically scoped and may be shadowed at any time by another let. The bound expression is evaluated in a copy of the calling stack, which allows feeding values in but avoids unintended stack effects outside. Bindings require termination using ```;``` to separate them from surrounding code.
 
 ```
 S: let: fn {7 +}; 35 @fn call
@@ -739,20 +739,31 @@ S: let: addr '127.0.0.1';
      
    let: server
         @server-socket
-        @addr @port bind
-        0 accept;
+        @addr @port bind;
 
    let: sender tcp-socket
         @addr @port
         connect;
 
-   let: receiver
-        @server {&break &_ if} for;
+   func: do-connect() (
+     |yield
+     @client {&break &_yield1 if} for
+   );
 
-   ['hello world' bytes] @sender write &nop _for
-   @sender close
-   @receiver read unopt words unopt list
-   @server-socket close
+   func: do-accept() (
+     |yield
+     @server 0 accept {&break &_yield1 if} for
+   );
+
+   [do-connect do-accept] run
+
+   let: in; _
+   let: out; _
+
+   ['hello world' bytes] @out write &nop _for
+   @out close
+   @in read unopt words unopt list
+   @server close
 
 ['hello' 'world']
 ```

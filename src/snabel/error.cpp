@@ -6,10 +6,6 @@ namespace snabel {
     Error(str("Error: ") + msg)
   { }
   
-  RedefineError::RedefineError(const str &msg):
-    SnabelError(msg)
-  { }
-
   TestError::TestError(const str &msg):
     SnabelError(msg)
   { }

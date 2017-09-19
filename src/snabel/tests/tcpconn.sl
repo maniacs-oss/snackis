@@ -6,16 +6,28 @@ let: server-socket
      
 let: server
      @server-socket
-     @addr @port bind
-     0 accept;
+     @addr @port bind;
 
-let: sender tcp-socket
-     @addr @port connect {&break &_ if} for;
+let: client
+     tcp-socket
+     @addr @port connect;
 
-let: receiver
-     @server {&break &_ if} for;
+func: do-connect() (
+  |yield
+  @client {&break &_yield1 if} for
+);
 
-['hello world' bytes] @sender write &nop _for
-@sender close
-@receiver read unopt words unopt list
-@server-socket close
+func: do-accept() (
+  |yield
+  @server 0 accept {&break &_yield1 if} for
+);
+
+[do-accept do-connect] run
+
+let: in; _
+let: out; _
+
+['hello world' bytes] @out write &nop _for
+@out close
+@in read unopt words unopt list
+@server close

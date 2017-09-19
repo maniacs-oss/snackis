@@ -13,10 +13,6 @@ namespace snabel {
     SnabelError(const str &msg);
   };
 
-  struct RedefineError: SnabelError {
-    RedefineError(const str &msg);
-  };
-
   struct TestError: SnabelError {
     TestError(const str &msg);
   };

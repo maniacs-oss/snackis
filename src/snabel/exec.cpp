@@ -875,7 +875,6 @@ namespace snabel {
     auto &mt(meta ? exe.meta_type : get_meta_type(exe, t));
     
     if (fnd) {
-      ERROR(Redefine, fmt("Redefining type: %0", name(n)));
       fnd->type = &mt;
       fnd->val = &t;
     } else {
@@ -1027,7 +1026,6 @@ namespace snabel {
 			       std::forward_as_tuple(conv)).first;
     }
 
-    ERROR(Redefine, fmt("Redefining conv: %0 -> %1", from.name, to.name));
     fnd->second = conv;
     return fnd;
   }
@@ -1304,9 +1302,7 @@ namespace snabel {
 	}
       }
 
-      for (auto e: try_compile.errors) {
-	if (!dynamic_cast<RedefineError *>(e)) { return false; }
-      }
+      if (!try_compile.errors.empty()) { return false; }
     }
 
     return true;
@@ -1378,10 +1374,7 @@ namespace snabel {
       
       for (auto &op: in) {
 	if (!finalize(op, curr_scope(thd), out_ops)) { thd.pc++; }
-	
-	for (auto e: try_compile.errors) {
-	  if (!dynamic_cast<RedefineError *>(e)) { goto exit; }
-	}
+	if (!try_compile.errors.empty()) { goto exit; }
       }
       
       in.clear();
@@ -1390,12 +1383,7 @@ namespace snabel {
   exit:
     thd.pc = start_pc;
     std::copy(in.begin(), in.end(), std::back_inserter(thd.ops));
-
-    for (auto e: try_compile.errors) {
-      if (!dynamic_cast<RedefineError *>(e)) { return false; }
-    }
-    
-    return true;
+    return try_compile.errors.empty();
   }
   
   bool compile(Exec &exe, OpSeq &in) {

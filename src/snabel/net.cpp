@@ -135,7 +135,7 @@ namespace snabel {
 
     exe.tcp_socket_type.eq = exe.file_type.eq;
     
-    exe.tcp_stream_type.supers.push_back(&exe.tcp_socket_type);
+    exe.tcp_server_type.supers.push_back(&exe.tcp_socket_type);
     exe.tcp_server_type.fmt = [](auto &v) {
       return fmt("TCPServer(%0)", get<FileRef>(v)->fd);
     };

@@ -785,7 +785,6 @@ namespace snabel {
       if (i < iters-1) { try_snabel.errors.clear(); }
     }
     
-    CATCH(try_snabel, Redefine, _) { }
     std::cout << "Snabel: " << usecs(pnow()-started) / iters << "us" << std::endl;
   }
 }
