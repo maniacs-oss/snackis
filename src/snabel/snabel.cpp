@@ -1,7 +1,7 @@
 #include "snabel/snabel.hpp"
 
 namespace snabel {
-  const int VERSION[3] = {0, 7, 15};
+  const int VERSION[3] = {0, 7, 16};
 
   str version_str() {
     Stream out;

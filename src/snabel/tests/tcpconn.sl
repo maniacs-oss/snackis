@@ -1,11 +1,8 @@
 let: addr '127.0.0.1';
 let: port 31331;
 
-let: server-socket
-     tcp-socket;
-     
 let: server
-     @server-socket
+     tcp-socket
      @addr @port bind;
 
 let: client
