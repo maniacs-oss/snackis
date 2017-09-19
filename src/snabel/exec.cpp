@@ -1041,13 +1041,7 @@ namespace snabel {
   void rewind(Exec &exe) {
     exe.threads.erase(std::next(exe.threads.begin()), exe.threads.end());
     auto &thd(exe.main);
-    
-    while (thd.scopes.size() > 1) {
-      auto &s(thd.scopes.back());
-      for (auto f(s.on_return.rbegin()); f != s.on_return.rend(); f++) { (*f)(); }
-      thd.scopes.pop_back();
-    }
-    
+    while (thd.scopes.size() > 1) { thd.scopes.pop_back(); }
     while (thd.stacks.size() > 1) { thd.stacks.pop_back(); }
     thd.main.return_pc = -1;
     thd.stacks.front().clear();

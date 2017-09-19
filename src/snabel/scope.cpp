@@ -34,6 +34,7 @@ namespace snabel {
   {}
   
   Scope::~Scope() {
+    for (auto f(on_exit.rbegin()); f != on_exit.rend(); f++) { (*f)(); }
     reset_stack(*this);
   }
 
@@ -203,7 +204,6 @@ namespace snabel {
       depth--;
       auto &s(thd.scopes.back());
       s.push_result = push_result;
-      for (auto f(s.on_return.rbegin()); f != s.on_return.rend(); f++) { (*f)(); }
       
       if (!depth) {
 	auto &ps(*std::next(thd.scopes.rbegin()));
