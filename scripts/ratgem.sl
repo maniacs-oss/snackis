@@ -34,9 +34,6 @@ func: para(l1 l2 Line)
 test: 'lines should be parallel to themselves'
   1 2 3 line 1 2 3 line para;
 
-test: 'lines should be parallel to themselves'
-  1 2 3 line 1 2 3 line para;
-
 test: 'lines should be parallel despite offset'
   1 2 3 line 1 2 4 line para;
 
