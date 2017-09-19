@@ -403,6 +403,44 @@ S: struct: Bar Foo
 true
 ```
 
+#### Conversions
+Snabel supports user-defined automatic promotions of function arguments. ```conv:``` takes a source type, a target type and an expression that is executed with the value pushed on promotion. Manual conversion is supported through ```conv``` which may be overloaded to define conversions that don't take part in automatic promotion. Snabel comes preloaded with promotions from integers to rationals, byte to unicode strings and strings to file paths.
+
+```
+S: struct: Foo
+     a;
+
+   struct: Bar
+     b;
+
+   Foo new Bar conv
+
+nil
+
+S: conv: Foo Bar
+     Bar new $ 42 set-b opt;
+   
+   Foo new Bar conv
+
+Opt(Bar(b 42.))
+
+S: func: say-bar(b Bar)
+     '@b' say
+
+   Foo new
+   $ 'foobar' set-a
+   say-bar
+
+'Foo(a 'foobar'.)'
+
+S: func: conv(v I64 t Type<Str>)
+     @v str opt;
+
+   42 Str conv
+
+Opt('42')
+```
+
 ### Lambdas
 Wrapping code in braces pushes a pointer on the stack. Lambdas may be exited early by calling ```return```, the final result (if any) is pushed on exit. ```recall``` may be used to call the current lambda recursively. Use ```&return```/```&recall``` to get a target that performs the specified action when called.
 
