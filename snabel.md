@@ -72,6 +72,22 @@ S: 7 35 +
 42
 ```
 
+### Decently Scoped
+While most languages tend to draw a circle around their core, inside which lexical scoping doesn't apply; usually functions, macros, types and similar; Snabel goes all in to apply lexical scoping wherever possible. Snabel also provides multiple levels of call stack control; ```break```, ```defer```, ```yield```, ```recall``` and ```return``` all support targeting outer scopes by specifying an index between 1 and 9.
+
+```
+S: {struct: Foo
+      bar baz;} call
+
+   Foo new
+
+Error: Unknown identifier: Foo
+
+S: {{42 return1} call 7 -} call
+
+42
+```
+
 ### The Stack
 Values and results from function calls are pushed on the stack in order of appearance. Thanks to lexical scoping and named bindings, keeping the stack squeaky clean is less critical in Snabel. ```$dump``` collects all values on the stack in a list that is pushed instead. ```$1```-```$9``` swaps in values, starting from the end; while ```$``` duplicates the last value. ```_``` drops the last value and ```|``` clears the entire stack.
 

@@ -1093,7 +1093,7 @@ namespace snabel {
       } else if (tok.text.substr(0, 6) == "return" &&
 		 tok.text.size() == 7 &&
 		 isdigit(tok.text.at(6))) {
-	auto i(tok.text.at(6) - '0');
+	auto i(tok.text.at(6) - '0');	
 	out.emplace_back(Return(i+1, true));
       } else if (tok.text.substr(0, 7) == "_return" &&
 		 tok.text.size() == 8 &&

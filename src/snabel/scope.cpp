@@ -199,7 +199,7 @@ namespace snabel {
 
   bool _return(Scope &scp, int64_t depth, bool push_result) {
     auto &thd(scp.thread);
-    
+
     while (thd.scopes.size() > 1 && depth) {
       depth--;
       auto &s(thd.scopes.back());
