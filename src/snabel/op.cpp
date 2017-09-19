@@ -182,7 +182,11 @@ namespace snabel {
 
     auto lmbr(get<LambdaRef>(*lmb));
     
-    add_conv(exe, from, to, [this, &exe, lmbr](auto &v, auto &scp) {
+    auto fnd(exe.convs.find(std::make_pair(&from, &to)));
+    opt<Conv> prev;
+    if (fnd != exe.convs.end()) { prev = fnd->second; }
+    
+    auto hnd(add_conv(exe, from, to, [this, &exe, lmbr](auto &v, auto &scp) {
 	push(scp.thread, v);
 	call(lmbr, scp, true);
 	auto out(try_pop(scp.thread));
@@ -197,7 +201,15 @@ namespace snabel {
 	v = *out;
 	v.type = v.type->args.at(0);
 	return true;
-	});
+	}));
+
+    scp.on_exit.push_back([&exe, hnd, prev](auto &scp) {
+	if (prev) {
+	  hnd->second = *prev;
+	} else {
+	  rem_conv(exe, hnd);
+	}
+      });
 
     return true;
   }
