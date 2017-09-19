@@ -699,7 +699,7 @@ namespace snabel {
       });
 
     add_macro(*this, "]", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(Stash());	
+	out.emplace_back(Dump());	
 	out.emplace_back(Restore());
       });
 
@@ -782,8 +782,8 @@ namespace snabel {
 	out.emplace_back(Putenv(get_sym(*this, fmt("@%0", n))));
       });
     
-    add_macro(*this, "$list", [](auto pos, auto &in, auto &out) {
-	out.emplace_back(Stash());
+    add_macro(*this, "$dump", [](auto pos, auto &in, auto &out) {
+	out.emplace_back(Dump());
       });
 
     add_macro(*this, "recall", [](auto pos, auto &in, auto &out) {

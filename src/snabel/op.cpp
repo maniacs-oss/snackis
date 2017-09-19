@@ -361,6 +361,32 @@ namespace snabel {
     return true;
   }
 
+  Dump::Dump():
+    OpImp(OP_DUMP, "dump")
+  { }
+
+  OpImp &Dump::get_imp(Op &op) const {
+    return std::get<Dump>(op.data);
+  }
+
+  bool Dump::run(Scope &scp) {
+    auto &exe(scp.exec);
+    auto &thd(scp.thread);
+    std::shared_ptr<List> lst(new List());
+    lst->swap(curr_stack(thd));
+
+    Type *elt(lst->empty() ? &exe.any_type : lst->at(0).type);
+
+    if (!lst->empty()) {
+      for (auto i(std::next(lst->begin())); i != lst->end() && elt; i++) {
+	elt = get_super(exe, *elt, *i->type);
+      }
+    }
+    
+    push(scp, get_list_type(exe, elt ? *elt : exe.any_type), lst);
+    return true;
+  }
+  
   Dup::Dup():
     OpImp(OP_DUP, "dup")
   { }
@@ -902,32 +928,6 @@ namespace snabel {
     return _return(scp, depth, push_result);
   }
   
-  Stash::Stash():
-    OpImp(OP_STASH, "stash")
-  { }
-
-  OpImp &Stash::get_imp(Op &op) const {
-    return std::get<Stash>(op.data);
-  }
-
-  bool Stash::run(Scope &scp) {
-    auto &exe(scp.exec);
-    auto &thd(scp.thread);
-    std::shared_ptr<List> lst(new List());
-    lst->swap(curr_stack(thd));
-
-    Type *elt(lst->empty() ? &exe.any_type : lst->at(0).type);
-
-    if (!lst->empty()) {
-      for (auto i(std::next(lst->begin())); i != lst->end() && elt; i++) {
-	elt = get_super(exe, *elt, *i->type);
-      }
-    }
-    
-    push(scp, get_list_type(exe, elt ? *elt : exe.any_type), lst);
-    return true;
-  }
-
   Swap::Swap(size_t pos):
     OpImp(OP_SWAP, "swap"), pos(pos)
   { }

@@ -646,7 +646,7 @@ namespace snabel {
     run_test(exe, "0 [1 2 3 4 5 6] &+ for");
     CHECK(get<int64_t>(pop(exe.main)) == 21, _);
 
-    run_test(exe, "'foo' &nop for $list \\- join");
+    run_test(exe, "'foo' &nop for $dump \\- join");
     CHECK(*get<StrRef>(pop(exe.main)) == "f-o-o", _);
 
     run_test(exe, "0 {++ $ 42 = &break when} loop");

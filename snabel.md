@@ -73,22 +73,22 @@ S: 7 35 +
 ```
 
 ### The Stack
-Values and results from function calls are pushed on the stack in order of appearance. Thanks to lexical scoping and named bindings, keeping the stack squeaky clean is less critical in Snabel. ```$list``` collects all values on the stack in a list that is pushed instead. ```$1```-```$9``` swaps in values, starting from the end; while ```$``` duplicates the last value. ```_``` drops the last value and ```|``` clears the entire stack.
+Values and results from function calls are pushed on the stack in order of appearance. Thanks to lexical scoping and named bindings, keeping the stack squeaky clean is less critical in Snabel. ```$dump``` collects all values on the stack in a list that is pushed instead. ```$1```-```$9``` swaps in values, starting from the end; while ```$``` duplicates the last value. ```_``` drops the last value and ```|``` clears the entire stack.
 
 ```
-S: 1 2 3 $list
+S: 1 2 3 $dump
 
 [1 2 3]
 
-S: 1 2 $ $list
+S: 1 2 $ $dump
 
 [1 2 2]
 
-S: 42 7 _ $list
+S: 42 7 _ $dump
 
 [42]
 
-S: 42 7 | $list
+S: 42 7 | $dump
 
 []
 
@@ -105,11 +105,11 @@ S: (1 2 +) (2 2 *) +
 
 7
 
-S: 1 (2 3 $list)
+S: 1 (2 3 $dump)
 
 [1 2 3]
 
-S: 1 (|2 3 $list) .
+S: 1 (|2 3 $dump) .
 
 1 [2 3].
 ```
@@ -279,7 +279,7 @@ S: Str list
 
 []
 
-S: 1 2 3 $list
+S: 1 2 3 $dump
 
 [1 2 3]
 
@@ -316,7 +316,7 @@ S: ['foo' 'bar'] 7 list zip list
 
 ['foo' 0. 'bar' 1.]
 
-S: ['foo' 0. 'bar' 1.] unzip list $1 list $list
+S: ['foo' 0. 'bar' 1.] unzip list $1 list $dump
 
 [[0 1] ['foo' 'bar']]
 ```
@@ -430,7 +430,7 @@ S: {1
     {10} defer
     {100} defer
     return
-    1000} call $list
+    1000} call $dump
    
 [1 100 10]
 ```
@@ -517,7 +517,7 @@ S: 0 [1 2 3 4 5 6] &+ for
 
 21
 
-S: 'foo' &nop for $list \- join
+S: 'foo' &nop for $dump \- join
 
 'f-o-o'
 
@@ -674,7 +674,7 @@ nil
 Random numbers are supported through ranged generators that may be treated as infinite iterators.
 
 ```
-S: 100 random $ pop $1 pop $1 $list
+S: 100 random $ pop $1 pop $1 $dump
 
 [61 23]
 
