@@ -40,7 +40,9 @@ namespace snabel {
   }
 
   static void stop_imp(Scope &scp, const Args &args) {
-    get<CoroRef>(args.at(0))->done = true;
+    auto &cor(*get<CoroRef>(args.at(0)));
+    for (auto f(cor.on_exit.rbegin()); f != cor.on_exit.rend(); f++) { (*f)(scp); }
+    cor.done = true;
   }
 
   void init_coros(Exec &exe) {
