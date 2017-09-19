@@ -44,7 +44,7 @@ sudo ldconfig
 sudo apt-get install cmake libsodium-dev uuid-dev
 ```
 
-### Getting started
+### Getting Started
 If you're running ```Linux/64```, copy ```snabel``` from [/dist](https://github.com/andreas-gone-wild/snackis/tree/master/dist) to ```/usr/local/bin``` and run ```rlwrap snabel```; otherwise you'll have to build the executable yourself.
 
 #### Building
