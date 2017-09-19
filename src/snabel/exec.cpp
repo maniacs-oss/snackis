@@ -1194,11 +1194,7 @@ namespace snabel {
 		 tok.text.size() == 2 &&
 		 isdigit(tok.text.at(1))) {
 	auto i(tok.text.at(1) - '0');
-	if (i) {
-	  out.emplace_back(Swap(i));
-	} else {
-	  out.emplace_back(Dup());
-	}
+	if (i) { out.emplace_back(Swap(i)); }
       } else if (tok.text.at(0) == '\'') {
 	auto s(tok.text.substr(1, tok.text.size()-2));
 	replace<str>(s, "\\n", "\n");
