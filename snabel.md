@@ -746,6 +746,36 @@ S: 7 {35 +} thread join
 42
 ```
 
+### Networking
+Snabel supports basic asynchronous TCP/IP-networking, you may find more examples [here]().
+
+```
+S: let: addr '127.0.0.1';
+   let: port 31331;
+
+   let: server-socket
+        tcp-socket;
+     
+   let: server
+        @server-socket
+        @addr @port bind
+        0 accept;
+
+   let: sender tcp-socket
+        @addr @port
+        connect;
+
+   let: receiver
+        @server {&break &_ if} for;
+
+   ['hello world' bytes] @sender write &nop _for
+   @sender close
+   @receiver read unopt words unopt list
+   @server-socket close
+
+['hello' 'world']
+```
+
 ### Sandboxing
 Functions defined via the host api may be tagged as safe or unsafe. Safe functions are not allowed to cause external effects; most of the functionality in Snabel's IO, network and thread vocabularies is tagged as unsafe. Calling ```safe``` increases the safety level for the current scope; there is no way of decreasing it short of closing the scope; and the level is inherited by sub scopes. Environment lookups are limited to the same safety level, stack access is only allowed within the same level, and executable definitions inherit the current level on compilation. 
 

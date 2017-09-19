@@ -1,5 +1,6 @@
+#include <iostream>
+
 #include <arpa/inet.h>
-#include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -21,13 +22,14 @@ namespace snabel {
   }
   
   opt<Box> AcceptIter::next(Scope &scp) {
-    struct sockaddr_in addr;
+    sockaddr_in addr;
     socklen_t addr_len(sizeof(addr));
-    int fd(accept(in->fd, (struct sockaddr *)&addr, &addr_len));
+    int fd(accept(in->fd, (sockaddr *)&addr, &addr_len));
 
     if (fd == -1) {
       if (errno != EAGAIN && errno != EWOULDBLOCK) {
 	ERROR(Snabel, fmt("Failed accepting client: %0", errno));
+	return nullopt;
       }
 
       return Box(scp, *type.args.at(0)->args.at(0));
@@ -37,16 +39,35 @@ namespace snabel {
     poll(*f);
     return Box(scp, *type.args.at(0), f);
   }
-  
+
+  ConnectIter::ConnectIter(Thread &thd, const FileRef &f, sockaddr_in addr):
+    Iter(thd.exec, get_iter_type(thd.exec,
+				 get_opt_type(thd.exec, thd.exec.tcp_stream_type))),
+    f(f), addr(addr)
+  { }
+
+  opt<Box> ConnectIter::next(Scope &scp) {
+    if (connect(f->fd, (sockaddr *)&addr, sizeof(addr)) == -1) {
+      if (errno == EINPROGRESS) { return Box(scp, *type.args.at(0)); }
+      ERROR(Snabel, fmt("Failed connecting: %0", errno));
+      return nullopt;
+    }
+
+    poll(*f);
+    return Box(scp, *type.args.at(0), f);
+  }
+
   static void tcp_socket_imp(Scope &scp, const Args &args) {
     auto fd(socket(AF_INET, SOCK_STREAM, 0));
 
     if (fd == -1) {
       ERROR(Snabel, fmt("Failed creating socket: %0", errno));
+      return;
     }
 
     int so(1);
     setsockopt(fd, IPPROTO_TCP, TCP_QUICKACK, &so, sizeof(so));
+    
     push(scp,
 	 scp.exec.tcp_socket_type,
 	 std::make_shared<File>(scp.thread, fd));
@@ -56,21 +77,17 @@ namespace snabel {
     auto &f(get<FileRef>(args.at(0)));
     auto &a(*get<StrRef>(args.at(1)));
     auto &p(get<int64_t>(args.at(2)));
+    auto &exe(scp.exec);
     
-    struct sockaddr_in addr;
+    sockaddr_in addr;
     bzero((char *)&addr, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = inet_addr(a.c_str());
     addr.sin_port = htons(p);
 
-    if (connect(f->fd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
-      if (errno != EINPROGRESS) {
-	ERROR(Snabel, fmt("Failed connecting: %0", errno));
-      }
-    }
-
-    poll(*f);
-    push(scp, scp.exec.tcp_stream_type, f);  
+    push(scp,
+	 get_iter_type(exe, get_opt_type(exe, exe.tcp_stream_type)),
+	 IterRef(new ConnectIter(scp.thread, f, addr)));
   }
 
   static void tcp_bind_imp(Scope &scp, const Args &args) {
@@ -82,13 +99,13 @@ namespace snabel {
       ERROR(Snabel, fmt("Failed setting reuse option: %0", errno));    
     }
 
-    struct sockaddr_in addr;
+    sockaddr_in addr;
     bzero((char *)&addr, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = a.empty() ? INADDR_ANY : inet_addr(a.c_str());
     addr.sin_port = htons(get<int64_t>(args.at(2)));
 
-    if (bind(f->fd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
+    if (bind(f->fd, (sockaddr *)&addr, sizeof(addr)) == -1) {
       ERROR(Snabel, fmt("Failed binding socket: %0", errno));    
     }
 

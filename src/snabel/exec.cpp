@@ -228,7 +228,18 @@ namespace snabel {
     auto it((*in.type->iter)(in));
     push(scp, it->type, it);
   }
-  
+
+  static void iter_pop_imp(Scope &scp, const Args &args) {
+    auto &it(get<IterRef>(args.at(0)));
+    auto nxt(it->next(scp));
+    
+    if (nxt) {
+      push(scp.thread, *nxt);
+    } else {
+      push(scp, *it->type.args.at(0));
+    }
+  }
+
   static void iterable_filter_imp(Scope &scp, const Args &args) {
     auto &exe(scp.exec);
     auto &in(args.at(0)), &tgt(args.at(1));
@@ -666,7 +677,8 @@ namespace snabel {
     add_func(*this, "uid", Func::Const, {}, uid_imp);
 
     add_func(*this, "iter", Func::Const, {ArgType(iterable_type)}, iter_imp);
-
+    add_func(*this, "pop", Func::Safe, {ArgType(iter_type)}, iter_pop_imp);
+    
     add_func(*this, "filter", Func::Const, 
 	     {ArgType(iterable_type), ArgType(callable_type)},
 	     iterable_filter_imp);
