@@ -72,6 +72,9 @@ S: 7 35 +
 42
 ```
 
+### Inverted Control
+Many of Snabel's features may look weird on first contact, but once you take a closer look you'll realize that it's the same old friends turned more or less inside out. One of the guiding principles of Snabel is to push as much control as possible to user code. So you get full stack access instead of having to specify everything upfront, iterators instead of callbacks, gradual typing instead of either or, deferred actions instead of try/finally. 
+
 ### Decently Scoped
 While most languages tend to draw a circle around their core, inside which lexical scoping doesn't apply; usually functions, macros, types and similar; Snabel goes all in to apply lexical scoping wherever possible. Snabel also provides multiple levels of call stack control; ```break```, ```defer```, ```yield```, ```recall``` and ```return``` all support targeting outer scopes by specifying an index between 1 and 9.
 
@@ -724,28 +727,6 @@ S: func: do-copy(in out) (
 nil
 ```
 
-### Random Numbers
-Random numbers are supported through ranged generators that may be treated as infinite iterators.
-
-```
-S: 100 random $ pop $1 pop $1 $dump
-
-[61 23]
-
-S: 100 random 3 nlist
-
-[18 29 63]
-```
-
-### Threads
-Starting a new thread copies program, stack and environment to a separate structure to minimize locking; sets the program counter after the last instruction, and calls the specified target. The target is only a starting point, threads are free to go wherever they want; a thread is finished once the program counter passes the last instruction. Anything remaining on the thread stack is pushed on the calling stack in ```join```
-
-```
-S: 7 {35 +} thread join
-
-42
-```
-
 ### Networking
 Snabel supports basic asynchronous TCP/IP-networking, you may find more examples [here]().
 
@@ -774,6 +755,28 @@ S: let: addr '127.0.0.1';
    @server-socket close
 
 ['hello' 'world']
+```
+
+### Random Numbers
+Random numbers are supported through ranged generators that may be treated as infinite iterators.
+
+```
+S: 100 random $ pop $1 pop $1 $dump
+
+[61 23]
+
+S: 100 random 3 nlist
+
+[18 29 63]
+```
+
+### Threads
+Starting a new thread copies program, stack and environment to a separate structure to minimize locking; sets the program counter after the last instruction, and calls the specified target. The target is only a starting point, threads are free to go wherever they want; a thread is finished once the program counter passes the last instruction. Anything remaining on the thread stack is pushed on the calling stack in ```join```
+
+```
+S: 7 {35 +} thread join
+
+42
 ```
 
 ### Sandboxing
