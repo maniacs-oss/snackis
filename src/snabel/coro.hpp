@@ -6,6 +6,9 @@
 #include "snabel/op.hpp"
 
 namespace snabel {
+  using ExitFunc = func<void (Scope &)>;
+  using OnExit = std::vector<ExitFunc>;
+
   struct Coro {
     int64_t pc, safe_level;
     std::deque<Stack> stacks;
@@ -13,6 +16,7 @@ namespace snabel {
     Env env;
 
     LambdaRef target;
+    OnExit on_exit;
     bool done;
     
     Coro(Scope &scp);

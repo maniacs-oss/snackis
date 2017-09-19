@@ -422,6 +422,19 @@ S: 42
 0
 ```
 
+#### Deferred Actions
+Deferred actions are executed in reverse defined order on scope exit.
+
+```
+S: {1
+    {10} defer
+    {100} defer
+    return
+    1000} call $list
+   
+[1 100 10]
+```
+
 ### Conditions
 ```when``` takes a condition and a callable target, the target is called if the condition is true. ```unless``` is the opposite of ```when```. ```if``` takes a condition and two targets, one that's called if the condition is true and one thats called otherwise. ```select``` takes an iterator of conditions/target pairs, and calls the first target which condition returns true.
 

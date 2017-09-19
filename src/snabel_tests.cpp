@@ -320,6 +320,9 @@ namespace snabel {
 
     run_test(exe, "{let: foo 35; {@foo 7 +}} call call");
     CHECK(get<int64_t>(pop(exe.main)) == 42, _);
+
+    run_test(exe, "{1 {10} defer {100} defer return 1000} call - -");
+    CHECK(get<int64_t>(pop(exe.main)) == -89, _);
   }
 
   static void coro_tests() {

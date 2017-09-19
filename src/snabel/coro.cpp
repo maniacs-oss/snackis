@@ -74,11 +74,14 @@ namespace snabel {
     auto &thd(scp.thread);
     cor.pc = thd.pc+1;
     cor.safe_level = scp.safe_level;
+    
     cor.stacks.assign(std::next(thd.stacks.begin(), scp.stack_depth),
 		      thd.stacks.end());
     
     cor.op_state.swap(scp.op_state);
     cor.env.swap(scp.env);
+    cor.on_exit.swap(scp.on_exit);
+    scp.on_exit.clear();
   }
 
   bool call(const CoroRef &cor, Scope &scp, bool now) {

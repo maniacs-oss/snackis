@@ -96,10 +96,9 @@ namespace snabel {
       new_scp.safe_level = cor->safe_level;
       std::copy(cor->stacks.begin(), cor->stacks.end(),
 		std::back_inserter(thd.stacks));
-      std::copy(cor->op_state.begin(), cor->op_state.end(),
-		std::inserter(new_scp.op_state, new_scp.op_state.end()));
-      std::copy(cor->env.begin(), cor->env.end(),
-		std::inserter(new_scp.env, new_scp.env.end()));
+      cor->op_state.swap(new_scp.op_state);
+      cor->env.swap(new_scp.env);
+      cor->on_exit.swap(new_scp.on_exit);
     } else {
       if (!thd.lambda) {
 	ERROR(Snabel, "Missing lambda");
@@ -222,7 +221,7 @@ namespace snabel {
     }
 
     auto hnd(add_func(scp.exec, name, Func::Safe, args, get<LambdaRef>(*lmb)));
-    scp.on_exit.push_back([hnd]() { rem_func(hnd); });
+    scp.on_exit.push_back([hnd](auto &scp) { rem_func(hnd); });
     return true;
   }
 

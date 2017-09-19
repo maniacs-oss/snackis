@@ -68,6 +68,19 @@ namespace snabel {
     }
   }
 
+  static void defer_imp(int lev, Scope &scp, const Args &args) {
+    auto &ss(scp.thread.scopes);
+    
+    if (ss.size() < lev+2) {
+      ERROR(Snabel, "Defer to root scope");
+      return;
+    }
+	
+    auto &fn(args.at(0));
+    auto s(std::next(ss.rbegin(), lev));    
+    s->on_exit.push_back([fn](auto &scp) { fn.type->call(scp, fn, true); });
+  }
+
   static void eq_imp(Scope &scp, const Args &args) {
     auto &x(args.at(0)), &y(args.at(1));
     push(scp, scp.exec.bool_type, x.type->eq(x, y));
@@ -586,6 +599,16 @@ namespace snabel {
     add_func(*this, "conv", Func::Pure, {ArgType(any_type), ArgType(meta_type)},
 	     conv_imp);
 
+    for (int i=-1; i<10; i++) {
+      add_func(*this,
+	       fmt("defer%0", (i == -1) ? "" : fmt_arg(i)),
+	       Func::Safe,
+	       {ArgType(callable_type)},
+	       [i](auto &scp, auto &args) {
+		 defer_imp(std::max(0, i), scp, args);
+	       });
+    }
+    
     add_func(*this, "=", Func::Pure, {ArgType(any_type), ArgType(0)}, eq_imp);
     add_func(*this, "==", Func::Pure, {ArgType(any_type), ArgType(0)}, equal_imp);
     
