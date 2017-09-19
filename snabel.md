@@ -58,6 +58,20 @@ cmake ..
 make snabel
 ```
 
+### Running Code
+Snabel has two modes of operation; launching with arguments will treat the first argument as a filename to load and run with remaining arguments pushed on the stack, while launching without arguments starts the REPL. ```load``` may be used to load files from within the REPL.
+
+```
+Snabel v0.7.15
+
+Press Return on empty line to evaluate,
+Ctrl-C exits.
+
+S: 'foo.sl' load
+
+nil
+```
+
 ### Postfix
 Like Yoda of Star Wars-fame, and yesterdays scientific calculators; as well as most printers in active use; yet unlike currently trending languages; Snabel expects arguments before operations.
 
