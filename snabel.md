@@ -59,7 +59,7 @@ make snabel
 ```
 
 ### Running Code
-Snabel has two modes of operation; launching with arguments will treat the first argument as a filename to load and run with remaining arguments pushed on the stack, while launching without arguments starts the REPL. ```load``` may be used to load files from within the REPL.
+Snabel supports two modes of operation; launching with arguments treats the first one as a filename to load with remaining arguments pushed on the stack, while launching without starts the REPL. ```load``` may be used to load files from within the REPL.
 
 ```
 Snabel v0.7.15
