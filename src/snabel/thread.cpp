@@ -214,7 +214,7 @@ namespace snabel {
 
       if (s.break_pc > -1) {
 	thd.pc = s.break_pc;
-	s.break_pc = -1;
+	s.return_pc = s.break_pc = -1;
 	depth--;
 	if (!depth) { return true; }
       }
