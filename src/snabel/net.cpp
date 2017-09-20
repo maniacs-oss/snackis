@@ -47,6 +47,8 @@ namespace snabel {
   { }
 
   opt<Box> ConnectIter::next(Scope &scp) {
+    if (!f) { return nullopt; }
+    
     if (connect(f->fd, (sockaddr *)&addr, sizeof(addr)) == -1) {
       if (errno == EINPROGRESS) { return Box(scp, *type.args.at(0)); }
       ERROR(Snabel, fmt("Failed connecting: %0", errno));
@@ -54,7 +56,9 @@ namespace snabel {
     }
 
     poll(*f);
-    return Box(scp, *type.args.at(0), f);
+    auto res(Box(scp, *type.args.at(0), f));
+    f = nullptr;
+    return res;
   }
 
   static void tcp_socket_imp(Scope &scp, const Args &args) {

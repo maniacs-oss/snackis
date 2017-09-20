@@ -14,7 +14,7 @@ let: addr; _
 let: server
      tcp-socket
      @addr @port connect
-     {&_ unless} for;
+     {&break &nop if} for;
 let: in Bin list;
 let: out Bin list;
 
