@@ -748,13 +748,12 @@ Snabel supports basic asynchronous TCP/IP-networking, you may find more examples
 S: let: addr '127.0.0.1';
    let: port 31331;
 
-   let: server
-        tcp-socket
-        @addr @port bind;
+   let: server tcp-socket
+               @addr @port bind;
 
    let: sender tcp-socket
-        @addr @port
-        connect;
+               @addr @port
+               connect;
 
    func: do-connect() (
      |yield

@@ -11,10 +11,13 @@
 
 let: port stoi64; _
 let: addr; _
-let: server
-     tcp-socket
-     @addr @port connect
-     {&break &nop if} for;
+
+let: server tcp-socket
+            @addr @port connect
+            {&break {'connecting...' say} if} for;
+
+'connected' say
+
 let: in Bin list;
 let: out Bin list;
 

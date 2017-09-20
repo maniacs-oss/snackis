@@ -16,8 +16,8 @@ let: in-port stoi64; _
 let: in-addr; _
 
 let: server tcp-socket
-     @in-addr @in-port bind
-     1 accept;
+            @in-addr @in-port bind
+            1 accept;
 
 func: do-send(in out) (
   |_yield  
@@ -36,15 +36,23 @@ func: do-recv(in out) (
   'disconnect' say
 );
 
+func: do-connect(in) (
+  |yield
+  
+  let: out tcp-socket
+           @out-addr @out-port connect
+	   {&break &_yield1 if} for;
+  
+  @in @out do-recv @procs $1 push
+  @in @out do-send @procs $1 push
+);
+
 func: do-server() (
   |_yield
 
   @server {
     {'connect' say
-     let: in; _
-     let: out tcp-socket @out-addr @out-port connect;
-     @in @out do-recv @procs $1 push
-     @in @out do-send @procs $1 push} when
+     do-connect @procs $1 push} when
 
     _yield1
     idle
